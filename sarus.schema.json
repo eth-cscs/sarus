@@ -1,0 +1,232 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Sarus",
+    "description": "Sarus configuration file",
+    "type": "object",
+    "properties": {
+        "OCIBundleDir": {
+            "$ref": "#/definitions/AbsolutePath"
+        },
+        "rootfsFolder": {
+            "$ref": "#/definitions/Folder"
+        },
+        "prefixDir": {
+            "$ref": "#/definitions/AbsolutePath"
+        },
+        "dirOfFilesToCopyInContainerEtc": {
+            "$ref": "#/definitions/AbsolutePath"
+        },
+        "tempDir": {
+            "$ref": "#/definitions/AbsolutePath"
+        },
+        "localRepositoryBaseDir": {
+            "$ref": "#/definitions/AbsolutePath"
+        },
+        "centralizedRepositoryDir": {
+            "$ref": "#/definitions/AbsolutePath"
+        },
+        "mksquashfsPath": {
+            "$ref": "#/definitions/AbsolutePath"
+        },
+        "runcPath": {
+            "$ref": "#/definitions/AbsolutePath"
+        },
+        "ramFilesystemType": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "pattern": "^ramfs$"
+                },
+                {
+                    "type": "string",
+                    "pattern": "^tmpfs$"
+                }
+            ]
+        },
+        "siteMounts": {
+            "$ref": "#/definitions/ArrayOfMounts"
+        },
+        "environment": {
+            "type": "object",
+            "properties": {
+                "set": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                },
+                "prepend": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                },
+                "append": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                },
+                "unset": {
+                    "$ref": "#/definitions/ArrayOfStrings"
+                }
+            }
+        },
+        "userMounts": {
+            "type": "object",
+            "properties": {
+                "notAllowedPrefixesOfPath": {
+                    "$ref": "#/definitions/ArrayOfAbsolutePaths"
+                },
+                "notAllowedPaths": {
+                    "$ref": "#/definitions/ArrayOfAbsolutePaths"
+                }
+            },
+            "required":[ "notAllowedPrefixesOfPath", "notAllowedPaths" ]
+        },
+        "OCIHooks": {
+            "type": "object",
+            "properties": {
+                "prestart": {
+                    "$ref": "#/definitions/ArrayOfOCIHooks"
+                },
+                "poststart": {
+                    "$ref": "#/definitions/ArrayOfOCIHooks"
+                },
+                "poststop": {
+                    "$ref": "#/definitions/ArrayOfOCIHooks"
+                }
+            }
+        }
+    },
+    "required": [
+        "OCIBundleDir",
+        "rootfsFolder",
+        "prefixDir",
+        "dirOfFilesToCopyInContainerEtc",
+        "tempDir",
+        "localRepositoryBaseDir",
+        "mksquashfsPath",
+        "runcPath",
+        "ramFilesystemType"
+    ],
+    "definitions": {
+        "Folder": {
+            "type": "string",
+            "pattern": "[^/]"
+        },
+        "AbsolutePath": {
+            "type": "string",
+            "pattern": "^/"
+        },
+        "ArrayOfAbsolutePaths": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/AbsolutePath"
+            }
+        },
+        "ArrayOfStrings": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "Mount" : {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "oneOf": [
+                    	{
+                            "type": "string",
+                            "pattern": "^bind$"
+                        }
+                    ]
+                },
+                "source": {
+                    "$ref": "#/definitions/AbsolutePath"
+                },
+                "destination": {
+                    "$ref": "#/definitions/AbsolutePath"
+                },
+                "flags": {
+                    "type": "object",
+                    "properties": {
+                        "readonly": {
+                            "type": "string",
+                            "pattern": ""
+                        },
+                        "bind-propagation": {
+                            "oneOf": [
+                                {
+                                    "type": "string",
+                                    "pattern": "^private$"
+                                },
+                                {
+                                    "type": "string",
+                                    "pattern": "^rprivate$"
+                                },
+                                {
+                                    "type": "string",
+                                    "pattern": "^slave$"
+                                },
+                                {
+                                    "type": "string",
+                                    "pattern": "^rslave$"
+                                },
+                                {
+                                    "type": "string",
+                                    "pattern": "^recursive$"
+                                }
+                            ]
+                        },
+                        "size": {
+                            "type": "string",
+                            "pattern": "^[0-9]+[BKMGTPE]$"
+                        },
+                        "bs": {
+                            "type": "string",
+                            "pattern": "^[0-9]+[BKMGTPE]$"
+                        }
+                    }
+                }
+            },
+            "required": [
+                "type",
+                "destination"
+            ]
+        },
+        "ArrayOfMounts": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/Mount"
+            }
+        },
+        "OCIHook": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "$ref": "#/definitions/AbsolutePath"
+                },
+                "args": {
+                    "$ref": "#/definitions/ArrayOfStrings"
+                },
+                "env": {
+                    "$ref": "#/definitions/ArrayOfStrings"
+                },
+                "timeout": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            },
+            "required": [
+                "path"
+            ]
+        },
+        "ArrayOfOCIHooks": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/OCIHook"
+            }
+        }
+    }
+}

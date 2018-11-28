@@ -1,0 +1,32 @@
+#ifndef sarus_runtime_mount_utilities_hpp
+#define sarus_runtime_mount_utilities_hpp
+
+#include <cstddef>
+#include <sys/mount.h>
+
+#include <boost/filesystem.hpp>
+#include <boost/format.hpp>
+
+#include "common/Config.hpp"
+#include "common/Logger.hpp"
+#include "runtime/Mount.hpp"
+
+
+namespace sarus {
+namespace runtime {
+
+void validateMountSource(const boost::filesystem::path&);
+void validateMountDestination(const boost::filesystem::path& destination, const common::Config& config);
+bool isPathOnBindMountableDevice(const boost::filesystem::path& path, const common::Config& config);
+dev_t getDevice(const boost::filesystem::path& path);
+void bindMount(const boost::filesystem::path& from, const boost::filesystem::path& to, unsigned long flags=0);
+void loopMountSquashfs(const boost::filesystem::path& image, const boost::filesystem::path& mountPoint);
+void mountOverlayfs(const boost::filesystem::path& lowerDir,
+                    const boost::filesystem::path& upperDir,
+                    const boost::filesystem::path& workDir,
+                    const boost::filesystem::path& mountPoint);
+
+}
+}
+
+#endif

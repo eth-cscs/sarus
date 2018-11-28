@@ -1,0 +1,43 @@
+{
+    "OCIBundleDir": "/var/sarus/OCIBundleDir",
+    "rootfsFolder": "rootfsFolder",
+    "prefixDir": "/opt/sarus",
+    "dirOfFilesToCopyInContainerEtc": "/opt/sarus/etc",
+    "tempDir": "/tmp",
+    "localRepositoryBaseDir" : "/home",
+    "mksquashfsPath": "/usr/sbin/mksquashfs",
+    "runcPath": "/usr/bin/runc.amd64",
+    "ramFilesystemType": "tmpfs",
+    "siteMounts": [
+        {
+            "type": "bind",
+            "source": "/home",
+            "destination": "/home",
+            "flags": {}
+        }
+    ],
+    "environment": {
+        "set": [
+            {"VAR_TO_SET_IN_CONTAINER": "value"}
+        ],
+        "prepend": [
+            {"VAR_WITH_LIST_OF_PATHS_IN_CONTAINER": "/path/to/prepend"}
+        ],
+        "append": [
+            {"VAR_WITH_LIST_OF_PATHS_IN_CONTAINER": "/path/to/append"}
+        ],
+        "unset": [
+            "VAR_TO_UNSET_IN_CONTAINER_0",
+            "VAR_TO_UNSET_IN_CONTAINER_1"
+        ]
+    },
+    "userMounts": {
+        "notAllowedPrefixesOfPath": [
+            "/etc",
+            "/var"
+        ],
+        "notAllowedPaths": [
+            "/opt"
+        ]
+    }
+}

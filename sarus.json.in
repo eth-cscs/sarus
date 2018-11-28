@@ -1,0 +1,68 @@
+{
+    "OCIBundleDir": "/var/sarus/OCIBundleDir",
+    "rootfsFolder": "rootfs",
+    "prefixDir": "@CMAKE_INSTALL_PREFIX@",
+    "dirOfFilesToCopyInContainerEtc": "@DIR_OF_FILES_TO_COPY_IN_CONTAINER_ETC@",
+    "tempDir": "/tmp",
+    "localRepositoryBaseDir": "/home",
+    "centralizedRepositoryDir": "/var/sarus/centralized_repository",
+    "mksquashfsPath": "@MKSQUASHFS_PATH@",
+    "runcPath": "@RUNC_PATH@",
+    "ramFilesystemType": "tmpfs",
+    "siteMounts": [
+        {
+            "type": "bind",
+            "source": "/home",
+            "destination": "/home",
+            "flags": {}
+        }
+    ],
+    "environment": {
+        "set": [
+            {"VAR_TO_SET_IN_CONTAINER": "value"}
+        ],
+        "prepend": [
+            {"VAR_WITH_LIST_OF_PATHS_IN_CONTAINER": "/path/to/prepend"}
+        ],
+        "append": [
+            {"VAR_WITH_LIST_OF_PATHS_IN_CONTAINER": "/path/to/append"}
+        ],
+        "unset": [
+            "VAR_TO_UNSET_IN_CONTAINER_0",
+            "VAR_TO_UNSET_IN_CONTAINER_1"
+        ]
+    },
+    "userMounts": {
+        "notAllowedPrefixesOfPath": [
+            "/etc",
+            "/var",
+            "/opt/sarus"
+        ],
+        "notAllowedPaths": [
+            "/opt"
+        ]
+    },
+    "OCIHooks": {
+        "prestart": [
+            {
+                "path": "@CMAKE_INSTALL_PREFIX@/bin/mpi_hook",
+                "env": [
+                    "SARUS_MPI_LIBS=",
+                    "SARUS_MPI_DEPENDENCY_LIBS=",
+                    "SARUS_MPI_BIND_MOUNTS="
+                ]
+            },
+            {
+                "path": "@CMAKE_INSTALL_PREFIX@/bin/ssh_hook",
+                "env": [
+                    "SARUS_LOCAL_REPOSITORY_BASE_DIR=/home",
+                    "SARUS_OPENSSH_DIR=/opt/sarus/openssh"
+                ],
+                "args": [
+                    "ssh_hook",
+                    "start-sshd"
+                ]
+            }
+        ]
+    }
+}

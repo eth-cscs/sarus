@@ -1,0 +1,16 @@
+*.pyc
+*.swp
+*.gcno
+*.gcda
+doc/_build
+doc/_static
+doc/_templates
+doc/venv
+files_to_copy_in_container_etc/group
+files_to_copy_in_container_etc/passwd
+build/
+*.gcov
+.idea
+.settings
+.project
+.cproject

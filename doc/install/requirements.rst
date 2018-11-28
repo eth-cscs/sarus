@@ -1,0 +1,189 @@
+************
+Requirements
+************
+
+
+Operating System
+================
+
+A Linux system with the following kernel modules loaded:
+
+* ext4
+* loop
+* squashfs
+* overlayfs
+
+
+Software
+========
+
+System packages
+---------------
+
+For Debian/Ubuntu systems:
+
+.. code-block:: bash
+
+    $ sudo apt-get install build-essential sudo curl wget rsync \
+        autoconf automake libtool valgrind xfsprogs squashfs-tools \
+        libcap-dev cmake zlib1g-dev libssl-dev
+
+
+For RHEL/CentOS:
+
+.. code-block:: bash
+
+    $ sudo yum install gcc-c++ sudo curl wget rsync autoconf automake libtool \
+        valgrind xfsprogs squashfs-tools libcap-devel cmake3 zlib-devel \
+        openssl-devel
+
+Python 2.7 is required if you are interested to also run the integration tests:
+
+.. code-block:: bash
+
+    # Debian/Ubuntu
+    $ sudo apt-get install python python-pip
+
+    # RHEL/CentOS
+    $ sudo yum install python python2-pip
+
+    # All platforms, after installing Python + pip
+    $ pip install setuptools
+    $ pip install nose coverage cpp-coveralls
+    $ mv $(dirname $(which coveralls) )/coveralls $(dirname $(which coveralls) )/cpp-coveralls
+    $ pip install coveralls coveralls-merge pexpect
+
+
+Additional dependencies
+-----------------------
+
+* `libarchive <https://github.com/libarchive/libarchive>`_ 3.3.1
+* `Boost libraries <https://www.boost.org/>`_ >= 1.60.x (recommended 1.65.x)
+* `C++ REST SDK <https://github.com/Microsoft/cpprestsdk>`_ v2.10.0
+* `RapidJSON <http://rapidjson.org/index.html>`_ commit 663f076
+
+.. note::
+    We recommend these versions as they are the ones routinely used for build
+    integration and testing, thus guaranteed to work.
+
+As the specific software versions listed above may not be provided by the system
+package manager, we suggest to install from source:
+
+.. note::
+    The following instructions will default to ``/usr/local`` as the installation
+    prefix. To install to a specific location, use the ``-DCMAKE_INSTALL_PREFIX``
+    CMake options for libarchive and C++ REST SDK and the ``--prefix`` option for
+    the Boost libraries.
+
+.. code-block:: bash
+
+    # install libarchive
+    mkdir -p libarchive/3.3.1 && cd libarchive/3.3.1
+    wget https://github.com/libarchive/libarchive/archive/v3.3.1.tar.gz
+    tar xvf v3.3.1.tar.gz
+    mv libarchive-3.3.1 src
+    mkdir src/build-cmake && cd src/build-cmake
+    cmake ..
+    make -j$(nproc)
+    make install
+
+    # install Boost
+    mkdir -p boost/1_65_0 && cd boost/1_65_0
+    wget https://downloads.sourceforge.net/project/boost/boost/1.65.0/boost_1_65_0.tar.bz2
+    tar xf boost_1_65_0.tar.bz2
+    mv boost_1_65_0 src && cd src
+    ./bootstrap.sh
+    ./b2 install
+
+    # install cpprestsdk
+    mkdir -p cpprestsdk/v2.10.0 && cd cpprestsdk/v2.10.0
+    wget https://github.com/Microsoft/cpprestsdk/archive/v2.10.0.tar.gz
+    tar xf v2.10.0.tar.gz
+    mv cpprestsdk-2.10.0 src && cd src/Release
+    mkdir build && cd build
+    cmake -DWERROR=FALSE ..
+    make -j$(nproc)
+    make install
+
+    # install RapidJSON
+    wget -O rapidjson.tar.gz https://github.com/Tencent/rapidjson/archive/663f076c7b44ce96526d1acfda3fa46971c8af31.tar.gz
+    tar xvzf rapidjson.tar.gz && cd rapidjson
+    cp -r include/rapidjson /usr/local/include/rapidjson
+
+.. note::
+    Should you have trouble pointing to a specific version of Boost when
+    building the C++ REST SDK, use the `-DBOOST_ROOT` CMake option with the
+    prefix directory to your Boost installation.
+
+
+.. _requirements-oci-runtime:
+
+OCI-compliant runtime
+---------------------
+
+Sarus internally relies on an OCI-compliant runtime to spawn a container.
+
+Here we will provide some indications to install `runc <https://github.com/opencontainers/runc>`_,
+the reference implementation from the Open Container Initiative. The recommended
+version is **v1.0.0-rc5**.
+
+The simplest solution is to download a pre-built binary release from the
+project's GitHub page:
+
+.. code-block:: bash
+
+    $ wget -O runc.amd64 https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64
+    $ chmod 755 runc.amd64      # set as executable file
+
+Alternatively, you can follow the instructions to `build from source
+<https://github.com/opencontainers/runc#building>`_.
+
+
+.. _requirements-permissions:
+
+Permissions
+===========
+
+During installation
+-------------------
+
+* Write permissions to:
+    - The Sarus installation directory. This will be passed through the
+      ``CMAKE_INSTALL_PREFIX`` option to CMake.
+    - The directory for Sarus's configuration files. This is passed through
+      the ``SYSCONFDIR`` option to CMake. The default value is
+      ``<CMAKE_INSTALL_PREFIX>/etc``.
+
+
+During execution
+----------------
+
+* Sarus must run as a root-owned SUID executable and be able to achieve full
+  root privileges to perform mounts and create namespaces.
+
+* Because of the considerable power granted by the requirement above, as a
+  security measure, Sarus will check that the configuration files and
+  executables opened during privileged execution are owned by root and are
+  located in root-owned directories. These files are:
+
+    - ``sarus.json`` in Sarus's configuration directory. The directory
+      location is set with the ``SYSCONFDIR`` option to CMake.
+    - The system utilities entered in ``sarus.json``:
+
+        + ``mksquashfs``
+        + ``dd``
+
+    - The OCI-compliant runtime pointed by ``runcPath`` in ``sarus.json``.
+    - All the OCI hooks entered in ``sarus.json``.
+
+* The directory where Sarus will create the OCI bundle must be root-owned.
+  This location can be configured through the ``OCIBundleDir`` entry in
+  ``sarus.json``.
+
+* Write/read permissions to the Sarus's centralized repository.
+  The system administrator can configure the repository's location through the
+  ``centralizedRepositoryDir`` entry in ``sarus.json``.
+
+* Write/read permissions to the users' local image repositories.
+  The system administrator can configure the repositories location through the
+  ``localRepositoryBaseDir`` entry in ``sarus.json``.

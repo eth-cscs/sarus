@@ -1,0 +1,8 @@
+
+configure_file(ConfigBuildTime.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/ConfigBuildTime.cpp)
+
+file(GLOB common_srcs "*.cpp" "*.c")
+add_library(common_library STATIC ${common_srcs})
+target_link_libraries(common_library ${Boost_LIBRARIES} ${cpprestsdk_LIBRARIES} cpprestsdk::cpprest)
+
+add_subdirectory(test)
