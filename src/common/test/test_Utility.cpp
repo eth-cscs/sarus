@@ -11,8 +11,6 @@
 
 using namespace sarus;
 
-static bool fileHasUserOwnership(const boost::filesystem::path&, uid_t uid, gid_t gid);
-
 TEST_GROUP(UtilityTestGroup) {
 };
 
@@ -55,23 +53,23 @@ TEST(UtilityTestGroup, makeUniquePathWithRandomSuffix) {
 
 TEST(UtilityTestGroup, createFoldersIfNecessary) {
     common::createFoldersIfNecessary("/tmp/grandparent/parent/child");
-    CHECK(fileHasUserOwnership("/tmp/grandparent/parent", 0, 0));
-    CHECK(fileHasUserOwnership("/tmp/grandparent/parent/child", 0, 0));
+    CHECK((common::getOwner("/tmp/grandparent/parent") == std::tuple<uid_t, gid_t>{0, 0}));
+    CHECK((common::getOwner("/tmp/grandparent/parent/child") == std::tuple<uid_t, gid_t>{0, 0}));
     boost::filesystem::remove_all("/tmp/grandparent");
 
     common::createFoldersIfNecessary("/tmp/grandparent/parent/child", 1000, 1000);
-    CHECK(fileHasUserOwnership("/tmp/grandparent/parent", 1000, 1000));
-    CHECK(fileHasUserOwnership("/tmp/grandparent/parent/child", 1000, 1000));
+    CHECK((common::getOwner("/tmp/grandparent/parent") == std::tuple<uid_t, gid_t>{1000, 1000}));
+    CHECK((common::getOwner("/tmp/grandparent/parent/child")  == std::tuple<uid_t, gid_t>{1000, 1000}));
     boost::filesystem::remove_all("/tmp/grandparent");
 }
 
 TEST(UtilityTestGroup, createFileIfNecessary) {
     common::createFileIfNecessary("/tmp/testFile");
-    CHECK(fileHasUserOwnership("/tmp/testFile", 0, 0));
+    CHECK((common::getOwner("/tmp/testFile") == std::tuple<uid_t, gid_t>{0, 0}));
     boost::filesystem::remove_all("/tmp/testFile");
 
     common::createFileIfNecessary("/tmp/testFile", 1000, 1000);
-    CHECK(fileHasUserOwnership("/tmp/testFile", 1000, 1000));
+    CHECK((common::getOwner("/tmp/testFile") == std::tuple<uid_t, gid_t>{1000, 1000}));
     boost::filesystem::remove_all("/tmp/testFile");
 }
 
@@ -79,11 +77,11 @@ TEST(UtilityTestGroup, copyFile) {
     common::createFileIfNecessary("/tmp/src");
 
     common::copyFile("/tmp/src", "/tmp/dst");
-    CHECK(fileHasUserOwnership("/tmp/dst", 0, 0));
+    CHECK((common::getOwner("/tmp/dst") == std::tuple<uid_t, gid_t>{0, 0}));
     boost::filesystem::remove_all("/tmp/dst");
 
     common::copyFile("/tmp/src", "/tmp/dst", 1000, 1000);
-    CHECK(fileHasUserOwnership("/tmp/dst", 1000, 1000));
+    CHECK((common::getOwner("/tmp/dst") == std::tuple<uid_t, gid_t>{1000, 1000}));
     boost::filesystem::remove_all("/tmp/src");
     boost::filesystem::remove_all("/tmp/dst");
 }
@@ -94,13 +92,13 @@ TEST(UtilityTestGroup, copyFolder) {
     common::createFileIfNecessary("/tmp/src-folder/subfolder/file1");
 
     common::copyFolder("/tmp/src-folder", "/tmp/dst-folder");
-    CHECK(fileHasUserOwnership("/tmp/dst-folder/file0", 0, 0));
-    CHECK(fileHasUserOwnership("/tmp/dst-folder/subfolder/file1", 0, 0));
+    CHECK((common::getOwner("/tmp/dst-folder/file0") == std::tuple<uid_t, gid_t>{0, 0}));
+    CHECK((common::getOwner("/tmp/dst-folder/subfolder/file1") == std::tuple<uid_t, gid_t>{0, 0}));
     boost::filesystem::remove_all("/tmp/dst-folder");
 
     common::copyFolder("/tmp/src-folder", "/tmp/dst-folder", 1000, 1000);
-    CHECK(fileHasUserOwnership("/tmp/dst-folder/file0", 1000, 1000));
-    CHECK(fileHasUserOwnership("/tmp/dst-folder/subfolder/file1", 1000, 1000));
+    CHECK((common::getOwner("/tmp/dst-folder/file0") == std::tuple<uid_t, gid_t>{1000, 1000}));
+    CHECK((common::getOwner("/tmp/dst-folder/subfolder/file1") == std::tuple<uid_t, gid_t>{1000, 1000}));
     boost::filesystem::remove_all("/tmp/dst-folder");
     boost::filesystem::remove_all("/tmp/src-folder");
 }
@@ -259,21 +257,6 @@ TEST(UtilityTestGroup, realpathRelativeToRootfs) {
     CHECK(common::realpathWithinRootfs(rootfs, "/dirX/link_absolute_with_no_common_path") == (rootfs / "dir0/dir1"));
 
     boost::filesystem::remove_all(rootfs);
-}
-
-static bool fileHasUserOwnership(const boost::filesystem::path& path, uid_t uid, gid_t gid) {
-    if(!boost::filesystem::exists(path)) {
-        return false;
-    }
-
-    struct stat sb;
-    if (stat(path.c_str(), &sb) == -1) {
-        perror("stat");
-        auto message = boost::format("Failed to stat %s") % path.c_str();
-        SARUS_THROW_ERROR(message.str());
-    }
-
-    return sb.st_uid == uid && sb.st_gid == gid;
 }
 
 TEST(UtilityTestGroup, serializeJSON) {
