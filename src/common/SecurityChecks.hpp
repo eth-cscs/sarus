@@ -12,12 +12,16 @@ namespace common {
 
 class SecurityChecks {
 public:
-    void checkThatFileIsUntamperable(const boost::filesystem::path&) const;
+    SecurityChecks(const common::Config&);
+    void checkThatPathIsUntamperable(const boost::filesystem::path&) const;
     void checkThatBinariesInSarusJsonAreUntamperable(const rapidjson::Document&) const;
-    void checkThatOCIHooksAreUntamperable(const common::Config&) const;
+    void checkThatOCIHooksAreUntamperable() const;
 
 private:
-    void checkThatOCIHooksAreUntamperableByType(const common::Config&, const std::string& hookType) const;
+    void checkThatOCIHooksAreUntamperableByType(const std::string& hookType) const;
+
+private:
+    const common::Config* config;
 };
 
 }
