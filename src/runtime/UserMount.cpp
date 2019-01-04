@@ -18,11 +18,11 @@ namespace runtime {
 UserMount::UserMount(   const boost::filesystem::path& source,
                         const boost::filesystem::path& destination,
                         const size_t mountFlags,
-                        const common::Config& config)
+                        std::shared_ptr<const common::Config> config)
     : source{source}
     , destination{destination}
     , mountFlags{mountFlags}
-    , config{&config}
+    , config{std::move(config)}
 {}
 
 void UserMount::performMount() const {

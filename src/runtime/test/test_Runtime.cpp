@@ -43,16 +43,16 @@ IGNORE_TEST(RuntimeTestGroup, setupOCIBundle) {
 TEST(RuntimeTestGroup, setupOCIBundle) {
 #endif
     // configure
-    auto config = test_utility::config::makeConfig();
-    config.commandRun.execArgs = common::CLIArguments{"/bin/bash"};
+    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+    config->commandRun.execArgs = common::CLIArguments{"/bin/bash"};
     // hack to make the resulting image's file path = <repository dir>////test-image.squashfs
-    config.directories.images = boost::filesystem::path{__FILE__}.parent_path();
-    config.imageID = common::ImageID{"", "", "", "test_image"};
+    config->directories.images = boost::filesystem::path{__FILE__}.parent_path();
+    config->imageID = common::ImageID{"", "", "", "test_image"};
 
-    auto bundleDir = boost::filesystem::path{config.json.get()["OCIBundleDir"].GetString()};
+    auto bundleDir = boost::filesystem::path{config->json.get()["OCIBundleDir"].GetString()};
     auto overlayfsLowerDir = bundleDir / "overlay/rootfs-lower"; // hardcoded so in production code being tested
-    auto rootfsDir = bundleDir / boost::filesystem::path{config.json.get()["rootfsFolder"].GetString()};
-    auto dirOfFilesToCopyInContainerEtc = boost::filesystem::path{config.json.get()["dirOfFilesToCopyInContainerEtc"].GetString()};
+    auto rootfsDir = bundleDir / boost::filesystem::path{config->json.get()["rootfsFolder"].GetString()};
+    auto dirOfFilesToCopyInContainerEtc = boost::filesystem::path{config->json.get()["dirOfFilesToCopyInContainerEtc"].GetString()};
 
     // create test folders / files
     common::createFoldersIfNecessary(bundleDir);
@@ -61,7 +61,7 @@ TEST(RuntimeTestGroup, setupOCIBundle) {
     common::createFileIfNecessary(dirOfFilesToCopyInContainerEtc / "group");
 
     // create dummy metadata file in image repo
-    auto metadataFile = boost::filesystem::path(config.directories.images / (config.imageID.getUniqueKey() + ".meta"));
+    auto metadataFile = boost::filesystem::path(config->directories.images / (config->imageID.getUniqueKey() + ".meta"));
     common::createFileIfNecessary(metadataFile);
     std::ofstream metadataStream(metadataFile.c_str());
     metadataStream << "{}";
@@ -71,7 +71,7 @@ TEST(RuntimeTestGroup, setupOCIBundle) {
     runtime::Runtime{config}.setupOCIBundle();
 
     // check filesystem types
-    CHECK_EQUAL(getFilesystemType(bundleDir), getExpectedFilesystemTypeOfBundle(config));
+    CHECK_EQUAL(getFilesystemType(bundleDir), getExpectedFilesystemTypeOfBundle(*config));
     #ifdef OVERLAYFS_SUPER_MAGIC // skip the check if not defined (e.g. on Cray)
     CHECK_EQUAL(getFilesystemType(rootfsDir), OVERLAYFS_SUPER_MAGIC);
     #endif

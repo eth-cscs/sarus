@@ -9,8 +9,8 @@
 namespace sarus {
 namespace image_manager {
 
-InputImage::InputImage(const common::Config& config)
-    : config{&config}
+InputImage::InputImage(std::shared_ptr<const common::Config> config)
+    : config{std::move(config)}
 {}
 
 boost::filesystem::path InputImage::makeTemporaryExpansionDirectory() const {

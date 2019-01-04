@@ -56,7 +56,7 @@ public:
     }
 
     ~Checker() {
-        auto config = test_utility::config::makeConfig();
+        auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
         auto mountObject = std::unique_ptr<runtime::Mount>{};
 
         auto parser = cli::MountParser{!isSiteMount, config};

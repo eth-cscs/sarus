@@ -21,13 +21,13 @@ namespace runtime {
  */
 class ConfigsMerger {
 public:
-    ConfigsMerger(const common::Config&, const common::ImageMetadata&);
+    ConfigsMerger(std::shared_ptr<const common::Config>, const common::ImageMetadata&);
     boost::filesystem::path getCwdInContainer() const;
     std::unordered_map<std::string, std::string> getEnvironmentInContainer() const;
     common::CLIArguments getCommandToExecuteInContainer() const;
 
 private:
-    const common::Config* config;
+    std::shared_ptr<const common::Config> config;
     common::ImageMetadata metadata;
     void setNvidiaEnvironmentVariables(
             const std::unordered_map<std::string, std::string>& hostEnvironment,

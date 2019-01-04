@@ -18,7 +18,7 @@ namespace cli {
 
 class MountParser {
 public:
-    MountParser(bool isUserMount, const common::Config& conf);
+    MountParser(bool isUserMount, std::shared_ptr<const common::Config> conf);
     std::unique_ptr<runtime::Mount> parseMountRequest(const std::unordered_map<std::string, std::string>& mountRequest);
 
 private:
@@ -39,7 +39,7 @@ private:
 
 private:
     bool isUserMount;
-    const common::Config* conf;
+    std::shared_ptr<const common::Config> conf;
     ValidationSettings validationSettings = {};
 };
 

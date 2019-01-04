@@ -24,10 +24,10 @@ IGNORE_TEST(SiteMountsTestGroup, make_site_mount_test) {
 #else
 TEST(SiteMountsTestGroup, make_site_mount_test) {
 #endif
-    auto config = test_utility::config::makeConfig();
+    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
 
-    auto bundleDir = boost::filesystem::path{config.json.get()["OCIBundleDir"].GetString()};
-    auto rootfsDir = bundleDir / boost::filesystem::path{config.json.get()["rootfsFolder"].GetString()};
+    auto bundleDir = boost::filesystem::path{config->json.get()["OCIBundleDir"].GetString()};
+    auto rootfsDir = bundleDir / boost::filesystem::path{config->json.get()["rootfsFolder"].GetString()};
     common::createFoldersIfNecessary(bundleDir / "overlay/rootfs-lower");
 
     auto sourceDir = boost::filesystem::path{"./site_mounts_source"};

@@ -4,8 +4,8 @@
 namespace sarus {
 namespace image_manager {
 
-PulledImage::PulledImage(const common::Config& config, web::json::value& manifest)
-    : InputImage{config}
+PulledImage::PulledImage(std::shared_ptr<const common::Config> config, web::json::value& manifest)
+    : InputImage{std::move(config)}
 {
     initializeListOfLayersAndMetadata(manifest);
 }

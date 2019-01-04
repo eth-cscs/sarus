@@ -14,12 +14,12 @@ namespace rj = rapidjson;
 namespace sarus {
 namespace runtime {
 
-OCIBundleConfig::OCIBundleConfig(const common::Config& config)
-    : config{&config}
-    , configsMerger{config, common::ImageMetadata{config.getMetadataFileOfImage()}}
+OCIBundleConfig::OCIBundleConfig(std::shared_ptr<const common::Config> config)
+    : config{config}
+    , configsMerger{config, common::ImageMetadata{config->getMetadataFileOfImage()}}
     , document{new rj::Document{}}
     , allocator{&document->GetAllocator()}
-    , configFile{boost::filesystem::path{config.json.get()["OCIBundleDir"].GetString()} / "config.json"}
+    , configFile{boost::filesystem::path{config->json.get()["OCIBundleDir"].GetString()} / "config.json"}
 {}
 
 void OCIBundleConfig::generateConfigFile() const {

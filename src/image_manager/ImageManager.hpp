@@ -17,7 +17,7 @@ namespace image_manager {
 
 class ImageManager {    
 public:        
-    ImageManager(const common::Config& config);
+    ImageManager(std::shared_ptr<const common::Config> config);
     void pullImage();
     void loadImage(const boost::filesystem::path& archive);
     void removeImage();
@@ -30,7 +30,7 @@ private:
     void printLog(const boost::format& message, common::logType logType) const;
 
 private:
-    const common::Config* config;
+    std::shared_ptr<const common::Config> config;
     Puller puller;
     ImageStore imageStore;
     const std::string sysname = "ImageManager";  // system name for logger

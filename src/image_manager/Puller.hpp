@@ -21,7 +21,7 @@ namespace image_manager {
 
 class Puller {
 public:
-    Puller(const common::Config& config);
+    Puller(std::shared_ptr<const common::Config> config);
     web::json::value getManifest();
     std::string getManifestPath();
     PulledImage pull();
@@ -39,7 +39,7 @@ private:
     std::unique_ptr<web::http::client::http_client> setupHttpClientWithCredential(const std::string& server);
 
 private:
-    const common::Config* config;
+    std::shared_ptr<const common::Config> config;
 
     /** system name for logger */
     const std::string sysname = "Puller";

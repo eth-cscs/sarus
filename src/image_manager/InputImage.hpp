@@ -1,6 +1,7 @@
 #ifndef sarus_image_manger_InputImage_hpp
 #define sarus_image_manger_InputImage_hpp
 
+#include <memory>
 #include <tuple>
 #include <vector>
 #include <archive.h> // libarchive
@@ -18,7 +19,7 @@ namespace image_manager {
  */
 class InputImage {
 public:
-    InputImage(const common::Config& config);
+    InputImage(std::shared_ptr<const common::Config> config);
     virtual std::tuple<common::PathRAII, common::ImageMetadata, std::string> expand() const = 0;
 
 protected:
@@ -37,7 +38,7 @@ protected:
     void log(const std::string& message, common::logType level) const;
 
 protected:
-    const common::Config* config;
+    std::shared_ptr<const common::Config> config;
 };
 
 }

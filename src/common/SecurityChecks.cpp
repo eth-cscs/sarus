@@ -13,8 +13,8 @@ namespace common {
     } \
 }
 
-SecurityChecks::SecurityChecks(const common::Config& config)
-    : config{&config}
+SecurityChecks::SecurityChecks(std::shared_ptr<const common::Config> config)
+    : config{std::move(config)}
 {}
 
 void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& path) const {

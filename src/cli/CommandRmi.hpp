@@ -23,8 +23,8 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandRmi(const std::deque<common::CLIArguments>& argsGroups, const common::Config& conf)
-        : Command(conf)
+    CommandRmi(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config> conf)
+        : conf{std::move(conf)}
     {
         initializeOptionsDescription();
         parseCommandArguments(argsGroups);
@@ -73,9 +73,9 @@ private:
                         .run(), values);
             boost::program_options::notify(values);
 
-            conf.imageID = cli::utility::parseImageID(argsGroups[1]);
-            conf.useCentralizedRepository = values.count("centralized-repository");
-            conf.directories.initialize(conf.useCentralizedRepository, conf);
+            conf->imageID = cli::utility::parseImageID(argsGroups[1]);
+            conf->useCentralizedRepository = values.count("centralized-repository");
+            conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch (std::exception& e) {
             SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of rmi command");
@@ -86,6 +86,7 @@ private:
 
 private:
     boost::program_options::options_description optionsDescription{"Options"};
+    std::shared_ptr<common::Config> conf;
 };
 
 }

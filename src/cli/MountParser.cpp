@@ -13,14 +13,14 @@
 namespace sarus {
 namespace cli {
 
-MountParser::MountParser(bool isUserMount, const common::Config& conf)
+MountParser::MountParser(bool isUserMount, std::shared_ptr<const common::Config> conf)
     : isUserMount{isUserMount}
-    , conf{&conf}
+    , conf{std::move(conf)}
 {
     if(isUserMount) {
         // Retrieve settings from Config struct
-        if (conf.json.get().HasMember("userMounts")) {
-            const rapidjson::Value& userMounts = conf.json.get()["userMounts"];
+        if (this->conf->json.get().HasMember("userMounts")) {
+            const rapidjson::Value& userMounts = this->conf->json.get()["userMounts"];
             for (const auto& value : userMounts["notAllowedPrefixesOfPath"].GetArray()) {
                 validationSettings.destinationDisallowedWithPrefix.push_back(value.GetString());
             }
@@ -142,10 +142,10 @@ std::unique_ptr<runtime::Mount> MountParser::parseBindMountRequest(const std::un
     auto flags = convertBindMountFlags(localMap);
 
     if(isUserMount) {
-        return std::unique_ptr<runtime::Mount>{new runtime::UserMount{source, destination, flags, *conf}};
+        return std::unique_ptr<runtime::Mount>{new runtime::UserMount{source, destination, flags, conf}};
     }
     else {
-        return std::unique_ptr<runtime::Mount>{new runtime::SiteMount{source, destination, flags, *conf}};
+        return std::unique_ptr<runtime::Mount>{new runtime::SiteMount{source, destination, flags, conf}};
     }
 }
 

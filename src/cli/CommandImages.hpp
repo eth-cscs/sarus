@@ -29,8 +29,8 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandImages(const std::deque<common::CLIArguments>& argsGroups, const common::Config& conf)
-        : Command{conf}
+    CommandImages(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config> conf)
+        : conf{std::move(conf)}
     {
         initializeOptionsDescription();
         parseCommandArguments(argsGroups);
@@ -103,8 +103,8 @@ private:
                         .run(), values);
             boost::program_options::notify(values);
 
-            conf.useCentralizedRepository = values.count("centralized-repository");
-            conf.directories.initialize(conf.useCentralizedRepository, conf);
+            conf->useCentralizedRepository = values.count("centralized-repository");
+            conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch(std::exception& e) {
             SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of pull command");
@@ -175,6 +175,7 @@ private:
 
 private:
     boost::program_options::options_description optionsDescription{"Options"};
+    std::shared_ptr<common::Config> conf;
     std::unique_ptr<image_manager::ImageManager> imageManager;
 };
 

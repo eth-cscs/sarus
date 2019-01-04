@@ -51,14 +51,14 @@ std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(const std
 std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(
     const std::string& commandName,
     const std::deque<common::CLIArguments>& commandArgsGroups,
-    const common::Config& config) const {
+    std::shared_ptr<common::Config> config) const {
     if(!isValidCommandName(commandName)) {
         auto message = boost::format("Failed to make command object for command name \"%s\" (invalid command name)")
             % commandName;
         SARUS_THROW_ERROR(message.str());
     }
     auto it = mapWithArguments.find(commandName);
-    return it->second(commandArgsGroups, config);
+    return it->second(commandArgsGroups, std::move(config));
 }
 
 std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObjectHelpOfCommand(const std::string& commandName) const {

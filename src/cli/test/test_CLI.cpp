@@ -1,3 +1,5 @@
+#include <memory>
+
 #include <boost/filesystem.hpp>
 
 #include "common/Utility.hpp"
@@ -27,7 +29,7 @@ TEST_GROUP(CLITestGroup) {
 
 std::unique_ptr<cli::Command> generateCommandFromCLIArguments(const common::CLIArguments& args) {
     auto cli = cli::CLI{};
-    auto conf = test_utility::config::makeConfig();
+    auto conf = std::make_shared<common::Config>(test_utility::config::makeConfig());
     return cli.parseCommandLine(args, conf);
 }
 
@@ -96,10 +98,10 @@ common::Config generateConfig(const common::CLIArguments& args) {
     auto cli = cli::CLI{};
     auto argsGroups = cli.groupArgumentsAndCorrespondingOptions(args);
 
-    auto conf = test_utility::config::makeConfig();
+    auto conf = std::make_shared<common::Config>(test_utility::config::makeConfig());
     auto factory = cli::CommandObjectsFactory{};
     auto command = factory.makeCommandObject(commandName, argsGroups, conf);
-    return command->getConfig();
+    return *conf;
 }
 
 TEST(CLITestGroup, generated_config_for_CommandLoad) {

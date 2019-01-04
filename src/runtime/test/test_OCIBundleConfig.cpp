@@ -15,20 +15,20 @@ TEST_GROUP(OCIBundleConfigTestGroup) {
 
 TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     // create test config
-    auto config = test_utility::config::makeConfig();
-    config.commandRun.execArgs = common::CLIArguments{"/bin/bash"};
-    config.userIdentity.uid = 1000; // UID hardcoded in expected json file
-    config.userIdentity.gid = 1000; // GID hardcoded in expected json file
-    config.imageID = common::ImageID{"test", "test", "test", "test_image"};
+    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+    config->commandRun.execArgs = common::CLIArguments{"/bin/bash"};
+    config->userIdentity.uid = 1000; // UID hardcoded in expected json file
+    config->userIdentity.gid = 1000; // GID hardcoded in expected json file
+    config->imageID = common::ImageID{"test", "test", "test", "test_image"};
 
     // create test bundle
-    auto bundleDir = boost::filesystem::path{config.json.get()["OCIBundleDir"].GetString()};
+    auto bundleDir = boost::filesystem::path{config->json.get()["OCIBundleDir"].GetString()};
     auto actualConfigFile = bundleDir / "config.json";
     auto expectedConfigFile = boost::filesystem::path{__FILE__}.parent_path() / "expected_config.json";
     common::createFoldersIfNecessary(bundleDir);
 
     // create dummy metadata file in image repo
-    auto metadataFile = boost::filesystem::path(config.directories.images / (config.imageID.getUniqueKey() + ".meta"));
+    auto metadataFile = boost::filesystem::path(config->directories.images / (config->imageID.getUniqueKey() + ".meta"));
     common::createFileIfNecessary(metadataFile);
     std::ofstream metadataStream(metadataFile.c_str());
     metadataStream << "{}";
@@ -45,7 +45,7 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
 
     // cleanup
     boost::filesystem::remove_all(bundleDir);
-    boost::filesystem::remove_all(config.directories.repository);
+    boost::filesystem::remove_all(config->directories.repository);
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();

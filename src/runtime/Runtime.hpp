@@ -1,6 +1,8 @@
 #ifndef sarus_runtime_Runtime_hpp
 #define sarus_runtime_Runtime_hpp
 
+#include <memory>
+
 #include "common/Config.hpp"
 #include "common/SecurityChecks.hpp"
 #include "runtime/OCIBundleConfig.hpp"
@@ -11,7 +13,7 @@ namespace runtime {
 
 class Runtime {
 public:
-    Runtime(const common::Config&);
+    Runtime(std::shared_ptr<const common::Config>);
     void setupOCIBundle() const;
     void executeContainer() const;
 
@@ -25,7 +27,7 @@ private:
     void remountRootfsWithNoSuid() const;
 
 private:
-    const common::Config* config;
+    std::shared_ptr<const common::Config> config;
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
     OCIBundleConfig bundleConfig;

@@ -27,7 +27,7 @@ CLI::CLI() {
         ("verbose", "Enable verbose mode (print all log messages with INFO level or higher)");
 }
 
-std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& args, common::Config& conf) const {
+std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& args, std::shared_ptr<common::Config> conf) const {
     auto argsGroups = groupArgumentsAndCorrespondingOptions(args);
     boost::program_options::variables_map values;
     auto factory = cli::CommandObjectsFactory{};
@@ -82,7 +82,7 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
     // (string "sarus" and the related general options that we have already parsed)
     argsGroups.pop_front();
 
-    return factory.makeCommandObject(commandName, argsGroups, conf);
+    return factory.makeCommandObject(commandName, argsGroups, std::move(conf));
 }
 
 const boost::program_options::options_description& CLI::getOptionsDescription() const {

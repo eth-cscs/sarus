@@ -17,8 +17,7 @@ class CommandHelp : public Command {
 public:
     CommandHelp() = default;
 
-    CommandHelp(const std::deque<common::CLIArguments>&, const common::Config& conf)
-        : Command(conf)
+    CommandHelp(const std::deque<common::CLIArguments>&, std::shared_ptr<common::Config>)
     {}
 
     void execute() override {
