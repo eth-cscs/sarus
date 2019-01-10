@@ -44,7 +44,6 @@ void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& 
 
     // check non-writable
     auto status = boost::filesystem::status(path);
-    status.permissions();
     auto isGroupWritable = status.permissions() & (1 << 4);
     auto isWorldWritable = status.permissions() & (1 << 1);
     if(isGroupWritable || isWorldWritable) {
