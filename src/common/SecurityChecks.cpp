@@ -54,7 +54,7 @@ void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& 
         SARUS_THROW_ERROR(message.str());
     }
 
-    // resursively check that subfolders/subfiles are untamperable (if directory)
+    // recursively check that subfolders/subfiles are untamperable (if directory)
     if(boost::filesystem::is_directory(path)) {
         for(boost::filesystem::directory_iterator entry{path};
             entry != boost::filesystem::directory_iterator{};
