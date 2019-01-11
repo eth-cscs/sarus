@@ -71,12 +71,15 @@ public:
     }
 
     std::string getBriefDescription() const override {
-        return "Run a command in a new container";
+        return  "Run a command in a new container\n"
+                "\n"
+                "Note: REPOSITORY[:TAG] has to be specified as\n"
+                "      displayed by the \"sarus images\" command.";
     }
 
     void printHelpMessage() const override {
         auto printer = cli::HelpMessage()
-            .setUsage("sarus run [OPTIONS] [SERVER/]IMAGE[:TAG] [COMMAND] [ARG...]")
+            .setUsage("sarus run [OPTIONS] REPOSITORY[:TAG] [COMMAND] [ARG...]")
             .setDescription(getBriefDescription())
             .setOptionsDescription(optionsDescription);
         std::cout << printer;

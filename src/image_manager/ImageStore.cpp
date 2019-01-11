@@ -36,6 +36,18 @@ namespace image_manager {
 
         common::Lockfile lock{metadataFile};
         auto metadata = readRepositoryMetadata();
+
+        // remove previous entries with the same image ID (if any)
+        auto& images = metadata["images"];
+        for(auto it = images.Begin(); it != images.End(); ) {
+            if ((*it)["uniqueKey"].GetString() == image.imageID.getUniqueKey()) {
+                it = images.Erase(it);
+            } else {
+                ++it;
+            }
+        }
+
+        // add new metadata entry
         metadata["images"].GetArray().PushBack(
             createImageJSON(image, metadata.GetAllocator()),
             metadata.GetAllocator());

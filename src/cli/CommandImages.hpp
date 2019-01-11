@@ -11,11 +11,12 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
+#include "common/Config.hpp"
+#include "common/CLIArguments.hpp"
+#include "common/ImageID.hpp"
 #include "common/SarusImage.hpp"
 #include "cli/Utility.hpp"
-#include "common/Config.hpp"
 #include "cli/Command.hpp"
-#include "common/CLIArguments.hpp"
 #include "cli/HelpMessage.hpp"
 #include "image_manager/ImageManager.hpp"
 
@@ -42,7 +43,18 @@ public:
             return image.imageID.server;
         };
         fieldGetters["REPOSITORY"] = [](const common::SarusImage& image) {
-            return image.imageID.repositoryNamespace + "/" + image.imageID.image;
+            if(image.imageID.server != common::ImageID::DEFAULT_SERVER) {
+                return image.imageID.server
+                    + "/" + image.imageID.repositoryNamespace
+                    + "/" + image.imageID.image;
+            }
+            else if(image.imageID.repositoryNamespace != common::ImageID::DEFAULT_REPOSITORY_NAMESPACE) {
+                return image.imageID.repositoryNamespace
+                    + "/" + image.imageID.image;
+            }
+            else {
+                return image.imageID.image;
+            }
         };
         fieldGetters["TAG"] = [](const common::SarusImage& image) {
             return image.imageID.tag;

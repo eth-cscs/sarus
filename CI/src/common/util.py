@@ -30,15 +30,13 @@ def list_images(is_centralized_repository):
     images = []
     for line in lines_without_header:
         fields = line.split()
-        image_library_and_name = fields[0]
+        image_repository = fields[0]
         image_tag = fields[1]
-        server = fields[5]
-        images.append(server + "/" + image_library_and_name + ":" + image_tag)
+        images.append(image_repository + ":" + image_tag)
     return images
 
 
 def pull_image_if_necessary(is_centralized_repository, image):
-    image = _canonicalize_image_id(image)
     if image in list_images(is_centralized_repository):
         return
     if is_centralized_repository:
@@ -49,7 +47,6 @@ def pull_image_if_necessary(is_centralized_repository, image):
 
 
 def remove_image_if_necessary(is_centralized_repository, image):
-    image = _canonicalize_image_id(image)
     if image not in list_images(is_centralized_repository):
         return
     if is_centralized_repository:
@@ -106,23 +103,3 @@ def run_command_in_container_with_slurm(image, command, options_of_srun_command=
     else:
         out = subprocess.check_output(full_command, env=environment)
     return command_output_without_trailing_new_lines(out)
-
-
-def _canonicalize_image_id(image):
-    """
-    Canonicalize the image ID in the format "<server>/<namespace>/<image>:<tag>".
-
-    The canonical ID is useful to check whether an image is already stored in the
-    repository (simple matter of searching the canonical ID through the images
-    retrieved with the "list" command)
-    """
-    has_namespace = "/" in image
-    has_server_and_namespace = image.count("/") == 2
-    has_tag = ":" in image
-    if not has_namespace:
-        image = "library/" + image
-    if not has_server_and_namespace:
-        image = "index.docker.io/" + image
-    if not has_tag:
-        image += ":latest"
-    return image
