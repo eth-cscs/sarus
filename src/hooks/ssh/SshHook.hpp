@@ -12,6 +12,7 @@
 
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
+#include "common/SecurityChecks.hpp"
 #include "runtime/mount_utilities.hpp"
 #include "hooks/common/Utility.hpp"
 #include "PasswdDB.hpp"
@@ -47,6 +48,7 @@ public:
     void startSshd() {
         localRepositoryBaseDir = sarus::common::getEnvironmentVariable("SARUS_LOCAL_REPOSITORY_BASE_DIR");
         opensshDirInHost = sarus::common::getEnvironmentVariable("SARUS_OPENSSH_DIR");
+        sarus::common::SecurityChecks{sarus::common::Config{}}.checkThatPathIsUntamperable(opensshDirInHost);
         std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
         hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
         parseConfigJSONOfBundle();

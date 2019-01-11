@@ -41,14 +41,14 @@ Config::JSON::JSON()
 {}
 
 void Config::JSON::initialize(const boost::filesystem::path& configFilename, const boost::filesystem::path& schemaFilename) {
-    SecurityChecks{}.checkThatFileIsUntamperable(configFilename);
+    SecurityChecks{Config{}}.checkThatPathIsUntamperable(configFilename);
 
     auto schema = common::readJSON(schemaFilename);
     rapidjson::SchemaDocument schemaDoc(schema); // convert to SchemaDocument
     auto json = common::readAndValidateJSON(configFilename, schemaDoc);
     file = std::make_shared<rapidjson::Document>(std::move(json));
 
-    common::SecurityChecks{}.checkThatBinariesInSarusJsonAreUntamperable(*file);
+    common::SecurityChecks{Config{}}.checkThatBinariesInSarusJsonAreUntamperable(*file);
 }
 
 Config::UserIdentity::UserIdentity() {
