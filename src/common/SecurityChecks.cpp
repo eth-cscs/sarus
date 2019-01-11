@@ -44,7 +44,6 @@ void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& 
 
     // check non-writable
     auto status = boost::filesystem::status(path);
-    status.permissions();
     auto isGroupWritable = status.permissions() & (1 << 4);
     auto isWorldWritable = status.permissions() & (1 << 1);
     if(isGroupWritable || isWorldWritable) {
@@ -54,7 +53,7 @@ void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& 
         SARUS_THROW_ERROR(message.str());
     }
 
-    // resursively check that subfolders/subfiles are untamperable (if directory)
+    // recursively check that subfolders/subfiles are untamperable (if directory)
     if(boost::filesystem::is_directory(path)) {
         for(boost::filesystem::directory_iterator entry{path};
             entry != boost::filesystem::directory_iterator{};
