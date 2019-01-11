@@ -6,6 +6,9 @@
 namespace sarus {
 namespace common {
 
+const std::string ImageID::DEFAULT_SERVER{"index.docker.io"};
+const std::string ImageID::DEFAULT_REPOSITORY_NAMESPACE{"library"};
+
 bool operator==(const ImageID& lhs, const ImageID& rhs) {
     return lhs.server == rhs.server
         && lhs.repositoryNamespace == rhs.repositoryNamespace

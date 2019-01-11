@@ -16,7 +16,7 @@ class TestPullCommand(unittest.TestCase):
         self._test_pull_command(is_centralized_repository=True)
 
     def _test_pull_command(self, is_centralized_repository):
-        image = "index.docker.io/library/alpine:latest"
+        image = "alpine:latest"
 
         util.remove_image_if_necessary(is_centralized_repository, image)
         actual_images = set(util.list_images(is_centralized_repository))

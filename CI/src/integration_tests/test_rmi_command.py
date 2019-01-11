@@ -15,7 +15,7 @@ class TestRmiCommand(unittest.TestCase):
         self._test_rmi_command(is_centralized_repository=True)
 
     def _test_rmi_command(self, is_centralized_repository):
-        image = "index.docker.io/library/alpine:latest"
+        image = "alpine:latest"
 
         util.pull_image_if_necessary(is_centralized_repository, image)
         actual_images = set(util.list_images(is_centralized_repository))

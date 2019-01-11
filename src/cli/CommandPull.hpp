@@ -48,7 +48,7 @@ public:
 
     void printHelpMessage() const override {
         auto printer = cli::HelpMessage()
-            .setUsage("sarus pull [OPTIONS] [SERVER/]IMAGE[:TAG]")
+            .setUsage("sarus pull [OPTIONS] REPOSITORY[:TAG]")
             .setDescription(getBriefDescription())
             .setOptionsDescription(optionsDescription);
         std::cout << printer;

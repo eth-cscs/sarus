@@ -41,12 +41,15 @@ public:
     }
 
     std::string getBriefDescription() const override {
-        return "Remove an image";
+        return  "Remove an image\n"
+                "\n"
+                "Note: REPOSITORY[:TAG] has to be specified as\n"
+                "      displayed by the \"sarus images\" command.";
     }
 
     void printHelpMessage() const override {
         auto printer = cli::HelpMessage()
-            .setUsage("sarus rmi [SERVER/]IMAGE[:TAG]")
+            .setUsage("sarus rmi REPOSITORY[:TAG]")
             .setDescription(getBriefDescription());
         std::cout << printer;
     }

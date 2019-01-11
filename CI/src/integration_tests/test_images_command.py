@@ -34,8 +34,8 @@ class TestImagesCommand(unittest.TestCase):
         self.assertEqual(actual_header, expected_header)
 
         # imported image
-        image_output = self._image_in_output_of_images_command(is_centralized_repository, "library/loaded_image", "latest")
-        self.assertEqual(image_output[0], "library/loaded_image")
+        image_output = self._image_in_output_of_images_command(is_centralized_repository, "load/library/loaded_image", "latest")
+        self.assertEqual(image_output[0], "load/library/loaded_image")
         self.assertEqual(image_output[1], "latest")
         self.assertEqual(image_output[2], "e21c333399e0")
         self.assertEqual(image_output[4], "1.91MB")

@@ -14,6 +14,9 @@ struct ImageID {
     std::string image;
     std::string tag;
     std::string getUniqueKey() const;
+
+    static const std::string DEFAULT_SERVER;
+    static const std::string DEFAULT_REPOSITORY_NAMESPACE;
 };
 
 bool operator==(const ImageID&, const ImageID&);
