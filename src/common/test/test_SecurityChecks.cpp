@@ -1,4 +1,5 @@
 #include <tuple>
+#include <memory>
 
 #include "common/Utility.hpp"
 #include "common/SecurityChecks.hpp"
@@ -10,9 +11,9 @@ TEST_GROUP(SecurityChecksTestGroup) {
 };
 
 TEST(SecurityChecksTestGroup, checkThatPathIsUntamperable) {
-    auto config = common::Config{};
-    config.buildTime.areRuntimeSecurityChecksEnabled = true;
-    auto securityChecks = common::SecurityChecks{config};
+    auto config = std::make_shared<common::Config>();
+    config->buildTime.areRuntimeSecurityChecksEnabled = true;
+    auto securityChecks = common::SecurityChecks{std::move(config)};
 
     std::tuple<uid_t, gid_t> rootIds{0, 0};
     std::tuple<uid_t, gid_t> nonRootIds{1000, 1000};
@@ -52,6 +53,7 @@ TEST(SecurityChecksTestGroup, checkThatPathIsUntamperable) {
         boost::filesystem::remove(path);
     }
 
+    // writability
     {
         auto path = testDirectory / "group-writable-file";
         common::createFileIfNecessary(path, std::get<0>(rootIds), std::get<1>(rootIds));

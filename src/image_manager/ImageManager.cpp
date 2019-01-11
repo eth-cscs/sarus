@@ -16,8 +16,8 @@
 namespace sarus {
 namespace image_manager {
 
-    ImageManager::ImageManager(const common::Config& config)
-    : config(&config)
+    ImageManager::ImageManager(std::shared_ptr<const common::Config> config)
+    : config(config)
     , puller(config)
     , imageStore(config)
     {}
@@ -46,7 +46,7 @@ namespace image_manager {
 
         printLog(boost::format("Loading image archive %s") % archive, common::logType::INFO);
 
-        auto loadedImage = LoadedImage{*config, archive};
+        auto loadedImage = LoadedImage{config, archive};
         processImage(loadedImage);
         
         printLog(boost::format("Successfully loaded image archive"), common::logType::INFO);

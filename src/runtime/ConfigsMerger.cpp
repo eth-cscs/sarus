@@ -7,8 +7,8 @@
 namespace sarus {
 namespace runtime {
 
-ConfigsMerger::ConfigsMerger(const common::Config& config, const common::ImageMetadata& metadata)
-    : config{&config}
+ConfigsMerger::ConfigsMerger(std::shared_ptr<const common::Config> config, const common::ImageMetadata& metadata)
+    : config{std::move(config)}
     , metadata{metadata}
 {}
 

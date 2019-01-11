@@ -20,7 +20,7 @@ namespace cli {
 class CLI {
 public:
     CLI();
-    std::unique_ptr<cli::Command> parseCommandLine(const common::CLIArguments&, common::Config&) const;
+    std::unique_ptr<cli::Command> parseCommandLine(const common::CLIArguments&, std::shared_ptr<common::Config>) const;
 
 // these methods are public for test purpose
 public:

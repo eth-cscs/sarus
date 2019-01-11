@@ -20,10 +20,10 @@
 namespace sarus {
 namespace runtime {
 
-Runtime::Runtime(const common::Config& config)
-    : config{&config}
-    , bundleDir{ boost::filesystem::path{config.json.get()["OCIBundleDir"].GetString()} }
-    , rootfsDir{ bundleDir / boost::filesystem::path{config.json.get()["rootfsFolder"].GetString()} }
+Runtime::Runtime(std::shared_ptr<const common::Config> config)
+    : config{config}
+    , bundleDir{ boost::filesystem::path{config->json.get()["OCIBundleDir"].GetString()} }
+    , rootfsDir{ bundleDir / boost::filesystem::path{config->json.get()["rootfsFolder"].GetString()} }
     , bundleConfig{config}
     , securityChecks{config}
 {}

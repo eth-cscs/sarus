@@ -26,8 +26,8 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandLoad(const std::deque<common::CLIArguments>& argsGroups, const common::Config& conf)
-        : Command(conf)
+    CommandLoad(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config> conf)
+    : conf{std::move(conf)}
     {
         initializeOptionsDescription();
         parseCommandArguments(argsGroups);
@@ -35,7 +35,7 @@ public:
 
     void execute() override {
         auto imageManager = image_manager::ImageManager{conf};
-        imageManager.loadImage(conf.archivePath);
+        imageManager.loadImage(conf->archivePath);
     }
 
     bool requiresRootPrivileges() const override {
@@ -57,7 +57,7 @@ public:
 private:
     void initializeOptionsDescription() {
         optionsDescription.add_options()
-            ("temp-dir",   boost::program_options::value<std::string>(&conf.directories.tempFromCLI),
+            ("temp-dir",   boost::program_options::value<std::string>(&conf->directories.tempFromCLI),
                 "Temporary directory where the image is expanded")
             ("centralized-repository", "Use centralized repository instead of the local one");
     }
@@ -81,10 +81,10 @@ private:
 
             parsePathOfArchiveToBeLoaded(argsGroups[1]);
 
-            conf.imageID = cli::utility::parseImageID(argsGroups[2]);
-            conf.imageID.server = "load";
-            conf.useCentralizedRepository = values.count("centralized-repository");
-            conf.directories.initialize(conf.useCentralizedRepository, conf);
+            conf->imageID = cli::utility::parseImageID(argsGroups[2]);
+            conf->imageID.server = "load";
+            conf->useCentralizedRepository = values.count("centralized-repository");
+            conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch (std::exception& e) {
             SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of load command");
@@ -100,7 +100,7 @@ private:
         }
 
         try {
-            conf.archivePath = boost::filesystem::absolute(archiveArgs.argv()[0]);
+            conf->archivePath = boost::filesystem::absolute(archiveArgs.argv()[0]);
         } catch(const std::exception& e) {
             auto message = boost::format("failed to convert archive's path %s to absolute path") % archiveArgs.argv()[0];
             SARUS_RETHROW_ERROR(e, message.str());
@@ -109,6 +109,7 @@ private:
 
 private:
     boost::program_options::options_description optionsDescription{"Options"};
+    std::shared_ptr<common::Config> conf;
 };
 
 }

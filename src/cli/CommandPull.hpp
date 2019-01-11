@@ -26,8 +26,8 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandPull(const std::deque<common::CLIArguments>& argsGroups, const common::Config& conf)
-        : Command(conf)
+    CommandPull(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config> conf)
+        : conf{std::move(conf)}
     {
         initializeOptionsDescription();
         parseCommandArguments(argsGroups);
@@ -58,7 +58,7 @@ private:
     void initializeOptionsDescription() {
         optionsDescription.add_options()
             ("temp-dir",
-                boost::program_options::value<std::string>(&conf.directories.tempFromCLI),
+                boost::program_options::value<std::string>(&conf->directories.tempFromCLI),
                 "Temporary directory where the image is expanded")
             ("login", "Enter user credentials for private repository")
             ("centralized-repository", "Use centralized repository instead of the local one");
@@ -82,13 +82,13 @@ private:
             boost::program_options::notify(values);
 
             if(values.count("login")) {
-                conf.authentication.isAuthenticationNeeded = true;
-                readUserCredentialsFromCLI(conf.authentication);
+                conf->authentication.isAuthenticationNeeded = true;
+                readUserCredentialsFromCLI(conf->authentication);
             }
 
-            conf.imageID = cli::utility::parseImageID(argsGroups[1]);
-            conf.useCentralizedRepository = values.count("centralized-repository");
-            conf.directories.initialize(conf.useCentralizedRepository, conf);
+            conf->imageID = cli::utility::parseImageID(argsGroups[1]);
+            conf->useCentralizedRepository = values.count("centralized-repository");
+            conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch (std::exception& e) {
             SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of pull command");
@@ -125,6 +125,7 @@ private:
 
 private:
     boost::program_options::options_description optionsDescription{"Options"};
+    std::shared_ptr<common::Config> conf;
 };
 
 }

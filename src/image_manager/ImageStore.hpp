@@ -18,7 +18,7 @@ namespace image_manager {
 
 class ImageStore {
 public:
-    ImageStore(const common::Config&);
+    ImageStore(std::shared_ptr<const common::Config>);
 
     void addImage(const common::SarusImage&);
     void removeImage(const common::ImageID&);
@@ -33,7 +33,7 @@ private:
 
 private:
     const std::string sysname = "ImageStore"; // system name for logger
-    const common::Config* config;
+    std::shared_ptr<const common::Config> config;
     boost::filesystem::path metadataFile;
 };
 

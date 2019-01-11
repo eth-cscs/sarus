@@ -1,6 +1,8 @@
 #ifndef sarus_image_manger_LoadedImage_hpp
 #define sarus_image_manger_LoadedImage_hpp
 
+#include <memory>
+
 #include <boost/filesystem.hpp>
 
 #include "InputImage.hpp"
@@ -14,7 +16,7 @@ namespace image_manager {
  */
 class LoadedImage : public InputImage {
 public:
-    LoadedImage(const common::Config& config, const boost::filesystem::path& imageArchive);
+    LoadedImage(std::shared_ptr<const common::Config> config, const boost::filesystem::path& imageArchive);
     std::tuple<common::PathRAII, common::ImageMetadata, std::string> expand() const override;
 
 private:

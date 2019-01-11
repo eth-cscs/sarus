@@ -11,8 +11,8 @@ TEST_GROUP(PulledImageTestGroup) {
 };
 
 TEST(PulledImageTestGroup, test) {
-    auto config = test_utility::config::makeConfig();
-    config.imageID = {"index.docker.io", "library", "alpine", "3.8"};
+    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+    config->imageID = {"index.docker.io", "library", "alpine", "3.8"};
 
     // pull
     auto puller = image_manager::Puller{config};
@@ -38,7 +38,7 @@ TEST(PulledImageTestGroup, test) {
     CHECK(metadata == expectedMetadata);
 
     // cleanup
-    boost::filesystem::remove_all(config.directories.repository);
+    boost::filesystem::remove_all(config->directories.repository);
 }
 
 }}} // namespace

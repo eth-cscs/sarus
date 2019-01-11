@@ -21,9 +21,9 @@ namespace rj = rapidjson;
 namespace sarus {
 namespace image_manager {
 
-    ImageStore::ImageStore(const common::Config& config)
-        : config{&config}
-        , metadataFile{config.directories.repository / "metadata.json"}
+    ImageStore::ImageStore(std::shared_ptr<const common::Config> config)
+        : config{config}
+        , metadataFile{config->directories.repository / "metadata.json"}
     {}
 
     /**

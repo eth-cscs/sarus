@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <deque>
+#include <memory>
 
 #include "common/Config.hpp"
 #include "common/CLIArguments.hpp"
@@ -22,8 +23,8 @@ public:
         map[commandName] = []() {
             return std::unique_ptr<cli::Command>{new CommandType{}};
         };
-        mapWithArguments[commandName] = [](const std::deque<common::CLIArguments>& commandArgsGroups, const common::Config& config) {
-            return std::unique_ptr<cli::Command>{new CommandType{commandArgsGroups, config}};
+        mapWithArguments[commandName] = [](const std::deque<common::CLIArguments>& commandArgsGroups, std::shared_ptr<common::Config> config) {
+            return std::unique_ptr<cli::Command>{new CommandType{commandArgsGroups, std::move(config)}};
         };
     }
 
@@ -32,12 +33,14 @@ public:
     std::unique_ptr<cli::Command> makeCommandObject(const std::string& commandName) const;
     std::unique_ptr<cli::Command> makeCommandObject(const std::string& commandName,
                                                     const std::deque<common::CLIArguments>& commandArgsGroups,
-                                                    const common::Config& config) const;
+                                                    std::shared_ptr<common::Config> config) const;
     std::unique_ptr<cli::Command> makeCommandObjectHelpOfCommand(const std::string& commandName) const;
 
 private:
     std::unordered_map<std::string, std::function<std::unique_ptr<cli::Command>()>> map;
-    std::unordered_map<std::string, std::function<std::unique_ptr<cli::Command>(const std::deque<common::CLIArguments>&, const common::Config&)>> mapWithArguments;
+    std::unordered_map<std::string, std::function<std::unique_ptr<cli::Command>(
+        const std::deque<common::CLIArguments>&,
+        std::shared_ptr<common::Config>)>> mapWithArguments;
 };
 
 }

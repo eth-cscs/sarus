@@ -35,11 +35,8 @@ using namespace concurrency::streams;       // Asynchronous streams
 namespace sarus {
 namespace image_manager {
 
-    /**
-     * Constructor
-    */
-    Puller::Puller(const common::Config& config)
-    :   config(&config)
+    Puller::Puller(std::shared_ptr<const common::Config> config)
+        : config{std::move(config)}
     {}
 
     /**
@@ -75,7 +72,7 @@ namespace image_manager {
         printLog(boost::format("Elapsed time on pulling    : %s [sec]") % elapsed, common::logType::INFO);
         printLog(boost::format("Successfully pulled image"), common::logType::INFO);
 
-        return PulledImage{*config, manifest};
+        return PulledImage{config, manifest};
     }
 
     /**
