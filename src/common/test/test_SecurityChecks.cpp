@@ -23,8 +23,7 @@ TEST(SecurityChecksTestGroup, checkThatPathIsUntamperable) {
     // tamperable file
     {
         auto path = testDirectory / "tamperable-file";
-        common::createFileIfNecessary(path, std::get<0>(rootIds), std::get<1>(rootIds));
-        common::setOwner(path, std::get<0>(nonRootIds), std::get<1>(nonRootIds));
+        common::createFileIfNecessary(path, std::get<0>(nonRootIds), std::get<1>(nonRootIds));
         CHECK_THROWS(common::Error, securityChecks.checkThatPathIsUntamperable(path));
         boost::filesystem::remove(path);
     }
@@ -40,8 +39,7 @@ TEST(SecurityChecksTestGroup, checkThatPathIsUntamperable) {
     // tamperable folder
     {
         auto path = testDirectory / "tamperable-subfolder";
-        common::createFoldersIfNecessary(path, std::get<0>(rootIds), std::get<1>(rootIds));
-        common::setOwner(path, std::get<0>(nonRootIds), std::get<1>(nonRootIds));
+        common::createFoldersIfNecessary(path, std::get<0>(nonRootIds), std::get<1>(nonRootIds));
         CHECK_THROWS(common::Error, securityChecks.checkThatPathIsUntamperable(path));
         boost::filesystem::remove(path);
     }
