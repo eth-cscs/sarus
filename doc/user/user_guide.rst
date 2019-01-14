@@ -217,7 +217,7 @@ credentials:
 
 .. code-block:: bash
 
-    $ srun sarus pull <privateRepo>/<image>:<tag> --login
+    $ srun -N 1 sarus pull --login <privateRepo>/<image>:<tag>
     username    :user
     password    :
     ...
@@ -228,16 +228,24 @@ Cloud:
 
 .. code-block:: bash
 
-    $ srun sarus pull --login nvcr.io/nvidia/caffe:17.12
+    $ srun -N 1 sarus pull --login nvcr.io/nvidia/k8s/cuda-sample:nbody
     username    :$oauthtoken
     password    :
     ...
 
-.. note::
+To work with images not pulled from Docker Hub (including the removal detailed
+in a later section), you need to enter the image descriptor (repository[:tag])
+as displayed by the :program:`sarus images` command in the first two columns:
 
-    To work with images not pulled from Docker Hub (including the
-    removal detailed in a later section), you need to enter the full image
-    identifier: ``<server>/<repository>/<image>[:<tag>]``
+.. code-block:: bash
+
+    $ sarus images
+    REPOSITORY                       TAG          DIGEST         CREATED               SIZE         SERVER
+    nvcr.io/nvidia/k8s/cuda-sample   nbody        29e2298d9f71   2019-01-14T12:22:25   91.88MB      nvcr.io
+
+    $ srun -N1 sarus run nvcr.io/nvidia/k8s/cuda-sample:nbody cat /usr/local/cuda/version.txt
+    CUDA Version 9.0.176
+
 
 Loading images from tar archives
 --------------------------------
@@ -263,7 +271,7 @@ the Sarus image:
 .. code-block:: bash
 
     $ sarus images
-    REPOSITORY   TAG          DIGEST         CREATED      SIZE         SERVER
+    REPOSITORY       TAG          DIGEST         CREATED      SIZE         SERVER
 
     $ srun sarus load ./debian.tar my_debian
     > expand image layers ...
@@ -274,8 +282,8 @@ the Sarus image:
     # created: <user home>/.sarus/images/load/library/my_debian/latest.meta
 
     $ sarus images
-    REPOSITORY          TAG          DIGEST         CREATED               SIZE         SERVER
-    library/my_debian   latest       2fe79f06fa6d   2018-01-31T15:08:56   47.04MB      load
+    REPOSITORY               TAG          DIGEST         CREATED               SIZE         SERVER
+    load/library/my_debian   latest       2fe79f06fa6d   2018-01-31T15:08:56   47.04MB      load
 
 The image is now ready to use. Notice that the origin server for the image has
 been labeled ``load`` to indicate this image has been loaded from an archive.
@@ -286,7 +294,8 @@ compute nodes. Should you run out of space while expanding the image,
 alternative expansion directory.
 
 As with images from 3rd party registries, to use or remove loaded images you
-need to enter the full image descriptor.
+need to enter the image descriptor (repository[:tag]) as displayed by the
+:program:`sarus images` command in the first two columns.
 
 Removing images
 ---------------
@@ -305,6 +314,20 @@ rmi` command:
 
     $ sarus images
     REPOSITORY   TAG          DIGEST         CREATED      SIZE         SERVER
+
+To remove images pulled from 3rd party registries or images loaded from local
+tar archives you need to enter the image descriptor (repository[:tag]) as
+displayed by the :program:`sarus images` command:
+
+.. code-block:: bash
+
+    $ sarus images
+    REPOSITORY               TAG          DIGEST         CREATED               SIZE         SERVER
+    load/library/my_debian   latest       2fe79f06fa6d   2018-01-31T15:08:56   47.04MB      load
+
+    $ sarus rmi load/library/my_debian
+    removed load/library/my_debian/latest
+
 
 Accessing host directories from the container
 ---------------------------------------------
@@ -501,15 +524,20 @@ To print information about a command (e.g. command-specific options), use
 .. code-block:: bash
 
     $ sarus help run
-    Usage: sarus run [OPTIONS] [SERVER/]IMAGE[:TAG] [COMMAND] [ARG...]
+    Usage: sarus run [OPTIONS] REPOSITORY[:TAG] [COMMAND] [ARG...]
 
     Run a command in a new container
 
+    Note: REPOSITORY[:TAG] has to be specified as
+          displayed by the "sarus images" command.
+
     Options:
-      --mount arg             Mount custom directories into the container
-      -m [ --mpi ]            Enable MPI support
-      --writable-volatile arg Make specified directory writable volatile. All
-                              changes will be discarded after the container exits.
+      --centralized-repository  Use centralized repository instead of the local one
+      -t [ --tty ]              Allocate a pseudo-TTY in the container
+      --entrypoint arg          Overwrite the default ENTRYPOINT of the image
+      --mount arg               Mount custom directories into the container
+      -m [ --mpi ]              Enable MPI support
+      --ssh                     Enable SSH in the container
 
 
 Support for container customization through hooks
