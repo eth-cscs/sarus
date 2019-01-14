@@ -19,9 +19,15 @@ class TestPullCommand(unittest.TestCase):
         image = "alpine:latest"
 
         util.remove_image_if_necessary(is_centralized_repository, image)
-        actual_images = set(util.list_images(is_centralized_repository))
-        self.assertTrue(image not in actual_images)
+        actual_images = util.list_images(is_centralized_repository)
+        self.assertEqual(actual_images.count(image), 0)
 
         util.pull_image_if_necessary(is_centralized_repository, image)
-        actual_images = set(util.list_images(is_centralized_repository))
-        self.assertTrue(image in actual_images)
+        actual_images = util.list_images(is_centralized_repository)
+        self.assertEqual(actual_images.count(image), 1)
+
+        # check that multiple pulls of the same image don't generate
+        # multiple entries in the list of available images 
+        util.pull_image_if_necessary(is_centralized_repository, image)
+        actual_images = util.list_images(is_centralized_repository)
+        self.assertEqual(actual_images.count(image), 1)
