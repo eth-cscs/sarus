@@ -2,6 +2,7 @@
 #define sarus_image_manger_PulledImage_hpp
 
 #include <vector>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include <cpprest/json.h>
 
@@ -16,7 +17,7 @@ namespace image_manager {
  */
 class PulledImage : public InputImage {
 public:
-    PulledImage(const common::Config& config, web::json::value& manifest);
+    PulledImage(std::shared_ptr<const common::Config> config, web::json::value& manifest);
     std::tuple<common::PathRAII, common::ImageMetadata, std::string> expand() const override;
 
 private:

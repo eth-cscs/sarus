@@ -11,11 +11,12 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
+#include "common/Config.hpp"
+#include "common/CLIArguments.hpp"
+#include "common/ImageID.hpp"
 #include "common/SarusImage.hpp"
 #include "cli/Utility.hpp"
-#include "common/Config.hpp"
 #include "cli/Command.hpp"
-#include "common/CLIArguments.hpp"
 #include "cli/HelpMessage.hpp"
 #include "image_manager/ImageManager.hpp"
 
@@ -29,8 +30,8 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandImages(const std::deque<common::CLIArguments>& argsGroups, const common::Config& conf)
-        : Command{conf}
+    CommandImages(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config> conf)
+        : conf{std::move(conf)}
     {
         initializeOptionsDescription();
         parseCommandArguments(argsGroups);
@@ -42,7 +43,18 @@ public:
             return image.imageID.server;
         };
         fieldGetters["REPOSITORY"] = [](const common::SarusImage& image) {
-            return image.imageID.repositoryNamespace + "/" + image.imageID.image;
+            if(image.imageID.server != common::ImageID::DEFAULT_SERVER) {
+                return image.imageID.server
+                    + "/" + image.imageID.repositoryNamespace
+                    + "/" + image.imageID.image;
+            }
+            else if(image.imageID.repositoryNamespace != common::ImageID::DEFAULT_REPOSITORY_NAMESPACE) {
+                return image.imageID.repositoryNamespace
+                    + "/" + image.imageID.image;
+            }
+            else {
+                return image.imageID.image;
+            }
         };
         fieldGetters["TAG"] = [](const common::SarusImage& image) {
             return image.imageID.tag;
@@ -103,8 +115,8 @@ private:
                         .run(), values);
             boost::program_options::notify(values);
 
-            conf.useCentralizedRepository = values.count("centralized-repository");
-            conf.directories.initialize(conf.useCentralizedRepository, conf);
+            conf->useCentralizedRepository = values.count("centralized-repository");
+            conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch(std::exception& e) {
             SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of pull command");
@@ -175,6 +187,7 @@ private:
 
 private:
     boost::program_options::options_description optionsDescription{"Options"};
+    std::shared_ptr<common::Config> conf;
     std::unique_ptr<image_manager::ImageManager> imageManager;
 };
 

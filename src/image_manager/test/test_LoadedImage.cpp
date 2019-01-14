@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "image_manager/LoadedImage.hpp"
 #include "test_utility/config.hpp"
 #include "test_utility/unittest_main_function.hpp"
@@ -10,7 +12,7 @@ TEST_GROUP(LoadedImageTestGroup) {
 };
 
 TEST(LoadedImageTestGroup, test) {
-    auto config = test_utility::config::makeConfig();
+    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
 
     // expand
     auto archive = boost::filesystem::path{__FILE__}.parent_path() / "saved_image.tar";
@@ -32,7 +34,7 @@ TEST(LoadedImageTestGroup, test) {
     CHECK(metadata == expectedMetadata);
 
     // cleanup
-    boost::filesystem::remove_all(config.directories.repository);
+    boost::filesystem::remove_all(config->directories.repository);
 }
 
 }}} // namespace

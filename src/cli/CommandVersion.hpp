@@ -2,6 +2,7 @@
 #define cli_CommandVersion_hpp
 
 #include <iostream>
+#include <memory>
 
 #include "common/Config.hpp"
 #include "cli/Command.hpp"
@@ -16,12 +17,12 @@ class CommandVersion : public Command {
 public:
     CommandVersion() = default;
 
-    CommandVersion(const std::deque<common::CLIArguments>&, const common::Config& conf)
-        : Command(conf)
+    CommandVersion(const std::deque<common::CLIArguments>&, std::shared_ptr<const common::Config> conf)
+        : conf{std::move(conf)}
     {}
 
     void execute() override {
-        common::Logger::getInstance().log(conf.buildTime.version, "CommandVersion", common::logType::GENERAL);
+        common::Logger::getInstance().log(conf->buildTime.version, "CommandVersion", common::logType::GENERAL);
     }
 
     bool requiresRootPrivileges() const override {
@@ -38,6 +39,9 @@ public:
             .setDescription(getBriefDescription());
         std::cout << printer;
     }
+
+private:
+    std::shared_ptr<const common::Config> conf;
 };
 
 }

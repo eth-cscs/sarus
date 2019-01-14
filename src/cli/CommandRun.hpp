@@ -27,8 +27,8 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandRun(const std::deque<common::CLIArguments>& argsGroups, const common::Config& conf)
-        : Command(conf)
+    CommandRun(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config> conf)
+        : conf{std::move(conf)}
     {
         initializeOptionsDescription();
         parseCommandArguments(argsGroups);
@@ -37,7 +37,7 @@ public:
     void execute() override {
         cli::utility::printLog("Executing run command", common::logType::INFO);
 
-        if(conf.commandRun.enableSSH && !checkSshKeysInLocalRepository()) {
+        if(conf->commandRun.enableSSH && !checkSshKeysInLocalRepository()) {
             common::Logger::getInstance().log(
                 "Failed to check the SSH keys. Hint: try to generate the SSH keys"
                 " with the \"sarus ssh-keygen\" command first",
@@ -49,7 +49,7 @@ public:
         verifyThatImageIsAvailable();
 
         auto setupBegin = std::chrono::high_resolution_clock::now();
-        auto cliTime = std::chrono::duration<double>(setupBegin - conf.program_start);
+        auto cliTime = std::chrono::duration<double>(setupBegin - conf->program_start);
         auto message = boost::format("Processed CLI arguments in %.6f seconds") % cliTime.count();
         cli::utility::printLog(message, common::logType::INFO);
 
@@ -71,12 +71,15 @@ public:
     }
 
     std::string getBriefDescription() const override {
-        return "Run a command in a new container";
+        return  "Run a command in a new container\n"
+                "\n"
+                "Note: REPOSITORY[:TAG] has to be specified as\n"
+                "      displayed by the \"sarus images\" command.";
     }
 
     void printHelpMessage() const override {
         auto printer = cli::HelpMessage()
-            .setUsage("sarus run [OPTIONS] [SERVER/]IMAGE[:TAG] [COMMAND] [ARG...]")
+            .setUsage("sarus run [OPTIONS] REPOSITORY[:TAG] [COMMAND] [ARG...]")
             .setDescription(getBriefDescription())
             .setOptionsDescription(optionsDescription);
         std::cout << printer;
@@ -91,7 +94,7 @@ private:
                 boost::program_options::value<std::string>(&entrypoint)->implicit_value(""),
                 "Overwrite the default ENTRYPOINT of the image")
             ("mount",
-                boost::program_options::value<std::vector<std::string>>(&conf.commandRun.userMounts),
+                boost::program_options::value<std::vector<std::string>>(&conf->commandRun.userMounts),
                 "Mount custom directories into the container")
             ("mpi,m", "Enable MPI support")
             ("ssh", "Enable SSH in the container");
@@ -116,34 +119,34 @@ private:
             boost::program_options::store(parsed, values);
             boost::program_options::notify(values);
 
-            conf.useCentralizedRepository = values.count("centralized-repository");
-            conf.directories.initialize(conf.useCentralizedRepository, conf);
+            conf->useCentralizedRepository = values.count("centralized-repository");
+            conf->directories.initialize(conf->useCentralizedRepository, *conf);
 
             if(values.count("tty")) {
-                conf.commandRun.allocatePseudoTTY = true;
+                conf->commandRun.allocatePseudoTTY = true;
             }
             if(values.count("entrypoint")) {
                 if(entrypoint.empty()) {
-                    conf.commandRun.entrypoint = common::CLIArguments{};
+                    conf->commandRun.entrypoint = common::CLIArguments{};
                 }
                 else {
-                    conf.commandRun.entrypoint = common::CLIArguments{entrypoint};
+                    conf->commandRun.entrypoint = common::CLIArguments{entrypoint};
                 }
             }
             if(values.count("mpi")) {
-                conf.commandRun.useMPI = true;
+                conf->commandRun.useMPI = true;
             }
             if(values.count("ssh")) {
-                conf.commandRun.enableSSH = true;
+                conf->commandRun.enableSSH = true;
             }
 
-            conf.imageID = cli::utility::parseImageID(argsGroups[1]);
+            conf->imageID = cli::utility::parseImageID(argsGroups[1]);
 
             makeSiteMountObjects();
             makeUserMountObjects();
 
             // the remaining arguments (after image) are all part of the command to be executed in the container
-            conf.commandRun.execArgs = std::accumulate(argsGroups.cbegin()+2, argsGroups.cend(), common::CLIArguments{});
+            conf->commandRun.execArgs = std::accumulate(argsGroups.cbegin()+2, argsGroups.cend(), common::CLIArguments{});
         }
         catch (std::exception& e) {
             SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of run command");
@@ -156,16 +159,16 @@ private:
         bool isUserMount = false;
         auto parser = cli::MountParser{isUserMount, conf};
         for(const auto& map : convertJSONSiteMountsToMaps()) {
-            conf.commandRun.mounts.push_back(parser.parseMountRequest(map));
+            conf->commandRun.mounts.push_back(parser.parseMountRequest(map));
         }
     }
 
     void makeUserMountObjects() {
         bool isUserMount = true;
         auto parser = cli::MountParser{isUserMount, conf};
-        for (const auto& mountString : conf.commandRun.userMounts) {
+        for (const auto& mountString : conf->commandRun.userMounts) {
             auto map = common::convertListOfKeyValuePairsToMap(mountString);
-            conf.commandRun.mounts.push_back(parser.parseMountRequest(map));
+            conf->commandRun.mounts.push_back(parser.parseMountRequest(map));
         }
     }
 
@@ -173,11 +176,11 @@ private:
         auto maps = std::vector<std::unordered_map<std::string, std::string>>{};
 
         try {
-            if(!conf.json.get().HasMember("siteMounts")) {
+            if(!conf->json.get().HasMember("siteMounts")) {
                 return maps;
             }
 
-            for(const auto& mount : conf.json.get()["siteMounts"].GetArray()) {
+            for(const auto& mount : conf->json.get()["siteMounts"].GetArray()) {
                 auto map = std::unordered_map<std::string, std::string>{};
                 for(const auto& field : mount.GetObject()) {
                     if(field.name.GetString() == std::string{"flags"}) {
@@ -202,9 +205,9 @@ private:
         cli::utility::printLog( "Checking that the SSH keys are in the local repository",
                                 common::logType::INFO);
         common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR="
-            + common::getLocalRepositoryDirectory(conf).string());
+            + common::getLocalRepositoryDirectory(*conf).string());
         auto command = boost::format("%s/bin/ssh_hook check-localrepository-has-sshkeys")
-            % conf.buildTime.prefixDir.string();
+            % conf->buildTime.prefixDir.string();
         try {
             common::executeCommand(command.str());
         }
@@ -215,10 +218,10 @@ private:
     }
 
     void verifyThatImageIsAvailable() const {
-        cli::utility::printLog( boost::format("Verifying that image %s is available") % conf.getImageFile(),
+        cli::utility::printLog( boost::format("Verifying that image %s is available") % conf->getImageFile(),
                                 common::logType::INFO);
-        if(!boost::filesystem::exists(conf.getImageFile())) {
-            auto message = boost::format("Specified image %s is not available") % conf.imageID;
+        if(!boost::filesystem::exists(conf->getImageFile())) {
+            auto message = boost::format("Specified image %s is not available") % conf->imageID;
             cli::utility::printLog(message.str(), common::logType::GENERAL, std::cerr);
             exit(EXIT_FAILURE);
         }
@@ -227,6 +230,7 @@ private:
 
 private:
     boost::program_options::options_description optionsDescription{"Options"};
+    std::shared_ptr<common::Config> conf;
     std::string entrypoint;
 };
 

@@ -20,11 +20,12 @@
 namespace sarus {
 namespace runtime {
 
-Runtime::Runtime(const common::Config& config)
-    : config{&config}
-    , bundleDir{ boost::filesystem::path{config.json.get()["OCIBundleDir"].GetString()} }
-    , rootfsDir{ bundleDir / boost::filesystem::path{config.json.get()["rootfsFolder"].GetString()} }
+Runtime::Runtime(std::shared_ptr<const common::Config> config)
+    : config{config}
+    , bundleDir{ boost::filesystem::path{config->json.get()["OCIBundleDir"].GetString()} }
+    , rootfsDir{ bundleDir / boost::filesystem::path{config->json.get()["rootfsFolder"].GetString()} }
     , bundleConfig{config}
+    , securityChecks{config}
 {}
 
 void Runtime::setupOCIBundle() const {
@@ -37,8 +38,8 @@ void Runtime::setupOCIBundle() const {
     performCustomMounts();
     remountRootfsWithNoSuid();
     bundleConfig.generateConfigFile();
-    securityChecks.checkThatFileIsUntamperable(bundleConfig.getConfigFile());
-    securityChecks.checkThatOCIHooksAreUntamperable(*config);
+    securityChecks.checkThatPathIsUntamperable(bundleConfig.getConfigFile());
+    securityChecks.checkThatOCIHooksAreUntamperable();
     utility::logMessage("Successfully set up OCI Bundle", common::logType::INFO);
 }
 

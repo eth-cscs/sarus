@@ -6,9 +6,9 @@
 namespace sarus {
 namespace image_manager {
 
-LoadedImage::LoadedImage(   const common::Config& config,
+LoadedImage::LoadedImage(   std::shared_ptr<const common::Config> config,
                             const boost::filesystem::path& imageArchive)
-    : InputImage{config}
+    : InputImage{std::move(config)}
     , imageArchive{imageArchive}
 {}
 

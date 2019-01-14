@@ -1,5 +1,6 @@
 #include <exception>
 #include <iostream>
+#include <memory>
 #include <chrono>
 
 #include <unistd.h>
@@ -21,16 +22,16 @@ int main(int argc, char* argv[]) {
     auto& logger = common::Logger::getInstance();
 
     try {
-        auto conf = common::Config{};
-        saveAndClearEnvironmentVariables(conf);
-        conf.program_start = std::chrono::high_resolution_clock::now();
-        conf.json.initialize(conf.buildTime.configFile, conf.buildTime.configSchemaFile);
+        auto conf = std::make_shared<common::Config>();
+        saveAndClearEnvironmentVariables(*conf);
+        conf->program_start = std::chrono::high_resolution_clock::now();
+        conf->json.initialize(conf->buildTime.configFile, conf->buildTime.configSchemaFile);
 
         auto args = common::CLIArguments(argc, argv);
         auto command = cli::CLI{}.parseCommandLine(args, conf);
 
         if(!command->requiresRootPrivileges()) {
-            dropPrivileges(command->getConfig());
+            dropPrivileges(*conf);
         }
         else {
             getPrivileges();

@@ -10,3 +10,4 @@ add_unit_test(test_common_ImageMetadata test_ImageMetadata.cpp ImageMetadata.cpp
 add_unit_test(test_common_Lockfile test_Lockfile.cpp Lockfile.cpp "${link_libraries}" ${object_files_directory})
 add_unit_test(test_common_JSON test_JSON.cpp NO_UUT_SRC_FILE "${link_libraries}" ${object_files_directory})
 add_unit_test(test_common_CLIArguments test_CLIArguments.cpp CLIArguments.cpp "${link_libraries}" ${object_files_directory})
+add_unit_test(test_common_SecurityChecks_AsRoot test_SecurityChecks.cpp SecurityChecks.cpp "${link_libraries}" ${object_files_directory})

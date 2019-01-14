@@ -1,6 +1,8 @@
 #ifndef sarus_cli_CommandSshKeygen_hpp
 #define sarus_cli_CommandSshKeygen_hpp
 
+#include <memory>
+
 #include "common/Logger.hpp"
 #include "common/CLIArguments.hpp"
 #include "cli/Command.hpp"
@@ -15,19 +17,19 @@ class CommandSshKeygen : public Command {
 public:
     CommandSshKeygen() = default;
 
-    CommandSshKeygen(const std::deque<common::CLIArguments>& argsGroups, const common::Config& conf)
-        : Command(conf)
+    CommandSshKeygen(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config> conf)
+        : conf{std::move(conf)}
     {
         parseCommandArguments(argsGroups);
     }
 
     void execute() override {
         common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR="
-            + common::getLocalRepositoryDirectory(conf).string());
+            + common::getLocalRepositoryDirectory(*conf).string());
         common::setEnvironmentVariable("SARUS_OPENSSH_DIR="
-            + (conf.buildTime.prefixDir / "openssh").string());
+            + (conf->buildTime.prefixDir / "openssh").string());
         auto command = boost::format("%s/bin/ssh_hook keygen")
-            % conf.buildTime.prefixDir.string();
+            % conf->buildTime.prefixDir.string();
         common::executeCommand(command.str());
         common::Logger::getInstance().log("Successfully generated SSH keys", "CLI", common::logType::GENERAL);
     }
@@ -56,11 +58,14 @@ private:
             SARUS_THROW_ERROR("failed to parse CLI arguments of ssh-keygen command (too many arguments provided)");
         }
 
-        conf.useCentralizedRepository = false;
-        conf.directories.initialize(conf.useCentralizedRepository, conf);
+        conf->useCentralizedRepository = false;
+        conf->directories.initialize(conf->useCentralizedRepository, *conf);
 
         cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::logType::DEBUG);
     }
+
+private:
+    std::shared_ptr<common::Config> conf;
 };
 
 }

@@ -14,7 +14,7 @@ namespace runtime {
 
 class OCIBundleConfig {
 public:
-    OCIBundleConfig(const common::Config&);
+    OCIBundleConfig(std::shared_ptr<const common::Config>);
     void generateConfigFile() const;
     const boost::filesystem::path& getConfigFile() const;
 
@@ -27,7 +27,7 @@ private:
     rapidjson::Value makeMemberHooks() const;
 
 private:
-    const common::Config* config;
+    std::shared_ptr<const common::Config> config;
     ConfigsMerger configsMerger;
     std::shared_ptr<rapidjson::Document> document;
     rapidjson::MemoryPoolAllocator<>* allocator;

@@ -85,38 +85,30 @@ common::ImageID parseImageID(const std::string &input) {
         SARUS_THROW_ERROR(message.str());
     }
 
-    /** parse full image ID */
-    boost::cmatch matches;
-    std::string fixedInput = input;
-
-    // if input startwith "docker:", erase ( to be compatible for sarusimg format)
-    if ( fixedInput.size() > std::string("docker:").size()
-            && fixedInput.find("docker:") == 0 ) {
-        fixedInput.erase(0, std::string("docker:").size());
-    }
-
-    boost::regex withHostname("(.*?)/(.*?)/(.*?)");
+    boost::regex withServer("(.*?)/(.*?)/(.*?)");
     boost::regex withNamespace("(.*?)/(.*?)");
+    boost::cmatch matches;
+
     // matches pattern <hostname>/<repositoryNamespace>/image<:tag>
-    if(boost::regex_match( fixedInput.c_str(), matches, withHostname)) {
+    if(boost::regex_match( input.c_str(), matches, withServer)) {
         server = matches[1].str();
         repositoryNamespace = matches[2].str();
         image  = getImageName(matches[3].str());
         tag    = getImageTag(matches[3].str());
     }
     // matches pattern <repositoryNamespace>/image<:tag>
-    else if(boost::regex_match( fixedInput.c_str(), matches, withNamespace)) {
-        server = "index.docker.io";
+    else if(boost::regex_match( input.c_str(), matches, withNamespace)) {
+        server = common::ImageID::DEFAULT_SERVER;
         repositoryNamespace = matches[1];
         image  = getImageName(matches[2].str());
         tag    = getImageTag(matches[2].str());
     }
     // matches pattern image<:tag>
     else {
-        server = "index.docker.io";
-        repositoryNamespace = "library";
-        image  = getImageName(fixedInput);
-        tag    = getImageTag(fixedInput);
+        server = common::ImageID::DEFAULT_SERVER;
+        repositoryNamespace = common::ImageID::DEFAULT_REPOSITORY_NAMESPACE;
+        image  = getImageName(input);
+        tag    = getImageTag(input);
     }
 
     // if empty field exists, throw exception
