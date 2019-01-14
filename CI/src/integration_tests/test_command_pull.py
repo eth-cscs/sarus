@@ -3,19 +3,19 @@ import unittest
 import common.util as util
 
 
-class TestPullCommand(unittest.TestCase):
+class TestCommandPull(unittest.TestCase):
     """
     These tests verify that the pulled images are available to the user,
     i.e. correctly listed through the "images" command.
     """
 
-    def test_pull_command_with_local_repository(self):
-        self._test_pull_command(is_centralized_repository=False)
+    def test_command_pull_with_local_repository(self):
+        self._test_command_pull(is_centralized_repository=False)
 
-    def test_pull_command_with_centralized_repository(self):
-        self._test_pull_command(is_centralized_repository=True)
+    def test_command_pull_with_centralized_repository(self):
+        self._test_command_pull(is_centralized_repository=True)
 
-    def _test_pull_command(self, is_centralized_repository):
+    def _test_command_pull(self, is_centralized_repository):
         image = "alpine:latest"
 
         util.remove_image_if_necessary(is_centralized_repository, image)

@@ -6,7 +6,7 @@ import os
 import common.util as util
 
 
-class TestImagesCommand(unittest.TestCase):
+class TestCommandImages(unittest.TestCase):
     """
     This test checks the output of the "images" command in different scenarios:
     - when the metadata file doesn't exist.
@@ -16,13 +16,13 @@ class TestImagesCommand(unittest.TestCase):
 
     _IMAGE_NAME = "loaded_image:latest"
 
-    def test_images_command_with_local_repository(self):
-        self._test_images_command(is_centralized_repository=False)
+    def test_command_images_with_local_repository(self):
+        self._test_command_images(is_centralized_repository=False)
 
-    def test_images_command_with_centralized_repository(self):
-        self._test_images_command(is_centralized_repository=True)
+    def test_command_images_with_centralized_repository(self):
+        self._test_command_images(is_centralized_repository=True)
 
-    def _test_images_command(self, is_centralized_repository):
+    def _test_command_images(self, is_centralized_repository):
         expected_header = ["REPOSITORY", "TAG", "DIGEST", "CREATED", "SIZE", "SERVER"]
 
         # import image (with fixed digest)
