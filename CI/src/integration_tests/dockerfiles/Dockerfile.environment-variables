@@ -1,0 +1,4 @@
+FROM debian:stretch
+
+ENV IMAGE_ENV_VARIABLE=image_env_variable_value
+ENV IMAGE_ENV_VAR=image_env_var_value
