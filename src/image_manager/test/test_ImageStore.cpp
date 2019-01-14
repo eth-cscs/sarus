@@ -36,10 +36,13 @@ TEST(ImageStoreTestGroup, test_ImageStore) {
 
     // add image
     imageStore.addImage(image);
-    CHECK(boost::filesystem::exists( imageStore.getMetadataFile()));
-
-    // list images
+    CHECK(boost::filesystem::exists(imageStore.getMetadataFile()));
     auto expectedImages = std::vector<common::SarusImage>{ image };
+    CHECK(imageStore.listImages() == expectedImages);
+
+    // add same image another time
+    imageStore.addImage(image);
+    CHECK(boost::filesystem::exists(imageStore.getMetadataFile()));
     CHECK(imageStore.listImages() == expectedImages);
 
     // remove image
