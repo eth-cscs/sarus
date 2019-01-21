@@ -15,4 +15,4 @@ class TestCommandVersion(unittest.TestCase):
         out = subprocess.check_output(command)
         lines = util.command_output_without_trailing_new_lines(out)
         self.assertEqual(len(lines), 1)
-        self.assertTrue(re.match(r"^[0-9]+\.[0-9]+\.[0.9]+(-.+)*$", lines[0]) is not None)
+        self.assertTrue(re.match(r"^\d+\.\d+\.\d+(-.+)*$", lines[0]) is not None)
