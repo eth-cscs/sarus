@@ -9,7 +9,7 @@ LABEL version="1.1"
 RUN apt-get update --fix-missing \
     && apt-get install -y --no-install-recommends build-essential \
     && apt-get install -y --no-install-recommends \
-          kmod sudo rsync curl \
+          kmod sudo rsync curl gdb git vim \
           autoconf automake libtool valgrind xfsprogs \
           squashfs-tools libcap-dev cmake wget python python-pip \
           zlib1g-dev libboost-all-dev libssl-dev munge slurm-wlm

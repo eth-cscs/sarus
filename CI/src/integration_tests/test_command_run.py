@@ -3,19 +3,19 @@ import unittest
 import common.util as util
 
 
-class TestRunCommand(unittest.TestCase):
+class TestCommandRun(unittest.TestCase):
     """
     These tests verify that the available images are run correctly,
     i.e. the Linux's pretty name inside the container is correct.
     """
 
-    def test_run_command_with_local_repository(self):
-        self._test_run_command(is_centralized_repository=False)
+    def test_command_run_with_local_repository(self):
+        self._test_command_run(is_centralized_repository=False)
 
-    def test_run_command_with_centralized_repository(self):
-        self._test_run_command(is_centralized_repository=True)
+    def test_command_run_with_centralized_repository(self):
+        self._test_command_run(is_centralized_repository=True)
 
-    def _test_run_command(self, is_centralized_repository):
+    def _test_command_run(self, is_centralized_repository):
         util.pull_image_if_necessary(is_centralized_repository, "library/alpine:3.8")
         util.pull_image_if_necessary(is_centralized_repository, "library/debian:jessie")
         util.pull_image_if_necessary(is_centralized_repository, "library/debian:stretch")
