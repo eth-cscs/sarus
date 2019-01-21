@@ -44,14 +44,6 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
         SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments");
     }
 
-    if(values.count("help")) {
-        return factory.makeCommandObject("help");
-    }
-
-    if(values.count("version")) {
-        return factory.makeCommandObject("version");
-    }
-
     // configure logger
     auto& logger = common::Logger::getInstance();
     if(values.count("debug")) {
@@ -62,6 +54,16 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
     }
     else {
         logger.setLevel(common::logType::WARN);
+    }
+
+    // --help option
+    if(values.count("help")) {
+        return factory.makeCommandObject("help", argsGroups, std::move(conf));
+    }
+
+    // --version option
+    if(values.count("version")) {
+        return factory.makeCommandObject("version", argsGroups, std::move(conf));
     }
 
     // no command name => return help command
