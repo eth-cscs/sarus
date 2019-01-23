@@ -52,7 +52,7 @@ void Runtime::executeContainer() const {
 
     // execute runc
     auto runcPath = config->json.get()["runcPath"].GetString();
-    auto args = common::CLIArguments{runcPath, "run", containerID};
+    auto args = common::CLIArguments{runcPath, "run", "--no-pivot", containerID};
     common::forkExecWait(args);
 
     utility::logMessage("Successfully executed " + containerID, common::logType::INFO);
