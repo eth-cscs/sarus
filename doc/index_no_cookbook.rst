@@ -37,7 +37,6 @@ Key features:
    config/index
    user/index
    developer/index
-   cookbook/index
 
 
 

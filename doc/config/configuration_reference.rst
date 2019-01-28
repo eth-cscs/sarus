@@ -42,7 +42,7 @@ This path is used to find all needed Sarus-specific utilities.
 Recommended value: ``/opt/sarus/<version>``
 
 dirOfFilesToCopyInContainerEtc (string, REQUIRED)
---------------------------
+-------------------------------------------------
 Absolute path to the directory containing the files that will be automatically
 copied by Sarus into the container's /etc folder. Such files are:
 hosts, resolv.conf, nsswitch.conf, passwd, group.
@@ -88,6 +88,8 @@ mksquashfsPath (string, REQUIRED)
 ---------------------------------
 Absolute path to trusted ``mksquashfs`` binary.
 It must be a root-owned executable in a root-owned directory.
+
+.. _config-reference-runcPath:
 
 runcPath (string, REQUIRED)
 ---------------------------

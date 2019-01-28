@@ -26,7 +26,7 @@ author = 'Swiss National Supercomputing Centre'
 
 # The short X.Y version
 version = subprocess.check_output(["git", "describe", '--tags', '--dirty'],
-                                  universal_newlines=True)[:8]
+                                  universal_newlines=True).split('-')[0]
 # The full version, including alpha/beta/rc tags
 release = subprocess.check_output(["git", "describe", '--tags', '--dirty'],
                                   universal_newlines=True)
@@ -131,7 +131,9 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'Sarus.tex', 'Sarus Documentation',
+    ('index_no_cookbook', 'Sarus.tex', 'Sarus Documentation',
+     'Swiss National Supercomputing Centre', 'manual'),
+    ('cookbook/index', 'Sarus_cookbook.tex', 'Sarus Cookbook',
      'Swiss National Supercomputing Centre', 'manual'),
 ]
 
