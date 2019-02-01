@@ -111,6 +111,11 @@ compile the code using the MPI compiler.
    WORKDIR /opt/mpi_gpudirect
    RUN mpicxx -g all_gather.cpp -o all_gather -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcudart
 
+Used OCI hooks
+==============
+* NVIDIA Container Runtime hook
+* Native MPI hook (MPICH-based)
+
 Running the container
 =====================
 To run a GPUDirect program with Sarus on a Cray XC50, we need to set two

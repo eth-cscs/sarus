@@ -99,6 +99,11 @@ tools from the host.
 
    CMD ["pyfr --help"]
 
+Used OCI hooks
+==============
+* NVIDIA Container Runtime hook
+* Native MPI hook (MPICH-based)
+
 Running the container
 =====================
 We assume that a host scratchpad directory is configured to be mounted

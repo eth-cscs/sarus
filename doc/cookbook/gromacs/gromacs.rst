@@ -85,6 +85,11 @@ as advised by its developers, and proceeds to build FFTW 3.3.8 as a dependency.
    && cd ../.. \
    && rm -r gromacs-2018.3 gromacs-2018.3.tar.gz
 
+Used OCI hooks
+==============
+* NVIDIA Container Runtime hook
+* Native MPI hook (MPICH-based)
+
 Running the container
 =====================
 Assuming that the ``benchmark.tpr`` input data is present in a directory which
