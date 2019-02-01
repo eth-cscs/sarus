@@ -121,6 +121,11 @@ Piz Daint.
 
    WORKDIR "/examples"
 
+Used OCI hooks
+==============
+* NVIDIA Container Runtime hook
+* Native MPI hook (MPICH-based)
+
 Running the container
 =====================
 Assuming that the tensorflow-benchmark code is present in a directory which Sarus is
@@ -140,8 +145,8 @@ location during container setup, we can use the ``--mount`` option:
 .. code-block:: bash
 
    srun -C gpu -N4 -t5 sarus run --mpi \
-       ethcscs/horovod:0.15.1-tf1.7.0-cuda9.0-mpich3.1.4-no-nccl \
        --mount=type=bind,src=<path-to-parent-directory>/tensorflow-benchmarks/scripts/,dst=/tf-scripts \
+       ethcscs/horovod:0.15.1-tf1.7.0-cuda9.0-mpich3.1.4-no-nccl \
        python /tf-scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py \
        --model resnet50 --batch_size 64 --variable_update horovod
 

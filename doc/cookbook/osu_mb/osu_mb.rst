@@ -173,6 +173,10 @@ ABI-compatible MPI implementation present in the image:
    WORKDIR /usr/local/libexec/osu-micro-benchmarks/mpi/pt2pt
    CMD ["mpiexec", "-n", "2", "-bind-to", "core", "./osu_bw"]
 
+Used OCI hooks
+==============
+* Native MPI hook (MPICH-based)
+
 Running the container
 =====================
 We run the container using the Slurm Workload Manager and Sarus.

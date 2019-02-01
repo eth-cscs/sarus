@@ -51,6 +51,10 @@ NVIDIA CUDA C compiler. This image is available on Docker Hub at
 
    CMD ["/usr/local/cuda/samples/1_Utilities/deviceQuery/deviceQuery"]
 
+Used OCI hooks
+==============
+* NVIDIA Container Runtime hook
+
 Running the container
 =====================
 We run the container using the Slurm Workload Manager and Sarus:
@@ -102,4 +106,3 @@ in the following table:
 The results show that containers deployed with Sarus
 and the NVIDIA Container Runtime hook can achieve the same performance of the
 natively built CUDA application, both in terms of average value and variability.
-

@@ -669,3 +669,22 @@ default search ``PATH``. E.g.:
 
 The custom ``ssh`` binary will take care of using the proper keys and
 non-standard port in order to connect to the remote container.
+
+OpenMPI communication through SSH
+---------------------------------
+
+The MPICH-based MPI hook described above does not support OpenMPI libraries.
+As an alternative, OpenMPI programs can communicate through SSH connections
+created by the SSH hook.
+
+To run an OpenMPI program using the SSH hook, we need to manually provide a list
+of hosts and explicitly launch ``mpirun`` only on one node of the allocation.
+We can do so with the following commands:
+
+.. code-block:: bash
+
+   salloc -C gpu -N4 -t5
+   srun hostname >$HOME/hostfile
+   srun sarus run --ssh --mount=src=/users,dst=/users,type=bind \
+       ethcscs/openmpi:3.1.3  \
+       bash -c 'if [ $SLURM_PROCID -eq 0 ]; then mpirun --hostfile $HOME/hostfile -npernode 1 /openmpi-3.1.3/examples/hello_c; else sleep infinity; fi'
