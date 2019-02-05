@@ -90,3 +90,4 @@ for specific use cases:
    mpi-hook
    gpu-hook
    ssh-hook
+   slurm-global-sync-hook
