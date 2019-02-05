@@ -17,6 +17,7 @@ increasing complexity, providing a smooth learning curve.
    gpu/cuda_nbody.rst
    gpu/gpudirect.rst
    osu_mb/osu_mb.rst
+   openmpi/openmpi_ssh.rst
    gromacs/gromacs.rst
    tensorflow_horovod/tf_hvd.rst
    pyfr/pyfr.rst
