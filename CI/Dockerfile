@@ -11,7 +11,7 @@ RUN apt-get update --fix-missing \
     && apt-get install -y --no-install-recommends \
           kmod sudo rsync curl gdb git vim \
           autoconf automake libtool valgrind xfsprogs \
-          squashfs-tools libcap-dev cmake wget python python-pip \
+          squashfs-tools libcap-dev cmake wget python python-pip python3-venv\
           zlib1g-dev libboost-all-dev libssl-dev munge slurm-wlm
 
 # install libarchive
