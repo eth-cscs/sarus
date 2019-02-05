@@ -8,14 +8,14 @@ starting the user-requested application in any of them. This kind of
 synchronization is useful, for example, when used in conjunction with the
 :doc:`SSH hook </config/ssh-hook>`: if the containers are not all available,
 some of them might try to establish connections with containers that have yet to
-start, causing the whole job step allocation to fail.
+start, causing the whole job step execution to fail.
 
 When activated, the hook will retrieve information about the current SLURM job
 step and node by reading three environment variables: ``SLURM_JOB_ID``,
 ``SLURM_NTASKS`` and ``SLURM_PROCID``. The hook will then create a job-specific
 synchronization directory inside the Sarus local repository of the user. Inside
 the synchronization directory, two subdirectories will be created: ``arrival``
-and ``departure``. In the ``arrival`` directory each hook from a SLURM node will
+and ``departure``. In the ``arrival`` directory each hook from a SLURM task will
 create a file with its SLURM process ID as part of the filename, then
 periodically check if files from all other SLURM tasks are present in the
 directory. The check is performed every 0.1 seconds. When all processes have
@@ -24,7 +24,7 @@ departure by creating a file in the ``departure`` directory, and then exit the
 hook program. The hook associated with the SLURM process ID 0 waits for all
 other hooks to depart and then cleans up the synchronization directory.
 
-The arrival/departure strategy has been implemented to prevent edge-case racing
+The arrival/departure strategy has been implemented to prevent edge-case race
 conditions: for example, if the file from the last hook is detected and the
 cleanup started before the last hook has checked for the presence of all other
 files, this situation would result in the deadlock of the last hook.
