@@ -4,6 +4,7 @@ stages:
 tests_docker_ci:
   stage: test
   script:
+      - ./CI/check_that_version_file_is_up_to_date.sh
       - test -e ~/sarus_cache/openssh.tar && mkdir -p build/dep && cp ~/sarus_cache/openssh.tar build/dep/openssh.tar
       - test -e ~/sarus_cache/cpputest && mkdir -p build/dep && cp -r ~/sarus_cache/cpputest build/dep/cpputest
       - sarus_prefix_dir=/opt/sarus
