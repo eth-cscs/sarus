@@ -24,13 +24,20 @@ project = 'Sarus'
 copyright = '2018, Swiss National Supercomputing Centre'
 author = 'Swiss National Supercomputing Centre'
 
-# The short X.Y version
-version = subprocess.check_output(["git", "describe", '--tags', '--dirty'],
-                                  universal_newlines=True).split('-')[0]
-# The full version, including alpha/beta/rc tags
-release = subprocess.check_output(["git", "describe", '--tags', '--dirty'],
-                                  universal_newlines=True)
+# Retrieve the version string
+# Search git repo for added information about untagged snapshots
+try:
+    full_version = subprocess.check_output(["git", "describe", '--tags', '--dirty'],
+                                           universal_newlines=True)
+except:
+    with open('../VERSION') as f:
+        full_version = f.readlines()[0]
 
+# Set the full version string (including alpha/beta/rc tags) as "release"
+release = full_version
+
+# Short release string X.Y
+version = full_version.split('-')[0]
 
 # -- General configuration ---------------------------------------------------
 
@@ -88,7 +95,8 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+#
+# html_static_path = ['_static']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

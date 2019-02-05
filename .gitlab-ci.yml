@@ -4,6 +4,7 @@ stages:
 tests_docker_ci:
   stage: test
   script:
+      - ./CI/check_that_version_file_is_up_to_date.sh
       - test -e ~/sarus_cache/openssh.tar && mkdir -p build/dep && cp ~/sarus_cache/openssh.tar build/dep/openssh.tar
       - test -e ~/sarus_cache/cpputest && mkdir -p build/dep && cp -r ~/sarus_cache/cpputest build/dep/cpputest
       - sarus_prefix_dir=/opt/sarus
@@ -17,3 +18,4 @@ tests_docker_ci:
       - build_type=Release
       - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source -v $sarus_cached_home_dir:/home/docker -v $sarus_cached_centralized_repository_dir:/home/docker/sarus_centralized_repository $docker_image /sarus-source/CI/run_unit_tests_and_integration_tests.sh $sarus_prefix_dir $build_type $host_uid $host_gid
       - ./CI/run_integration_tests_for_virtual_cluster.sh $sarus_cached_home_dir
+      - docker run --tty --rm -v $(pwd):/sarus-source $docker_image /sarus-source/CI/run_documentation_build_test.sh
