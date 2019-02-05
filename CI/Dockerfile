@@ -49,6 +49,7 @@ RUN wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/run
 
 RUN pip install setuptools
 RUN pip install nose gcovr pexpect
+RUN pip install sphinx sphinx-rtd-theme
 
 RUN useradd -m docker && echo "docker:docker" | chpasswd
 RUN echo "docker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers

@@ -15,15 +15,6 @@ cleanup_and_exit_if_last_command_failed() {
 
 sarus_src_dir=/sarus-source
 
-install_documentation_tools() {
-    log "Installing documentation tools"
-    cd /home/docker
-    python3 -m venv ./venv
-    source venv/bin/activate
-    pip -q install sphinx sphinx-rtd-theme
-    cleanup_and_exit_if_last_command_failed
-}
-
 check_static_snapshot() {
     log "Building documentation from static snapshot"
     mkdir /home/docker/sarus-static
@@ -58,6 +49,5 @@ check_git_repo() {
 }
 
 log "Checking documentation build process"
-install_documentation_tools
 check_static_snapshot
 check_git_repo
