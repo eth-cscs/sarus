@@ -47,6 +47,11 @@ find_program(RUNC_PATH runc.amd64)
 execute_process(COMMAND ${GIT_PATH} describe --tags --dirty
                 OUTPUT_VARIABLE LATEST_GIT_TAG
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(NOT LATEST_GIT_TAG)
+    file(STRINGS VERSION VERSION_STRINGS)
+    list(GET VERSION_STRINGS 0 LATEST_GIT_TAG)
+endif(NOT LATEST_GIT_TAG)
+message(STATUS "Sarus version: " ${LATEST_GIT_TAG})
 
 add_subdirectory(dep)
 add_subdirectory(files_to_copy_in_container_etc)
