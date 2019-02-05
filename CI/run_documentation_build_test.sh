@@ -20,7 +20,7 @@ install_documentation_tools() {
     cd /home/docker
     python3 -m venv ./venv
     source venv/bin/activate
-    pip install sphinx sphinx-rtd-theme
+    pip -q install sphinx sphinx-rtd-theme
     cleanup_and_exit_if_last_command_failed
 }
 
@@ -43,7 +43,8 @@ check_static_snapshot() {
 
 check_git_repo() {
     log "Building documentation from git repository"
-    cd $sarus_src_dir/doc
+    cp -rT $sarus_src_dir /home/docker/sarus-git
+    cd /home/docker/sarus-git/doc
     make html
     cleanup_and_exit_if_last_command_failed
     log "    Build successful, checking version string"
