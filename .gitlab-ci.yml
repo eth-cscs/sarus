@@ -14,6 +14,7 @@ tests_docker_ci:
       - host_gid=$(id -g)
       - build_type=Debug
       - docker_image=ethcscs/sarus-ci:1.0.0
+      - docker run --tty --rm -v $(pwd):/sarus-source $docker_image /sarus-source/CI/check_version_from_cmake.sh
       - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source -v $sarus_cached_home_dir:/home/docker -v $sarus_cached_centralized_repository_dir:/home/docker/sarus_centralized_repository $docker_image /sarus-source/CI/run_unit_tests_and_integration_tests.sh $sarus_prefix_dir $build_type $host_uid $host_gid
       - build_type=Release
       - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source -v $sarus_cached_home_dir:/home/docker -v $sarus_cached_centralized_repository_dir:/home/docker/sarus_centralized_repository $docker_image /sarus-source/CI/run_unit_tests_and_integration_tests.sh $sarus_prefix_dir $build_type $host_uid $host_gid
