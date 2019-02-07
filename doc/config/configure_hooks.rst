@@ -19,7 +19,8 @@ effectively be called by the OCI-compliant runtime specified with the
 ``runcPath`` parameter.
 
 As indicated in :ref:`requirements-permissions`, all the hooks entered in the
-configuration file must be root-owned files inside root-owned directories.
+configuration file must be root-owned executables inside root-owned directories,
+and must grant write permissions only to the owner.
 
 
 OCIHooks object format

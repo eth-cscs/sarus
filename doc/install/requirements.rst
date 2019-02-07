@@ -162,21 +162,32 @@ During execution
   root privileges to perform mounts and create namespaces.
 
 * Because of the considerable power granted by the requirement above, as a
-  security measure, Sarus will check that the configuration files and
-  executables opened during privileged execution are owned by root and have
-  write permissions only to the owner (no write permissions to group users
-  or other users). These files are:
+  security measure, Sarus will check that critical files and directories opened
+  during privileged execution meet the following restrictions:
+
+    - They are located in a root-owned directory.
+    - They are owned by root.
+    - They are writable only by the owner (no write permissions to group users
+      or other users).
+
+  The files checked for the security conditions are:
 
     - ``sarus.json`` in Sarus's configuration directory. The directory
       location is set with the ``SYSCONFDIR`` option to CMake.
     - The ``mksquashfs`` utility pointed by ``mksquashfsPath`` in ``sarus.json``.
     - The OCI-compliant runtime pointed by ``runcPath`` in ``sarus.json``.
-    - All the OCI hooks entered in ``sarus.json``.
+    - All the OCI hooks executables entered in ``sarus.json``.
 
-* The directory where Sarus will create the OCI bundle must be root-owned
-  and writable only by the owner.
-  This location can be configured through the ``OCIBundleDir`` entry in
-  ``sarus.json``.
+  For directories, the conditions apply recursively for all their contents.
+  The checked directories are:
+
+    - The directory where Sarus will create the OCI bundle.
+      This location can be configured through the ``OCIBundleDir`` entry in
+      ``sarus.json``.
+    - If the :doc:`SSH Hook </config/ssh-hook>` is enabled in ``sarus.json``,
+      the directory of the custom OpenSSH software.
+      This location is determined at build time and is set to
+      ``<CMAKE_INSTALL_PREFIX>/openssh``.
 
 * Write/read permissions to the Sarus's centralized repository.
   The system administrator can configure the repository's location through the
@@ -185,10 +196,3 @@ During execution
 * Write/read permissions to the users' local image repositories.
   The system administrator can configure the repositories location through the
   ``localRepositoryBaseDir`` entry in ``sarus.json``.
-
-* If the :doc:`SSH Hook </config/ssh-hook>` is enabled in ``sarus.json``, the
-  directory of the custom OpenSSH software must be root-owned and have write
-  permissions only to the owner. This conditions also apply recursively for all
-  the contents of that directory.
-  The location of the custom OpenSSH software is determined at build time and is
-  set to ``<CMAKE_INSTALL_PREFIX>/openssh``.

@@ -17,9 +17,10 @@ this is the case, Sarus's installation scripts will also automatically install
 the hook in the ``$CMAKE_INSTALL_PREFIX/bin`` directory.
 
 A custom OpenSSH software will also be built and installed in the
-``$CMAKE_INSTALL_PREFIX/openssh`` directory. This directory must be root-owned
-and have write permissions only to the owner (no write permissions to group
-or other users).
+``$CMAKE_INSTALL_PREFIX/openssh`` directory. As indicated in the :ref:`installation
+requirements <requirements-permissions>`, this directory must be located in a
+root-owned directory, be root-owned itself, and grant write permissions only to
+the owner (no write permissions to group or other users).
 
 Sarus configuration
 ---------------------
