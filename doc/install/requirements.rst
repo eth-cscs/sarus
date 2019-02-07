@@ -163,20 +163,18 @@ During execution
 
 * Because of the considerable power granted by the requirement above, as a
   security measure, Sarus will check that the configuration files and
-  executables opened during privileged execution are owned by root and are
-  located in root-owned directories. These files are:
+  executables opened during privileged execution are owned by root and have
+  write permissions only to the owner (no write permissions to group users
+  or other users). These files are:
 
     - ``sarus.json`` in Sarus's configuration directory. The directory
       location is set with the ``SYSCONFDIR`` option to CMake.
-    - The system utilities entered in ``sarus.json``:
-
-        + ``mksquashfs``
-        + ``dd``
-
+    - The ``mksquashfs`` utility pointed by ``mksquashfsPath`` in ``sarus.json``.
     - The OCI-compliant runtime pointed by ``runcPath`` in ``sarus.json``.
     - All the OCI hooks entered in ``sarus.json``.
 
-* The directory where Sarus will create the OCI bundle must be root-owned.
+* The directory where Sarus will create the OCI bundle must be root-owned
+  and writable only by the owner.
   This location can be configured through the ``OCIBundleDir`` entry in
   ``sarus.json``.
 
@@ -187,3 +185,10 @@ During execution
 * Write/read permissions to the users' local image repositories.
   The system administrator can configure the repositories location through the
   ``localRepositoryBaseDir`` entry in ``sarus.json``.
+
+* If the :doc:`SSH Hook </config/ssh-hook>` is enabled in ``sarus.json``, the
+  directory of the custom OpenSSH software must be root-owned and write
+  permissions only to the owner This conditions also apply recursively for all
+  the contents of that directory.
+  The location of the custom OpenSSH software is determined at build time and is
+  set to ``<CMAKE_INSTALL_PREFIX>/openssh``.
