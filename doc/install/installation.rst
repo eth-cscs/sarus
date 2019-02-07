@@ -89,7 +89,8 @@ For the full details about configuration options and the structure of *sarus.jso
 please consult the :doc:`/config/configuration_reference`.
 
 * **OCIBundleDir:** the absolute path to where Sarus will create the OCI
-  bundle for the container. This directory must exist and be root-owned.
+  bundle for the container. This directory must exist, be root-owned and be
+  writable only by the owner (no write permissions to group or other users).
   E.g., when using the default value of ``/var/sarus/OCIBundleDir``:
 
   .. code-block:: bash
