@@ -24,7 +24,7 @@ install_sarus() {
 
     # build Sarus
     cd /sarus-source
-    cp CI/src/common/sarus.json.in ./arus.json.in
+    cp CI/src/common/sarus.json.in ./sarus.json.in
     mkdir -p build && cd build
     cmake   -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc-gcov.cmake \
             -DCMAKE_BUILD_TYPE=$build_type \
