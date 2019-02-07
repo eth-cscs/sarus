@@ -187,8 +187,8 @@ During execution
   ``localRepositoryBaseDir`` entry in ``sarus.json``.
 
 * If the :doc:`SSH Hook </config/ssh-hook>` is enabled in ``sarus.json``, the
-  directory of the custom OpenSSH software must be root-owned and write
-  permissions only to the owner This conditions also apply recursively for all
+  directory of the custom OpenSSH software must be root-owned and have write
+  permissions only to the owner. This conditions also apply recursively for all
   the contents of that directory.
   The location of the custom OpenSSH software is determined at build time and is
   set to ``<CMAKE_INSTALL_PREFIX>/openssh``.
