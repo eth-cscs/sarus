@@ -16,6 +16,11 @@ The hook is written in C++ and it will be compiled along with Sarus if the
 this is the case, Sarus's installation scripts will also automatically install
 the hook in the ``$CMAKE_INSTALL_PREFIX/bin`` directory.
 
+A custom OpenSSH software will also be built and installed in the
+``$CMAKE_INSTALL_PREFIX/openssh`` directory. This directory must be root-owned
+and have write permissions only from the owner (no write permissions to group
+or other users).
+
 Sarus configuration
 ---------------------
 
