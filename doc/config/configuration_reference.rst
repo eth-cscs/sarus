@@ -6,10 +6,10 @@ The runtime configuration parameters of Sarus are read from a file called
 *sarus.json*, which is expected to be a valid `JSON document
 <https://www.json.org/>`_. Given the :ref:`privileges
 <requirements-permissions-execution>` that Sarus requires in order to exercise
-its functions the configuration file must satisfy specific :ref:`security
-requirements <requirements-permissions-security>` about location and ownership.
-The location for the configuration file can be set at build-time using the
-``SYSCONFDIR`` CMake option (see :doc:`/install/installation`).
+its functions, the configuration file must satisfy specific :ref:`security
+requirements <requirements-permissions-security>` regarding its location and
+ownership. The location for the configuration file can be set at build-time
+using the ``SYSCONFDIR`` CMake option (see :doc:`/install/installation`).
 
 
 Configuration file entries

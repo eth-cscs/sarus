@@ -55,9 +55,10 @@ order to customize your build:
 Install
 -------
 
-As explained in :ref:`requirements-permissions`, Sarus must be installed as a
-root-owned SUID binary. The straightforward way to achieve this is running the
-``make install`` command with super-user privileges:
+As explained in the :ref:`execution requirements
+<requirements-permissions-execution>`, Sarus must be installed as a root-owned
+SUID binary. The straightforward way to achieve this is running the ``make
+install`` command with super-user privileges:
 
 .. code-block:: bash
 

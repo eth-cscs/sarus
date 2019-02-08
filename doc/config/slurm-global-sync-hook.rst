@@ -25,9 +25,11 @@ hook program. The hook associated with the SLURM process ID 0 waits for all
 other hooks to depart and then cleans up the synchronization directory.
 
 The arrival/departure strategy has been implemented to prevent edge-case race
-conditions: for example, if the file from the last hook is detected and the
-cleanup started before the last hook has checked for the presence of all other
-files, this situation would result in the deadlock of the last hook.
+conditions: for example, if the file from the last arriving hook is detected and
+the cleanup started before the last arriving hook has checked for the presence
+of all other files, this situation would result in the deadlock of the last
+arriving hook. Having all hooks signal their departure before cleaning up
+the synchronization directory avoids this problem.
 
 
 Hook installation
@@ -57,7 +59,7 @@ The following is an example ``OCIHooks`` object enabling the MPI hook:
             {
                 "path": "/opt/sarus/bin/slurm_global_sync_hook",
                 "env": [
-                    "SARUS_LOCAL_REPOSITORY_BASE_DIR=<e.g. /home>"
+                    "SARUS_LOCAL_REPOSITORY_BASE_DIR=/home"
                 ]
             }
         ]

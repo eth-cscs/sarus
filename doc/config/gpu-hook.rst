@@ -14,7 +14,7 @@ installed and working in the host system.
 
 The hook depends on the library and utility provided by the libnvidia-container
 project to carry out the low-level actions of importing the GPU device and
-drivers inside the container. At the moment of writing the latest release of
+drivers inside the container. At the time of writing, the latest release of
 libnvidia-container is version 1.0.0 RC2:
 
 .. code-block:: bash
@@ -95,7 +95,7 @@ will cause the hook to return immediately without performing any action.
 The hook environment also needs to grant visibility to the library and utility
 of libnvidia-container.
 
-The following is an example ``OCIHooks`` object enabling the MPI hook:
+The following is an example ``OCIHooks`` object enabling the GPU hook:
 
 .. code-block:: json
 

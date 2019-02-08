@@ -178,7 +178,7 @@ security measure Sarus will check that critical files and directories opened
 during privileged execution meet the following restrictions:
 
   - Their parent directory is owned by root.
-  - Their parent directory is writable only by the owner(no write permissions
+  - Their parent directory is writable only by the owner (no write permissions
     to group users or other users).
   - They are owned by root.
   - They are writable only by the owner.
