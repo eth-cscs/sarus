@@ -31,7 +31,6 @@ Runtime::Runtime(std::shared_ptr<const common::Config> config)
 void Runtime::setupOCIBundle() const {
     utility::logMessage("Setting up OCI Bundle", common::logType::INFO);
     setupMountIsolation();
-    securityChecks.checkThatPathIsUntamperable(bundleDir);
     setupRamFilesystem();
     mountImageIntoRootfs();
     setupDevFilesystem();

@@ -20,6 +20,8 @@ public:
     void checkThatOCIHooksAreUntamperable() const;
 
 private:
+    void checkThatPathIsRootOwned(const boost::filesystem::path&) const;
+    void checkThatPathIsNotGroupWritableOrWorldWritable(const boost::filesystem::path& path) const;
     void checkThatOCIHooksAreUntamperableByType(const std::string& hookType) const;
 
 private:
