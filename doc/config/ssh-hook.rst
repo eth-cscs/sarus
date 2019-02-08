@@ -12,9 +12,15 @@ Hook installation
 -----------------
 
 The hook is written in C++ and it will be compiled along with Sarus if the
-``ENABLE_SSH=TRUE`` CMake option has been used when configuring the build. If
-this is the case, Sarus's installation scripts will also automatically install
-the hook in the ``$CMAKE_INSTALL_PREFIX/bin`` directory.
+``ENABLE_SSH=TRUE`` CMake option has been used when configuring the build (the
+option is enabled by default). If this is the case, Sarus's installation scripts
+will also automatically install the hook in the ``$CMAKE_INSTALL_PREFIX/bin``
+directory.
+
+A custom OpenSSH software will also be built and installed in the
+``$CMAKE_INSTALL_PREFIX/openssh`` directory. This directory must satisfy the
+:ref:`security requirements <requirements-permissions-security>` for critical
+files and directories.
 
 Sarus configuration
 ---------------------
@@ -28,7 +34,7 @@ environment variables must be defined:
   local user repositories, as configured in the :ref:`corresponding parameter
   <config-reference-localRepositoryBaseDir>` of *sarus.json*.
 
-* ``SARUS_OPENSSH_DIR``: Asboslute path to the location of Sarus's custom
+* ``SARUS_OPENSSH_DIR``: Absolute path to the location of Sarus's custom
   OpenSSH software.
 
 The following is an example ``OCIHooks`` object enabling the SSH hook:

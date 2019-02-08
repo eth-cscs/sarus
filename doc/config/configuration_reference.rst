@@ -5,10 +5,11 @@ Configuration file reference
 The runtime configuration parameters of Sarus are read from a file called
 *sarus.json*, which is expected to be a valid `JSON document
 <https://www.json.org/>`_. Given the :ref:`privileges
-<requirements-permissions>` that Sarus requires in order to exercise its
-functions, as a security measure, the configuration file must be owned by root
-and located in a root-owned directory. The location for the configuration file
-can be set at build-time (see :doc:`/install/installation`).
+<requirements-permissions-execution>` that Sarus requires in order to exercise
+its functions the configuration file must satisfy specific :ref:`security
+requirements <requirements-permissions-security>` about location and ownership.
+The location for the configuration file can be set at build-time using the
+``SYSCONFDIR`` CMake option (see :doc:`/install/installation`).
 
 
 Configuration file entries
@@ -18,10 +19,11 @@ Configuration file entries
 
 OCIBundleDir (string, REQUIRED)
 -------------------------------
-Absolute path to where Sarus will generate an OCI bundle, from which a
-container will be created. An OCI bundle is composed by a *config.json*
-configuration file and a directory which will form the root filesystem
-of the container. The ``OCIBundleDir`` directory must exist and be root-owned.
+Absolute path to where Sarus will generate an OCI bundle, from which a container
+will be created. An OCI bundle is composed by a *config.json* configuration file
+and a directory which will form the root filesystem of the container. The
+``OCIBundleDir`` directory must satisfy the :ref:`security requirements
+<requirements-permissions-security>` for critical files and directories.
 
 Recommended value: ``/var/sarus/OCIBundleDir``
 
@@ -87,7 +89,8 @@ Recommended value: ``/var/sarus/centralized_repository``
 mksquashfsPath (string, REQUIRED)
 ---------------------------------
 Absolute path to trusted ``mksquashfs`` binary.
-It must be a root-owned executable in a root-owned directory.
+This executable must satisfy the :ref:`security requirements
+<requirements-permissions-security>` for critical files and directories.
 
 .. _config-reference-runcPath:
 
@@ -95,7 +98,8 @@ runcPath (string, REQUIRED)
 ---------------------------
 Absolute path to trusted OCI-compliant runtime binary, which will be used by
 Sarus to spawn the actual low-level container process.
-It must be a root-owned executable in a root-owned directory.
+This executable must satisfy the :ref:`security requirements
+<requirements-permissions-security>` for critical files and directories.
 
 .. _config-reference-ramFilesystemType:
 

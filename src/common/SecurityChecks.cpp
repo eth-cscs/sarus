@@ -25,33 +25,13 @@ void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& 
     auto message = boost::format("Checking that path %s is untamperable") % path;
     logMessage(message, common::logType::INFO);
 
-    uid_t uid; gid_t gid;
-    try {
-        std::tie(uid, gid) = common::getOwner(path);
-    }
-    catch(common::Error& e) {
-        auto message = boost::format("Failed to check that path %s is untamperable") % path;
-        SARUS_RETHROW_ERROR(e, message.str());
+    if(path.has_parent_path()) {
+        checkThatPathIsRootOwned(path.parent_path());
+        checkThatPathIsNotGroupWritableOrWorldWritable(path.parent_path());
     }
 
-    // check root ownership
-    if(uid != 0 || gid != 0) {
-        auto message = boost::format(   "Path %s must be owned by root in order to prevent"
-                                        "other users from tampering its contents. Found uid=%d, gid=%d.")
-            % path % uid % gid;
-        SARUS_THROW_ERROR(message.str());
-    }
-
-    // check non-writable
-    auto status = boost::filesystem::status(path);
-    auto isGroupWritable = status.permissions() & (1 << 4);
-    auto isWorldWritable = status.permissions() & (1 << 1);
-    if(isGroupWritable || isWorldWritable) {
-        auto message = boost::format(   "Path %s cannot be group- or world-writable in order"
-                                        " to prevent other users from tampering its contents.")
-            % path;
-        SARUS_THROW_ERROR(message.str());
-    }
+    checkThatPathIsRootOwned(path);
+    checkThatPathIsNotGroupWritableOrWorldWritable(path);
 
     // recursively check that subfolders/subfiles are untamperable (if directory)
     if(boost::filesystem::is_directory(path)) {
@@ -71,6 +51,36 @@ void SecurityChecks::checkThatBinariesInSarusJsonAreUntamperable(const rapidjson
 
     checkThatPathIsUntamperable(json["mksquashfsPath"].GetString());
     checkThatPathIsUntamperable(json["runcPath"].GetString());
+}
+
+void SecurityChecks::checkThatPathIsRootOwned(const boost::filesystem::path& path) const {
+    uid_t uid; gid_t gid;
+    try {
+        std::tie(uid, gid) = common::getOwner(path);
+    }
+    catch(common::Error& e) {
+        auto message = boost::format("Failed to check that path %s is untamperable") % path;
+        SARUS_RETHROW_ERROR(e, message.str());
+    }
+
+    if(uid != 0 || gid != 0) {
+        auto message = boost::format(   "Path %s must be owned by root in order to prevent"
+                                        "other users from tampering its contents. Found uid=%d, gid=%d.")
+            % path % uid % gid;
+        SARUS_THROW_ERROR(message.str());
+    }
+}
+
+void SecurityChecks::checkThatPathIsNotGroupWritableOrWorldWritable(const boost::filesystem::path& path) const {
+    auto status = boost::filesystem::status(path);
+    auto isGroupWritable = status.permissions() & (1 << 4);
+    auto isWorldWritable = status.permissions() & (1 << 1);
+    if(isGroupWritable || isWorldWritable) {
+        auto message = boost::format(   "Path %s cannot be group- or world-writable in order"
+                                        " to prevent other users from tampering its contents.")
+            % path;
+        SARUS_THROW_ERROR(message.str());
+    }
 }
 
 void SecurityChecks::checkThatOCIHooksAreUntamperable() const {

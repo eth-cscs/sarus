@@ -21,18 +21,11 @@ Create a new folder to build Sarus out-of-source:
    mkdir build
    cd build
 
-Create an environment variable to specify the installation directory:
-
-.. code-block:: bash
-
-   export CMAKE_INSTALL_PREFIX=/opt/sarus
-
 Configure and build:
 
 .. code-block:: bash
 
-   cmake -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX .. \
-         -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc.cmake
+   cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc.cmake
    make
 
 .. note::
@@ -40,8 +33,7 @@ Configure and build:
     shared objects, and binaries). However, should CMake not find a dependency,
     its location can be manually specified through the command line. E.g.::
 
-       cmake -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX .. \
-             -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc.cmake \
+       cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc.cmake \
              -DCMAKE_PREFIX_PATH="<boost install dir>;<cpprestsdk install dir>;<libarchive install dir>" \
              -Dcpprestsdk_INCLUDE_DIR=<cpprestsdk include dir> \
              ..
@@ -56,7 +48,7 @@ order to customize your build:
      Disabling this may be convenient when rapidly iterating over test and development installations.
      It is strongly recommended to keep these checks enabled for production deployments [TRUE].
    - ENABLE_SSH: build and install the SSH hook and custom OpenSSH software to enable
-     connections inside containers [FALSE].
+     connections inside containers [TRUE].
    - ENABLE_TESTS_WITH_GCOV: run gcov after each unit test to collect coverage information [FALSE].
    - ENABLE_TESTS_WITH_VALGRIND: run each unit test through valgrind [FALSE].
 
@@ -89,7 +81,9 @@ For the full details about configuration options and the structure of *sarus.jso
 please consult the :doc:`/config/configuration_reference`.
 
 * **OCIBundleDir:** the absolute path to where Sarus will create the OCI
-  bundle for the container. This directory must exist and be root-owned.
+  bundle for the container. This directory must satisfy the :ref:`security
+  requirements <requirements-permissions-security>` for critical files and
+  directories.
   E.g., when using the default value of ``/var/sarus/OCIBundleDir``:
 
   .. code-block:: bash

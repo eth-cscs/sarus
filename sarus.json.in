@@ -49,14 +49,15 @@
                 "env": [
                     "SARUS_MPI_LIBS=",
                     "SARUS_MPI_DEPENDENCY_LIBS=",
-                    "SARUS_MPI_BIND_MOUNTS="
+                    "SARUS_MPI_BIND_MOUNTS=",
+                    "PATH=/usr/sbin"
                 ]
             },
             {
                 "path": "@CMAKE_INSTALL_PREFIX@/bin/ssh_hook",
                 "env": [
                     "SARUS_LOCAL_REPOSITORY_BASE_DIR=/home",
-                    "SARUS_OPENSSH_DIR=/opt/sarus/openssh"
+                    "SARUS_OPENSSH_DIR=@CMAKE_INSTALL_PREFIX@/openssh"
                 ],
                 "args": [
                     "ssh_hook",

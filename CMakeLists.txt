@@ -11,7 +11,7 @@ set(SYSCONFDIR ${CMAKE_INSTALL_PREFIX}/etc CACHE PATH "Configuration files direc
 set(LIBEXECDIR ${CMAKE_INSTALL_PREFIX}/libexec CACHE PATH "libexec directory [$CMAKE_INSTALL_PREFIX/libexec]")
 set(DIR_OF_FILES_TO_COPY_IN_CONTAINER_ETC ${CMAKE_INSTALL_PREFIX}/files_to_copy_in_container_etc CACHE PATH "Directory of configuration files copied into the container [$CMAKE_INSTALL_PREFIX/files_to_copy_in_container_etc]")
 set(ENABLE_RUNTIME_SECURITY_CHECKS TRUE CACHE BOOL "Enable runtime security checks (root ownership of files, etc.) [TRUE]")
-set(ENABLE_SSH FALSE CACHE BOOL "Build a statically-linked ssh to be executed inside the container [FALSE]")
+set(ENABLE_SSH TRUE CACHE BOOL "Build a statically-linked ssh to be executed inside the container [TRUE]")
 
 set(ENABLE_TESTS_WITH_GCOV FALSE CACHE BOOL "Run gcov after each unit test to collect coverage information [FALSE]")
 set(ENABLE_TESTS_WITH_VALGRIND FALSE CACHE BOOL "Run each unit test through valgrind [FALSE]")

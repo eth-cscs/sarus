@@ -53,6 +53,16 @@ TEST(SecurityChecksTestGroup, checkThatPathIsUntamperable) {
         boost::filesystem::remove(path);
     }
 
+    // tamperable parent folder
+    {
+        auto parent = testDirectory / "tamperable-parent-folder";
+        auto path = parent / "file";
+        common::createFoldersIfNecessary(parent, std::get<0>(nonRootIds), std::get<1>(nonRootIds));
+        common::createFileIfNecessary(path, std::get<0>(rootIds), std::get<1>(rootIds));
+        CHECK_THROWS(common::Error, securityChecks.checkThatPathIsUntamperable(path));
+        boost::filesystem::remove_all(parent);
+    }
+
     // writability
     {
         auto path = testDirectory / "group-writable-file";
@@ -86,17 +96,17 @@ TEST(SecurityChecksTestGroup, checkThatPathIsUntamperable) {
         common::createFoldersIfNecessary(subdir1, std::get<0>(rootIds), std::get<1>(rootIds));
 
         // tamperable subdirectory 
-        securityChecks.checkThatPathIsUntamperable(testDirectory);
+        securityChecks.checkThatPathIsUntamperable(subdir0);
         auto tamperableSubdir = subdir1 / "tamperable-dir";
         common::createFoldersIfNecessary(tamperableSubdir, std::get<0>(nonRootIds), std::get<1>(nonRootIds));
-        CHECK_THROWS(common::Error, securityChecks.checkThatPathIsUntamperable(testDirectory));
+        CHECK_THROWS(common::Error, securityChecks.checkThatPathIsUntamperable(subdir0));
         boost::filesystem::remove(tamperableSubdir);
 
         // tamperable file
-        securityChecks.checkThatPathIsUntamperable(testDirectory);
+        securityChecks.checkThatPathIsUntamperable(subdir0);
         auto file = subdir1 / "tamperable-file";
         common::createFileIfNecessary(file, std::get<0>(nonRootIds), std::get<1>(nonRootIds));
-        CHECK_THROWS(common::Error, securityChecks.checkThatPathIsUntamperable(testDirectory));
+        CHECK_THROWS(common::Error, securityChecks.checkThatPathIsUntamperable(subdir0));
 
         boost::filesystem::remove_all(subdir0);
     }
