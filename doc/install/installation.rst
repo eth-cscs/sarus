@@ -25,7 +25,9 @@ Configure and build:
 
 .. code-block:: bash
 
-   cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc.cmake
+   cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc.cmake \
+         -DCMAKE_INSTALL_PREFIX=/opt/sarus \
+         ..
    make
 
 .. note::
@@ -34,6 +36,7 @@ Configure and build:
     its location can be manually specified through the command line. E.g.::
 
        cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc.cmake \
+             -DCMAKE_INSTALL_PREFIX=/opt/sarus \
              -DCMAKE_PREFIX_PATH="<boost install dir>;<cpprestsdk install dir>;<libarchive install dir>" \
              -Dcpprestsdk_INCLUDE_DIR=<cpprestsdk include dir> \
              ..
@@ -41,7 +44,7 @@ Configure and build:
 Below are listed the Sarus-specific options that can be passed to CMake in
 order to customize your build:
 
-   - CMAKE_INSTALL_PREFIX: installation directory of Sarus [/opt/sarus].
+   - CMAKE_INSTALL_PREFIX: installation directory of Sarus [/usr/local].
    - SYSCONFDIR: directory with the configuration files of Sarus [<CMAKE_INSTALL_PREFIX>/etc].
    - DIR_OF_FILES_TO_COPY_IN_CONTAINER_ETC: directory with configuration files that are copied into the container [<CMAKE_INSTALL_PREFIX>/files_to_copy_in_container_etc].
    - ENABLE_RUNTIME_SECURITY_CHECKS: Enable runtime security checks (root ownership of files, etc.).
