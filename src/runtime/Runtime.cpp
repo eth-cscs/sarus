@@ -89,6 +89,15 @@ void Runtime::setupRamFilesystem() const {
         auto message = boost::format("Failed to remount %s with MS_SLAVE") % bundleDir;
         SARUS_THROW_ERROR(message.str());
     }
+
+    // ensure permissions to the bundle directory comply with security checks
+    // the permission change could be embedded in the mount command using a tmpfs-specific mode option,
+    // but an explicit permission change works also for ramfs
+    auto bundleDirPermissions = boost::filesystem::owner_all   |
+                                boost::filesystem::group_read  | boost::filesystem::group_exe |
+                                boost::filesystem::others_read | boost::filesystem::others_exe;
+    boost::filesystem::permissions(bundleDir, bundleDirPermissions);
+
     utility::logMessage("Successfully set up RAM filesystem", common::logType::INFO);
 }
 
