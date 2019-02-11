@@ -15,6 +15,7 @@ change_uid_gid_of_docker_user() {
 install_sarus() {
     local prefixdir=$1; shift
     local build_type=$1; shift
+    local enable_security_checks=$1; shift
     local pwd_backup=$(pwd)
 
     local enable_coverage=FALSE
@@ -27,7 +28,7 @@ install_sarus() {
     mkdir -p build && cd build
     cmake   -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc-gcov.cmake \
             -DCMAKE_BUILD_TYPE=$build_type \
-            -DENABLE_RUNTIME_SECURITY_CHECKS=FALSE \
+            -DENABLE_RUNTIME_SECURITY_CHECKS=$enable_security_checks \
             -DENABLE_TESTS_WITH_GCOV=$enable_coverage \
             -DENABLE_TESTS_WITH_VALGRIND=FALSE \
             -DENABLE_SSH=TRUE \

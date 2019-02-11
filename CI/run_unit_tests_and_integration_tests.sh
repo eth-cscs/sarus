@@ -14,8 +14,8 @@ build_dir=$sarus_src_dir/build
 . utility_functions.bash
 change_uid_gid_of_docker_user $host_uid $host_gid
 
-# install sarus
-sudo -u docker bash -c ". utility_functions.bash && install_sarus $sarus_prefixdir $build_type"
+# install sarus without security checks for executing unit tests
+sudo -u docker bash -c ". utility_functions.bash && install_sarus $sarus_prefixdir $build_type FALSE"
 
 # run tests with an invalid locale (some systems/user accounts have indeed
 # invalid locale settings and Sarus used to fail in such cases)
@@ -30,6 +30,12 @@ CTEST_OUTPUT_ON_FAILURE=1 ctest --tests-regex 'AsRoot'
 if [ "$build_type" = "Debug" ]; then
     gcovr -r $sarus_src_dir/src -k -g --object-directory $build_dir/src
 fi
+
+# re-install sarus with security checks for executing integration tests
+cd $build_dir
+rm -r CMake*
+cd $sarus_src_dir/CI/
+sudo -u docker bash -c ". utility_functions.bash && install_sarus $sarus_prefixdir $build_type TRUE"
 
 # integration tests
 cd $sarus_src_dir/CI/src
