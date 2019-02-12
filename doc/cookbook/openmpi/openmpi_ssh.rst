@@ -87,6 +87,7 @@ tools, OpenMPI 3.1.3, and compile the example code using the MPI compiler.
 Used OCI hooks
 ==============
 * SSH hook
+* SLURM global sync hook
 
 Running the container
 =====================

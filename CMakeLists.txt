@@ -18,6 +18,10 @@ set(ENABLE_TESTS_WITH_VALGRIND FALSE CACHE BOOL "Run each unit test through valg
 
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+message(STATUS "Installation directory: " ${CMAKE_INSTALL_PREFIX})
+message(STATUS "Enable runtime security checks: " ${ENABLE_RUNTIME_SECURITY_CHECKS})
+message(STATUS "Enable SSH support: " ${ENABLE_SSH})
+
 find_package(RapidJSON REQUIRED)
 include_directories(${RapidJSON_INCLUDE_DIR})
 
