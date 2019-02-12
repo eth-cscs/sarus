@@ -32,8 +32,6 @@ if [ "$build_type" = "Debug" ]; then
 fi
 
 # re-install sarus with security checks for executing integration tests
-cd $build_dir
-rm -r CMake*
 cd $sarus_src_dir/CI/
 sudo -u docker bash -c ". utility_functions.bash && install_sarus $sarus_prefixdir $build_type TRUE"
 
