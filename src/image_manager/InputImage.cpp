@@ -52,22 +52,26 @@ void InputImage::expandLayers(  const std::vector<boost::filesystem::path>& laye
         // extract layer tarfile & get whiteouts list
         extractArchiveWithExcludePatterns(archivePath, excludePattern, whiteouts);
 
-        // to make sure everything is writable by user
-        boost::filesystem::recursive_directory_iterator it(expandDir), end;
-        while( it!= end )
-        {
-            // skip symbolic link
-            if ( !boost::filesystem::is_symlink( it->path() ) )
-            {
-                // add writable permis to owner
-                boost::filesystem::permissions(it->path(), 
-                    boost::filesystem::add_perms | boost::filesystem::owner_write);
+        // change permissions for this user (+rw for files, +rwx for directories)
+        for(auto it = boost::filesystem::recursive_directory_iterator{expandDir};
+            it != boost::filesystem::recursive_directory_iterator{};
+            ++it) {
+            if(boost::filesystem::is_symlink(it->path())) {
+                continue; // skip symbolik links
             }
-            ++it;
+
+            boost::filesystem::permissions(it->path(), boost::filesystem::add_perms
+                                                    | boost::filesystem::owner_read
+                                                    | boost::filesystem::owner_write);
+
+            if(boost::filesystem::is_directory(it->path())) {
+                boost::filesystem::permissions(it->path(),  boost::filesystem::add_perms | boost::filesystem::owner_exe);
+            }
         }
+
         log(boost::format("Remove whiteouts."), common::logType::DEBUG);
         
-        // remove whiteous files/dirs
+        // remove whiteouts files/dirs
         for (std::string &wh: whiteouts)
         {
             boost::filesystem::path whSymbol = expandDir / boost::filesystem::path(wh);
@@ -84,31 +88,12 @@ void InputImage::expandLayers(  const std::vector<boost::filesystem::path>& laye
                 }
             }
         }
-        
     }
-        
+
     // change directory to previous working path
     common::changeDirectory(cwd);
 
     log(boost::format("making expanded layers readable by the world"), common::logType::DEBUG);
-
-    // add permision to be readable (& executable for dir)
-    boost::filesystem::recursive_directory_iterator it(expandDir), end;
-    while(it!= end) {
-        // skip symbolic link
-        if(!boost::filesystem::is_symlink( it->path())) {
-            // add readable permission to all
-            boost::filesystem::permissions(it->path(), 
-                boost::filesystem::add_perms | boost::filesystem::owner_read);
-
-            // add executable permission for dirs to all
-            if (!boost::filesystem::is_directory(it->path())) {
-                boost::filesystem::permissions(it->path(), 
-                    boost::filesystem::add_perms | boost::filesystem::owner_exe );
-            }
-        }
-        ++it;
-    }
 
     auto timeEnd = std::chrono::system_clock::now();
     auto timeElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeEnd - timeStart).count() / double(1000);
