@@ -37,6 +37,13 @@ TEST(LoadedImageTestGroup, test) {
     boost::filesystem::remove_all(config->directories.repository);
 }
 
+TEST(LoadedImageTestGroup, image_with_nonexecutable_directory) {
+    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+    auto archive = boost::filesystem::path{__FILE__}.parent_path() / "saved_image_with_non-executable_dir.tar";
+    auto loadedImage = LoadedImage(config, archive);
+    loadedImage.expand();
+}
+
 }}} // namespace
 
 SARUS_UNITTEST_MAIN_FUNCTION();
