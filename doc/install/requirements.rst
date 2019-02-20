@@ -17,6 +17,8 @@ A Linux system with the following kernel modules loaded:
 Software
 ========
 
+.. _requirements-packages:
+
 System packages
 ---------------
 

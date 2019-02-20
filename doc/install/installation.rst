@@ -12,7 +12,7 @@ Change directory to the Sarus's sources:
 
 .. code-block:: bash
 
-   cd <sarus source dir>
+   cd <sarus project root dir>
 
 Create a new folder to build Sarus out-of-source:
 
