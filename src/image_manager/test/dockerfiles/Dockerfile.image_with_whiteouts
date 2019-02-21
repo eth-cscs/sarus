@@ -1,0 +1,4 @@
+from alpine
+
+RUN mkdir -p /dir-with-whiteout && touch /dir-with-whiteout/file
+RUN rm /dir-with-whiteout/file
