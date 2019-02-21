@@ -7,5 +7,4 @@ Developer documentation
 
    class_diagram
    running_tests
-   memory_overhead
    ssh
