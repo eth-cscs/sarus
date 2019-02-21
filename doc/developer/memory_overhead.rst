@@ -96,7 +96,7 @@ create a 10GiB file in one of them and measure again memory usage on the host:
 
 .. code-block:: bash
 
-    # Create 5GB file in one of the containers
+    # Create 10GB file in one of the containers
     $ dd if=/dev/zero of=10G.file bs=64M count=160
      160+0 records in
      160+0 records out

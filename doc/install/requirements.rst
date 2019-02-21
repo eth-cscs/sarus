@@ -126,7 +126,8 @@ Sarus internally relies on an OCI-compliant runtime to spawn a container.
 Here we will provide some indications to install `runc
 <https://github.com/opencontainers/runc>`_, the reference implementation from
 the Open Container Initiative. The recommended version is **commit 6635b4f0c6**,
-providing a fix for a major security vulnerability. Since this is not a tagged
+providing a fix for a `major security vulnerability
+<https://nvd.nist.gov/vuln/detail/CVE-2019-5736>`_. Since this is not a tagged
 version with a pre-built binary release available, it is necessary to build it
 from source.
 

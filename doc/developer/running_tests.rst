@@ -165,12 +165,12 @@ utility:
 Integration tests
 =================
 
-Integration tests use Python 2.7 and the packages indicated in the :ref:`Requirements page <requirements-packages>`.
-Sarus must be correclty installed and configured on the system in order to
-successfully perform integration testing.
-Before running the tests, we need to re-target the centralized repository to
-a location that is writable by the current user (this is not necessary if
-running integration tests as root):
+Integration tests use Python 2.7 and the packages indicated in the
+:ref:`Requirements page <requirements-packages>`. Sarus must be correctly
+installed and configured on the system in order to successfully perform
+integration testing. Before running the tests, we need to re-target the
+centralized repository to a location that is writable by the current user (this
+is not necessary if running integration tests as root):
 
 .. code-block:: bash
 
@@ -180,11 +180,11 @@ running integration tests as root):
 .. note::
 
    Integration tests are not exposed to the risk of failing when runtime security
-   checks are enabled, like unit tests do. To test a configuration more similar
+   checks are enabled, like unit tests are. To test a configuration more similar
    to a production deployment, re-build and install Sarus with runtime security checks
    enabled.
 
-We can run the tests from the parent directory of the related Python scripts::
+We can run the tests from the parent directory of the related Python scripts:
 
 .. code-block:: bash
 
