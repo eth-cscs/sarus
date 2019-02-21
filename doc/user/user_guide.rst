@@ -468,7 +468,7 @@ the entrypoint:
 
 .. code-block:: bash
 
-    $ srun sarus run <image repo>/echo foobar
+    $ srun sarus run <image repo>/echo Foobar
     Foobar
 
 The image entrypoint can be changed by providing a value to the ``--entrypoint``
@@ -497,6 +497,24 @@ is useful, for example, for inspecting and debugging containers:
     PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
     $ exit
+
+
+.. _user-working-dir:
+
+Working directory
+-----------------
+
+Sarus supports image working directories as defined by the OCI Image
+Specification.
+
+If an image specifies a working directory, the container process will start
+there. Otherwise, the process will start in the container's root directory (``/``).
+Using image-defined working directories can be useful, for example, for
+simplifying the command line when launching containers.
+
+When creating images with Docker, the working directory is set using the
+`WORKDIR <https://docs.docker.com/engine/reference/builder/#workdir>`_
+instruction in the Dockerfile.
 
 Verbosity levels and help messages
 ----------------------------------

@@ -6,4 +6,5 @@ Developer documentation
    :maxdepth: 2
 
    class_diagram
+   running_tests
    ssh
