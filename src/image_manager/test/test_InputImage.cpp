@@ -24,7 +24,12 @@ TEST(InputImageTestGroup, image_with_whiteouts) {
     auto loadedImage = LoadedImage(config, archive);
     common::PathRAII expandedImage;
     std::tie(expandedImage, std::ignore, std::ignore) = loadedImage.expand();
+
     CHECK(boost::filesystem::is_empty(expandedImage.getPath() / "dir-with-whiteout"));
+    CHECK(boost::filesystem::is_regular_file(expandedImage.getPath() / "dir-removed-and-recreated-as-file-on-same-layer"));
+    CHECK(boost::filesystem::is_directory(expandedImage.getPath() / "file-removed-and-recreated-as-dir-on-same-layer"));
+    CHECK(boost::filesystem::is_regular_file(expandedImage.getPath() / "dir-with-artificial-whiteout/file"));
+    CHECK(!boost::filesystem::exists(expandedImage.getPath() / "file-in-root-folder"));
 }
 
 }}} // namespace

@@ -30,9 +30,10 @@ protected:
                         const boost::filesystem::path& expandDir) const;
     void extractArchiveWithExcludePatterns( const boost::filesystem::path& archivePath,
                                             const std::vector<std::string> &excludePattern,
-                                            const boost::filesystem::path& expandDir,
-                                            std::vector<boost::filesystem::path> &whiteouts) const;
-    void applyWhiteouts(const std::vector<boost::filesystem::path>& whiteouts) const;
+                                            const boost::filesystem::path& expandDir) const;
+    std::vector<boost::filesystem::path> readWhiteoutsInLayer(const boost::filesystem::path& layerArchive) const;
+    void applyWhiteouts(const std::vector<boost::filesystem::path>& whiteouts,
+                        const boost::filesystem::path& expandDir) const;
     boost::filesystem::path convertWhiteoutToTarget(const boost::filesystem::path&) const;
     void copyDataOfArchiveEntry(const boost::filesystem::path& archivePath,
                                 ::archive* in,
