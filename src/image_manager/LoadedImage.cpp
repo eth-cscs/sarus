@@ -19,10 +19,8 @@ std::tuple<common::PathRAII, common::ImageMetadata, std::string> LoadedImage::ex
     auto tempArchiveDir = common::PathRAII{makeTemporaryExpansionDirectory()};
     auto expansionDir = common::PathRAII{makeTemporaryExpansionDirectory()};
 
-    common::changeDirectory(tempArchiveDir.getPath());
-
     try {
-        extractArchive(imageArchive);
+        extractArchive(imageArchive, tempArchiveDir.getPath());
     }
     catch(common::Error& e) {
         auto message = boost::format("failed to extract archive %s") % imageArchive;

@@ -26,9 +26,6 @@ void InputImage::expandLayers(  const std::vector<boost::filesystem::path>& laye
 
     auto timeStart = std::chrono::system_clock::now();
 
-    auto cwd = boost::filesystem::current_path();
-    common::changeDirectory(expandDir);
-
     std::vector<std::string> excludePattern = {"^dev/", "^/", "../"};
     const std::string sha256OfEmptyTarArchive = "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4";
 
@@ -43,14 +40,11 @@ void InputImage::expandLayers(  const std::vector<boost::filesystem::path>& laye
             SARUS_THROW_ERROR("Missing layer archive: " + archivePath.string());
         }
 
-        // reserve whiteouts capacity
-        std::vector<std::string> whiteouts;
-        whiteouts.reserve(500);
-
         log(boost::format("> %-15.15s: %s") % "extracting" % archivePath, common::logType::GENERAL);
 
         // extract layer tarfile & get whiteouts list
-        extractArchiveWithExcludePatterns(archivePath, excludePattern, whiteouts);
+        std::vector<boost::filesystem::path> whiteouts;
+        extractArchiveWithExcludePatterns(archivePath, excludePattern, expandDir, whiteouts);
 
         // change permissions for this user (+rw for files, +rwx for directories)
         for(auto it = boost::filesystem::recursive_directory_iterator{expandDir};
@@ -68,30 +62,9 @@ void InputImage::expandLayers(  const std::vector<boost::filesystem::path>& laye
                 boost::filesystem::permissions(it->path(),  boost::filesystem::add_perms | boost::filesystem::owner_exe);
             }
         }
-
-        log(boost::format("Remove whiteouts."), common::logType::DEBUG);
         
-        // remove whiteouts files/dirs
-        for (std::string &wh: whiteouts)
-        {
-            boost::filesystem::path whSymbol = expandDir / boost::filesystem::path(wh);
-            boost::filesystem::path whTarget = expandDir / boost::filesystem::path(wh.replace(wh.find_first_of(".wh."), 4, ""));
-
-            if( boost::filesystem::exists(whSymbol)) {
-                if (!boost::filesystem::remove_all(whSymbol) ){
-                    log(boost::format("Failed to remove whiteout: %s") % whSymbol, common::logType::ERROR);
-                }
-            }
-            if( boost::filesystem::exists(whTarget)) {
-                if (!boost::filesystem::remove_all(whTarget) ){
-                    log(boost::format("Failed to remove whiteout: %s") % whTarget, common::logType::ERROR);
-                }
-            }
-        }
+        applyWhiteouts(whiteouts);
     }
-
-    // change directory to previous working path
-    common::changeDirectory(cwd);
 
     log(boost::format("making expanded layers readable by the world"), common::logType::DEBUG);
 
@@ -103,19 +76,24 @@ void InputImage::expandLayers(  const std::vector<boost::filesystem::path>& laye
 }
 
 // Extract the specified archive into the current working directory
-void InputImage::extractArchive(const boost::filesystem::path& archivePath) const {
+void InputImage::extractArchive(const boost::filesystem::path& archivePath,
+                                const boost::filesystem::path& expandDir) const {
     auto excludePatterns = std::vector<std::string>{};
-    auto whiteouts = std::vector<std::string>{}; // dummy/ignored out parameter
-    extractArchiveWithExcludePatterns(archivePath, excludePatterns, whiteouts);
+    auto whiteouts = std::vector<boost::filesystem::path>{}; // dummy/ignored out parameter
+    extractArchiveWithExcludePatterns(archivePath, excludePatterns, expandDir, whiteouts);
 }
 
 // Extract the specified archive into the current working directory, drop
 // the archive's entries that match the specified exclude patterns and return
 // a list of the Docker whiteout symbols found in the archive (out parameter).
 void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::path& archivePath,
-                                                    const std::vector<std::string> &excludePattern, 
-                                                    std::vector<std::string> &whiteouts) const {
+                                                    const std::vector<std::string> &excludePattern,
+                                                    const boost::filesystem::path& expandDir,
+                                                    std::vector<boost::filesystem::path> &whiteouts) const {
     log(boost::format("extracting archive %s") % archivePath, common::logType::DEBUG);
+
+    auto cwd = boost::filesystem::current_path();
+    common::changeDirectory(expandDir);
 
     /* Select which attributes we want to restore */
     int flags = ARCHIVE_EXTRACT_TIME
@@ -141,7 +119,7 @@ void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::pat
     }
     // define pattern to mark the whiteouts
     ::archive* matchToMarkWhiteouts = archive_match_new();
-    if (archive_match_exclude_pattern(matchToMarkWhiteouts, "^.wh.*" ) != ARCHIVE_OK) {
+    if (archive_match_exclude_pattern(matchToMarkWhiteouts, ".wh.*" ) != ARCHIVE_OK) {
         auto message = boost::format("invalid libarchive exclude pattern: ^.wh.*");
         SARUS_THROW_ERROR(message.str());
     }
@@ -187,7 +165,7 @@ void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::pat
         // if entry maches whiteouts pattern, memorize entry
         if ( archive_match_excluded(matchToMarkWhiteouts, entry) ) {
             log(boost::format("archive: entry is whiteout"), common::logType::DEBUG);
-            whiteouts.push_back( archive_entry_pathname(entry) );
+            whiteouts.push_back(expandDir / archive_entry_pathname(entry));
         }
         
         // write entry
@@ -223,7 +201,45 @@ void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::pat
     archive_write_close(ext);
     archive_write_free(ext);
 
+    common::changeDirectory(cwd); // move back to original working dir
+
     log(boost::format("successfully extracted archive %s") % archivePath, common::logType::DEBUG);
+}
+
+void InputImage::applyWhiteouts(const std::vector<boost::filesystem::path>& whiteouts) const {
+    log(boost::format("Applying whiteouts"), common::logType::DEBUG);
+
+    for(const auto& whiteout : whiteouts) {
+        log(boost::format("Applying whiteout %s") % whiteout, common::logType::DEBUG);
+
+        auto target = convertWhiteoutToTarget(whiteout);
+
+        if(!boost::filesystem::remove_all(whiteout) ){
+            log(boost::format("Failed to remove whiteout file: %s") % whiteout, common::logType::WARN);
+        }
+
+        if(!boost::filesystem::exists(target)) {
+            log(boost::format("Whiteout target %s doesn't exist") % target, common::logType::WARN);
+        }
+        else if(!boost::filesystem::remove_all(target)) {
+            log(boost::format("Failed to remove whiteout: %s") % target, common::logType::ERROR);
+        }
+    }
+
+    log(boost::format("Successfully applied whiteouts"), common::logType::DEBUG);
+}
+
+boost::filesystem::path InputImage::convertWhiteoutToTarget(const boost::filesystem::path& whiteout) const {
+    if(strncmp(whiteout.filename().c_str(), ".wh.", 4) != 0) {
+        auto message = boost::format("internal error: attempted to process %s as a whiteout") % whiteout;
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    auto target = whiteout;
+    target.remove_filename();
+    target /= whiteout.filename().c_str() + 4;
+
+    return target;
 }
 
 void InputImage::copyDataOfArchiveEntry(const boost::filesystem::path& archivePath,
