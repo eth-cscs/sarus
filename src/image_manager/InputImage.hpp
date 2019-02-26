@@ -34,7 +34,6 @@ protected:
     std::vector<boost::filesystem::path> readWhiteoutsInLayer(const boost::filesystem::path& layerArchive) const;
     void applyWhiteouts(const std::vector<boost::filesystem::path>& whiteouts,
                         const boost::filesystem::path& expandDir) const;
-    boost::filesystem::path convertWhiteoutToTarget(const boost::filesystem::path&) const;
     void copyDataOfArchiveEntry(const boost::filesystem::path& archivePath,
                                 ::archive* in,
                                 ::archive* out,
