@@ -276,8 +276,7 @@ void InputImage::applyWhiteouts(const std::vector<boost::filesystem::path>& whit
         // regular whiteout:
         // remove the single file or folder that corresponds to the whiteout
         else {
-            auto target = whiteoutFile;
-            target.remove_filename();
+            auto target = whiteoutFile.parent_path();
             target /= whiteoutFile.filename().c_str() + 4; // remove leading ".wh." characters in filename
             log(boost::format("Applying regular whiteout to %s") % target, common::logType::DEBUG);
             if(!boost::filesystem::remove_all(target)) {
