@@ -32,17 +32,17 @@ void SiteMount::performMount() const {
         SARUS_THROW_ERROR(message.str());
     }
 
-    validateMountDestination(destination, *config);
-
     auto rootfsDir = boost::filesystem::path{config->json.get()["OCIBundleDir"].GetString()} /
         config->json.get()["rootfsFolder"].GetString();
     auto destinationReal = common::realpathWithinRootfs(rootfsDir, destination);
 
+    validateMountDestination(destinationReal, *config);
+
     if(boost::filesystem::is_directory(realpathOfSource.get())) {
-        common::createFoldersIfNecessary(rootfsDir / destination, config->userIdentity.uid, config->userIdentity.gid);
+        common::createFoldersIfNecessary(destinationReal, config->userIdentity.uid, config->userIdentity.gid);
     }
     else {
-        common::createFileIfNecessary(rootfsDir / destination, config->userIdentity.uid, config->userIdentity.gid);
+        common::createFileIfNecessary(destinationReal, config->userIdentity.uid, config->userIdentity.gid);
     }
 
     try {
