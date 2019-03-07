@@ -207,7 +207,7 @@ TEST(UtilityTestGroup, convertStringListToVector) {
     CHECK(vec == (std::vector<std::string>{"one", "two", "three"}));
 }
 
-TEST(UtilityTestGroup, realpathRelativeToRootfs) {
+TEST(UtilityTestGroup, realpathWithinRootfs) {
     auto rootfs = common::makeUniquePathWithRandomSuffix("/tmp/sarus-rootfs");
 
     common::createFoldersIfNecessary(rootfs / "dir0/dir1");

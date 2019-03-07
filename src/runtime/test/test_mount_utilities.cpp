@@ -53,17 +53,17 @@ TEST(MountUtilitiesTestGroup, validate_mount_destination_test) {
     auto otherDeviceDir = boost::filesystem::path{"/otherDevice"};
     common::createFoldersIfNecessary(rootfsDir / otherDeviceDir);
     runtime::loopMountSquashfs("test_image.squashfs", rootfsDir / otherDeviceDir);
-    CHECK_THROWS(common::Error, runtime::validateMountDestination(otherDeviceDir, config));
+    CHECK_THROWS(common::Error, runtime::validateMountDestination(rootfsDir / otherDeviceDir, config));
     CHECK(umount((rootfsDir / otherDeviceDir).c_str()) == 0);
 
     // Test non-existing mount point
     auto nonExistingDir = boost::filesystem::path{"/nonExistingMountPoint"};
-    runtime::validateMountDestination(nonExistingDir, config);
+    runtime::validateMountDestination(rootfsDir / nonExistingDir, config);
 
     // Test existing mount point
     auto existingDir = boost::filesystem::path{"/file_in_squashfs_image"};
     common::createFoldersIfNecessary(rootfsDir / existingDir);
-    runtime::validateMountDestination(existingDir, config);
+    runtime::validateMountDestination(rootfsDir / existingDir, config);
 
     // Cleanup
     boost::filesystem::remove_all(bundleDir);

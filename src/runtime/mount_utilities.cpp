@@ -34,18 +34,13 @@ void validateMountDestination(const boost::filesystem::path& destination, const 
         SARUS_THROW_ERROR("Custom mount destination is invalid.");
     }
 
-    /* Prepend the rootfs to the destination path */
-    auto bundleDir = boost::filesystem::path{config.json.get()["OCIBundleDir"].GetString()};
-    auto rootfsDir = bundleDir / config.json.get()["rootfsFolder"].GetString();
-    auto fullDestination = rootfsDir / destination;
-
     /* If the destination does not exist, check its parents */
-    if (!boost::filesystem::exists(fullDestination)) {
+    if (!boost::filesystem::exists(destination)) {
         /* Search the first existing parent folder and check that it is on the device
            where we are authorized to create stuff */
         boost::optional<boost::filesystem::path> deepestExistingFolder;
         auto current = boost::filesystem::path("");
-        for(const auto& component : fullDestination) {
+        for(const auto& component : destination) {
             current /= component;
             if(boost::filesystem::exists(current)) {
                 deepestExistingFolder = current;
@@ -56,22 +51,22 @@ void validateMountDestination(const boost::filesystem::path& destination, const 
         }
 
         if(!deepestExistingFolder) {
-            auto message = boost::format("internal error: failed to find existing parent folder of %s") % fullDestination;
+            auto message = boost::format("internal error: failed to find existing parent folder of %s") % destination;
             SARUS_THROW_ERROR(message.str());
         }
 
         if(!isPathOnBindMountableDevice(*deepestExistingFolder, config)) {
             auto message =
                 boost::format("Custom mount destination is not on an allowed device for custom mounts: %s")
-                % fullDestination;
+                % destination;
             SARUS_THROW_ERROR(message.str());
         }
     }
     /* If destination exists, check it is on an allowed device */
-    else if (!isPathOnBindMountableDevice(fullDestination, config)) {
+    else if (!isPathOnBindMountableDevice(destination, config)) {
         auto message =
             boost::format("Custom mount destination is not on an allowed device for custom mounts: %s")
-            % fullDestination;
+            % destination;
         SARUS_THROW_ERROR(message.str());
     }
 }
