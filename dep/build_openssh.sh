@@ -17,7 +17,7 @@ wget https://github.com/openssl/openssl/archive/OpenSSL_1_0_2o.tar.gz
 tar xf OpenSSL_1_0_2o.tar.gz
 cd openssl-OpenSSL_1_0_2o
 ./config --prefix=$deps_dir -static -no-shared
-make -j && make install
+make && make install
 
 # zlib
 cd $deps_dir/src
