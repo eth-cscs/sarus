@@ -20,7 +20,7 @@ void TimestampHook::activate() {
     if(!isHookEnabled) {
         return;
     }
-//    parseEnvironmentVariables();
+    parseEnvironmentVariables();
     timestamp();
 }
 
@@ -54,21 +54,12 @@ void TimestampHook::timestamp() {
     logger.log(fullMessage.str(), "hook", sarus::common::logType::INFO, logFile);
 }
 
-//void TimestampHook::parseEnvironmentVariables() {
-//    char* p;
-//    if((p = getenv("SARUS_MPI_LIBS")) == nullptr) {
-//        SARUS_THROW_ERROR("Environment doesn't contain variable SARUS_MPI_LIBS");
-//    }
-//    hostMpiLibs = parseListOfPaths(p);
-//
-//    if((p = getenv("SARUS_MPI_DEPENDENCY_LIBS")) != nullptr) {
-//        hostMpiDependencyLibs = parseListOfPaths(p);
-//    }
-//
-//    if((p = getenv("SARUS_MPI_BIND_MOUNTS")) != nullptr) {
-//        bindMounts = parseListOfPaths(p);
-//    }
-//}
+void TimestampHook::parseEnvironmentVariables() {
+    char* p;
+    if((p = getenv("TIMESTAMP_HOOK_MESSAGE")) != nullptr) {
+        message = std::string{p};
+    }
+}
 
 
 }}} // namespace

@@ -72,7 +72,7 @@ TEST(TimestampTestGroup, test_disabled_hook) {
     test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
     // Create and call hook
-    auto hook = TimestampHook{"unit test"};
+    auto hook = TimestampHook{};
     hook.activate();
 
     // cleanup
@@ -86,12 +86,17 @@ TEST(TimestampTestGroup, test_existing_file) {
         logFileStream << "Line 1\nLine 2\n";
     }
 
+    // Prepare bundle and container stdin
     auto logVariable = "TIMESTAMP_HOOK_LOGFILE=" + logFile.string();
     createOCIBundleConfigJSON(bundleDir, logVariable, idsOfUser);
     test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
+    // Set the expected message
+    auto expectedMessage = std::string{"unit test"};
+    sarus::common::setEnvironmentVariable("TIMESTAMP_HOOK_MESSAGE=" + expectedMessage);
+
     // Create and call hook
-    auto hook = TimestampHook{"$unit test"};
+    auto hook = TimestampHook{};
     hook.activate();
 
     // Open logfile and check contents
@@ -105,10 +110,10 @@ TEST(TimestampTestGroup, test_existing_file) {
         CHECK(fileLines.size() == 3);
         CHECK(fileLines[0] == std::string("Line 1"));
         CHECK(fileLines[1] == std::string("Line 2"));
-        auto timestampPreambleEnd = std::find(fileLines[2].cbegin(), fileLines[2].cend(), '$');
+        auto timestampPreambleEnd = std::find(fileLines[2].cbegin(), fileLines[2].cend(), ':');
         CHECK(timestampPreambleEnd != fileLines[2].cend());
-        auto timestampMessage = std::string(timestampPreambleEnd+1, fileLines[2].cend());
-        CHECK(timestampMessage == std::string("unit test"));
+        auto timestampMessage = std::string(timestampPreambleEnd+2, fileLines[2].cend());
+        CHECK(timestampMessage == expectedMessage);
     }
 
     // cleanup
@@ -121,8 +126,12 @@ TEST(TimestampTestGroup, test_non_existing_file) {
     createOCIBundleConfigJSON(bundleDir, logVariable, idsOfUser);
     test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
+    // Set the expected message
+    auto expectedMessage = std::string{"unit test"};
+    sarus::common::setEnvironmentVariable("TIMESTAMP_HOOK_MESSAGE=" + expectedMessage);
+
     // Create and call hook
-    auto hook = TimestampHook{"$unit test"};
+    auto hook = TimestampHook{};
     hook.activate();
 
     // Basic file checks
@@ -138,10 +147,10 @@ TEST(TimestampTestGroup, test_non_existing_file) {
         }
 
         CHECK(fileLines.size() == 1);
-        auto timestampPreambleEnd = std::find(fileLines[0].cbegin(), fileLines[0].cend(), '$');
+        auto timestampPreambleEnd = std::find(fileLines[0].cbegin(), fileLines[0].cend(), ':');
         CHECK(timestampPreambleEnd != fileLines[0].cend());
-        auto timestampMessage = std::string(timestampPreambleEnd+1, fileLines[0].cend());
-        CHECK(timestampMessage == std::string("unit test"));
+        auto timestampMessage = std::string(timestampPreambleEnd+2, fileLines[0].cend());
+        CHECK(timestampMessage == expectedMessage);
     }
 
     // cleanup
