@@ -37,7 +37,7 @@ Configure and build:
 
        cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc.cmake \
              -DCMAKE_INSTALL_PREFIX=/opt/sarus \
-             -DCMAKE_PREFIX_PATH="<boost install dir>;<cpprestsdk install dir>;<libarchive install dir>" \
+             -DCMAKE_PREFIX_PATH="<boost install dir>;<cpprestsdk install dir>;<libarchive install dir>;<rapidjson install dir>" \
              -Dcpprestsdk_INCLUDE_DIR=<cpprestsdk include dir> \
              ..
 
