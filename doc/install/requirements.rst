@@ -154,7 +154,7 @@ You can now proceed to build runc from source:
     $ git checkout 6635b4f0c6
 
     # Build executable
-    $ make
+    $ make BUILDTAGS=""
 
     # This will install the binary to /usr/local/sbin/
     # Alternatively, copy the binary to your preferred location
