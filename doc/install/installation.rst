@@ -41,6 +41,9 @@ Configure and build:
              -Dcpprestsdk_INCLUDE_DIR=<cpprestsdk include dir> \
              ..
 
+.. note::
+    Old versions of CMake might have problems finding Boost 1.65.0. We recommend to use at least CMake 3.10 in order to avoid compatibility issues.
+
 Below are listed the Sarus-specific options that can be passed to CMake in
 order to customize your build:
 
