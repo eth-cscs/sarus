@@ -88,7 +88,6 @@ ABI-compatible MPI implementation present in the image:
        && rm osu-micro-benchmarks-5.3.2.tar.gz
 
    WORKDIR /usr/local/libexec/osu-micro-benchmarks/mpi/pt2pt
-   CMD ["mpiexec", "-n", "2", "-bind-to", "core", "./osu_bw"]
 
 2. MVAPICH 2.2 based on Debian 8.
    This image is available on Docker Hub at ``ethcscs/osu-mb:5.3.2-mvapich2.2``:
@@ -125,9 +124,6 @@ ABI-compatible MPI implementation present in the image:
        && rm -rf mvapich2-2.2.tar.gz mvapich2-2.2
 
    WORKDIR /usr/local/libexec/osu-micro-benchmarks/mpi/pt2pt
-   # we need to disable Cross Memory Attach (CMA), otherwise mpiexec fails
-   ENV MV2_SMP_USE_CMA=0
-   CMD ["mpiexec", "-n", "2", "-bind-to", "core", "./osu_bw"]
 
 3. Intel MPI 2017 Update 1 based on Centos 7. Due to the license of the Intel MPI
    limiting redistribution of the software, the installation files (like
@@ -171,7 +167,6 @@ ABI-compatible MPI implementation present in the image:
        && rm osu-micro-benchmarks-5.3.2.tar.gz
 
    WORKDIR /usr/local/libexec/osu-micro-benchmarks/mpi/pt2pt
-   CMD ["mpiexec", "-n", "2", "-bind-to", "core", "./osu_bw"]
 
 Used OCI hooks
 ==============
