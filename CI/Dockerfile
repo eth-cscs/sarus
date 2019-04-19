@@ -43,7 +43,7 @@ RUN wget -O rapidjson-master.tar.gz https://github.com/Tencent/rapidjson/archive
     && rm -rf rapidjson-master.tar.gz rapidjson-master
 
 # install runc
-RUN wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64 \
+RUN wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc7/runc.amd64 \
     && mv runc.amd64 /sbin/runc.amd64 \
     && chmod 755 /sbin/runc.amd64
 
