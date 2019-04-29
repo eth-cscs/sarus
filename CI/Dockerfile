@@ -45,13 +45,9 @@ RUN wget -O rapidjson-master.tar.gz https://github.com/Tencent/rapidjson/archive
     && rm -rf rapidjson-master.tar.gz rapidjson-master
 
 # install runc
-RUN go get github.com/opencontainers/runc \
-    && cd ${HOME}/go/src/github.com/opencontainers/runc/ \
-    && git checkout v1.0.0-rc7 \
-    && make BUILDTAGS="" \
-    && mv runc /sbin/runc.amd64 \
-    && cd / \
-    && rm -rf ${HOME}/go
+RUN wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64 \
+    && mv runc.amd64 /sbin/runc.amd64 \
+    && chmod 755 /sbin/runc.amd64
 
 RUN pip install setuptools
 RUN pip install nose gcovr pexpect
