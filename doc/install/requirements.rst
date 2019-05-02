@@ -136,7 +136,7 @@ project's GitHub page:
     $ chmod 755 runc.amd64      # set as executable file
 
 Alternatively, you can follow the instructions to `build from source
-<https://github.com/opencontainers/runc#building>`_, which enables more
+<https://github.com/opencontainers/runc#building>`_, which allows more
 fine-grained control over runc's features, including security options.
 
 
