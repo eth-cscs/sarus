@@ -66,6 +66,14 @@ Config::UserIdentity::UserIdentity() {
             SARUS_THROW_ERROR(message.str());
         }
     }
+
+    // According to the getgroups(2) manpage, it is unspecified whether the effective
+    // group ID of the calling process is included in the returned supplementary gid list.
+    // Ensure the effective gid is included for consistency with host identification tools.
+    auto egid = getegid();
+    if (std::find(supplementaryGids.begin(), supplementaryGids.end(), egid) == supplementaryGids.end()) {
+        supplementaryGids.push_back(egid);
+    }
 }
 
 boost::filesystem::path Config::getImageFile() const {

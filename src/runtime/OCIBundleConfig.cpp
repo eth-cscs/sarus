@@ -62,10 +62,19 @@ rj::Value OCIBundleConfig::makeMemberProcess() const {
                         *allocator);
 
     // user
-    auto user = rj::Value{rj::kObjectType};
-    user.AddMember("uid", rj::Value{config->userIdentity.uid}, *allocator);
-    user.AddMember("gid", rj::Value{config->userIdentity.gid}, *allocator);
-    process.AddMember("user", user, *allocator);
+    {
+        auto user = rj::Value{rj::kObjectType};
+        user.AddMember("uid", rj::Value{config->userIdentity.uid}, *allocator);
+        user.AddMember("gid", rj::Value{config->userIdentity.gid}, *allocator);
+
+        auto additionalGids = rj::Value{rj::kArrayType};
+        for(const auto& gid : config->userIdentity.supplementaryGids) {
+            additionalGids.PushBack(rj::Value{gid}, *allocator);
+        }
+        user.AddMember("additionalGids", additionalGids, *allocator);
+
+        process.AddMember("user", user, *allocator);
+    }
 
     // args
     auto args = rj::Value{rj::kArrayType};

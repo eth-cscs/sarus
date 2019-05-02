@@ -12,6 +12,13 @@ change_uid_gid_of_docker_user() {
     sudo usermod -d /home/docker docker
 }
 
+add_supplementary_groups_to_docker_user() {
+    for group in "$@"; do
+        sudo groupadd $group
+        sudo usermod -a -G $group docker
+    done
+}
+
 install_sarus() {
     local prefixdir=$1; shift
     local build_type=$1; shift
