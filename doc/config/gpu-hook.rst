@@ -133,8 +133,8 @@ positional argument. For example:
         ]
     }
 
-Sarus runtime support
------------------------
+Sarus support at runtime
+------------------------
 
 The actions performed by the NVIDIA Container Runtime hook are controlled via a
 set of specific `environment variables

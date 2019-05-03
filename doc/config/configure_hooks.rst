@@ -92,3 +92,4 @@ for specific use cases:
    gpu-hook
    ssh-hook
    slurm-global-sync-hook
+   timestamp-hook

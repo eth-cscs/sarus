@@ -342,7 +342,7 @@ system.
 Environmental Transfer
 ----------------------
 
-All the environment variables defined in the calling processes' environment
+All the environment variables defined in the host process environment
 will be transferred into the container, however, any environment variables
 defined in the container description, e.g., Docker ENV-defined variables,
 will be sourced and override those.

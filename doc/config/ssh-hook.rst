@@ -24,7 +24,7 @@ files and directories.
 Sarus configuration
 ---------------------
 
-The SSH hook must be configured to run as a prestart hook. It expects to
+The SSH hook must be configured to run as a **prestart** hook. It expects to
 receive its own name/location as the first argument, and the string
 ``start-sshd`` as positional argument. In addition, the following
 environment variables must be defined:
@@ -56,8 +56,8 @@ The following is an example ``OCIHooks`` object enabling the SSH hook:
         ]
     }
 
-Sarus runtime support
------------------------
+Sarus support at runtime
+------------------------
 
 The command ``sarus ssh-keygen`` will call the hook without creating a
 container, passing the appropriate arguments to generate dedicated keys to be

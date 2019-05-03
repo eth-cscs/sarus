@@ -23,8 +23,8 @@ Hook installation
 
 The hook is written in C++ and it will be compiled when building Sarus without
 the need of additional dependencies. Sarus's installation scripts will also
-automatically install the hook in the ``$CMAKE_INSTALL_PREFIX/bin`` directory. In short,
-no specific action is required to install the MPI hook.
+automatically install the hook in the ``$CMAKE_INSTALL_PREFIX/bin`` directory.
+In short, no specific action is required to install the MPI hook.
 
 Sarus configuration
 =====================
@@ -78,8 +78,8 @@ The following is an example ``OCIHooks`` object enabling the MPI hook:
         ]
     }
 
-Sarus runtime support
-=======================
+Sarus support at runtime
+========================
 
 The hook alters the container filesystem only if the environment variable
 ``SARUS_MPI_HOOK=1`` is present in the container. This environment variable is
