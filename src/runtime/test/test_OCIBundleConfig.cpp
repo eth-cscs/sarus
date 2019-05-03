@@ -19,6 +19,7 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     config->commandRun.execArgs = common::CLIArguments{"/bin/bash"};
     config->userIdentity.uid = 1000; // UID hardcoded in expected json file
     config->userIdentity.gid = 1000; // GID hardcoded in expected json file
+    config->userIdentity.supplementaryGids = std::vector<gid_t>{2000, 3000, 4000, 1000}; // GIDs hardcoded in expected json file
     config->imageID = common::ImageID{"test", "test", "test", "test_image"};
 
     // create test bundle

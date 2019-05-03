@@ -13,6 +13,7 @@ build_dir=$sarus_src_dir/build
 
 . utility_functions.bash
 change_uid_gid_of_docker_user $host_uid $host_gid
+add_supplementary_groups_to_docker_user "test1" "test2"
 
 # install sarus without security checks for executing unit tests
 sudo -u docker bash -c ". utility_functions.bash && install_sarus $sarus_prefixdir $build_type FALSE"

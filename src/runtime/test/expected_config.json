@@ -4,7 +4,8 @@
 		"terminal": false,
 		"user": {
 			"uid": 1000,
-			"gid": 1000
+			"gid": 1000,
+            "additionalGids": [2000,3000,4000,1000]
 		},
 		"args": ["/bin/bash"],
 		"env": [
