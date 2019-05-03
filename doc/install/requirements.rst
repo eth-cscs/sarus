@@ -125,57 +125,19 @@ Sarus internally relies on an OCI-compliant runtime to spawn a container.
 
 Here we will provide some indications to install `runc
 <https://github.com/opencontainers/runc>`_, the reference implementation from
-the Open Container Initiative. The recommended version is **commit 6635b4f0c6**,
-providing a fix for a `major security vulnerability
-<https://nvd.nist.gov/vuln/detail/CVE-2019-5736>`_. Since this is not a tagged
-version with a pre-built binary release available, it is necessary to build it
-from source.
+the Open Container Initiative. The recommended version is **v1.0.0-rc8**.
 
-To do so, an installation of the `Go programming language
-<https://golang.org/>`_ is needed. System packages are available for major Linux
-distributions, or you can follow the official documentation for `manual
-installation <https://golang.org/doc/install>`_.
-
-For a regular installation, the default Go working directory is ``$HOME/go``.
-Should you prefer a different location, remember to set it as the ``$GOPATH`` in
-your environment.
-
-You can now proceed to build runc from source:
+The simplest solution is to download a pre-built binary release from the
+project's GitHub page:
 
 .. code-block:: bash
 
-    $ cd $HOME/go
+    $ wget -O runc.amd64 https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64
+    $ chmod 755 runc.amd64      # set as executable file
 
-    # Retrieve project from Github
-    $ go get github.com/opencontainers/runc
-
-    # Checkout specific commit
-    $ cd src/github.com/opencontainers/runc/
-    $ git checkout 6635b4f0c6
-
-    # Build executable
-    $ make
-
-    # This will install the binary to /usr/local/sbin/
-    # Alternatively, copy the binary to your preferred location
-    $ sudo make install
-
-For the complete details about the build options (like supported build tags and
-the test suite), please refer to the `official
-instructions <https://github.com/opencontainers/runc#building>`_.
-
-.. Commenting text in the wait for an official tagged release
-..
-.. The simplest solution is to download a pre-built binary release from the
-.. project's GitHub page:
-..
-.. .. code-block:: bash
-..
-..     $ wget -O runc.amd64 https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64
-..     $ chmod 755 runc.amd64      # set as executable file
-..
-.. Alternatively, you can follow the instructions to `build from source
-.. <https://github.com/opencontainers/runc#building>`_.
+Alternatively, you can follow the instructions to `build from source
+<https://github.com/opencontainers/runc#building>`_, which allows more
+fine-grained control over runc's features, including security options.
 
 
 Permissions

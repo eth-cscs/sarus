@@ -1,4 +1,4 @@
-# Sarus - An OCI-compatible container runtime for HPC
+# Sarus - An OCI-compatible container engine for HPC
 
 Sarus is a software to run Linux containers on High Performance Computing
 environments. Its development has been driven by the specific requirements of

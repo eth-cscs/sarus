@@ -11,8 +11,10 @@ RUN apt-get update --fix-missing \
     && apt-get install -y --no-install-recommends \
           kmod sudo rsync curl gdb git vim \
           autoconf automake libtool valgrind xfsprogs \
-          squashfs-tools libcap-dev cmake wget python python-pip python3-venv\
-          zlib1g-dev libboost-all-dev libssl-dev munge slurm-wlm
+          squashfs-tools libcap-dev cmake wget python python-pip python3-venv \
+          zlib1g-dev libboost-all-dev libssl-dev munge slurm-wlm golang \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # install libarchive
 RUN wget -O libarchive-v3.3.1.tar.gz https://github.com/libarchive/libarchive/archive/v3.3.1.tar.gz \
@@ -43,7 +45,7 @@ RUN wget -O rapidjson-master.tar.gz https://github.com/Tencent/rapidjson/archive
     && rm -rf rapidjson-master.tar.gz rapidjson-master
 
 # install runc
-RUN wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64 \
+RUN wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64 \
     && mv runc.amd64 /sbin/runc.amd64 \
     && chmod 755 /sbin/runc.amd64
 
