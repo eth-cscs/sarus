@@ -1,5 +1,7 @@
 # Sarus - An OCI-compatible container engine for HPC
 
+<a target="_blank" href="https://opensource.org/licenses/BSD-3-Clause">![License: BSD][BSD.License]</a>
+
 Sarus is a software to run Linux containers on High Performance Computing
 environments. Its development has been driven by the specific requirements of
 HPC systems, while leveraging open standards and technologies to encourage
