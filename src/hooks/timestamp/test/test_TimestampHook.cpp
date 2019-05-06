@@ -1,11 +1,6 @@
-#include <boost/filesystem.hpp>
-#include <rapidjson/document.h>
-#include <rapidjson/ostreamwrapper.h>
-#include <rapidjson/writer.h>
-
 #include <vector>
 
-#include "common/Utility.hpp"
+#include "hooks/common/Utility.hpp"
 #include "hooks/timestamp/TimestampHook.hpp"
 #include "test_utility/Misc.hpp"
 #include "test_utility/config.hpp"
@@ -27,39 +22,14 @@ TEST_GROUP(TimestampTestGroup) {
 
 void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir, const std::string logVar, const std::tuple<uid_t, gid_t>& idsOfUser) {
     namespace rj = rapidjson;
-    auto doc = rj::Document{rj::kObjectType};
+    auto doc = sarus::hooks::common::test::createBaseConfigJSON(bundleDir / "rootfs", idsOfUser);
     auto& allocator = doc.GetAllocator();
-    doc.AddMember(
-        "process",
-        rj::Document{rj::kObjectType},
-        allocator);
-    doc["process"].AddMember(
-        "user",
-        rj::Document{rj::kObjectType},
-        allocator
-    );
-    doc["process"]["user"].AddMember(
-        "uid",
-        rj::Value{std::get<0>(idsOfUser)},
-        allocator);
-    doc["process"]["user"].AddMember(
-        "gid",
-        rj::Value{std::get<1>(idsOfUser)},
-        allocator);
-    doc["process"].AddMember(
-        "env",
-        rj::Document{rj::kArrayType},
-        allocator);
     if (!logVar.empty()) {
         doc["process"]["env"].PushBack(rj::Value{logVar.c_str(), allocator}, allocator);
     }
 
     try {
-        sarus::common::createFoldersIfNecessary(bundleDir);
-        std::ofstream ofs((bundleDir / "config.json").c_str());
-        rj::OStreamWrapper osw(ofs);
-        rj::Writer<rj::OStreamWrapper> writer(osw);
-        doc.Accept(writer);
+        sarus::common::writeJSON(doc, bundleDir / "config.json");
     }
     catch(const std::exception& e) {
         auto message = boost::format("Failed to write OCI Bundle's JSON configuration");

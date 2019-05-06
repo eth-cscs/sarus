@@ -4,10 +4,12 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <boost/format.hpp>
-#include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 
 #include "common/Error.hpp"
+
+
+namespace rj = rapidjson;
 
 namespace sarus {
 namespace hooks {
@@ -15,9 +17,9 @@ namespace common {
 namespace utility {
 
 std::tuple<boost::filesystem::path, pid_t> parseStateOfContainerFromStdin() {
-    rapidjson::Document state;
+    rj::Document state;
     try {
-        rapidjson::IStreamWrapper sw(std::cin);
+        rj::IStreamWrapper sw(std::cin);
         state.ParseStream(sw);
     }
     catch(const std::exception& e) {
@@ -54,6 +56,49 @@ void enterNamespacesOfProcess(pid_t pid) {
         auto file = boost::format("/proc/%s/ns/pid") % pid;
         enterNamespace(file.str());
     }
+}
+
+} // utility namespace
+
+namespace test {
+
+rj::Document createBaseConfigJSON(const boost::filesystem::path& rootfsDir, const std::tuple<uid_t, gid_t>& idsOfUser) {
+    auto doc = rj::Document{rj::kObjectType};
+    auto& allocator = doc.GetAllocator();
+
+    // root
+    doc.AddMember(
+        "root",
+        rj::Value{rj::kObjectType},
+        allocator);
+    doc["root"].AddMember(
+        "path",
+        rj::Value{rootfsDir.filename().c_str(), allocator},
+        allocator);
+
+    // process
+    doc.AddMember(
+        "process",
+        rj::Document{rj::kObjectType},
+        allocator);
+    doc["process"].AddMember(
+        "user",
+        rj::Document{rj::kObjectType},
+        allocator);
+    doc["process"]["user"].AddMember(
+        "uid",
+        rj::Value{std::get<0>(idsOfUser)},
+        allocator);
+    doc["process"]["user"].AddMember(
+        "gid",
+        rj::Value{std::get<1>(idsOfUser)},
+        allocator);
+    doc["process"].AddMember(
+        "env",
+        rj::Document{rj::kArrayType},
+        allocator);
+
+    return doc;
 }
 
 }}}} // namespace
