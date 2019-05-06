@@ -1,0 +1,5 @@
+At installation time, the CMakeLists.txt in this directory generates
+and installs the files to be copied into the container's /etc
+(e.g. /etc/passwd, /etc/groups, /etc/nsswitch.conf, ...).
+Such files are installed in the directory specified by the
+CMake variable DIR_OF_FILES_TO_COPY_IN_CONTAINER_ETC.
