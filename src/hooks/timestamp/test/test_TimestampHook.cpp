@@ -1,5 +1,8 @@
 #include <vector>
 
+#include <boost/regex.hpp>
+
+#include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
 #include "hooks/timestamp/TimestampHook.hpp"
 #include "test_utility/Misc.hpp"
@@ -69,21 +72,17 @@ TEST(TimestampTestGroup, test_existing_file) {
     auto hook = TimestampHook{};
     hook.activate();
 
-    // Open logfile and check contents
+    // Read logfile and check contents
     {
-        std::vector<std::string> fileLines;
-        std::ifstream logFileStream(logFile.string());
-        for (std::string line; std::getline(logFileStream, line); ) {
-            fileLines.push_back(line);
-        }
+        auto logFileContent = sarus::common::readFile(logFile);
 
-        CHECK(fileLines.size() == 3);
-        CHECK(fileLines[0] == std::string("Line 1"));
-        CHECK(fileLines[1] == std::string("Line 2"));
-        auto timestampPreambleEnd = std::find(fileLines[2].cbegin(), fileLines[2].cend(), ':');
-        CHECK(timestampPreambleEnd != fileLines[2].cend());
-        auto timestampMessage = std::string(timestampPreambleEnd+2, fileLines[2].cend());
-        CHECK(timestampMessage == expectedMessage);
+        auto initialPattern = "Line 1\nLine 2\n";
+        auto timestampPattern = "\\[.*\\..*\\] \\[.*\\] \\[hook\\] \\[INFO\\] Timestamp hook: " + expectedMessage + "\n";
+        auto expectedPattern = initialPattern + timestampPattern;
+
+        auto regex = boost::regex(expectedPattern);
+        boost::cmatch matches;
+        CHECK(boost::regex_match(logFileContent.c_str(), matches, regex));
     }
 
     // cleanup
@@ -108,19 +107,14 @@ TEST(TimestampTestGroup, test_non_existing_file) {
     CHECK(boost::filesystem::exists(logFile));
     CHECK(sarus::common::getOwner(logFile) == idsOfUser);
 
-    // Open logfile and check contents
+    // Read logfile and check contents
     {
-        std::vector<std::string> fileLines;
-        std::ifstream logFileStream(logFile.string());
-        for (std::string line; std::getline(logFileStream, line); ) {
-            fileLines.push_back(line);
-        }
+        auto logFileContent = sarus::common::readFile(logFile);
 
-        CHECK(fileLines.size() == 1);
-        auto timestampPreambleEnd = std::find(fileLines[0].cbegin(), fileLines[0].cend(), ':');
-        CHECK(timestampPreambleEnd != fileLines[0].cend());
-        auto timestampMessage = std::string(timestampPreambleEnd+2, fileLines[0].cend());
-        CHECK(timestampMessage == expectedMessage);
+        auto timestampPattern = "\\[.*\\..*\\] \\[.*\\] \\[hook\\] \\[INFO\\] Timestamp hook: " + expectedMessage + "\n";
+        auto regex = boost::regex(timestampPattern);
+        boost::cmatch matches;
+        CHECK(boost::regex_match(logFileContent.c_str(), matches, regex));
     }
 
     // cleanup
