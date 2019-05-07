@@ -7,6 +7,11 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1) # required for gcov (e.g. will generate example.gcno instead of example.cpp.gcno)
 
+# build statically-linked executables
+SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+SET(BUILD_SHARED_LIBS OFF)
+SET(CMAKE_EXE_LINKER_FLAGS "-static")
+
 set(SYSCONFDIR ${CMAKE_INSTALL_PREFIX}/etc CACHE PATH "Configuration files directory [$CMAKE_INSTALL_PREFIX/etc]")
 set(LIBEXECDIR ${CMAKE_INSTALL_PREFIX}/libexec CACHE PATH "libexec directory [$CMAKE_INSTALL_PREFIX/libexec]")
 set(DIR_OF_FILES_TO_COPY_IN_CONTAINER_ETC ${CMAKE_INSTALL_PREFIX}/files_to_copy_in_container_etc CACHE PATH "Directory of configuration files copied into the container [$CMAKE_INSTALL_PREFIX/files_to_copy_in_container_etc]")
