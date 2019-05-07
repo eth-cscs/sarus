@@ -1,14 +1,10 @@
 #include <sys/types.h>
 #include <sys/mount.h>
 #include <sys/signal.h>
-#include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
-#include <rapidjson/document.h>
-#include <rapidjson/ostreamwrapper.h>
-#include <rapidjson/writer.h>
 
 #include "common/Logger.hpp"
-#include "common/Utility.hpp"
+#include "hooks/common/Utility.hpp"
 #include "runtime/mount_utilities.hpp"
 #include "hooks/ssh/SshHook.hpp"
 #include "test_utility/Misc.hpp"
@@ -144,41 +140,11 @@ public:
 
 private:
     void createOCIBundleConfigJSON() const {
-        auto doc = rj::Document{rj::kObjectType};
+        auto doc = sarus::hooks::common::test::createBaseConfigJSON(rootfsDir, idsOfUser);
         auto& allocator = doc.GetAllocator();
-        doc.AddMember(
-            "root",
-            rj::Value{rj::kObjectType},
-            allocator);
-        doc["root"].AddMember(
-            "path",
-            rj::Value{rootfsDir.filename().c_str(), allocator},
-            allocator);
-        doc.AddMember(
-            "process",
-            rj::Document{rj::kObjectType},
-            allocator);
-        doc["process"].AddMember(
-            "user",
-            rj::Document{rj::kObjectType},
-            allocator
-        );
-        doc["process"]["user"].AddMember(
-            "uid",
-            rj::Value{std::get<0>(idsOfUser)},
-            allocator);
-        doc["process"]["user"].AddMember(
-            "gid",
-            rj::Value{std::get<1>(idsOfUser)},
-            allocator);
-        doc["process"].AddMember(
-            "env",
-            rj::Document{rj::kArrayType},
-            allocator);
         doc["process"]["env"].PushBack(rj::Value{"SARUS_SSH_HOOK=1", allocator}, allocator);
 
         try {
-            sarus::common::createFoldersIfNecessary(bundleDir);
             sarus::common::writeJSON(doc, bundleDir / "config.json");
         }
         catch(const std::exception& e) {

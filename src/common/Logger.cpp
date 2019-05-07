@@ -3,8 +3,9 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <cerrno>
 
-#include <sys/time.h>
+#include <time.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <limits.h>
@@ -71,12 +72,13 @@ namespace common {
             return "";
         }
 
-        auto epoch = timeval{};
-        if(gettimeofday(&epoch, nullptr) != 0) {
-            SARUS_THROW_ERROR("logger failed to retrieve UNIX epoch time");
+        auto tp = timespec{};
+        if(clock_gettime(CLOCK_MONOTONIC, &tp) != 0) {
+            auto message = boost::format("logger failed to retrieve UNIX epoch time (%s)") % strerror(errno);
+            SARUS_THROW_ERROR(message.str());
         }
 
-        auto timestamp = boost::format("[%d.%d] ") % epoch.tv_sec % epoch.tv_usec;
+        auto timestamp = boost::format("[%d.%d] ") % tp.tv_sec % tp.tv_nsec;
         return timestamp.str();
     }
 

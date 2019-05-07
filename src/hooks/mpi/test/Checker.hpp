@@ -7,11 +7,10 @@
 #include <unordered_set>
 #include <unistd.h>
 #include <sys/mount.h>
-#include <rapidjson/ostreamwrapper.h>
-#include <rapidjson/writer.h>
 
-#include "common/Utility.hpp"
+#include "hooks/common/Utility.hpp"
 #include "hooks/mpi/MpiHook.hpp"
+#include "test_utility/Misc.hpp"
 #include "test_utility/config.hpp"
 #include "test_utility/filesystem.hpp"
 #include "test_utility/OCIHooks.hpp"
@@ -113,24 +112,8 @@ private:
     }
 
     void createOCIBundleConfigJSON() const {
-        auto doc = rj::Document{rj::kObjectType};
+        auto doc = sarus::hooks::common::test::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
         auto& allocator = doc.GetAllocator();
-        doc.AddMember(
-            "root",
-            rj::Value{rj::kObjectType},
-            allocator);
-        doc["root"].AddMember(
-            "path",
-            rj::Value{rootfsDir.filename().c_str(), allocator},
-            allocator);
-        doc.AddMember(
-            "process",
-            rj::Document{rj::kObjectType},
-            allocator);
-        doc["process"].AddMember(
-            "env",
-            rj::Document{rj::kArrayType},
-            allocator);
         for(const auto& v : environmentVariables) {
             doc["process"]["env"].PushBack(rj::Value{v.c_str(), allocator}, allocator);
         }
