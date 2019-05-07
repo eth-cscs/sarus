@@ -79,11 +79,9 @@ private:
         gidOfUser = json["process"]["user"]["gid"].GetInt();
 
         // get environment variables
-        for(const auto& v : json["process"]["env"].GetArray()) {
-            if(v.GetString() == std::string{"SARUS_SSH_HOOK=1"}) {
-                isHookEnabled = true;
-                break;
-            }
+        auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
+        if(env["SARUS_SSH_HOOK"] == "1") {
+            isHookEnabled = true;
         }
     }
 

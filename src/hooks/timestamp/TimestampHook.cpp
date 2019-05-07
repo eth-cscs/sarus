@@ -32,14 +32,10 @@ void TimestampHook::parseConfigJSONOfBundle() {
     gidOfUser = json["process"]["user"]["gid"].GetInt();
 
     // get environment variables
-    for(const auto& v : json["process"]["env"].GetArray()) {
-        std::string key, value;
-        std::tie(key, value) = sarus::common::parseEnvironmentVariable(v.GetString());
-        if(key == std::string{"TIMESTAMP_HOOK_LOGFILE"}) {
-            isHookEnabled = true;
-            logFilePath = std::move(value);
-            break;
-        }
+    auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
+    if(env.find("TIMESTAMP_HOOK_LOGFILE") != env.cend()) {
+        logFilePath = env["TIMESTAMP_HOOK_LOGFILE"];
+        isHookEnabled = true;
     }
 }
 

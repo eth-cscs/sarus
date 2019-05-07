@@ -43,11 +43,9 @@ void MpiHook::parseConfigJSONOfBundle() {
     rootfsDir = bundleDir / json["root"]["path"].GetString();
 
     // get environment variables
-    for(const auto& v : json["process"]["env"].GetArray()) {
-        if(v.GetString() == std::string{"SARUS_MPI_HOOK=1"}) {
-            isHookEnabled = true;
-            break;
-        }
+    auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
+    if(env["SARUS_MPI_HOOK"] == "1") {
+        isHookEnabled = true;
     }
 }
 
