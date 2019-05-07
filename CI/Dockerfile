@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 
-LABEL version="1.1"
+LABEL version="1.0.0"
 
 # Install requirements to build sarus
 # Note: run apt-get install in two phases to avoid errors
