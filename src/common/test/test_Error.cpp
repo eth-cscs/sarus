@@ -42,7 +42,7 @@ TEST(ErrorTestGroup, oneStackTraceEntry) {
         functionThatThrows();
     }
     catch(const common::Error& error) {
-        auto expectedFirstEntry = common::Error::ErrorTraceEntry{"first error message", "test_Error.cpp", 12, "functionThatThrows"};
+        auto expectedFirstEntry = common::Error::ErrorTraceEntry{"first error message", "test_Error.cpp", 22, "functionThatThrows"};
 
         CHECK_EQUAL(error.getErrorTrace().size(), 1);
         CHECK(error.getErrorTrace()[0] == expectedFirstEntry);
@@ -54,8 +54,8 @@ TEST(ErrorTestGroup, twoStackTraceEntries) {
         functionThatRethrows();
     }
     catch (const common::Error& error) {
-        auto expectedFirstEntry = common::Error::ErrorTraceEntry{"first error message", "test_Error.cpp", 12, "functionThatThrows"};
-        auto expectedSecondEntry = common::Error::ErrorTraceEntry{"second error message", "test_Error.cpp", 20, "functionThatRethrows"};
+        auto expectedFirstEntry = common::Error::ErrorTraceEntry{"first error message", "test_Error.cpp", 22, "functionThatThrows"};
+        auto expectedSecondEntry = common::Error::ErrorTraceEntry{"second error message", "test_Error.cpp", 30, "functionThatRethrows"};
 
         CHECK_EQUAL(error.getErrorTrace().size(), 2);
         CHECK(error.getErrorTrace()[0] == expectedFirstEntry);
@@ -69,7 +69,7 @@ TEST(ErrorTestGroup, fromStdException) {
     }
     catch(const common::Error& error) {
         auto expectedFirstEntry = common::Error::ErrorTraceEntry{"first error message", "unknown file", -1, "\"unknown function\""};
-        auto expectedSecondEntry = common::Error::ErrorTraceEntry{"second error message", "test_Error.cpp", 27, "functionThatThrowsFromStdException"};
+        auto expectedSecondEntry = common::Error::ErrorTraceEntry{"second error message", "test_Error.cpp", 37, "functionThatThrowsFromStdException"};
 
         CHECK_EQUAL(error.getErrorTrace().size(), 2);
         CHECK(error.getErrorTrace()[0] == expectedFirstEntry);
