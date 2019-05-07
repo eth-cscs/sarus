@@ -140,7 +140,7 @@ public:
 
 private:
     void createOCIBundleConfigJSON() const {
-        auto doc = sarus::hooks::common::test::createBaseConfigJSON(rootfsDir, idsOfUser);
+        auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, idsOfUser);
         auto& allocator = doc.GetAllocator();
         doc["process"]["env"].PushBack(rj::Value{"SARUS_SSH_HOOK=1", allocator}, allocator);
 

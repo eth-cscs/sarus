@@ -112,7 +112,7 @@ private:
     }
 
     void createOCIBundleConfigJSON() const {
-        auto doc = sarus::hooks::common::test::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
+        auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
         auto& allocator = doc.GetAllocator();
         for(const auto& v : environmentVariables) {
             doc["process"]["env"].PushBack(rj::Value{v.c_str(), allocator}, allocator);

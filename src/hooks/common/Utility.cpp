@@ -69,47 +69,4 @@ void enterNamespacesOfProcess(pid_t pid) {
     }
 }
 
-} // utility namespace
-
-namespace test {
-
-rj::Document createBaseConfigJSON(const boost::filesystem::path& rootfsDir, const std::tuple<uid_t, gid_t>& idsOfUser) {
-    auto doc = rj::Document{rj::kObjectType};
-    auto& allocator = doc.GetAllocator();
-
-    // root
-    doc.AddMember(
-        "root",
-        rj::Value{rj::kObjectType},
-        allocator);
-    doc["root"].AddMember(
-        "path",
-        rj::Value{rootfsDir.filename().c_str(), allocator},
-        allocator);
-
-    // process
-    doc.AddMember(
-        "process",
-        rj::Document{rj::kObjectType},
-        allocator);
-    doc["process"].AddMember(
-        "user",
-        rj::Document{rj::kObjectType},
-        allocator);
-    doc["process"]["user"].AddMember(
-        "uid",
-        rj::Value{std::get<0>(idsOfUser)},
-        allocator);
-    doc["process"]["user"].AddMember(
-        "gid",
-        rj::Value{std::get<1>(idsOfUser)},
-        allocator);
-    doc["process"].AddMember(
-        "env",
-        rj::Document{rj::kArrayType},
-        allocator);
-
-    return doc;
-}
-
 }}}} // namespace

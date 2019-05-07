@@ -27,7 +27,7 @@ void createOCIBundleConfigJSON( const boost::filesystem::path& bundleDir,
                                 const std::tuple<uid_t, gid_t>& idsOfUser,
                                 bool withSlurmEnvironmentVariables=true) {
     namespace rj = rapidjson;
-    auto doc = sarus::hooks::common::test::createBaseConfigJSON(rootfsDir, idsOfUser);
+    auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, idsOfUser);
     auto& allocator = doc.GetAllocator();
     
     if(withSlurmEnvironmentVariables) {
