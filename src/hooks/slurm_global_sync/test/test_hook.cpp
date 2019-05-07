@@ -22,13 +22,19 @@ TEST_GROUP(SlurmGlobalSyncTestGroup) {
     boost::filesystem::path syncDir = localRepositoryDir / "slurm_global_sync/slurm-jobid-256";
 };
 
-void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir, const boost::filesystem::path& rootfsDir, const std::tuple<uid_t, gid_t>& idsOfUser) {
+void createOCIBundleConfigJSON( const boost::filesystem::path& bundleDir,
+                                const boost::filesystem::path& rootfsDir,
+                                const std::tuple<uid_t, gid_t>& idsOfUser,
+                                bool withSlurmEnvironmentVariables=true) {
     namespace rj = rapidjson;
     auto doc = sarus::hooks::common::test::createBaseConfigJSON(rootfsDir, idsOfUser);
     auto& allocator = doc.GetAllocator();
-    doc["process"]["env"].PushBack(rj::Value{"SLURM_JOB_ID=256", allocator}, allocator);
-    doc["process"]["env"].PushBack(rj::Value{"SLURM_PROCID=0", allocator}, allocator);
-    doc["process"]["env"].PushBack(rj::Value{"SLURM_NTASKS=2", allocator}, allocator); 
+    
+    if(withSlurmEnvironmentVariables) {
+        doc["process"]["env"].PushBack(rj::Value{"SLURM_JOB_ID=256", allocator}, allocator);
+        doc["process"]["env"].PushBack(rj::Value{"SLURM_PROCID=0", allocator}, allocator);
+        doc["process"]["env"].PushBack(rj::Value{"SLURM_NTASKS=2", allocator}, allocator); 
+    }
 
     try {
         sarus::common::writeJSON(doc, bundleDir / "config.json");
@@ -37,6 +43,18 @@ void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir, const b
         auto message = boost::format("Failed to write OCI Bundle's JSON configuration");
         SARUS_RETHROW_ERROR(e, message.str());
     }
+}
+
+TEST(SlurmGlobalSyncTestGroup, test_hook_disabled) {
+    createOCIBundleConfigJSON(bundleDir, rootfsDir, idsOfUser, false);
+    test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
+
+    auto hook = Hook{};
+    hook.performSynchronization(); // let's simply verify that no errors occur
+
+    // cleanup
+    boost::filesystem::remove_all(bundleDir);
+    boost::filesystem::remove_all(localRepositoryBaseDir);
 }
 
 TEST(SlurmGlobalSyncTestGroup, test_high_level_synchronization) {

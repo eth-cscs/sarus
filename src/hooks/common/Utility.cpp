@@ -7,7 +7,7 @@
 #include <rapidjson/istreamwrapper.h>
 
 #include "common/Error.hpp"
-
+#include "common/Utility.hpp"
 
 namespace rj = rapidjson;
 
@@ -30,6 +30,17 @@ std::tuple<boost::filesystem::path, pid_t> parseStateOfContainerFromStdin() {
     pid_t pidOfContainer = state["pid"].GetInt();
 
     return std::tuple<boost::filesystem::path, pid_t>{bundleDir, pidOfContainer};
+}
+
+std::unordered_map<std::string, std::string> parseEnvironmentVariablesFromOCIBundle(const boost::filesystem::path& bundleDir) {
+    auto env = std::unordered_map<std::string, std::string>{};
+    auto json = sarus::common::readJSON(bundleDir / "config.json");
+    for(const auto& variable : json["process"]["env"].GetArray()) {
+        std::string k, v;
+        std::tie(k, v) = sarus::common::parseEnvironmentVariable(variable.GetString());
+        env[k] = v;
+    }
+    return env;
 }
 
 static void enterNamespace(const boost::filesystem::path& namespaceFile) {

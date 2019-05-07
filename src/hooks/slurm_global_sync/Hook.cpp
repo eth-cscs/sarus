@@ -17,6 +17,9 @@ Hook::Hook() {
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
+    if(!isHookEnabled) {
+        return;
+    }
 
     localRepositoryBaseDir = sarus::common::getEnvironmentVariable("SARUS_LOCAL_REPOSITORY_BASE_DIR");
     localRepositoryDir = sarus::common::getLocalRepositoryDirectory(localRepositoryBaseDir, uidOfUser);
@@ -29,6 +32,10 @@ Hook::Hook() {
 }
 
 void Hook::performSynchronization() const {
+    if(!isHookEnabled) {
+        return;
+    }
+
     signalArrival();
     while(!allInstancesArrived()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -90,21 +97,16 @@ void Hook::parseConfigJSONOfBundle() {
     gidOfUser = json["process"]["user"]["gid"].GetInt();
 
     // get environment variables
-    slurmJobID = getEnvironmentVariableInOCIBundleConfig(json, "SLURM_JOB_ID");
-    slurmNTasks = getEnvironmentVariableInOCIBundleConfig(json, "SLURM_NTASKS");
-    slurmProcID = getEnvironmentVariableInOCIBundleConfig(json, "SLURM_PROCID");
-}
-
-std::string Hook::getEnvironmentVariableInOCIBundleConfig(const rapidjson::Document& json, const std::string& key) const {
-    for(const auto& variable : json["process"]["env"].GetArray()) {
-        std::string k, v;
-        std::tie(k, v) = sarus::common::parseEnvironmentVariable(variable.GetString());
-        if(k == key) {
-            return v;
-        }
+    auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
+    if(env.find("SLURM_JOB_ID") == env.cend()
+        || env.find("SLURM_NTASKS") == env.cend()
+        || env.find("SLURM_PROCID") == env.cend()) {
+        isHookEnabled = false;
+        return;
     }
-    auto message = boost::format("environment of OCI bundle's config.json doens't contain variable with key %s") % key;
-    SARUS_THROW_ERROR(message.str());
+    slurmJobID = env["SLURM_JOB_ID"];
+    slurmNTasks = env["SLURM_NTASKS"];
+    slurmProcID = env["SLURM_PROCID"];
 }
 
 }}} // namesapce

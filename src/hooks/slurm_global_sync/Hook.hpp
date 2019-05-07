@@ -31,6 +31,7 @@ private:
     size_t countFilesInDirectory(const boost::filesystem::path& directory) const;
 
 private:
+    bool isHookEnabled{ true };
     boost::filesystem::path bundleDir;
     boost::filesystem::path localRepositoryBaseDir;
     boost::filesystem::path localRepositoryDir;
