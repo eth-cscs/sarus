@@ -25,12 +25,12 @@ TEST_GROUP(SlurmGlobalSyncTestGroup) {
 void createOCIBundleConfigJSON( const boost::filesystem::path& bundleDir,
                                 const boost::filesystem::path& rootfsDir,
                                 const std::tuple<uid_t, gid_t>& idsOfUser,
-                                bool withSlurmEnvironmentVariables=true) {
+                                bool generateSlurmEnvironmentVariables=true) {
     namespace rj = rapidjson;
     auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, idsOfUser);
     auto& allocator = doc.GetAllocator();
     
-    if(withSlurmEnvironmentVariables) {
+    if(generateSlurmEnvironmentVariables) {
         doc["process"]["env"].PushBack(rj::Value{"SLURM_JOB_ID=256", allocator}, allocator);
         doc["process"]["env"].PushBack(rj::Value{"SLURM_PROCID=0", allocator}, allocator);
         doc["process"]["env"].PushBack(rj::Value{"SLURM_NTASKS=2", allocator}, allocator); 
@@ -46,7 +46,8 @@ void createOCIBundleConfigJSON( const boost::filesystem::path& bundleDir,
 }
 
 TEST(SlurmGlobalSyncTestGroup, test_hook_disabled) {
-    createOCIBundleConfigJSON(bundleDir, rootfsDir, idsOfUser, false);
+    bool generateSlurmEnvironmentVariables = false;
+    createOCIBundleConfigJSON(bundleDir, rootfsDir, idsOfUser, generateSlurmEnvironmentVariables);
     test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
     auto hook = Hook{};
