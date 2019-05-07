@@ -17,7 +17,7 @@
 #include <rapidjson/istreamwrapper.h>
 
 #include "common/Error.hpp"
-
+#include "common/Utility.hpp"
 
 namespace rj = rapidjson;
 
@@ -40,6 +40,17 @@ std::tuple<boost::filesystem::path, pid_t> parseStateOfContainerFromStdin() {
     pid_t pidOfContainer = state["pid"].GetInt();
 
     return std::tuple<boost::filesystem::path, pid_t>{bundleDir, pidOfContainer};
+}
+
+std::unordered_map<std::string, std::string> parseEnvironmentVariablesFromOCIBundle(const boost::filesystem::path& bundleDir) {
+    auto env = std::unordered_map<std::string, std::string>{};
+    auto json = sarus::common::readJSON(bundleDir / "config.json");
+    for(const auto& variable : json["process"]["env"].GetArray()) {
+        std::string k, v;
+        std::tie(k, v) = sarus::common::parseEnvironmentVariable(variable.GetString());
+        env[k] = v;
+    }
+    return env;
 }
 
 static void enterNamespace(const boost::filesystem::path& namespaceFile) {
@@ -66,49 +77,6 @@ void enterNamespacesOfProcess(pid_t pid) {
         auto file = boost::format("/proc/%s/ns/pid") % pid;
         enterNamespace(file.str());
     }
-}
-
-} // utility namespace
-
-namespace test {
-
-rj::Document createBaseConfigJSON(const boost::filesystem::path& rootfsDir, const std::tuple<uid_t, gid_t>& idsOfUser) {
-    auto doc = rj::Document{rj::kObjectType};
-    auto& allocator = doc.GetAllocator();
-
-    // root
-    doc.AddMember(
-        "root",
-        rj::Value{rj::kObjectType},
-        allocator);
-    doc["root"].AddMember(
-        "path",
-        rj::Value{rootfsDir.filename().c_str(), allocator},
-        allocator);
-
-    // process
-    doc.AddMember(
-        "process",
-        rj::Document{rj::kObjectType},
-        allocator);
-    doc["process"].AddMember(
-        "user",
-        rj::Document{rj::kObjectType},
-        allocator);
-    doc["process"]["user"].AddMember(
-        "uid",
-        rj::Value{std::get<0>(idsOfUser)},
-        allocator);
-    doc["process"]["user"].AddMember(
-        "gid",
-        rj::Value{std::get<1>(idsOfUser)},
-        allocator);
-    doc["process"].AddMember(
-        "env",
-        rj::Document{rj::kArrayType},
-        allocator);
-
-    return doc;
 }
 
 }}}} // namespace

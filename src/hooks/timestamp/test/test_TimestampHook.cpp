@@ -35,7 +35,7 @@ TEST_GROUP(TimestampTestGroup) {
 
 void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir, const std::string logVar, const std::tuple<uid_t, gid_t>& idsOfUser) {
     namespace rj = rapidjson;
-    auto doc = sarus::hooks::common::test::createBaseConfigJSON(bundleDir / "rootfs", idsOfUser);
+    auto doc = test_utility::ocihooks::createBaseConfigJSON(bundleDir / "rootfs", idsOfUser);
     auto& allocator = doc.GetAllocator();
     if (!logVar.empty()) {
         doc["process"]["env"].PushBack(rj::Value{logVar.c_str(), allocator}, allocator);
