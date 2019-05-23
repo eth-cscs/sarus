@@ -35,6 +35,7 @@ private:
     void copyEtcFilesIntoRootfs() const;
     void performCustomMounts() const;
     void remountRootfsWithNoSuid() const;
+    int  countExtraFileDescriptors() const;
 
 private:
     std::shared_ptr<const common::Config> config;

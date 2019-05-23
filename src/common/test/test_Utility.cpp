@@ -113,6 +113,36 @@ TEST(UtilityTestGroup, copyFolder) {
     boost::filesystem::remove_all("/tmp/src-folder");
 }
 
+TEST(UtilityTestGroup, countFilesInDirectory) {
+    // nominal usage
+    {
+        auto testDir = std::string("/tmp/file-count-test");
+        common::createFoldersIfNecessary(testDir);
+        common::createFileIfNecessary(testDir + "file1");
+        common::createFileIfNecessary(testDir + "file2");
+        common::createFileIfNecessary(testDir + "file3");
+        common::createFileIfNecessary(testDir + "file4");
+        CHECK_EQUAL(common::countFilesInDirectory(testDir), 4);
+
+        boost::filesystem::remove(testDir + "file1");
+        boost::filesystem::remove(testDir + "file4");
+        CHECK_EQUAL(common::countFilesInDirectory(testDir), 2);
+
+        boost::filesystem::remove_all(testDir);
+    }
+    // non-existing directory
+    {
+        CHECK_THROWS(common::Error, common::countFilesInDirectory("/tmp/" + common::generateRandomString(16)));
+    }
+    // non-directory argument
+    {
+        auto testFile = "/tmp/file-count-test.txt";
+        common::createFileIfNecessary(testFile);
+        CHECK_THROWS(common::Error, common::countFilesInDirectory(testFile));
+        boost::filesystem::remove(testFile);
+    }
+}
+
 TEST(UtilityTestGroup, convertListOfKeyValuePairsToMap) {
     // empty list
     {

@@ -60,9 +60,11 @@ void Runtime::executeContainer() const {
     // chdir to bundle
     common::changeDirectory(bundleDir);
 
+    auto extraFileDescriptors = std::to_string(countExtraFileDescriptors());
+
     // execute runc
     auto runcPath = config->json.get()["runcPath"].GetString();
-    auto args = common::CLIArguments{runcPath, "run", "--no-pivot", containerID};
+    auto args = common::CLIArguments{runcPath, "run", "--no-pivot", "--preserve-fds", extraFileDescriptors, containerID};
     common::forkExecWait(args);
 
     utility::logMessage("Successfully executed " + containerID, common::logType::INFO);
@@ -190,6 +192,26 @@ void Runtime::remountRootfsWithNoSuid() const {
         SARUS_THROW_ERROR(message.str());
     }
     utility::logMessage("Successfully remounted rootfs with MS_NOSUID", common::logType::INFO);
+}
+
+int Runtime::countExtraFileDescriptors() const {
+    auto processFD = boost::format("/proc/%d/fd") % getpid();
+    auto processFDPath = boost::filesystem::path(processFD.str());
+
+    // The stdio and $LISTEN_FDS are taken care of by runc, so we consider as "extra" the remaining ones
+    auto totalFDs = common::countFilesInDirectory(processFDPath);
+    const int stdioFDs = 3;
+    auto listenFDs = 0;
+    auto& hostEnv = config->commandRun.hostEnvironment;
+    if (hostEnv.count("LISTEN_FDS") > 0) {
+        listenFDs = std::stoi(hostEnv.at("LISTEN_FDS"));
+    }
+    auto extraFDs = totalFDs - stdioFDs - listenFDs;
+    if (extraFDs < 0){
+        extraFDs = 0;
+    }
+
+    return extraFDs;
 }
 
 } // namespace

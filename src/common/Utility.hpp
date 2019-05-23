@@ -59,6 +59,7 @@ void createFileIfNecessary(const boost::filesystem::path&, uid_t uid=-1, gid_t g
 void copyFile(const boost::filesystem::path& src, const boost::filesystem::path& dst, uid_t uid=-1, gid_t gid=-1);
 void copyFolder(const boost::filesystem::path& src, const boost::filesystem::path& dst, uid_t uid=-1, gid_t gid=-1);
 void changeDirectory(const boost::filesystem::path& path);
+int countFilesInDirectory(const boost::filesystem::path& path);
 boost::filesystem::path realpathWithinRootfs(const boost::filesystem::path& rootfs, const boost::filesystem::path& path);
 std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(const std::string& kvList,
         const char pairSeparator = ',', const char kvSeparator = '=');
