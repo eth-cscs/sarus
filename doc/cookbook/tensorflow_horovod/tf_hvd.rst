@@ -142,8 +142,8 @@ option it is possible to run the benchmarks with the other models as well.
 
 Results
 =======
-We measure the performance in images/sec as reported by the application logs and
-compute speedup values using the performance averages for each data point. 
+We measure the performance in images/sec as reported by the application logs by
+taking the mean value based on 5 different runs for each model and node number.
 The results are showcased in the following Figure:
 
 .. _fig-horovod-results:
