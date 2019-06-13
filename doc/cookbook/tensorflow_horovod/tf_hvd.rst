@@ -42,8 +42,11 @@ We start from the reference Dockerfile provided by Horovod for version 0.16.1
 and modify it to use Python 3.5, TensorFlow 1.13.1, CUDA 10.0, cuDNN 7.5.0. and
 NCCL 2.4.2. These specific versions of CUDA and cuDNN are required because they 
 are the ones against which the version of TensorFlow available through ``pip`` 
-has been built. We also replace OpenMPI with MPICH 3.1.4. Finally, we instruct 
-Horovod to use NVIDIA's NCCL library for every MPI operation.
+has been built. We also replace OpenMPI with MPICH 3.1.4. and remove the 
+installation of OpenSSH, as the containers will be able to communicate thanks to
+Slurm and the native MPI hook Finally, we instruct Horovod to use NVIDIA's NCCL 
+library for every MPI operation by adding the appropriate environment variables 
+to the **/etc/nccl.conf** configuration file.
 
 .. code-block:: docker
 
@@ -100,15 +103,6 @@ Horovod to use NVIDIA's NCCL library for every MPI operation.
         HOROVOD_GPU_ALLREDUCE=NCCL HOROVOD_WITH_TENSORFLOW=1 pip install --no-cache-dir horovod==${HOROVOD_VERSION} && \
     l   dconfig
 
-    # Install OpenSSH for MPI to communicate between containers
-    RUN apt-get install -y --no-install-recommends openssh-client openssh-server && \
-        mkdir -p /var/run/sshd
-
-    # Allow OpenSSH to talk to containers without asking for confirmation
-    RUN cat /etc/ssh/ssh_config | grep -v StrictHostKeyChecking > /etc/ssh/ssh_config.new && \
-        echo "    StrictHostKeyChecking no" >> /etc/ssh/ssh_config.new && \
-        mv /etc/ssh/ssh_config.new /etc/ssh/ssh_config
-
     # NCCL configuration
     RUN echo NCCL_DEBUG=INFO >> /etc/nccl.conf && \
         echo NCCL_IB_HCA=ipogif0 >> /etc/nccl.conf && \
@@ -127,8 +121,8 @@ arbitrary variable ``$INPUT``), we can run the container application as follows:
 
 .. code-block:: bash
 
-   srun -C gpu -N4 -t5 sarus run --mpi \
-       ethcscs/horovod:0.15.1-tf1.7.0-cuda9.0-mpich3.1.4-no-nccl \
+   srun -C gpu -N4 sarus run --mpi \
+       ethcscs/horovod:0.16.1-tf1.13.1-cuda10.0-mpich3.1.4-nccl \
        python ${INPUT}/tensorflow-benchmarks/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py \
        --model resnet50 --batch_size 64 --variable_update horovod
 
@@ -139,9 +133,12 @@ location during container setup, we can use the ``--mount`` option:
 
    srun -C gpu -N4 -t5 sarus run --mpi \
        --mount=type=bind,src=<path-to-parent-directory>/tensorflow-benchmarks/scripts/,dst=/tf-scripts \
-       ethcscs/horovod:0.15.1-tf1.7.0-cuda9.0-mpich3.1.4-no-nccl \
+       ethcscs/horovod:0.16.1-tf1.13.1-cuda10.0-mpich3.1.4-nccl \
        python /tf-scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py \
        --model resnet50 --batch_size 64 --variable_update horovod
+
+The above commands are using the ``resnet50`` model. Using the ``--model`` 
+option it is possible to run the benchmarks with the other models as well.
 
 Results
 =======
@@ -159,8 +156,7 @@ The results are showcased in the following Figure:
    container versions of TensorFlow with Horovod on Piz Daint.
 
 
-We observe the container application closely matching the native installation
-when running on up to 16 nodes, with performance differences and normalized
-standard deviations less than 0.5%. From 32 nodes upwards, the container
-application shows a small performance advantage, up to 5% at 128 nodes,
-with both implementations maintaining close standard deviation values.
+We observe that performance of the container-based horovod-tensorflow is
+identical to the native one. An slight increased performance of the
+containized solution is observed only for the alexnet model as the number of
+nodes increases.
