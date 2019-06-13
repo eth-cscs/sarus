@@ -30,21 +30,20 @@ performed runs from a minimum of 1 nodes up to 12 nodes.
 
 Native application
 ==================
-For the native implementation, we use TensorFlow 1.12.0, built using Cray Python
-3.6, the Python extensions provided by the Cray Programming Environment 19.03,
-CUDA 10.0 and cuDNN 7.1.4. These installations are performed by CSCS staff and
-are available on Piz Daint through environment modules.
+For the native implementation, we use Horovod 0.16.0 with TensorFlow 1.12.0, 
+built using Cray Python 3.6, the Python extensions provided by the Cray 
+Programming Environment 19.03, CUDA 10.0, cuDNN 7.5.6 and NCCL 2.4.2. These 
+installations are performed by CSCS staff and are available on Piz Daint through
+environment modules.
 
 Container image and Dockerfile
 ==============================
 We start from the reference Dockerfile provided by Horovod for version 0.16.1
-and modify it to use Python 3.5, TensorFlow 1.13.1, CUDA 10.0, cuDNN 7.5.0. These
-specific versions of CUDA and cuDNN are required because they are the ones
-against which the version of TensorFlow available through ``pip`` has been
-built. We also replace OpenMPI with MPICH 3.1.4 and remove the installation of
-OpenSSH, as the containers will be able to communicate between them thanks to
-Slurm and the native MPI hook. Finally, we instruct Horovod to use NVIDIA's
-NCCL library for every MPI operation.
+and modify it to use Python 3.5, TensorFlow 1.13.1, CUDA 10.0, cuDNN 7.5.0. and
+NCCL 2.4.2. These specific versions of CUDA and cuDNN are required because they 
+are the ones against which the version of TensorFlow available through ``pip`` 
+has been built. We also replace OpenMPI with MPICH 3.1.4. Finally, we instruct 
+Horovod to use NVIDIA's NCCL library for every MPI operation.
 
 .. code-block:: docker
 
@@ -147,9 +146,8 @@ location during container setup, we can use the ``--mount`` option:
 Results
 =======
 We measure the performance in images/sec as reported by the application logs and
-compute speedup values using the performance averages for each data point,
-taking the native performance at 2 nodes as baseline. The results are showcased
-in the following Figure:
+compute speedup values using the performance averages for each data point. 
+The results are showcased in the following Figure:
 
 .. _fig-horovod-results:
 
