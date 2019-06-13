@@ -106,7 +106,7 @@ to the **/etc/nccl.conf** configuration file.
     # NCCL configuration
     RUN echo NCCL_DEBUG=INFO >> /etc/nccl.conf && \
         echo NCCL_IB_HCA=ipogif0 >> /etc/nccl.conf && \
-        echo NCCL_IB_CUDA_SUPPORT=1
+        echo NCCL_IB_CUDA_SUPPORT=1 >> /etc/nccl.conf
 
 Used OCI hooks
 ==============
