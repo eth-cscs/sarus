@@ -116,9 +116,9 @@ private:
         createLibraries();
         sarus::common::executeCommand("ldconfig -r" + rootfsDir.string()); // run ldconfig in rootfs
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
-        sarus::common::setEnvironmentVariable("SARUS_MPI_LIBS=" + joinPaths(hostMpiLibs));
-        sarus::common::setEnvironmentVariable("SARUS_MPI_DEPENDENCY_LIBS=" + joinPaths(hostMpiDependencyLibs));
-        sarus::common::setEnvironmentVariable("SARUS_MPI_BIND_MOUNTS=" + joinPaths(bindMounts));
+        sarus::common::setEnvironmentVariable("SARUS_MPI_LIBS=" + sarus::common::makeColonSeparatedListOfPaths(hostMpiLibs));
+        sarus::common::setEnvironmentVariable("SARUS_MPI_DEPENDENCY_LIBS=" + sarus::common::makeColonSeparatedListOfPaths(hostMpiDependencyLibs));
+        sarus::common::setEnvironmentVariable("SARUS_MPI_BIND_MOUNTS=" + sarus::common::makeColonSeparatedListOfPaths(bindMounts));
     }
 
     void createOCIBundleConfigJSON() const {
@@ -152,21 +152,6 @@ private:
         }
     }
 
-    std::string joinPaths(const std::vector<boost::filesystem::path>& paths) const {
-        auto s = std::string{};
-        bool isFirstPath = true;
-        for(const auto& path : paths) {
-            if(isFirstPath) {
-                isFirstPath = false;
-            }
-            else {
-                s += ":";
-            }
-            s += path.string();
-        }
-        return s;
-    }
-
     void checkLibrariesAreInRootfs() const {
         for(const auto& lib : containerMpiLibs) {
             CHECK(test_utility::filesystem::areFilesEqual(dummyHostLib, lib));
@@ -177,7 +162,7 @@ private:
     }
 
     void checkConfigurationOfDynamicLinkerInContainer() const {
-        auto containerLibs = getContainerLibrariesFromDynamicLinker();
+        auto containerLibs = sarus::common::getLibrariesFromDynamicLinker("ldconfig", rootfsDir);
 
         auto expectedLibsInContainer = containerMpiLibs;
         expectedLibsInContainer.insert( expectedLibsInContainer.end(),
@@ -185,23 +170,12 @@ private:
                                         containerMpiDependencyLibs.cend());
 
         for(const auto& expectedLib : expectedLibsInContainer) {
-            auto it = containerLibs.find(expectedLib.string());
+            auto hasFilenameOfExpectedLib = [&expectedLib](const boost::filesystem::path& lib) {
+                return lib.filename() == expectedLib.filename();
+            };
+            auto it = std::find_if(containerLibs.cbegin(), containerLibs.cend(), hasFilenameOfExpectedLib);
             CHECK(it != containerLibs.cend());
         }
-    }
-
-    std::unordered_set<std::string> getContainerLibrariesFromDynamicLinker() const {
-        auto libs = std::unordered_set<std::string>{};
-        auto output = sarus::common::executeCommand("ldconfig -r" + rootfsDir.string() + " -p");
-        std::stringstream stream{output};
-        std::string line;
-        std::getline(stream, line); // drop first line of output (header)
-        while(std::getline(stream, line)) {
-            auto pos = line.rfind(" => ");
-            auto lib = (rootfsDir / line.substr(pos + 4)).string();
-            libs.insert(std::move(lib));
-        }
-        return libs;
     }
 
     void checkBindMounts() const {
@@ -245,8 +219,18 @@ private:
 
 private:
     sarus::common::Config config = test_utility::config::makeConfig();
-    boost::filesystem::path dummyHostLib = boost::filesystem::path{__FILE__}.parent_path() / "lib_dummy_host.so";
-    boost::filesystem::path dummyContainerLib = boost::filesystem::path{__FILE__}.parent_path() / "lib_dummy_container.so";
+    boost::filesystem::path dummyHostLib = boost::filesystem::path{__FILE__}
+        .parent_path()
+        .parent_path()
+        .parent_path()
+        .parent_path()
+        .parent_path() / "CI/dummy_libs/lib_dummy_0.so";
+    boost::filesystem::path dummyContainerLib = boost::filesystem::path{__FILE__}
+        .parent_path()
+        .parent_path()
+        .parent_path()
+        .parent_path()
+        .parent_path() / "CI/dummy_libs/lib_dummy_1.so";
     boost::filesystem::path bundleDir = boost::filesystem::path{ config.json.get()["OCIBundleDir"].GetString() };
     boost::filesystem::path rootfsDir = bundleDir / config.json.get()["rootfsFolder"].GetString();
     boost::filesystem::path defaultLinkerDir;

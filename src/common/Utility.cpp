@@ -30,6 +30,7 @@
 #include <pwd.h>
 #include <limits.h>
 
+#include <boost/regex.hpp>
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/filereadstream.h>
@@ -550,28 +551,100 @@ std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(
     return map;
 }
 
-/**
- * Converts a string representing a list of entries to a vector of strings.
- *
- * If no separator is passed as argument, the entries are assumed to be separated by semicolons.
- */
-std::vector<std::string> convertStringListToVector(const std::string& input_string, const char separator) {
-    auto vec = std::vector<std::string>{};
-    
-    auto is_not_separator = [separator](char c) {
-        return c != separator;
-    };
-    
-    auto entryBegin = std::find_if(input_string.cbegin(), input_string.cend(), is_not_separator);
-    while(entryBegin != input_string.cend()) {
-        auto entryEnd = std::find(entryBegin, input_string.cend(), separator);
-        vec.emplace_back(entryBegin, entryEnd);
+std::string makeColonSeparatedListOfPaths(const std::vector<boost::filesystem::path>& paths) {
+    auto s = std::string{};
+    bool isFirstPath = true;
+    for(const auto& path : paths) {
+        if(isFirstPath) {
+            isFirstPath = false;
+        }
+        else {
+            s += ":";
+        }
+        s += path.string();
+    }
+    return s;
+}
 
-        entryBegin = entryEnd;
-        entryBegin = std::find_if(entryBegin, input_string.cend(), is_not_separator);
+std::vector<boost::filesystem::path> getLibrariesFromDynamicLinker(
+    const boost::filesystem::path& ldconfigPath,
+    const boost::filesystem::path& rootDir) {
+
+    auto libraries = std::vector<boost::filesystem::path>{};
+    auto command = boost::format("%s -r %s -p") % ldconfigPath.string() % rootDir.string();
+    auto output = sarus::common::executeCommand(command.str());
+    std::stringstream stream{output};
+    std::string line;
+    std::getline(stream, line); // drop first line of output (header)
+    while(std::getline(stream, line)) {
+        auto pos = line.rfind(" => ");
+        auto library = line.substr(pos + 4);
+        libraries.push_back(library);
     }
 
-    return vec;
+    return libraries;
+}
+
+bool isLibc(const boost::filesystem::path& lib) {
+    boost::cmatch matches;
+    boost::regex re("^(.*/)*libc(-\\d+\\.\\d+)?\\.so(.\\d+)?$");
+    if (boost::regex_match(lib.c_str(), matches, re)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+std::string getLibrarySoname(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath) {
+    auto command = boost::format("%s -d %d") % readelfPath % path;
+    auto output = sarus::common::executeCommand(command.str());
+
+    std::stringstream stream{output};
+    std::string line;
+    while(std::getline(stream, line)) {
+        boost::cmatch matches;
+        boost::regex re("^.* \\(SONAME\\) +Library soname: \\[(.*)\\]$");
+        if (boost::regex_match(line.c_str(), matches, re)) {
+            return matches[1];
+        }
+    }
+
+    auto message = boost::format("Failed to parse library soname from readelf output: %s") % output;
+    SARUS_THROW_ERROR(message.str());
+}
+
+std::tuple<unsigned int, unsigned int> parseLibcVersion(const boost::filesystem::path& lib) {
+    boost::cmatch matches;
+    boost::regex re("^(.*/)*libc-(\\d+)\\.(\\d+)?\\.so$");
+    if (boost::regex_match(lib.c_str(), matches, re)) {
+        return std::tuple<unsigned int, unsigned int>{
+            std::stoi(matches[2]),
+            std::stoi(matches[3])
+        };
+    }
+    else {
+        auto message = boost::format("Failed to parse libc ABI version from %s.") % lib;
+        SARUS_THROW_ERROR(message.str());
+    }
+}
+
+bool is64bitLibrary(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath) {
+    boost::cmatch matches;
+    boost::regex re("^ *Machine: +Advanced Micro Devices X86-64 *$");
+
+    auto command = boost::format("%s -h %s") % readelfPath.string() % path.string();
+    auto output = sarus::common::executeCommand(command.str());
+
+    std::stringstream stream{output};
+    std::string line;
+    while(std::getline(stream, line)) {
+        if (boost::regex_match(line.c_str(), matches, re)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 std::string readFile(const boost::filesystem::path& path) {
