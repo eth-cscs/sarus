@@ -178,9 +178,9 @@ Test Case 2
 ===========
 In this test case, we select again the `tf_cnn_benchmark
 <https://github.com/tensorflow/benchmarks>`_ scripts from the Tensorflow project
-but now we test all four different models that the benchmark can accept, namely
+but now we test all four different models that the benchmark supports, namely
 the *alexnet*, *inception3*, *resnet50* and *vgg16*. The batch size is again 64
-each we in a node range of 1-12 for each of the above models.
+and for each of the models we use a node range of 1 to 12 nodes.
 
 Native application
 ==================
@@ -269,7 +269,7 @@ Used OCI hooks
 
 Running the container
 =====================
-Assuming that the tensorflow-benchmark code is present in a directory which Sarus is
+If the  tensorflow-benchmark code is present in a directory which Sarus is
 configured to automatically mount inside the container (here referred by the
 arbitrary variable ``$INPUT``), we can run the container application as follows:
 
@@ -280,8 +280,7 @@ arbitrary variable ``$INPUT``), we can run the container application as follows:
        python ${INPUT}/tensorflow-benchmarks/scripts/tf_cnn_benchmarks/tf_cnn_benchmarks.py \
        --model resnet50 --batch_size 64 --variable_update horovod
 
-If the system administrator did not configure Sarus to mount the input data
-location during container setup, we can use the ``--mount`` option:
+Alternatively, the ``--mount`` option can be used:
 
 .. code-block:: bash
 
