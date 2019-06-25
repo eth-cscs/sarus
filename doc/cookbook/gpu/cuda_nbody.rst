@@ -76,6 +76,8 @@ NVIDIA CUDA C compiler. This image is available on Docker Hub at
    :language: docker
    :linenos:
 
+:download:`Dockerfile </cookbook/dockerfiles/cudasamples/9.2/Dockerfile>`
+
 Used OCI hooks
 ==============
 * NVIDIA Container Runtime hook
