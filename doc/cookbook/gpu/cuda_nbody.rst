@@ -72,22 +72,9 @@ through the system package manager, and compiling some of the samples with the
 NVIDIA CUDA C compiler. This image is available on Docker Hub at
 `ethcscs/cudasamples:9.2 <https://hub.docker.com/r/ethcscs/cudasamples/tags/>`_.
 
-.. code-block:: docker
-
-   FROM nvidia/cuda:9.2-devel
-
-   RUN apt-get update && apt-get install -y --no-install-recommends \
-           cuda-samples-$CUDA_PKG_VERSION && \
-       rm -rf /var/lib/apt/lists/*
-
-   RUN (cd /usr/local/cuda/samples/1_Utilities/bandwidthTest && make)
-   RUN (cd /usr/local/cuda/samples/1_Utilities/deviceQuery && make)
-   RUN (cd /usr/local/cuda/samples/1_Utilities/deviceQueryDrv && make)
-   RUN (cd /usr/local/cuda/samples/1_Utilities/p2pBandwidthLatencyTest && make)
-   RUN (cd /usr/local/cuda/samples/1_Utilities/topologyQuery && make)
-   RUN (cd /usr/local/cuda/samples/5_Simulations/nbody && make)
-
-   CMD ["/usr/local/cuda/samples/1_Utilities/deviceQuery/deviceQuery"]
+.. literalinclude:: /cookbook/dockerfiles/cudasamples/9.2/Dockerfile
+   :language: docker
+   :linenos:
 
 Used OCI hooks
 ==============
