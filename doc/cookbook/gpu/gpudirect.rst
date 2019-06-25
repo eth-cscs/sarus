@@ -12,7 +12,7 @@ We will show here that Sarus is able to leverage the GPUDirect technology.
 
 Test case
 =========
-This sample C++ `code <gpudirect.cpp>`_ performs an MPI_Allgather operation
+This sample C++ :download:`code </cookbook/dockerfiles/gpudirect/all_gather/all_gather.cpp>` performs an MPI_Allgather operation
 using CUDA device memory and GPUDirect. If the operation is carried out
 successfully, the program prints a success message to standard output.
 
@@ -63,13 +63,11 @@ Container image and Dockerfile
 We use CSCS mpich `image <dockerhub>`_ (based on cuda/9.2 and mpich/3.1.4) to
 build the sample code:
 
-.. code-block:: docker
+.. literalinclude:: /cookbook/dockerfiles/gpudirect/all_gather/Dockerfile
+   :language: docker
+   :linenos:
 
-   FROM ethcscs/mpich:ub1804_cuda92_mpi314
-
-   COPY all_gather.cpp /opt/mpi_gpudirect/all_gather.cpp
-   WORKDIR /opt/mpi_gpudirect
-   RUN mpicxx -g all_gather.cpp -o all_gather -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcudart
+:download:`Dockerfile </cookbook/dockerfiles/gpudirect/all_gather/Dockerfile>`
 
 Used OCI hooks
 ==============
