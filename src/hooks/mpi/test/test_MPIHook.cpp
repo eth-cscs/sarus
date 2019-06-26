@@ -53,7 +53,20 @@ TEST(MPIHookTestGroup, test) {
         .setMpiBindMounts({"/dev/null", "/dev/zero"})
         .checkSuccessfull();
 
-    // compatible libraries (same MAJOR, MINOR, PATCH) in non-default directory
+    // compatible libraries (same MAJOR, MINOR, PATCH) in non-default directory;
+    // check creation of /lib[64] directories for symlinks
+    Checker{}
+        .setEnvironmentVariablesInConfigJSON({"SARUS_MPI_HOOK=1"})
+        .setHostMpiLibraries({"libmpi.so.12.5.5"})
+        .setNonDefaultContainerMpiLibraries({"usr/local/lib/libmpi.so.12.5.5"})
+        .setHostMpiDependencyLibraries({"libdependency0.so", "libdependency1.so"})
+        .setMpiBindMounts({"/dev/null", "/dev/zero"})
+        .setupDefaultLinkerDir({"lib"})
+        .setupDefaultLinkerDir({"lib64"})
+        .checkSuccessfull();
+
+    // compatible libraries (same MAJOR, MINOR, PATCH) in non-default directory;
+    // check creation of /lib[64] symlinks to /usr/lib[64]
     Checker{}
         .setEnvironmentVariablesInConfigJSON({"SARUS_MPI_HOOK=1"})
         .setHostMpiLibraries({"libmpi.so.12.5.5"})
@@ -61,16 +74,21 @@ TEST(MPIHookTestGroup, test) {
         .setHostMpiDependencyLibraries({"libdependency0.so", "libdependency1.so"})
         .setMpiBindMounts({"/dev/null", "/dev/zero"})
         .setupDefaultLinkerDir({"usr/lib"})
+        .setupDefaultLinkerDir({"usr/lib64"})
+        .addDefaultLinkerDir({"lib"})
+        .addDefaultLinkerDir({"lib64"})
         .checkSuccessfull();
 
-    // compatible libraries (same MAJOR, MINOR, PATCH) in non-default 64-bit directory
+    // compatible libraries (same MAJOR, MINOR, PATCH) in non-default directory;
+    // check creation of /usr/lib64 dir
     Checker{}
         .setEnvironmentVariablesInConfigJSON({"SARUS_MPI_HOOK=1"})
         .setHostMpiLibraries({"libmpi.so.12.5.5"})
         .setNonDefaultContainerMpiLibraries({"usr/local/lib/libmpi.so.12.5.5"})
         .setHostMpiDependencyLibraries({"libdependency0.so", "libdependency1.so"})
         .setMpiBindMounts({"/dev/null", "/dev/zero"})
-        .setupDefaultLinkerDir({"usr/lib64"})
+        .setupDefaultLinkerDir({"usr/lib"})
+        .addDefaultLinkerDir({"usr/lib64"})
         .checkSuccessfull();
 
     // compatible libraries (same MAJOR, MINOR, compatible PATCH)
