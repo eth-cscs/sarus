@@ -18,8 +18,8 @@ to replace TensorFlow's own parameter server architecture for distributed
 training with communications based on an MPI model, leveraging ring-allreduce
 algorithms for improved usability and performance.
 
-Test case 1
-===========
+Horovod 0.15.1 with CUDA 9.x
+============================
 As test case, we select the `tf_cnn_benchmark
 <https://github.com/tensorflow/benchmarks>`_ scripts from the Tensorflow project
 for benchmarking convolutional neural networks. We use a `ResNet-50 model
@@ -29,7 +29,7 @@ performed runs from a minimum of 2 nodes up to 128 nodes, increasing the node
 count in powers of two.
 
 Native application
-==================
+------------------
 For the native implementation, we use TensorFlow 1.7.0, built using Cray Python
 3.6, the Python extensions provided by the Cray Programming Environment 18.08,
 CUDA 9.1 and cuDNN 7.1.4. These installations are performed by CSCS staff and
@@ -40,7 +40,7 @@ automatically populated with system-installed packages from the loaded
 environment modules.
 
 Container image and Dockerfile
-==============================
+------------------------------
 We start from the reference Dockerfile provided by Horovod for version 0.15.1
 and modify it to use Python 3.5, TensorFlow 1.7.0, CUDA 9.0, cuDNN 7.0.5. These
 specific versions of CUDA and cuDNN are required because they are the ones
@@ -122,12 +122,12 @@ Piz Daint.
    WORKDIR "/examples"
 
 Used OCI hooks
-==============
+--------------
 * NVIDIA Container Runtime hook
 * Native MPI hook (MPICH-based)
 
 Running the container
-=====================
+---------------------
 Assuming that the tensorflow-benchmark code is present in a directory which Sarus is
 configured to automatically mount inside the container (here referred by the
 arbitrary variable ``$INPUT``), we can run the container application as follows:
@@ -151,7 +151,7 @@ location during container setup, we can use the ``--mount`` option:
        --model resnet50 --batch_size 64 --variable_update horovod
 
 Results
-=======
+-------
 We measure the performance in images/sec as reported by the application logs and
 compute speedup values using the performance averages for each data point,
 taking the native performance at 2 nodes as baseline. The results are showcased
@@ -174,8 +174,8 @@ standard deviations less than 0.5%. From 32 nodes upwards, the container
 application shows a small performance advantage, up to 5% at 128 nodes,
 with both implementations maintaining close standard deviation values.
 
-Test Case 2
-===========
+Horovod 0.16.x with CUDA 10.0
+=============================
 In this test case, we select again the `tf_cnn_benchmark
 <https://github.com/tensorflow/benchmarks>`_ scripts from the Tensorflow project
 but now we test all four different models that the benchmark supports, namely
@@ -183,7 +183,7 @@ the *alexnet*, *inception3*, *resnet50* and *vgg16*. The batch size is again 64
 and for each of the models we use a node range of 1 to 12 nodes.
 
 Native application
-==================
+------------------
 For the native implementation, we use Horovod 0.16.0 with TensorFlow 1.12.0,
 built using Cray Python 3.6, the Python extensions provided by the Cray
 Programming Environment 19.03, CUDA 10.0, cuDNN 7.5.6 and NCCL 2.4.2. These
@@ -191,7 +191,7 @@ installations are performed by CSCS staff and are available on Piz Daint through
 environment modules.
 
 Container image and Dockerfile
-==============================
+------------------------------
 We start from the reference Dockerfile provided by Horovod for version 0.16.1
 and modify it to use Python 3.5, TensorFlow 1.13.1, CUDA 10.0, cuDNN 7.5.0. and
 NCCL 2.4.2. These specific versions of CUDA and cuDNN are required because they
@@ -263,12 +263,12 @@ to the **/etc/nccl.conf** configuration file.
         echo NCCL_IB_CUDA_SUPPORT=1 >> /etc/nccl.conf
 
 Used OCI hooks
-==============
+--------------
 * NVIDIA Container Runtime hook
 * Native MPI hook (MPICH-based)
 
 Running the container
-=====================
+---------------------
 If the  tensorflow-benchmark code is present in a directory which Sarus is
 configured to automatically mount inside the container (here referred by the
 arbitrary variable ``$INPUT``), we can run the container application as follows:
@@ -294,7 +294,7 @@ The above commands are using the ``resnet50`` model. Using the ``--model``
 option it is possible to run the benchmarks with the other models as well.
 
 Results
-=======
+-------
 We measure the performance in images/sec as reported by the application logs by
 taking the mean value based on 5 different runs for each model and node number.
 The results are showcased in the following Figure:
