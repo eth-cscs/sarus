@@ -160,7 +160,6 @@ in the following Figure:
 .. _fig-horovod-results_old:
 
 .. figure:: horovod-results_old.*
-
    :scale: 100%
    :alt: TensorFlow with Horovod results
 
@@ -305,7 +304,7 @@ The results are showcased in the following Figure:
    :scale: 100%
    :alt: TensorFlow with Horovod results
 
-   Comparison of performance and speedup between native and Sarus-deployed
+   Comparison of performance between native and Sarus-deployed
    container versions of TensorFlow with Horovod on Piz Daint.
 
 
