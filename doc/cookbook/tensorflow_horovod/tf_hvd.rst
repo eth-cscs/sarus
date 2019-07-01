@@ -157,7 +157,7 @@ compute speedup values using the performance averages for each data point,
 taking the native performance at 2 nodes as baseline. The results are showcased
 in the following Figure:
 
-.. _fig-horovod-results:
+.. _fig-horovod-results_old:
 
 .. figure:: horovod-results_old.*
 
@@ -299,7 +299,7 @@ We measure the performance in images/sec as reported by the application logs by
 taking the mean value based on 5 different runs for each model and node number.
 The results are showcased in the following Figure:
 
-.. _fig-horovod-results:
+.. _fig-horovod-results_new:
 
 .. figure:: horovod-results_new.*
    :scale: 100%
