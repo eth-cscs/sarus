@@ -77,7 +77,7 @@ Container image and Dockerfile
 The container image `ethcscs/cudasamples:9.2` (based on Nvidia cuda/9.2) used
 for this test case can be pulled from CSCS `DockerHub
 <https://hub.docker.com/r/ethcscs/cudasamples/tags>`_ or be rebuilt with this 
-:download:`Dockerfile <doc/cookbook/dockerfiles/cudasamples/9.2/Dockerfile>`:
+:download:`Dockerfile </cookbook/dockerfiles/cudasamples/9.2/Dockerfile>`:
 
 .. literalinclude:: /cookbook/dockerfiles/cudasamples/9.2/Dockerfile
    :language: docker
