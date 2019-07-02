@@ -15,8 +15,8 @@ increasing complexity, providing a smooth learning curve.
 
    test_setup.rst
    gpu/cuda_nbody.rst
-   gpu/gpudirect.rst
    osu_mb/osu_mb.rst
+   gpu/gpudirect.rst
    openmpi/openmpi_ssh.rst
    gromacs/gromacs.rst
    tensorflow_horovod/tf_hvd.rst
