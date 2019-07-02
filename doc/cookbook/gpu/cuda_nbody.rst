@@ -72,7 +72,6 @@ version (cudatoolkit/9.2).
 
 Container image and Dockerfile
 ==============================
-<<<<<<< HEAD
 
 The container image `ethcscs/cudasamples:9.2` (based on Nvidia cuda/9.2) used
 for this test case can be pulled from CSCS `DockerHub
