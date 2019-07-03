@@ -1,0 +1,18 @@
+#!/bin/sh
+FROM ethcscs/mvapich:ub1804_cuda92_mpi22
+
+RUN apt update \
+    && apt install -y ca-certificates patch
+
+RUN cd /tmp \
+    && wget http://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-5.6.1.tar.gz \
+    && tar xf osu-micro-benchmarks-5.6.1.tar.gz \
+    && cd osu-micro-benchmarks-5.6.1 \
+    && ./configure --prefix=/usr/local CC=$(which mpicc) CFLAGS=-O3 \
+    && make -j2 \
+    && make install \
+    && cd .. \
+    && rm -rf osu-micro-benchmarks-5.6.1*
+
+WORKDIR /usr/local/libexec/osu-micro-benchmarks/mpi/pt2pt
+CMD ["mpiexec", "-n", "2", "-bind-to", "core", "./osu_latency"]

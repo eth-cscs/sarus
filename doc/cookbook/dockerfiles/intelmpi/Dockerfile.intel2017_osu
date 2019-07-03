@@ -1,0 +1,14 @@
+FROM <YOUR-DOCKERHUB-REPO-HERE>/intelmpi:latest
+
+# build and install OSU microbenchmarks
+RUN cd /tmp \
+    && wget http://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-5.6.1.tar.gz \
+    && tar xf osu-micro-benchmarks-5.6.1.tar.gz \
+    && cd osu-micro-benchmarks-5.6.1 \
+    && ./configure --prefix=/usr/local CC=$(which mpiicc) LIBS="/opt/intel/compilers_and_libraries_2017.1.132/linux/compiler/lib/intel64_lin/libirc.a" \
+    && make -j2 \
+    && make install \
+    && cd .. \
+    && rm -rf osu-micro-benchmarks-5.6.1*
+
+WORKDIR /usr/local/libexec/osu-micro-benchmarks/mpi/pt2pt

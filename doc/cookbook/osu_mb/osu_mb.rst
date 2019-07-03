@@ -47,9 +47,14 @@ Latency
 
 .. code-block:: bash
 
+   sarus pull ethcscs/mvapich:ub1804_cuda92_mpi22_osu
    srun -C gpu -N2 -t2 \
-    sarus run --mpi ethcscs/osu-mb:5.3.2-mpich3.1.4 \
+    sarus run --mpi ethcscs/mvapich:ub1804_cuda92_mpi22_osu \
     /usr/local/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_latency
+
+A typical output looks like:
+
+.. code-block:: bash
 
    # OSU MPI Latency Test v5.3.2
    # Size          Latency (us)
@@ -95,6 +100,10 @@ All-to-all
     sarus run --mpi ethcscs/osu-mb:5.3.2-mpich3.1.4 \
     ../collective/osu_alltoall
 
+A typical outpout looks like:
+
+.. code-block:: bash
+
    # OSU MPI All-to-All Personalized Exchange Latency Test v5.3.2
    # Size       Avg Latency(us)
    1                       5.46
@@ -122,35 +131,51 @@ All-to-all
 
 Running the native application
 ==============================
-We compile the OSU micro benchmark suite version 5.3.2 natively using the Cray
-Programming Environment and linking against the optimized Cray MPT 7.7.2
-libraries.
+We compile the OSU micro benchmark suite natively using the Cray Programming
+Environment (PrgEnv-cray) and linking against the optimized Cray MPI
+(cray-mpich) libraries.
 
 Container images and Dockerfiles
 ================================
-We built 3 container images with the OSU micro benchmark suite version 5.3.2,
-in order to better demonstrate the effectiveness of the hook regardless of the
-ABI-compatible MPI implementation present in the image:
+We built the OSU benchmarks on top of several images containing MPI, in order to
+demonstrate the effectiveness of the MPI hook regardless of the ABI-compatible
+MPI implementation present in the images:
 
-1. MPICH 3.1.4:
-This image is available on Docker Hub at `ethcscs/osu-mb:5.3.2-mpich3.1.4
-<https://hub.docker.com/r/ethcscs/osu-mb/tags/>`_.
+MPICH
+-----
+The container image ``ethcscs/mpich:ub1804_cuda92_mpi314_osu`` (based on
+mpich/3.1.4) used for this test case can be pulled from CSCS `DockerHub
+<https://hub.docker.com/r/ethcscs/mpich/tags>`_ or be rebuilt with this
+:download:`Dockerfile
+</cookbook/dockerfiles/mpich/Dockerfile.ubuntu1804+cuda92+mpich314+osu>`.
 
-2. MVAPICH 2.2:
-This image is available on Docker Hub at `ethcscs/osu-mb:5.3.2-mvapich2.2
-<https://hub.docker.com/r/ethcscs/osu-mb/tags/>`_.
+MVAPICH
+-------
+The container image ``ethcscs/mvapich:ub1804_cuda92_mpi22_osu`` (based on
+mvapich/2.2) used for this test case can be pulled from CSCS `DockerHub
+<https://hub.docker.com/r/ethcscs/mvapich/tags>`_ or be rebuilt with this
+:download:`Dockerfile
+</cookbook/dockerfiles/mvapich/Dockerfile.ubuntu1804lts+cuda92+mvapich22+osu>`.
+On the Cray, the supported Cray MPICH ABI is 12.0 (mvapich>2.2 requires
+ABI/12.1 hence is not currently supported).
 
-3. Intel MPI 2017 Update 1:
-Due to the license of the Intel MPI limiting redistribution of the software,
-the installation files (like configuration and license file) have to be present
-locally in the computer building the image.
+OpenMPI
+-------
+As OpenMPI is not part of the MPICH ABI Compatibility Initiative, ``sarus run
+--mpi`` with OpenMPI is not supported. Documentation can be found on this
+dedicated page: :ref:`openmpi-ssh`.
 
-4. OpenMPI:
-This image is available on Docker Hub at `ethcscs/osu-mb:5.3.2-openmpi
-<https://hub.docker.com/r/ethcscs/osu-mb/tags/>`_.
+Intel MPI
+---------
+Because the Intel MPI license limits general redistribution of the software,
+we do not share the Docker image ``ethcscs/intelmpi`` used for this test case.
+Provided the Intel installation files (such as archive and license file) are
+available locally on your computer, you could build your own image with this
+example
+:download:`Dockerfile </cookbook/dockerfiles/intelmpi/Dockerfile.intel2017>`.
 
-Used OCI hooks
-==============
+Required OCI hooks
+==================
 * Native MPI hook (MPICH-based)
 
 Benchmarking results
