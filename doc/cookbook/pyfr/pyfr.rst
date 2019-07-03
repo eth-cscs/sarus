@@ -23,7 +23,10 @@ Running the container
 =====================
 We assume that a host scratchpad directory is configured to be mounted
 automatically inside the container by Sarus, and is accessible at the path
-defined by ``$SCRATCH``. First step is to use an interactive container to
+defined by ``$SCRATCH``. Documentation can be found on this dedicated page:
+:ref:`user-custom-mounts`.
+
+First step is to use an interactive container to
 prepare the simulation data:
 
 .. code-block:: bash
@@ -32,21 +35,18 @@ prepare the simulation data:
    srun -C gpu -N1 -t10 --pty sarus run --tty \
         ethcscs/pyfr:1.8.0-cuda9.2-ubuntu16.04 bash
 
+then within the interactive container, prepare the data:
+
+.. literalinclude:: /cookbook/dockerfiles/pyfr/data.sh
+   :language: bash
+   :linenos:
+
+and terminate the interactive session:
+
 .. code-block:: bash
 
-   # From the container:
-   ## copy the example data to the scratchpad directory
-   mkdir $SCRATCH/pyfr/
-   cd PyFR-1.8.0/examples/
-   cp -r euler_vortex_2d/ $SCRATCH/pyfr/euler_vortex_2d
-
-   ## Convert mesh data to PyFR format
-   cd $SCRATCH/pyfr/euler_vortex_2d
-   pyfr import euler_vortex_2d.msh euler_vortex_2d.pyfrm
-
-   ## Partition the mesh and exit the container
-   pyfr partition 4 euler_vortex_2d.pyfrm .
    exit
+
 
 Now that the data is ready, we can launch the multi-node simulation. Notice that
 we use the ``--pty`` option to ``srun`` in order to visualize and update correctly
@@ -72,9 +72,9 @@ Container image and Dockerfile
 The container image `ethcscs/pyfr:1.8.0-cuda9.2-ubuntu16.04` (based on Nvidia
 cuda/9.2) used for this test case can be pulled from CSCS `DockerHub
 <https://hub.docker.com/r/ethcscs/pyfr/tags>`_ or be rebuilt with this
-:download:`Dockerfile </cookbook/dockerfiles/pyfr/Dockerfile>`:
+:download:`Dockerfile </cookbook/dockerfiles/pyfr/Dockerfile.1.8.0>`:
 
-.. literalinclude:: /cookbook/dockerfiles/pyfr/Dockerfile
+.. literalinclude:: /cookbook/dockerfiles/pyfr/Dockerfile.1.8.0
    :language: docker
    :linenos:
 
