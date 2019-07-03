@@ -24,7 +24,8 @@ Running the container
 We assume that a host scratchpad directory is configured to be mounted
 automatically inside the container by Sarus, and is accessible at the path
 defined by ``$SCRATCH``. Documentation can be found on this dedicated page:
-:ref:`user-custom-mounts`.
+:ref:`user-custom-mounts`. For instance:
+``--mount=type=bind,source=$SCRATCH,destination=$SCRATCH``
 
 First step is to use an interactive container to
 prepare the simulation data:
@@ -35,7 +36,7 @@ prepare the simulation data:
    srun -C gpu -N1 -t10 --pty sarus run --tty \
         ethcscs/pyfr:1.8.0-cuda9.2-ubuntu16.04 bash
 
-then within the interactive container, prepare the data:
+then within the container, prepare the data:
 
 .. literalinclude:: /cookbook/dockerfiles/pyfr/data.sh
    :language: bash
@@ -54,7 +55,8 @@ PyFR's progress bar (which we request with the ``-p`` option):
 
 .. code-block:: bash
 
-   srun -C gpu -N4 -t1 --pty sarus run --mpi \
+   srun -C gpu -N4 -t1 --pty sarus run \
+       --mpi \
        ethcscs/pyfr:1.8.0-cuda9.2-ubuntu16.04 \
        pyfr run -b cuda -p \
        $SCRATCH/pyfr/euler_vortex_2d/euler_vortex_2d.pyfrm \
@@ -64,7 +66,7 @@ A typical output will look like:
 
 .. code-block:: bash
 
-    100.0% [===========================>] 100.00/100.00 ela: 00:00:29 rem: 00:00:00
+    100.0% [===========================>] 100.00/100.00 daint: 00:00:29 rem: 00:00:00
 
 
 Container image and Dockerfile

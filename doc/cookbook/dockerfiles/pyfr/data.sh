@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # From the container:
-## copy the example data to the scratchpad directory
+## copy the example data to the scratch directory
 mkdir $SCRATCH/pyfr/
 cd PyFR-1.8.0/examples/
 cp -r euler_vortex_2d/ $SCRATCH/pyfr/euler_vortex_2d
