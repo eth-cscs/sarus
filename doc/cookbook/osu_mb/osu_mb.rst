@@ -145,7 +145,7 @@ MPICH
 -----
 The container image ``ethcscs/mpich:ub1804_cuda92_mpi314_osu`` (based on
 mpich/3.1.4) used for this test case can be pulled from CSCS `DockerHub
-<https://hub.docker.com/r/ethcscs/mpich/tags>`_ or be rebuilt with this
+<https://hub.docker.com/r/ethcscs/mpich/tags>`__ or be rebuilt with this
 :download:`Dockerfile
 </cookbook/dockerfiles/mpich/Dockerfile.ubuntu1804+cuda92+mpich314+osu>`.
 
@@ -153,9 +153,9 @@ MVAPICH
 -------
 The container image ``ethcscs/mvapich:ub1804_cuda92_mpi22_osu`` (based on
 mvapich/2.2) used for this test case can be pulled from CSCS `DockerHub
-<https://hub.docker.com/r/ethcscs/mvapich/tags>`_ or be rebuilt with this
+<https://hub.docker.com/r/ethcscs/mvapich/tags>`__ or be rebuilt with this
 :download:`Dockerfile
-</cookbook/dockerfiles/mvapich/Dockerfile.ubuntu1804lts+cuda92+mvapich22+osu>`.
+</cookbook/dockerfiles/mvapich/Dockerfile.ubuntu1804+cuda92+mvapich22+osu>`.
 On the Cray, the supported Cray MPICH ABI is 12.0 (mvapich>2.2 requires
 ABI/12.1 hence is not currently supported).
 
