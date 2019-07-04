@@ -1,7 +1,7 @@
 #!/bin/sh
-# docker build -f Dockerfile_2018.3 -t ethcscs/gromacs:2018.3-cuda9.2_mpich3.1.4 .
 FROM ethcscs/mpich:ub1804_cuda92_mpi314
 
+## Uncomment the following lines if you want to build mpi yourself:
 ## RUN apt-get update \
 ## && apt-get install -y --no-install-recommends \
 ##         wget \

@@ -2,7 +2,7 @@
 GROMACS
 *******
 
-`GROMACS <https://user.cscs.ch/computing/applications/gromacs/>`_ is a
+`GROMACS <http://www.gromacs.org/>`_ is a 
 molecular dynamics package with an extensive array of modeling, simulation and
 analysis capabilities. While primarily developed for the simulation of
 biochemical molecules, its broad adoption includes reaserch fields such as
@@ -15,12 +15,13 @@ Test case
 =========
 As test case, we select the 3M atom system from the `HECBioSim
 <http://www.hecbiosim.ac.uk/benchmarks>`_ benchmark suite for Molecular
-Dynamics: a pair of ``hEGFR tetramers of 1IVO and 1NQL``:
+Dynamics: 
 
 .. code-block:: bash
 
-    * Total number of atoms = 2,997,924
-    * Protein atoms = 86,996  Lipid atoms = 867,784  Water atoms = 2,041,230  Ions = 1,914
+    A pair of hEGFR tetramers of 1IVO and 1NQL:
+        * Total number of atoms = 2,997,924
+        * Protein atoms = 86,996  Lipid atoms = 867,784  Water atoms = 2,041,230  Ions = 1,914
 
 The simulation is carried out using single precision, 1 MPI process per node
 and 12 OpenMP threads per MPI process. We measured runtimes for 4, 8, 16, 32
@@ -75,9 +76,10 @@ location during container setup, we can use the ``--mount`` option:
 
 Running the native application
 ==============================
-As the native application we use GROMACS release 2018.3, compiled with FFTW
-3.3.6, CUDA 9.1 and AVX2-256 SIMD instructions. The application is built by CSCS
-staff and provided to the users of Piz Daint through an environment module.
+CSCS provides and supports GROMACS on Piz Daint. This `documentation page
+<https://user.cscs.ch/computing/applications/gromacs/>`_ gives more details on
+how to run GROMACS as a native application.  For this test case, the
+``GROMACS/2018.3-CrayGNU-18.08-cuda-9.1`` modulefile was loaded.
 
 Container image and Dockerfile
 ==============================
