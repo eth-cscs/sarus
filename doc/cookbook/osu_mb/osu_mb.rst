@@ -2,7 +2,7 @@
 OSU Micro benchmarks
 ********************
 
-The `OSU Micro Benchmarks (OMB) <http://mvapich.cse.ohio-state.edu/benchmarks/>`_
+The OSU Micro Benchmarks `(OMB) <http://mvapich.cse.ohio-state.edu/benchmarks/>`_
 are a widely used suite of benchmarks for measuring and evaluating the
 performance of MPI operations for point-to-point, multi-pair, and collective
 communications. These benchmarks are often used for comparing different MPI
@@ -22,155 +22,21 @@ Test cases
 
 Latency
 -------
-The OSU point-to-point latency (``osu_latency``) test performs a ping-pong
-communication between a sender and a receiver where the sender sends a message
-and waits for the reply from the receiver. The messages are sent repeatedly for
-a variety of data sizes in order to report the average one-way latency. This
-test allows us to observe any possible overhead from enabling the MPI support
-provided by Sarus.
+The ``osu_latency`` benchmark measures the min, max and the average latency of
+a ping-pong communication between a sender and a receiver where the sender
+sends a message and waits for the reply from the receiver. The messages are
+sent repeatedly for a variety of data sizes in order to report the average
+one-way latency. This test allows us to observe any possible overhead from
+enabling the MPI support provided by Sarus.
 
 All-to-all
 ----------
 The ``osu_alltoall`` benchmark measures the min, max and the average latency of
 the MPI_Alltoall blocking collective operation across N processes, for various
 message lengths, over a large number of iterations. In the default version,
-these benchmarks report the average latency for each message length up to 1MB.
-We run this benchmark from a minimum of 2 nodes up to 128 nodes, increasing the node
-count in powers of two.
-
-Native application
-==================
-We compile the OSU micro benchmark suite version 5.3.2 natively using the Cray
-Programming Environment and linking against the optimized Cray MPT 7.7.2
-libraries.
-
-Container images and Dockerfiles
-================================
-We built three container images with the OSU micro benchmark suite version 5.3.2,
-in order to better demonstrate the effectiveness of the hook regardless of the
-ABI-compatible MPI implementation present in the image:
-
-1. MPICH 3.1.4 based on Debian 8.
-   This image is available on Docker Hub at `ethcscs/osu-mb:5.3.2-mpich3.1.4 <https://hub.docker.com/r/ethcscs/osu-mb/tags/>`_.
-
-.. code-block:: docker
-
-   FROM debian:jessie
-
-   RUN apt-get update \
-       && apt-get install -y file \
-                             g++ \
-                             gcc \
-                             gfortran \
-                             make \
-                             gdb \
-                             strace \
-                             realpath \
-                             wget \
-                             --no-install-recommends
-
-   RUN wget -q http://www.mpich.org/static/downloads/3.1.4/mpich-3.1.4.tar.gz \
-       && tar xf mpich-3.1.4.tar.gz \
-       && cd mpich-3.1.4 \
-       && ./configure --disable-fortran --enable-fast=all,O3 --prefix=/usr \
-       && make -j$(nproc) \
-       && make install \
-       && ldconfig
-
-   RUN wget -q http://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-5.3.2.tar.gz \
-       && tar xf osu-micro-benchmarks-5.3.2.tar.gz \
-       && cd osu-micro-benchmarks-5.3.2 \
-       && ./configure --prefix=/usr/local CC=$(which mpicc) CFLAGS=-O3 \
-       && make \
-       && make install \
-       && cd .. \
-       && rm -rf osu-micro-benchmarks-5.3.2 \
-       && rm osu-micro-benchmarks-5.3.2.tar.gz
-
-   WORKDIR /usr/local/libexec/osu-micro-benchmarks/mpi/pt2pt
-
-2. MVAPICH 2.2 based on Debian 8.
-   This image is available on Docker Hub at ``ethcscs/osu-mb:5.3.2-mvapich2.2``:
-
-.. code-block:: docker
-
-   FROM debian:jessie
-
-   RUN apt-get update \
-       && apt-get install -y --no-install-recommends \
-           bison \
-           file \
-           g++ \
-           gcc \
-           gfortran \
-           libibverbs-dev \
-           make \
-           perl-modules \
-           wget \
-           realpath \
-           strace \
-       && rm -rf /var/lib/apt/lists/*
-
-   # install MVAPICH2 v2.2 from source (this bundles OSU Micro-benchmarks v5.3.2)
-   RUN wget -q -O mvapich2-2.2.tar.gz http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2.tar.gz \
-       && tar -xf mvapich2-2.2.tar.gz \
-       && cd mvapich2-2.2 \
-       && ./configure  --prefix=/usr/local --disable-mcast --disable-xrc \
-       && make -j4 \
-       && make check \
-       && make install \
-       && ldconfig \
-       && cd .. \
-       && rm -rf mvapich2-2.2.tar.gz mvapich2-2.2
-
-   WORKDIR /usr/local/libexec/osu-micro-benchmarks/mpi/pt2pt
-
-3. Intel MPI 2017 Update 1 based on Centos 7. Due to the license of the Intel MPI
-   limiting redistribution of the software, the installation files (like
-   configuration and license file) have to be present locally in the computer
-   building the image.
-
-.. code-block:: docker
-
-   FROM centos:7
-
-   #COPY etc-apt-sources.list /etc/apt/sources.list
-   RUN yum install -y gcc \
-           gcc-c++ \
-           which \
-           make \
-           wget \
-           strace \
-           cpio
-
-   # install Intel compiler + Intel MPI
-   COPY intel_licence_file.lic /etc/intel_licence_file.lic
-   COPY intel_installation_config_file /etc/intel_installation_config_file
-   ADD parallel_studio_xe_2017_update1_cluster_edition_online.tgz .
-   RUN cd parallel_studio_xe_2017_update1_cluster_edition_online \
-       && ./install.sh --ignore-cpu -s /etc/intel_installation_config_file \
-       && rm -rf parallel_studio_xe_2017_update1_cluster_edition_online
-   ENV PATH /opt/intel/compilers_and_libraries_2017/linux/bin/intel64/:$PATH
-   ENV PATH /opt/intel/compilers_and_libraries_2017/linux/mpi/intel64/bin:$PATH
-   RUN echo "/opt/intel/compilers_and_libraries_2017/linux/mpi/intel64/lib" > /etc/ld.so.conf.d/intel_mpi.conf \
-       && ldconfig
-
-   # install OSU microbenchmarks
-   RUN wget -q http://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-5.3.2.tar.gz \
-       && tar xf osu-micro-benchmarks-5.3.2.tar.gz \
-       && cd osu-micro-benchmarks-5.3.2 \
-       && ./configure --prefix=/usr/local CC=$(which mpiicc) CFLAGS=-O3 LIBS="/opt/intel/compilers_and_libraries_2017.1.132/linux/compiler/lib/intel64_lin/libirc.a" \
-       && make \
-       && make install \
-       && cd .. \
-       && rm -rf osu-micro-benchmarks-5.3.2 \
-       && rm osu-micro-benchmarks-5.3.2.tar.gz
-
-   WORKDIR /usr/local/libexec/osu-micro-benchmarks/mpi/pt2pt
-
-Used OCI hooks
-==============
-* Native MPI hook (MPICH-based)
+this benchmark report the average latency for each message length up to 1MB.
+We run this benchmark from a minimum of 2 nodes up to 128 nodes, increasing the
+node count in powers of two.
 
 Running the container
 =====================
@@ -181,7 +47,14 @@ Latency
 
 .. code-block:: bash
 
-   srun -C gpu -N2 -t2 sarus run --mpi ethcscs/osu-mb:5.3.2-mpich3.1.4 /usr/local/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_latency
+   sarus pull ethcscs/mvapich:ub1804_cuda92_mpi22_osu
+   srun -C gpu -N2 -t2 \
+    sarus run --mpi ethcscs/mvapich:ub1804_cuda92_mpi22_osu \
+    /usr/local/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_latency
+
+A typical output looks like:
+
+.. code-block:: bash
 
    # OSU MPI Latency Test v5.3.2
    # Size          Latency (us)
@@ -215,13 +88,21 @@ directory, we can use that to simplify the terminal command:
 
 .. code-block:: bash
 
-   srun -C gpu -N2 -t2 sarus run --mpi ethcscs/osu-mb:5.3.2-mpich3.1.4 ./osu_latency
+   srun -C gpu -N2 -t2 \
+    sarus run --mpi ethcscs/osu-mb:5.3.2-mpich3.1.4 \
+    ./osu_latency
 
 All-to-all
 ----------
 .. code-block:: bash
 
-   srun -C gpu -N2 -t2 sarus run --mpi ethcscs/osu-mb:5.3.2-mpich3.1.4 ../collective/osu_alltoall
+   srun -C gpu -N2 -t2 \
+    sarus run --mpi ethcscs/osu-mb:5.3.2-mpich3.1.4 \
+    ../collective/osu_alltoall
+
+A typical outpout looks like:
+
+.. code-block:: bash
 
    # OSU MPI All-to-All Personalized Exchange Latency Test v5.3.2
    # Size       Avg Latency(us)
@@ -247,8 +128,58 @@ All-to-all
    524288                363.35
    1048576               733.93
 
-Results
-=======
+
+Running the native application
+==============================
+We compile the OSU micro benchmark suite natively using the Cray Programming
+Environment (PrgEnv-cray) and linking against the optimized Cray MPI
+(cray-mpich) libraries.
+
+Container images and Dockerfiles
+================================
+We built the OSU benchmarks on top of several images containing MPI, in order to
+demonstrate the effectiveness of the MPI hook regardless of the ABI-compatible
+MPI implementation present in the images:
+
+MPICH
+-----
+The container image ``ethcscs/mpich:ub1804_cuda92_mpi314_osu`` (based on
+mpich/3.1.4) used for this test case can be pulled from CSCS `DockerHub
+<https://hub.docker.com/r/ethcscs/mpich/tags>`_ or be rebuilt with this
+:download:`Dockerfile
+</cookbook/dockerfiles/mpich/Dockerfile.ubuntu1804+cuda92+mpich314+osu>`.
+
+MVAPICH
+-------
+The container image ``ethcscs/mvapich:ub1804_cuda92_mpi22_osu`` (based on
+mvapich/2.2) used for this test case can be pulled from CSCS `DockerHub
+<https://hub.docker.com/r/ethcscs/mvapich/tags>`_ or be rebuilt with this
+:download:`Dockerfile
+</cookbook/dockerfiles/mvapich/Dockerfile.ubuntu1804lts+cuda92+mvapich22+osu>`.
+On the Cray, the supported Cray MPICH ABI is 12.0 (mvapich>2.2 requires
+ABI/12.1 hence is not currently supported).
+
+OpenMPI
+-------
+As OpenMPI is not part of the MPICH ABI Compatibility Initiative, ``sarus run
+--mpi`` with OpenMPI is not supported. Documentation can be found on this
+dedicated page: :ref:`openmpi-ssh`.
+
+Intel MPI
+---------
+Because the Intel MPI license limits general redistribution of the software,
+we do not share the Docker image ``ethcscs/intelmpi`` used for this test case.
+Provided the Intel installation files (such as archive and license file) are
+available locally on your computer, you could build your own image with this
+example
+:download:`Dockerfile </cookbook/dockerfiles/intelmpi/Dockerfile.intel2017>`.
+
+Required OCI hooks
+==================
+* Native MPI hook (MPICH-based)
+
+Benchmarking results
+====================
 
 Latency
 -------
@@ -291,9 +222,9 @@ results, for both average values and variability, across the node counts and
 message sizes. The average value of the native benchmark for 1kB message size at
 16 nodes is slightly higher than the one computed for the container benchmark.
 
-It is worthy to note that the results this benchmark are heavily influenced by
-the topology of the tested set of nodes, especially regarding their variabiliy.
-This means that other tests using the same node counts may achieve significantly
-different results. It also implies that results at different node counts are
-only indicative and not directly relatable, since we did not allocate the same
-set of nodes for all node counts.
+It is worthy to note that the results of this benchmark are heavily influenced
+by the topology of the tested set of nodes, especially regarding their
+variabiliy. This means that other tests using the same node counts may achieve
+significantly different results. It also implies that results at different node
+counts are only indicative and not directly relatable, since we did not
+allocate the same set of nodes for all node counts.

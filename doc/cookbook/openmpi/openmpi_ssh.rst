@@ -1,4 +1,5 @@
-*************************
+.. _openmpi-ssh:
+
 OpenMPI with SSH launcher
 *************************
 
@@ -98,6 +99,7 @@ We can do so with the following commands:
 .. code-block:: bash
 
    salloc -C gpu -N4 -t5
+   sarus ssh-keygen
    srun hostname >$HOME/hostfile
    srun sarus run --ssh --mount=src=/users,dst=/users,type=bind \
        ethcscs/openmpi:3.1.3  \
