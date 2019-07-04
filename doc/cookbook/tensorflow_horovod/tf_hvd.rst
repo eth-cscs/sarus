@@ -74,6 +74,8 @@ OpenSSH, as the containers will be able to communicate between them thanks to
 Slurm and the native MPI hook. Finally, we instruct Horovod not to use NVIDIA's
 NCCL library for any MPI operation, because NCCL is not available natively on
 Piz Daint.
+The final :download:`Dockerfile </cookbook/dockerfiles/tensorflow_horovod/Dockerfile_horovod_0_15_1>`
+is the following:
 
 .. literalinclude:: /cookbook/dockerfiles/tensorflow_horovod/Dockerfile_horovod_0_15_1
     :language: docker
@@ -158,6 +160,8 @@ installation of OpenSSH, as the containers will be able to communicate thanks to
 Slurm and the native MPI hook Finally, we instruct Horovod to use NVIDIA's NCCL
 library for every MPI operation by adding the appropriate environment variables
 to the **/etc/nccl.conf** configuration file.
+The resulting :download:`Dockerfile </cookbook/dockerfiles/tensorflow_horovod/Dockerfile_horovod_0_16_1>`
+is the following:
 
 .. literalinclude:: /cookbook/dockerfiles/tensorflow_horovod/Dockerfile_horovod_0_16_1
     :language: docker
