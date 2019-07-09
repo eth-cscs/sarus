@@ -103,6 +103,10 @@ TEST(CLITestGroup, CommandTypes) {
     checkCommandDynamicType<cli::CommandVersion>(*command);
 }
 
+TEST(CLITestGroup, UnrecognizedGlobalOptions) {
+    CHECK_THROWS(common::Error, generateCommandFromCLIArguments({"sarus", "--mpi", "run"}));
+}
+
 common::Config generateConfig(const common::CLIArguments& args) {
     auto commandName = args.argv()[0];
     auto cli = cli::CLI{};

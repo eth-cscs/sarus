@@ -87,7 +87,7 @@ inline bool operator!=(const Error::ErrorTraceEntry& lhs, const Error::ErrorTrac
     auto errorTraceEntry = sarus::common::Error::ErrorTraceEntry{errorMessage, __FILENAME__, __LINE__, __func__}; \
     const auto* cp = dynamic_cast<const sarus::common::Error*>(&stdException); \
     if(cp) { /* check if dynamic type is common::Error */ \
-        assert(!std::is_const<decltype(stdException)>{}); /* a common::Error object must be caucht as non-const reference because we need to modify its internal error trace */ \
+        assert(!std::is_const<decltype(stdException)>{}); /* a common::Error object must be caught as non-const reference because we need to modify its internal error trace */ \
         auto* p = const_cast<sarus::common::Error*>(cp); \
         p->appendErrorTraceEntry(errorTraceEntry); \
         throw; \
