@@ -116,16 +116,16 @@ TEST(UtilityTestGroup, copyFolder) {
 TEST(UtilityTestGroup, countFilesInDirectory) {
     // nominal usage
     {
-        auto testDir = std::string("/tmp/file-count-test");
+        auto testDir = boost::filesystem::path("/tmp/file-count-test");
         common::createFoldersIfNecessary(testDir);
-        common::createFileIfNecessary(testDir + "file1");
-        common::createFileIfNecessary(testDir + "file2");
-        common::createFileIfNecessary(testDir + "file3");
-        common::createFileIfNecessary(testDir + "file4");
+        common::createFileIfNecessary(testDir / "file1");
+        common::createFileIfNecessary(testDir / "file2");
+        common::createFileIfNecessary(testDir / "file3");
+        common::createFileIfNecessary(testDir / "file4");
         CHECK_EQUAL(common::countFilesInDirectory(testDir), 4);
 
-        boost::filesystem::remove(testDir + "file1");
-        boost::filesystem::remove(testDir + "file4");
+        boost::filesystem::remove(testDir / "file1");
+        boost::filesystem::remove(testDir / "file4");
         CHECK_EQUAL(common::countFilesInDirectory(testDir), 2);
 
         boost::filesystem::remove_all(testDir);
