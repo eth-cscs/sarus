@@ -90,6 +90,7 @@ for specific use cases:
 
    mpi-hook
    gpu-hook
+   glibc-hook
    ssh-hook
    slurm-global-sync-hook
    timestamp-hook

@@ -78,7 +78,7 @@ void ConfigsMerger::setNvidiaEnvironmentVariables(const std::unordered_map<std::
         // Given a device index on the host, the correct index inside the container can be obtained
         // using a sorted copy of the host CVD: the container index will be the position of the
         // corresponding host index in the sorted list.
-        std::vector<std::string> hostCVD = common::convertStringListToVector(gpuDevicesAvailable->second, ',');
+        auto hostCVD = common::convertStringListToVector<std::string>(gpuDevicesAvailable->second, ',');
         auto hostCVDSorted = hostCVD;
         std::sort(hostCVDSorted.begin(), hostCVDSorted.end());
         std::string containerCVD;
