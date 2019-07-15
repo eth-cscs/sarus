@@ -62,3 +62,9 @@ The following is an example ``OCIHooks`` object enabling the glibc hook:
         ]
     }
 
+Sarus support at runtime
+========================
+
+The glibc hook is self-sufficient and does not require any support
+from the Sarus container engine.
+

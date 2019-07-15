@@ -88,9 +88,9 @@ for specific use cases:
 .. toctree::
    :maxdepth: 1
 
-   glibc-hook
    mpi-hook
    gpu-hook
+   glibc-hook
    ssh-hook
    slurm-global-sync-hook
    timestamp-hook

@@ -62,7 +62,7 @@ The following is an example ``OCIHooks`` object enabling the Timestamp hook:
 
 As mentioned above, the real value of the Timestamp hook lies in interleaving it
 between other hooks in order to have a measurement of the elapsed time.
-For example, using the other hooks described in this documentation:
+For example, using other hooks described in this documentation:
 
 .. code-block:: json
 
@@ -135,7 +135,7 @@ For example, using the other hooks described in this documentation:
         ]
     }
 
-The previous example would yield the following output in the logfile:
+The previous example would produce an output in the logfile like the following:
 
 .. code-block:: bash
 
