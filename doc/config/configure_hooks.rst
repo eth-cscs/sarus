@@ -88,6 +88,7 @@ for specific use cases:
 .. toctree::
    :maxdepth: 1
 
+   glibc-hook
    mpi-hook
    gpu-hook
    ssh-hook
