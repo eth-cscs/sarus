@@ -11,9 +11,10 @@
 #ifndef sarus_hooks_mpi_MpiSupport_hpp
 #define sarus_hooks_mpi_MpiSupport_hpp
 
-#include <unordered_map>
+#include <vector>
 #include <boost/filesystem.hpp>
 
+#include <sys/types.h>
 
 namespace sarus {
 namespace hooks {
@@ -26,8 +27,6 @@ public:
 private:
     void parseConfigJSONOfBundle();
     void parseEnvironmentVariables();
-    std::vector<boost::filesystem::path> parseListOfPaths(const std::string& s);
-    void getContainerLibrariesFromDynamicLinker();
     void replaceMpiLibrariesInContainer() const;
     void mountDependencyLibrariesIntoContainer() const;
     void performBindMounts() const;
@@ -35,7 +34,7 @@ private:
     bool isLibraryInDefaultLinkerDirectory(const boost::filesystem::path& lib) const;
     void createSymlinksInDefaultLinkerDirectory(const boost::filesystem::path& lib) const;
     std::tuple<int, int, int> getVersionNumbersOfLibrary(const boost::filesystem::path& lib) const;
-    std::string getStrippedLibraryName(const boost::filesystem::path& path) const;
+    std::string getLibraryFilenameWithoutExtension(const boost::filesystem::path& path) const;
 
 private:
     bool isHookEnabled{ false };
@@ -45,7 +44,7 @@ private:
     std::vector<boost::filesystem::path> hostMpiLibs;
     std::vector<boost::filesystem::path> hostMpiDependencyLibs;
     std::vector<boost::filesystem::path> bindMounts;
-    std::unordered_map<std::string, boost::filesystem::path> containerLibraries;
+    std::vector<boost::filesystem::path> containerLibraries;
 };
 
 }}} // namespace
