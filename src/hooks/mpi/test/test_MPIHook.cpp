@@ -54,7 +54,7 @@ TEST(MPIHookTestGroup, test) {
         .checkSuccessfull();
 
     // compatible libraries (same MAJOR, MINOR, PATCH) in non-default directory;
-    // check creation of /lib[64] directories for symlinks
+    // only /lib[64] directories available in starting image
     Checker{}
         .setEnvironmentVariablesInConfigJSON({"SARUS_MPI_HOOK=1"})
         .setHostMpiLibraries({"libmpi.so.12.5.5"})
@@ -66,7 +66,7 @@ TEST(MPIHookTestGroup, test) {
         .checkSuccessfull();
 
     // compatible libraries (same MAJOR, MINOR, PATCH) in non-default directory;
-    // check creation of /lib[64] symlinks to /usr/lib[64]
+    // only /usr/lib[64] available in starting image
     Checker{}
         .setEnvironmentVariablesInConfigJSON({"SARUS_MPI_HOOK=1"})
         .setHostMpiLibraries({"libmpi.so.12.5.5"})
@@ -75,12 +75,10 @@ TEST(MPIHookTestGroup, test) {
         .setMpiBindMounts({"/dev/null", "/dev/zero"})
         .setupDefaultLinkerDir({"usr/lib"})
         .setupDefaultLinkerDir({"usr/lib64"})
-        .addDefaultLinkerDir({"lib"})
-        .addDefaultLinkerDir({"lib64"})
         .checkSuccessfull();
 
     // compatible libraries (same MAJOR, MINOR, PATCH) in non-default directory;
-    // check creation of /usr/lib64 dir
+    // only /usr/lib available in starting image
     Checker{}
         .setEnvironmentVariablesInConfigJSON({"SARUS_MPI_HOOK=1"})
         .setHostMpiLibraries({"libmpi.so.12.5.5"})
@@ -88,7 +86,6 @@ TEST(MPIHookTestGroup, test) {
         .setHostMpiDependencyLibraries({"libdependency0.so", "libdependency1.so"})
         .setMpiBindMounts({"/dev/null", "/dev/zero"})
         .setupDefaultLinkerDir({"usr/lib"})
-        .addDefaultLinkerDir({"usr/lib64"})
         .checkSuccessfull();
 
     // compatible libraries (same MAJOR, MINOR, compatible PATCH)

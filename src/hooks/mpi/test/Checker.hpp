@@ -82,12 +82,6 @@ public:
 
     Checker& setupDefaultLinkerDir(const boost::filesystem::path& dir) {
         sarus::common::createFoldersIfNecessary(rootfsDir / dir);
-        addDefaultLinkerDir(dir);
-        return *this;
-    }
-
-    Checker& addDefaultLinkerDir(const boost::filesystem::path& dir) {
-        defaultLinkerDirs.push_back(dir);
         return *this;
     }
 
@@ -247,7 +241,7 @@ private:
     std::vector<boost::filesystem::path> containerMpiLibs;
     std::vector<boost::filesystem::path> containerMpiDependencyLibs;
     std::vector<boost::filesystem::path> bindMounts;
-    std::vector<boost::filesystem::path> defaultLinkerDirs;
+    std::vector<boost::filesystem::path> defaultLinkerDirs{"lib64", "lib"};
 
     bool expectSymlinks = false;
 };
