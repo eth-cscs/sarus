@@ -160,22 +160,52 @@ void MpiHook::createSymlinksInDefaultLinkerDirectory(const boost::filesystem::pa
     int versionMajor, versionMinor, versionPatch;
     std::tie(versionMajor, versionMinor, versionPatch) = getVersionNumbersOfLibrary(lib);
 
-    // According to the dynamic linker man-pages, in some 64-bit architectures, /usr/lib64 is
-    // one of the trusted directories. If it does not exist, fall back to /usr/lib
-    auto trustedDirectory = boost::filesystem::path(rootfsDir / "/usr/lib64");
-    if (!boost::filesystem::exists(trustedDirectory)) {
-        trustedDirectory = boost::filesystem::path(rootfsDir / "/usr/lib");
+    // Some ldconfig implementations only check in the default directories /lib64 or /lib,
+    // ignoring the other architecture option.
+    // We create symlinks to MPI libraries in both locations to ensure they are found.
+    // According to the file-hierarchy(7) man page, modern Linux distributions could implement
+    // /lib and /lib64 as symlinks.
+    // In order to be flexible with regard to container filesystems, we use the following strategy:
+    //     - If /usr/lib64 does not exist, create it
+    //     - If /lib64 does not exist, create it as symlink to /usr/lib64
+    //       (if it exists, it is either a proper directory or a symlink)
+    //     - Repeat the steps above for /usr/lib and /lib
+    //     - List /lib64 and /lib as MPI symlink paths
+
+    // lib64 path
+    auto usrLib64Path = boost::filesystem::path(rootfsDir / "/usr/lib64");
+    auto lib64Path = boost::filesystem::path(rootfsDir / "/lib64");
+    if (!boost::filesystem::exists(usrLib64Path)) {
+        sarus::common::createFoldersIfNecessary(usrLib64Path);
+    }
+    if (!boost::filesystem::exists(lib64Path)) {
+        boost::filesystem::create_symlink(usrLib64Path, lib64Path);
     }
 
-    auto libName = getLibraryFilenameWithoutExtension(lib) + ".so";
-    std::vector<boost::format> symlinks;
-    symlinks.push_back(boost::format(libName));
-    symlinks.push_back(boost::format("%s.%d") % libName % versionMajor);
-    symlinks.push_back(boost::format("%s.%d.%d") % libName % versionMajor % versionMinor);
-    symlinks.push_back(boost::format("%s.%d.%d.%d") % libName % versionMajor % versionMinor % versionPatch);
+    // lib path
+    auto usrLibPath = boost::filesystem::path(rootfsDir / "/usr/lib");
+    auto libPath = boost::filesystem::path(rootfsDir / "/lib");
+    if (!boost::filesystem::exists(usrLibPath)) {
+        sarus::common::createFoldersIfNecessary(usrLibPath);
+    }
+    if (!boost::filesystem::exists(libPath)) {
+        boost::filesystem::create_symlink(usrLibPath, libPath);
+    }
 
-    for (const auto& link : symlinks) {
-        boost::filesystem::create_symlink(lib, trustedDirectory / link.str());
+    std::vector<boost::filesystem::path> symlinkDirectories{lib64Path, libPath};
+
+    auto libName = getLibraryFilenameWithoutExtension(lib) + ".so";
+    auto symlinks = std::vector<boost::format> {
+        boost::format(libName),
+        boost::format("%s.%d") % libName % versionMajor,
+        boost::format("%s.%d.%d") % libName % versionMajor % versionMinor,
+        boost::format("%s.%d.%d.%d") % libName % versionMajor % versionMinor % versionPatch
+    };
+
+    for (const auto& dir: symlinkDirectories) {
+        for (const auto& link : symlinks) {
+            boost::filesystem::create_symlink(lib, dir / link.str());
+        }
     }
 }
 

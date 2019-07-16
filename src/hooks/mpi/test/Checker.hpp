@@ -82,7 +82,6 @@ public:
 
     Checker& setupDefaultLinkerDir(const boost::filesystem::path& dir) {
         sarus::common::createFoldersIfNecessary(rootfsDir / dir);
-        defaultLinkerDir = dir;
         return *this;
     }
 
@@ -189,18 +188,20 @@ private:
 
         for(const auto& lib : containerMpiLibs) {
             auto libPath = boost::filesystem::absolute(boost::filesystem::relative(lib,rootfsDir));
-            // Link with major, minor, patch numbers
-            auto libName = lib.filename().string();
-            CHECK(boost::filesystem::read_symlink(rootfsDir / defaultLinkerDir / libName) == libPath);
-            // Link with major, minor numbers
-            libName = libName.substr(0, libName.rfind("."));
-            CHECK(boost::filesystem::read_symlink(rootfsDir / defaultLinkerDir / libName) == libPath);
-            // Link with major number
-            libName = libName.substr(0, libName.rfind("."));
-            CHECK(boost::filesystem::read_symlink(rootfsDir / defaultLinkerDir / libName) == libPath);
-            // Link without numbers
-            libName = libName.substr(0, libName.rfind("."));
-            CHECK(boost::filesystem::read_symlink(rootfsDir / defaultLinkerDir / libName) == libPath);
+            for (const auto& linkerDir : defaultLinkerDirs) {
+                // Link with major, minor, patch numbers
+                auto libName = lib.filename().string();
+                CHECK(boost::filesystem::read_symlink(rootfsDir / linkerDir / libName) == libPath);
+                // Link with major, minor numbers
+                libName = libName.substr(0, libName.rfind("."));
+                CHECK(boost::filesystem::read_symlink(rootfsDir / linkerDir / libName) == libPath);
+                // Link with major number
+                libName = libName.substr(0, libName.rfind("."));
+                CHECK(boost::filesystem::read_symlink(rootfsDir / linkerDir / libName) == libPath);
+                // Link without numbers
+                libName = libName.substr(0, libName.rfind("."));
+                CHECK(boost::filesystem::read_symlink(rootfsDir / linkerDir / libName) == libPath);
+            }
         }
     }
 
@@ -233,7 +234,6 @@ private:
         .parent_path() / "CI/dummy_libs/lib_dummy_1.so";
     boost::filesystem::path bundleDir = boost::filesystem::path{ config.json.get()["OCIBundleDir"].GetString() };
     boost::filesystem::path rootfsDir = bundleDir / config.json.get()["rootfsFolder"].GetString();
-    boost::filesystem::path defaultLinkerDir;
 
     std::vector<std::string> environmentVariables;
     std::vector<boost::filesystem::path> hostMpiLibs;
@@ -241,6 +241,7 @@ private:
     std::vector<boost::filesystem::path> containerMpiLibs;
     std::vector<boost::filesystem::path> containerMpiDependencyLibs;
     std::vector<boost::filesystem::path> bindMounts;
+    std::vector<boost::filesystem::path> defaultLinkerDirs{"lib64", "lib"};
 
     bool expectSymlinks = false;
 };
