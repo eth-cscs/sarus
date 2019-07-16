@@ -10,7 +10,14 @@ endif(${ENABLE_TESTS_WITH_GCOV})
 
 # sarus executable
 add_executable(sarus "main.cpp")
-target_link_libraries(sarus common_library cli_library)
+
+if(${BUILD_STATIC})
+    list(APPEND Boost_LIBRARIES libdl.a)
+    target_link_libraries(sarus -static)
+    set_target_properties(sarus PROPERTIES LINK_SEARCH_START_STATIC 1 LINK_SEARCH_END_STATIC 1)
+endif(${BUILD_STATIC})
+
+target_link_libraries(sarus cli_library common_library)
 install(TARGETS sarus DESTINATION ${CMAKE_INSTALL_PREFIX}/bin PERMISSIONS
     SETUID OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
