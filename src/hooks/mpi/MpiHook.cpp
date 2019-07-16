@@ -167,7 +167,7 @@ void MpiHook::createSymlinksInDefaultLinkerDirectory(const boost::filesystem::pa
     // /lib and /lib64 as symlinks.
     // In order to be flexible with regard to container filesystems, we use the following strategy:
     //     - If /usr/lib64 does not exist, create it
-    //     - If /lib64 does not exist, create it as symlink to /usr/lib
+    //     - If /lib64 does not exist, create it as symlink to /usr/lib64
     //       (if it exists, it is either a proper directory or a symlink)
     //     - Repeat the steps above for /usr/lib and /lib
     //     - List /lib64 and /lib as MPI symlink paths
@@ -195,11 +195,12 @@ void MpiHook::createSymlinksInDefaultLinkerDirectory(const boost::filesystem::pa
     std::vector<boost::filesystem::path> symlinkDirectories{lib64Path, libPath};
 
     auto libName = getLibraryFilenameWithoutExtension(lib) + ".so";
-    std::vector<boost::format> symlinks;
-    symlinks.push_back(boost::format(libName));
-    symlinks.push_back(boost::format("%s.%d") % libName % versionMajor);
-    symlinks.push_back(boost::format("%s.%d.%d") % libName % versionMajor % versionMinor);
-    symlinks.push_back(boost::format("%s.%d.%d.%d") % libName % versionMajor % versionMinor % versionPatch);
+    auto symlinks = std::vector<boost::format> {
+        boost::format(libName),
+        boost::format("%s.%d") % libName % versionMajor,
+        boost::format("%s.%d.%d") % libName % versionMajor % versionMinor,
+        boost::format("%s.%d.%d.%d") % libName % versionMajor % versionMinor % versionPatch
+    };
 
     for (const auto& dir: symlinkDirectories) {
         for (const auto& link : symlinks) {
