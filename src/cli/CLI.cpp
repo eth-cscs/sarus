@@ -41,21 +41,24 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
     auto argsGroups = groupArgumentsAndCorrespondingOptions(args);
     boost::program_options::variables_map values;
     auto factory = cli::CommandObjectsFactory{};
+    auto& logger = common::Logger::getInstance();
 
     try {
         boost::program_options::store(
             boost::program_options::command_line_parser(argsGroups.front().argc(), argsGroups.front().argv())
                 .options(optionsDescription)
-                .allow_unregistered()
                 .run(), values);
         boost::program_options::notify(values); // throw if options are invalid
+    }
+    catch (const boost::program_options::error& e) {
+        auto message = boost::format("Error while parsing the command line: %s") % e.what();
+        SARUS_THROW_ERROR(message.str());
     }
     catch (const std::exception& e) {
         SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments");
     }
 
     // configure logger
-    auto& logger = common::Logger::getInstance();
     if(values.count("debug")) {
         logger.setLevel(common::logType::DEBUG);
     }

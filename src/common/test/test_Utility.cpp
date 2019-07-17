@@ -223,28 +223,36 @@ TEST(UtilityTestGroup, convertListOfKeyValuePairsToMap) {
 
 TEST(UtilityTestGroup, convertStringListToVector) {
     // no entries
-    auto vec = common::convertStringListToVector("");
+    auto vec = common::convertStringListToVector<std::string>("");
     CHECK(vec.empty());
 
-    vec = common::convertStringListToVector(";");
+    vec = common::convertStringListToVector<std::string>(";");
     CHECK(vec.empty());
 
-    vec = common::convertStringListToVector(";;");
+    vec = common::convertStringListToVector<std::string>(";;");
     CHECK(vec.empty());
 
     // two entries
-    vec = common::convertStringListToVector("one;two");
+    vec = common::convertStringListToVector<std::string>("one;two");
     CHECK(vec == (std::vector<std::string>{"one", "two"}));
 
-    vec = common::convertStringListToVector(";one;two;");
+    vec = common::convertStringListToVector<std::string>(";one;two;");
     CHECK(vec == (std::vector<std::string>{"one", "two"}));
 
-    vec = common::convertStringListToVector(";;one;;two;;");
+    vec = common::convertStringListToVector<std::string>(";;one;;two;;");
     CHECK(vec == (std::vector<std::string>{"one", "two"}));
 
     // three entries
-    vec = common::convertStringListToVector("one;two;three");
+    vec = common::convertStringListToVector<std::string>("one;two;three");
     CHECK(vec == (std::vector<std::string>{"one", "two", "three"}));
+
+    // another separator (other than ';')
+    vec = common::convertStringListToVector<std::string>("one_two_three", '_');
+    CHECK(vec == (std::vector<std::string>{"one", "two", "three"}));
+
+    // another type (other than std::string)
+    auto vecPaths = common::convertStringListToVector<boost::filesystem::path>("/root");
+    CHECK(vecPaths == (std::vector<boost::filesystem::path>{"/root"}));
 }
 
 TEST(UtilityTestGroup, realpathWithinRootfs) {
@@ -297,6 +305,51 @@ TEST(UtilityTestGroup, realpathWithinRootfs) {
     CHECK(common::realpathWithinRootfs(rootfs, "/dirX/link_absolute_with_no_common_path") == (rootfs / "dir0/dir1"));
 
     boost::filesystem::remove_all(rootfs);
+}
+
+TEST(UtilityTestGroup, getLibrarySoname) {
+    auto dummyLibsDir = boost::filesystem::path{__FILE__}
+        .parent_path()
+        .parent_path()
+        .parent_path()
+        .parent_path() / "CI/dummy_libs";
+    CHECK_EQUAL(common::getLibrarySoname(dummyLibsDir / "libc.so.6-host", "readelf"), std::string("libc.so.6"));
+    CHECK_EQUAL(common::getLibrarySoname(dummyLibsDir / "ld-linux-x86-64.so.2-host", "readelf"), std::string("ld-linux-x86-64.so.2"));
+    CHECK_THROWS(common::Error, common::getLibrarySoname(dummyLibsDir / "lib_dummy_0.so", "readelf"));
+}
+
+TEST(UtilityTestGroup, isLibc) {
+    // libc
+    CHECK(common::isLibc("libc.so"));
+    CHECK(common::isLibc("libc.so.6"));
+    CHECK(common::isLibc("libc-2.29.so"));
+    CHECK(common::isLibc("/libc.so"));
+    CHECK(common::isLibc("../libc.so"));
+    CHECK(common::isLibc("dir/libc.so"));
+    CHECK(common::isLibc("dir/dir/libc.so"));
+    CHECK(common::isLibc("/root/libc.so"));
+    CHECK(common::isLibc("/root/dir/libc.so"));
+
+    // not libc
+    CHECK(!common::isLibc("libcl.so"));
+    CHECK(!common::isLibc("libc_bogus.so"));
+}
+
+TEST(UtilityTestGroup, parseLibcVersion) {
+    CHECK((std::tuple<unsigned int, unsigned int>{0, 0} == common::parseLibcVersion("libc-0.0.so")));
+    CHECK((std::tuple<unsigned int, unsigned int>{2, 29} == common::parseLibcVersion("libc-2.29.so")));
+    CHECK((std::tuple<unsigned int, unsigned int>{100, 100} == common::parseLibcVersion("libc-100.100.so")));
+}
+
+TEST(UtilityTestGroup, is64BitLibrary) {
+    auto dummyLibsDir = boost::filesystem::path{__FILE__}
+        .parent_path()
+        .parent_path()
+        .parent_path()
+        .parent_path() / "CI/dummy_libs";
+    CHECK(common::is64bitLibrary(dummyLibsDir / "libc.so.6-host", "readelf"));
+    CHECK(common::is64bitLibrary(dummyLibsDir / "ld-linux-x86-64.so.2-host", "readelf"));
+    CHECK(!common::is64bitLibrary(dummyLibsDir / "libc.so.6-32bit-container", "readelf"));
 }
 
 TEST(UtilityTestGroup, serializeJSON) {

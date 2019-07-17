@@ -39,7 +39,7 @@ void MpiHook::activateMpiSupport() {
         return;
     }
     parseEnvironmentVariables();
-    getContainerLibrariesFromDynamicLinker();
+    containerLibraries = sarus::common::getLibrariesFromDynamicLinker("ldconfig", rootfsDir);
     replaceMpiLibrariesInContainer();
     mountDependencyLibrariesIntoContainer();
     performBindMounts();
@@ -64,51 +64,14 @@ void MpiHook::parseEnvironmentVariables() {
     if((p = getenv("SARUS_MPI_LIBS")) == nullptr) {
         SARUS_THROW_ERROR("Environment doesn't contain variable SARUS_MPI_LIBS");
     }
-    hostMpiLibs = parseListOfPaths(p);
+    hostMpiLibs = sarus::common::convertStringListToVector<boost::filesystem::path>(p, ':');
 
     if((p = getenv("SARUS_MPI_DEPENDENCY_LIBS")) != nullptr) {
-        hostMpiDependencyLibs = parseListOfPaths(p);
+        hostMpiDependencyLibs = sarus::common::convertStringListToVector<boost::filesystem::path>(p, ':');
     }
 
     if((p = getenv("SARUS_MPI_BIND_MOUNTS")) != nullptr) {
-        bindMounts = parseListOfPaths(p);
-    }
-}
-
-std::vector<boost::filesystem::path> MpiHook::parseListOfPaths(const std::string& s) {
-    auto list = std::vector<boost::filesystem::path>{};
-
-    if(s.empty()) {
-        return list;
-    }
-
-    auto pathBegin = s.cbegin();
-    while(true) {
-        auto pathEnd = std::find(pathBegin, s.cend(), ':');
-        auto path = std::string(pathBegin, pathEnd);
-        list.push_back(std::move(path));
-
-        if(pathEnd == s.cend()) {
-            break;
-        }
-        pathBegin = pathEnd + 1;
-    }
-
-    return list;
-}
-
-void MpiHook::getContainerLibrariesFromDynamicLinker() {
-    auto output = sarus::common::executeCommand("ldconfig -r" + rootfsDir.string() + " -p");
-    std::stringstream stream{output};
-    std::string line;
-    std::getline(stream, line); // drop first line of output (header)
-    while(std::getline(stream, line)) {
-        auto pos = line.rfind(" => ");
-        auto library = line.substr(pos + 4);
-        auto libraryRealpath = sarus::common::realpathWithinRootfs(rootfsDir, library);
-        library = "/" + boost::filesystem::relative(libraryRealpath, rootfsDir).string();
-        auto name = getStrippedLibraryName(library);
-        containerLibraries[name] = library;
+        bindMounts = sarus::common::convertStringListToVector<boost::filesystem::path>(p, ':');
     }
 }
 
@@ -122,17 +85,20 @@ void MpiHook::replaceMpiLibrariesInContainer() const {
     bool containerHasMpiLibrary = false;
 
     for(const auto& hostMpiLib : hostMpiLibs) {
-        auto name = getStrippedLibraryName(hostMpiLib);
-        auto it = containerLibraries.find(name);
+        auto name = getLibraryFilenameWithoutExtension(hostMpiLib);
+        auto hasStrippedNameOfHostMpiLib = [this, &name](const boost::filesystem::path& lib) {
+            return getLibraryFilenameWithoutExtension(lib) == name;
+        };
+        auto it = std::find_if(containerLibraries.cbegin(), containerLibraries.cend(), hasStrippedNameOfHostMpiLib);
         if(it != containerLibraries.cend()) {
             containerHasMpiLibrary = true;
-            const auto& containerMpiLib = it->second;
+            const auto& containerMpiLib = *it;
             if(!areLibrariesABICompatible(hostMpiLib, containerMpiLib)) {
                 auto message = boost::format(   "Failed to activate MPI support. Host's library %s is not ABI"
                                                 " compatible with container's library %s") % hostMpiLib % containerMpiLib;
                 SARUS_THROW_ERROR(message.str());
             }
-            sarus::runtime::bindMount(hostMpiLib, rootfsDir / containerMpiLib);
+            sarus::runtime::bindMount(hostMpiLib, sarus::common::realpathWithinRootfs(rootfsDir, containerMpiLib));
             if (!isLibraryInDefaultLinkerDirectory(containerMpiLib)) {
                 createSymlinksInDefaultLinkerDirectory(containerMpiLib);
             }
@@ -194,22 +160,52 @@ void MpiHook::createSymlinksInDefaultLinkerDirectory(const boost::filesystem::pa
     int versionMajor, versionMinor, versionPatch;
     std::tie(versionMajor, versionMinor, versionPatch) = getVersionNumbersOfLibrary(lib);
 
-    // According to the dynamic linker man-pages, in some 64-bit architectures, /usr/lib64 is
-    // one of the trusted directories. If it does not exist, fall back to /usr/lib
-    auto trustedDirectory = boost::filesystem::path(rootfsDir / "/usr/lib64");
-    if (!boost::filesystem::exists(trustedDirectory)) {
-        trustedDirectory = boost::filesystem::path(rootfsDir / "/usr/lib");
+    // Some ldconfig implementations only check in the default directories /lib64 or /lib,
+    // ignoring the other architecture option.
+    // We create symlinks to MPI libraries in both locations to ensure they are found.
+    // According to the file-hierarchy(7) man page, modern Linux distributions could implement
+    // /lib and /lib64 as symlinks.
+    // In order to be flexible with regard to container filesystems, we use the following strategy:
+    //     - If /usr/lib64 does not exist, create it
+    //     - If /lib64 does not exist, create it as symlink to /usr/lib64
+    //       (if it exists, it is either a proper directory or a symlink)
+    //     - Repeat the steps above for /usr/lib and /lib
+    //     - List /lib64 and /lib as MPI symlink paths
+
+    // lib64 path
+    auto usrLib64Path = boost::filesystem::path(rootfsDir / "/usr/lib64");
+    auto lib64Path = boost::filesystem::path(rootfsDir / "/lib64");
+    if (!boost::filesystem::exists(usrLib64Path)) {
+        sarus::common::createFoldersIfNecessary(usrLib64Path);
+    }
+    if (!boost::filesystem::exists(lib64Path)) {
+        boost::filesystem::create_symlink(usrLib64Path, lib64Path);
     }
 
-    auto libName = getStrippedLibraryName(lib) + ".so";
-    std::vector<boost::format> symlinks;
-    symlinks.push_back(boost::format(libName));
-    symlinks.push_back(boost::format("%s.%d") % libName % versionMajor);
-    symlinks.push_back(boost::format("%s.%d.%d") % libName % versionMajor % versionMinor);
-    symlinks.push_back(boost::format("%s.%d.%d.%d") % libName % versionMajor % versionMinor % versionPatch);
+    // lib path
+    auto usrLibPath = boost::filesystem::path(rootfsDir / "/usr/lib");
+    auto libPath = boost::filesystem::path(rootfsDir / "/lib");
+    if (!boost::filesystem::exists(usrLibPath)) {
+        sarus::common::createFoldersIfNecessary(usrLibPath);
+    }
+    if (!boost::filesystem::exists(libPath)) {
+        boost::filesystem::create_symlink(usrLibPath, libPath);
+    }
 
-    for (const auto& link : symlinks) {
-        boost::filesystem::create_symlink(lib, trustedDirectory / link.str());
+    std::vector<boost::filesystem::path> symlinkDirectories{lib64Path, libPath};
+
+    auto libName = getLibraryFilenameWithoutExtension(lib) + ".so";
+    auto symlinks = std::vector<boost::format> {
+        boost::format(libName),
+        boost::format("%s.%d") % libName % versionMajor,
+        boost::format("%s.%d.%d") % libName % versionMajor % versionMinor,
+        boost::format("%s.%d.%d.%d") % libName % versionMajor % versionMinor % versionPatch
+    };
+
+    for (const auto& dir: symlinkDirectories) {
+        for (const auto& link : symlinks) {
+            boost::filesystem::create_symlink(lib, dir / link.str());
+        }
     }
 }
 
@@ -259,7 +255,7 @@ std::tuple<int, int, int> MpiHook::getVersionNumbersOfLibrary(const boost::files
     return std::tuple<int, int, int>{major, minor, patch};
 }
 
-std::string MpiHook::getStrippedLibraryName(const boost::filesystem::path& path) const {
+std::string MpiHook::getLibraryFilenameWithoutExtension(const boost::filesystem::path& path) const {
     auto name = path.filename().string();
     auto pos = name.rfind(".so");
     return name.substr(0, pos);
