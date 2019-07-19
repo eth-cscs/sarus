@@ -10,7 +10,9 @@ set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1) # required for gcov (e.g. will generat
 # build statically-linked executables
 if(${BUILD_STATIC})
     set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-    SET(CMAKE_EXE_LINKER_FLAGS "-static")
+    set(CMAKE_EXE_LINKER_FLAGS "-static")
+    set(CMAKE_LINK_SEARCH_START_STATIC TRUE)
+    set(CMAKE_LINK_SEARCH_END_STATIC TRUE)
 endif(${BUILD_STATIC})
 
 set(SYSCONFDIR ${CMAKE_INSTALL_PREFIX}/etc CACHE PATH "Configuration files directory [$CMAKE_INSTALL_PREFIX/etc]")
