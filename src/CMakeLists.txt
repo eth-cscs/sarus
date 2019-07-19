@@ -12,8 +12,6 @@ endif(${ENABLE_TESTS_WITH_GCOV})
 add_executable(sarus "main.cpp")
 
 if(${BUILD_STATIC})
-    list(APPEND Boost_LIBRARIES libdl.a)
-    target_link_libraries(sarus -static)
     set_target_properties(sarus PROPERTIES LINK_SEARCH_START_STATIC 1 LINK_SEARCH_END_STATIC 1)
 endif(${BUILD_STATIC})
 
