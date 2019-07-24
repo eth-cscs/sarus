@@ -27,10 +27,12 @@ Key features:
     - Uses an OCI-compliant runtime to spawn the container process
 
 
-## Building the documentation
+## Accessing the documentation
 
-The full documentation is located in the `doc` directory and can be built using
-Python 3 and Sphinx:
+The full documentation is available on [Read the Docs](https://sarus.readthedocs.io).
+
+If you wish to generate the documentation yourself, the sources are located in the `doc`
+directory and can be built using Python 3 and Sphinx:
 
 ```
 cd doc
