@@ -9,6 +9,7 @@ doc/venv
 files_to_copy_in_container_etc/group
 files_to_copy_in_container_etc/passwd
 build/
+_build/
 *.gcov
 .idea
 .settings
