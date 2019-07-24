@@ -27,7 +27,7 @@ author = 'Swiss National Supercomputing Centre'
 # Retrieve the version string
 # Search git repo for added information about untagged snapshots
 try:
-    full_version = subprocess.check_output(["git", "describe", '--tags', '--dirty'],
+    full_version = subprocess.check_output(["git", "describe", '--tags'],
                                            universal_newlines=True)
 except:
     with open('../VERSION') as f:
@@ -139,10 +139,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    ('index_no_cookbook', 'Sarus.tex', 'Sarus Documentation',
-     'Swiss National Supercomputing Centre', 'manual'),
-    ('cookbook/index', 'Sarus_cookbook.tex', 'Sarus Cookbook',
-     'Swiss National Supercomputing Centre', 'manual'),
+    ('index', 'Sarus.tex', 'Sarus Documentation',
+     'Swiss National Supercomputing Centre', 'manual')
 ]
 
 
