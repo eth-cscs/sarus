@@ -12,3 +12,4 @@ install(TARGETS timestamp_hook DESTINATION ${CMAKE_INSTALL_PREFIX}/bin PERMISSIO
     WORLD_READ WORLD_EXECUTE)
 
 add_subdirectory(test)
+

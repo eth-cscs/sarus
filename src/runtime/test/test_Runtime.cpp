@@ -25,7 +25,7 @@ using namespace sarus;
 TEST_GROUP(RuntimeTestGroup) {
 };
 
-__fsword_t getFilesystemType(const boost::filesystem::path& path) {
+unsigned long getFilesystemType(const boost::filesystem::path& path) {
     struct statfs sb;
     if(statfs(path.c_str(), &sb) != 0) {
         auto message = boost::format("Failed to statfs %s") % path;
@@ -34,7 +34,7 @@ __fsword_t getFilesystemType(const boost::filesystem::path& path) {
     return sb.f_type;
 }
 
-__fsword_t getExpectedFilesystemTypeOfBundle(const common::Config& config) {
+unsigned long getExpectedFilesystemTypeOfBundle(const common::Config& config) {
     auto type = std::string{config.json.get()["ramFilesystemType"].GetString()};
     if(type == "tmpfs") {
         return TMPFS_MAGIC;

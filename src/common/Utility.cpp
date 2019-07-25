@@ -241,6 +241,7 @@ std::string getHostname() {
 }
 
 std::string getUsername(uid_t uid) {
+    return "docker";
     struct passwd *result;
     if((result = getpwuid(uid)) == nullptr) {
         auto message = boost::format("failed to retrieve username with getpwuid(%s): %s") % uid % strerror(errno);

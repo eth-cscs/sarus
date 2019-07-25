@@ -15,7 +15,6 @@
 #include "mount_utilities.hpp"
 
 #include <errno.h>
-#include <sys/stat.h>
 
 #include <boost/format.hpp>
 

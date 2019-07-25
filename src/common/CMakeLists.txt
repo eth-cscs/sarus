@@ -10,3 +10,4 @@ if(${BUILD_STATIC})
 endif(${BUILD_STATIC})
 
 add_subdirectory(test)
+

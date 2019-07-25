@@ -6,3 +6,4 @@ add_library(cli_library STATIC ${cli_srcs})
 target_link_libraries(cli_library image_manager_library runtime_library ${Boost_LIBRARIES})
 
 add_subdirectory(test)
+

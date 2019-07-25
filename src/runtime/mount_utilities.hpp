@@ -12,6 +12,7 @@
 #define sarus_runtime_mount_utilities_hpp
 
 #include <cstddef>
+#include <sys/stat.h>
 #include <sys/mount.h>
 
 #include <boost/filesystem.hpp>

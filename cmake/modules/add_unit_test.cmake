@@ -1,5 +1,7 @@
 
 include_directories(${CPPUTEST_INCLUDE_DIR})
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DCPPUTEST_MEM_LEAK_DETECTION_DISABLED")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCPPUTEST_MEM_LEAK_DETECTION_DISABLED")
 
 function(add_unit_test test_name test_src_file uut_src_file link_libraries object_files_directory)
     set(test_bin_file test_${test_name})

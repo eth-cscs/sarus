@@ -1,7 +1,7 @@
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/nsswitch.conf DESTINATION ${DIR_OF_FILES_TO_COPY_IN_CONTAINER_ETC})
-install(CODE "execute_process(COMMAND bash -c \"getent passwd >${CMAKE_CURRENT_BINARY_DIR}/passwd\")")
+install(CODE "execute_process(COMMAND sh -c \"getent passwd >${CMAKE_CURRENT_BINARY_DIR}/passwd\")")
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/passwd DESTINATION ${DIR_OF_FILES_TO_COPY_IN_CONTAINER_ETC})
-install(CODE "execute_process(COMMAND bash -c \"getent group >${CMAKE_CURRENT_BINARY_DIR}/group\")")
+install(CODE "execute_process(COMMAND sh -c \"getent group >${CMAKE_CURRENT_BINARY_DIR}/group\")")
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/group DESTINATION ${DIR_OF_FILES_TO_COPY_IN_CONTAINER_ETC})
 
