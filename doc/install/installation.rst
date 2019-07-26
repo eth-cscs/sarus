@@ -72,6 +72,14 @@ install`` command with super-user privileges:
 
 Another option is to install as a regular user and ``chown`` to root after that.
 
+To complete the installation, create the directory in which Sarus will create the OCI
+bundle for containers. The location of this directory is configurable at any time, as
+described in the next section. As an example, taking default values:
+
+.. code-block:: bash
+
+    sudo mkdir <sarus installation dir>/var/sarus/OCIBundleDir
+
 
 Minimal configuration
 =====================
@@ -79,11 +87,11 @@ Minimal configuration
 At run time, Sarus takes its configuration options from a file named
 *sarus.json*. This file must be placed in the directory specified to CMake
 with ``SYSCONFDIR``, e.g. ``cmake -DSYSCONFDIR=/opt/sarus/default/etc``. If
-not specified, ``SYSCONFDIR`` defaults to ``CMAKE_INSTALL_PREFIX/etc``. For reference, a
-template with a default configuration named *sarus.json.example* is created in
+not specified, ``SYSCONFDIR`` defaults to ``CMAKE_INSTALL_PREFIX/etc``.
+A *sarus.json* file with a minimal configuration is created in
 ``SYSCONFDIR`` as part of the installation step.
 
-Here we will highlight some key settings to complete a baseline configuration.
+Here we will highlight some key settings which form a baseline configuration.
 For the full details about configuration options and the structure of *sarus.json*
 please consult the :doc:`/config/configuration_reference`.
 
@@ -91,12 +99,8 @@ please consult the :doc:`/config/configuration_reference`.
   bundle for the container. This directory must satisfy the :ref:`security
   requirements <requirements-permissions-security>` for critical files and
   directories.
-  E.g., when using the default value of ``/var/sarus/OCIBundleDir``:
-
-  .. code-block:: bash
-
-      $ sudo mkdir -p /var/sarus/OCIBundleDir
-
+  By default, the OCI bundle directory is located in
+  ``<installation path>/var/sarus/OCIBundleDir``.
 * **localRepositoryBaseDir:** the starting path to individual user directories,
   where Sarus will create (if necessary) and access local repositories.
   The repositories will be located in ``<localRepositoryBaseDir>/<user name>/.sarus``.
@@ -112,7 +116,6 @@ please consult the :doc:`/config/configuration_reference`.
   and optionally ``flags`` for the mount. Please refer to the
   :ref:`configuration reference <config-reference-siteMounts>` for the complete
   format and features of these entries.
-
 * **ramFilesystemType:** the type of temporary filesystem Sarus will use to
   setup the base filesystem for the container. The OCI  bundle, and consequently
   the container's rootfs, will be generated in a filesystem of this type. The

@@ -45,8 +45,8 @@ install_sarus() {
 
     # install Sarus
     sudo make install
-    sudo cp $prefixdir/etc/sarus.json.example $prefixdir/etc/sarus.json
-    sudo sed -i -e 's@"centralizedRepositoryDir": *".*"@"centralizedRepositoryDir": "/home/docker/sarus_centralized_repository"@' $prefixdir/etc/sarus.json
+    sudo sed -i -e '/"localRepositoryBaseDir":.*/a "centralizedRepositoryDir": "\/home\/docker\/sarus_centralized_repository",' $prefixdir/etc/sarus.json
+    sudo sed -i -e 's/\("centralizedRepositoryDir"\)/    \1/' $prefixdir/etc/sarus.json
     sudo mkdir -p /var/sarus/OCIBundleDir
     export PATH=$prefixdir/bin:$PATH
 
