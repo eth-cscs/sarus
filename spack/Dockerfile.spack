@@ -1,0 +1,38 @@
+FROM ubuntu:16.04
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential ca-certificates curl       g++     \
+        gcc             gfortran        git        gnupg2  \
+        iproute2        lmod            lua-posix  make    \
+        openssh-server  python          python-pip tcl     \
+        unzip           less            wget       python3 \
+        vim             squashfs-tools                     \
+    && pip install boto3                                   \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install runc
+RUN wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64 \
+    && mv runc.amd64 /usr/bin/runc \
+    && chmod 755 /usr/bin/runc
+
+# Install and configure Spack
+ENV SPACK_ROOT=/opt/spack
+ENV PATH=${PATH}:${SPACK_ROOT}/bin
+RUN git clone https://github.com/spack/spack.git ${SPACK_ROOT} \
+    && . ${SPACK_ROOT}/share/spack/setup-env.sh           \
+    && spack bootstrap
+
+# Create a local Spack repository for Sarus-specific dependencies
+ENV SPACK_LOCAL_REPO=${SPACK_ROOT}/var/spack/repos/cscs
+RUN spack repo create ${SPACK_LOCAL_REPO} \
+    && spack repo add ${SPACK_LOCAL_REPO}
+
+COPY packages/cpprestsdk ${SPACK_LOCAL_REPO}/packages/cpprestsdk
+COPY packages/rapidjson ${SPACK_LOCAL_REPO}/packages/rapidjson
+
+# Install dependencies for Sarus
+RUN spack install --verbose boost@1.65.0
+RUN spack install --verbose cpprestsdk@2.10.0 ^boost@1.65.0
+RUN spack install --verbose --no-checksum libarchive@3.3.1
+RUN spack install --verbose rapidjson@663f076
+RUN spack install --verbose python@2.7.15
