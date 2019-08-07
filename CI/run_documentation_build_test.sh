@@ -18,8 +18,8 @@ sarus_src_dir=/sarus-source
 check_static_snapshot() {
     log "Building documentation from static snapshot"
     mkdir /home/docker/sarus-static
-    cp -r $sarus_src_dir/* sarus-static
-    cd sarus-static/doc
+    cp -r $sarus_src_dir/* /home/docker/sarus-static
+    cd /home/docker/sarus-static/doc
     make html
     cleanup_and_exit_if_last_command_failed
     log "    Build successful, checking version string"

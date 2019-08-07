@@ -4,12 +4,14 @@ change_uid_gid_of_docker_user() {
     local host_uid=$1
     local host_gid=$2
 
+    echo "Changing UID/GID of Docker user"
     sudo usermod -u $host_uid docker    
     sudo groupmod -g $host_gid docker
     sudo find / -path /proc -prune -o -user docker -exec chown -h $host_uid {} \;
     sudo find / -path /proc -prune -o -group docker -exec chgrp -h $host_gid {} \;
     sudo usermod -g $host_gid docker
     sudo usermod -d /home/docker docker
+    echo "Successfully changed UID/GID of Docker user"
 }
 
 add_supplementary_groups_to_docker_user() {
@@ -17,6 +19,45 @@ add_supplementary_groups_to_docker_user() {
         sudo groupadd $group
         sudo usermod -a -G $group docker
     done
+}
+
+# build and package Sarus as a standalone archive ready for installation
+build_sarus_archive() {
+    local build_type=$1; shift
+    local enable_security_checks=$1; shift
+    local pwd_backup=$(pwd)
+
+    local enable_coverage=FALSE
+    if [ "$build_type" = "Debug" ]; then
+        enable_coverage=TRUE
+    fi
+
+    # build Sarus
+    echo "Building Sarus (build type = ${build_type}, security checks = ${enable_security_checks})"
+    local build_dir=/sarus-source/build-${build_type}
+    mkdir -p ${build_dir} && cd ${build_dir}
+    local prefix_dir=${build_dir}/install/$(git describe --tags --dirty)-${build_type}
+    cmake   -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc-gcov.cmake \
+            -DCMAKE_PREFIX_PATH="/opt/boost/1_65_0;/opt/cpprestsdk/v2.10.0;/opt/libarchive/3.3.1;/opt/rapidjson/rapidjson-master" \
+            -Dcpprestsdk_INCLUDE_DIR=/opt/cpprestsdk/v2.10.0/include \
+            -DCMAKE_BUILD_TYPE=${build_type} \
+            -DBUILD_STATIC=TRUE \
+            -DENABLE_RUNTIME_SECURITY_CHECKS=${enable_security_checks} \
+            -DENABLE_TESTS_WITH_GCOV=${enable_coverage} \
+            -DENABLE_TESTS_WITH_VALGRIND=FALSE \
+            -DENABLE_SSH=TRUE \
+            -DCMAKE_INSTALL_PREFIX=${prefix_dir} \
+            ..
+    make -j$(nproc)
+    echo "Successfully built Sarus"
+
+    # build archive
+    local archive_name="sarus.tar.gz"
+    echo "Building archive ${archive_name}"
+    make install
+    (cd ${prefix_dir}/bin && wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64)
+    (cd ${prefix_dir} && mkdir -p var/OCIBundleDir)
+    (cd ${prefix_dir}/.. && tar cfz ../${archive_name} *)
 }
 
 install_sarus() {
@@ -44,13 +85,14 @@ install_sarus() {
     make -j$(nproc)
 
     # install Sarus
-    sudo make install
-    sudo cp $prefixdir/etc/sarus.json.example $prefixdir/etc/sarus.json
-    sudo sed -i -e 's@"centralizedRepositoryDir": *".*"@"centralizedRepositoryDir": "/home/docker/sarus_centralized_repository"@' $prefixdir/etc/sarus.json
-    sudo mkdir -p /var/sarus/OCIBundleDir
-    export PATH=$prefixdir/bin:$PATH
+    make install
+    echo "TODO: change configuration of Sarus for tests (see commented lines below)"
+    #sudo cp $prefixdir/etc/sarus.json.example $prefixdir/etc/sarus.json
+    #sudo sed -i -e 's@"centralizedRepositoryDir": *".*"@"centralizedRepositoryDir": "/home/docker/sarus_centralized_repository"@' $prefixdir/etc/sarus.json
+    #sudo mkdir -p /var/sarus/OCIBundleDir
+    #export PATH=$prefixdir/bin:$PATH
 
-    cd $pwd_backup
+    #cd $pwd_backup
 }
 
 generate_slurm_conf() {
