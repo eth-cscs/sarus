@@ -678,12 +678,12 @@ rapidjson::Document readJSON(const boost::filesystem::path& filename) {
     return json;
 }
 
-rapidjson::Document readAndValidateJSON(const boost::filesystem::path& configFilename, const rapidjson::SchemaDocument& schema) {
+rapidjson::Document readAndValidateJSON(const boost::filesystem::path& jsonFile, const rapidjson::SchemaDocument& schema) {
     rapidjson::Document json;
 
     // Use a reader object to parse the JSON storing configuration settings
     try {
-        std::ifstream configInputStream(configFilename.string());
+        std::ifstream configInputStream(jsonFile.string());
         rapidjson::IStreamWrapper configStreamWrapper(configInputStream);
         // Parse JSON from reader, validate the SAX events, and populate the configuration Document.
         rapidjson::SchemaValidatingReader<rapidjson::kParseDefaultFlags, rapidjson::IStreamWrapper, rapidjson::UTF8<> > reader(configStreamWrapper, schema);
@@ -715,7 +715,7 @@ rapidjson::Document readAndValidateJSON(const boost::filesystem::path& configFil
                 SARUS_THROW_ERROR(message.str());
             }
             else {
-                auto message = boost::format("Error parsing configuration file: %s") % configFilename;
+                auto message = boost::format("Error parsing JSON file: %s") % jsonFile;
                 SARUS_THROW_ERROR(message.str());
             }
         }
@@ -724,7 +724,7 @@ rapidjson::Document readAndValidateJSON(const boost::filesystem::path& configFil
         throw;
     }
     catch (const std::exception& e) {
-        auto message = boost::format("Error reading configuration file %s") % configFilename;
+        auto message = boost::format("Error reading JSON file %s") % jsonFile;
         SARUS_RETHROW_ERROR(e, message.str());
     }
 

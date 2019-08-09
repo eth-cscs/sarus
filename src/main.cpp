@@ -35,7 +35,11 @@ int main(int argc, char* argv[]) {
         auto conf = std::make_shared<common::Config>();
         saveAndClearEnvironmentVariables(*conf);
         conf->program_start = std::chrono::high_resolution_clock::now();
-        conf->json.initialize(conf->buildTime.configFile, conf->buildTime.configSchemaFile);
+
+        auto sarusInstallationPrefixDir = boost::filesystem::canonical("/proc/self/exe").parent_path().parent_path();
+        auto configFile =  sarusInstallationPrefixDir / "etc/sarus.json";
+        auto configSchemaFile = sarusInstallationPrefixDir / "etc/sarus.schema.json";
+        conf->json.initialize(configFile, configSchemaFile);
 
         auto args = common::CLIArguments(argc, argv);
         auto command = cli::CLI{}.parseCommandLine(args, conf);

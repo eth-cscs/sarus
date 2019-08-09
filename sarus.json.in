@@ -1,13 +1,13 @@
 {
-    "OCIBundleDir": "/var/sarus/OCIBundleDir",
+    "OCIBundleDir": "@PREFIX_DIR@/var/OCIBundleDir",
     "rootfsFolder": "rootfs",
-    "prefixDir": "@CMAKE_INSTALL_PREFIX@",
-    "dirOfFilesToCopyInContainerEtc": "@DIR_OF_FILES_TO_COPY_IN_CONTAINER_ETC@",
+    "prefixDir": "@PREFIX_DIR@",
+    "dirOfFilesToCopyInContainerEtc": "@PREFIX_DIR@/files_to_copy_in_container_etc",
     "tempDir": "/tmp",
     "localRepositoryBaseDir": "/home",
     "centralizedRepositoryDir": "/var/sarus/centralized_repository",
     "mksquashfsPath": "@MKSQUASHFS_PATH@",
-    "runcPath": "@RUNC_PATH@",
+    "runcPath": "@PREFIX_DIR@/bin/runc.amd64",
     "ramFilesystemType": "tmpfs",
     "siteMounts": [
         {
@@ -33,11 +33,7 @@
         ]
     },
     "userMounts": {
-        "notAllowedPrefixesOfPath": [
-            "/etc",
-            "/var",
-            "/opt/sarus"
-        ],
+        "notAllowedPrefixesOfPath": [],
         "notAllowedPaths": [
             "/opt"
         ]
@@ -45,7 +41,7 @@
     "OCIHooks": {
         "prestart": [
             {
-                "path": "@CMAKE_INSTALL_PREFIX@/bin/mpi_hook",
+                "path": "@PREFIX_DIR@/bin/mpi_hook",
                 "env": [
                     "SARUS_MPI_LIBS=",
                     "SARUS_MPI_DEPENDENCY_LIBS=",
@@ -54,10 +50,10 @@
                 ]
             },
             {
-                "path": "@CMAKE_INSTALL_PREFIX@/bin/ssh_hook",
+                "path": "@PREFIX_DIR@/bin/ssh_hook",
                 "env": [
                     "SARUS_LOCAL_REPOSITORY_BASE_DIR=/home",
-                    "SARUS_OPENSSH_DIR=@CMAKE_INSTALL_PREFIX@/openssh"
+                    "SARUS_OPENSSH_DIR=@PREFIX_DIR@/openssh"
                 ],
                 "args": [
                     "ssh_hook",

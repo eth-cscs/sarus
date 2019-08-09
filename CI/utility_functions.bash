@@ -55,7 +55,7 @@ build_sarus_archive() {
     local archive_name="sarus.tar.gz"
     echo "Building archive ${archive_name}"
     make install
-    (cd ${prefix_dir}/bin && wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64)
+    (cd ${prefix_dir}/bin && wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64 && chmod +x runc.amd64)
     (cd ${prefix_dir} && mkdir -p var/OCIBundleDir)
     (cd ${prefix_dir}/.. && tar cfz ../${archive_name} *)
 }
