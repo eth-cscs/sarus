@@ -28,16 +28,23 @@ tests_docker_ci:
       && change_uid_gid_of_docker_user ${host_uid} ${host_gid}
       && sudo -u docker bash -c '. /sarus-source/CI/utility_functions.bash && build_sarus_archive ${build_type} ${security_checks_enabled}'"
 
-    - docker run --tty --rm --user root --privileged --mount=src=$(pwd),dst=/sarus-source,type=bind ${docker_image_run} bash -c "
+    - docker run --tty --rm --user root --privileged
+      --mount=src=$(pwd),dst=/sarus-source,type=bind
+      --mount=src=${sarus_cached_home_dir},dst=/home/docker,type=bind
+      --mount=src=${sarus_cached_centralized_repository_dir},dst=/var/sarus/centralized_repository,type=bind
+      ${docker_image_run}
+      bash -c "
       . /sarus-source/CI/utility_functions.bash
       && change_uid_gid_of_docker_user ${host_uid} ${host_gid}
       && cd /sarus-source/${build_folder}
       && sudo -u docker CTEST_OUTPUT_ON_FAILURE=1 ctest --exclude-regex AsRoot
       && CTEST_OUTPUT_ON_FAILURE=1 ctest --tests-regex AsRoot
-      && sudo -u docker /sarus-source/CI/run_documentation_build_test.sh"
+      && sudo -u docker /sarus-source/CI/run_documentation_build_test.sh
+      && install_sarus_from_archive /opt/sarus sarus.tar.gz
+      && sudo -u docker PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH PATH=/opt/sarus/default/bin:$PATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker nosetests -v /sarus-source/CI/src/integration_tests/test*.py
+      && ([ '${build_type}' = 'Debug' ] && sudo -u docker gcovr -r /sarus-source/src -k -g --object-directory /sarus-source/${build_folder}/src)"
 
-    # TODO: enable integration tests
-    #- docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source -v $sarus_cached_home_dir:/home/docker -v $sarus_cached_centralized_repository_dir:/home/docker/sarus_centralized_repository $docker_image /sarus-source/CI/run_unit_tests_and_integration_tests.sh $sarus_prefix_dir $build_type $host_uid $host_gid
+    #  /sarus-source/CI/run_unit_tests_and_integration_tests.sh $sarus_prefix_dir $build_type $host_uid $host_gid
 
   artifacts:
     paths:

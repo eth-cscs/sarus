@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # This script finalizes the configuration of a Sarus installation made from the Sarus standalone archive.
-# The script is responsible for filling the missing parameters in the etc/sarus.json.
+# The script is responsible for setting the corrent mode of the Sarus binary,
+# as well as filling the missing parameters in the etc/sarus.json.
 
 function exit_on_error() {
     local last_command_exit_code=$?
@@ -12,10 +13,17 @@ function exit_on_error() {
     fi
 }
 
-echo "Configuring etc/sarus.json"
-
 prefix_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd ${prefix_dir}
+
+echo "Setting Sarus as SUID root"
+sudo chown root:root bin/sarus
+exit_on_error "failed to chown bin/sarus"
+sudo chmod +s bin/sarus
+exit_on_error "failed to chmod bin/sarus"
+echo "Successfully set Sarus as SUID root"
+
+echo "Configuring etc/sarus.json"
 
 # create etc/sarus.json
 if [ -e etc/sarus.json ]; then

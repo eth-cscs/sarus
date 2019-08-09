@@ -58,41 +58,24 @@ build_sarus_archive() {
     (cd ${prefix_dir}/bin && wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64 && chmod +x runc.amd64)
     (cd ${prefix_dir} && mkdir -p var/OCIBundleDir)
     (cd ${prefix_dir}/.. && tar cfz ../${archive_name} *)
+
+    cd ${pwd_backup}
 }
 
-install_sarus() {
-    local prefixdir=$1; shift
-    local build_type=$1; shift
-    local enable_security_checks=$1; shift
+install_sarus_from_archive() {
+    local root_dir=$1; shift
+    local archive=$(realpath $1); shift
     local pwd_backup=$(pwd)
 
-    local enable_coverage=FALSE
-    if [ "$build_type" = "Debug" ]; then
-        enable_coverage=TRUE
-    fi
+    mkdir -p ${root_dir}
+    cd ${root_dir}
+    rm -rf * #remove any other installation
+    tar xf ${archive}
+    local sarus_version=$(ls)
+    ln -s ${sarus_version} default
+    ./default/configure_installation.sh
 
-    # build Sarus
-    cd /sarus-source
-    mkdir -p build && cd build
-    cmake   -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc-gcov.cmake \
-            -DCMAKE_BUILD_TYPE=$build_type \
-            -DENABLE_RUNTIME_SECURITY_CHECKS=$enable_security_checks \
-            -DENABLE_TESTS_WITH_GCOV=$enable_coverage \
-            -DENABLE_TESTS_WITH_VALGRIND=FALSE \
-            -DENABLE_SSH=TRUE \
-            -DCMAKE_INSTALL_PREFIX=$prefixdir \
-            ..
-    make -j$(nproc)
-
-    # install Sarus
-    make install
-    echo "TODO: change configuration of Sarus for tests (see commented lines below)"
-    #sudo cp $prefixdir/etc/sarus.json.example $prefixdir/etc/sarus.json
-    #sudo sed -i -e 's@"centralizedRepositoryDir": *".*"@"centralizedRepositoryDir": "/home/docker/sarus_centralized_repository"@' $prefixdir/etc/sarus.json
-    #sudo mkdir -p /var/sarus/OCIBundleDir
-    #export PATH=$prefixdir/bin:$PATH
-
-    #cd $pwd_backup
+    cd ${pwd_backup}
 }
 
 generate_slurm_conf() {
