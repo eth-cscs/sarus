@@ -4,45 +4,18 @@ stages:
 tests_docker_ci:
   stage: test
   script:
-    - sarus_cached_home_dir=~/cache/ids/sarus/home_dir
-    - sarus_cached_centralized_repository_dir=~/cache/ids/sarus/centralized_repository_dir
-    - host_uid=$(id -u)
-    - host_gid=$(id -g)
-    - docker_image_build=ethcscs/sarus-ci-build:2.0.0
-    - docker_image_run=ethcscs/sarus-ci-run:2.0.0
 
     # Check version number
     - ./CI/check_that_version_file_is_up_to_date.sh
     # TODO: fix test below
     #      - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_build} /sarus-source/CI/check_version_from_cmake.sh
 
-    # Debug version (build + make archive + test)
-    - build_type=Debug
-    - build_folder=build-Debug
-    - security_checks_enabled=FALSE
-    - test -e ~/cache/ids/sarus/openssh.tar && mkdir -p ${build_folder}/dep && cp ~/cache/ids/sarus/openssh.tar ${build_folder}/dep/openssh.tar
-    - test -e ~/cache/ids/sarus/cpputest && mkdir -p ${build_folder}/dep && cp -r ~/cache/ids/sarus/cpputest ${build_folder}/dep/cpputest
+    - . ./CI/utility_functions.bash
 
-    - docker run --tty --rm --user root --mount=src=$(pwd),dst=/sarus-source,type=bind ${docker_image_build} bash -c "
-      . /sarus-source/CI/utility_functions.bash
-      && change_uid_gid_of_docker_user ${host_uid} ${host_gid}
-      && sudo -u docker bash -c '. /sarus-source/CI/utility_functions.bash && build_sarus_archive ${build_type} ${security_checks_enabled}'"
-
-    - docker run --tty --rm --user root --privileged
-      --mount=src=$(pwd),dst=/sarus-source,type=bind
-      --mount=src=${sarus_cached_home_dir},dst=/home/docker,type=bind
-      --mount=src=${sarus_cached_centralized_repository_dir},dst=/var/sarus/centralized_repository,type=bind
-      ${docker_image_run}
-      bash -c "
-      . /sarus-source/CI/utility_functions.bash
-      && change_uid_gid_of_docker_user ${host_uid} ${host_gid}
-      && cd /sarus-source/${build_folder}
-      && sudo -u docker CTEST_OUTPUT_ON_FAILURE=1 ctest --exclude-regex AsRoot
-      && CTEST_OUTPUT_ON_FAILURE=1 ctest --tests-regex AsRoot
-      && sudo -u docker /sarus-source/CI/run_documentation_build_test.sh
-      && install_sarus_from_archive /opt/sarus sarus.tar.gz
-      && sudo -u docker PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH PATH=/opt/sarus/default/bin:$PATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker nosetests -v /sarus-source/CI/src/integration_tests/test*.py
-      && ([ '${build_type}' = 'Debug' ] && sudo -u docker gcovr -r /sarus-source/src -k -g --object-directory /sarus-source/${build_folder}/src)"
+    # Debug version
+    - export build_type=Debug
+    - security_checks=FALSE
+    - build_install_test_sarus ${build_type} ${security_checks}
 
     #  /sarus-source/CI/run_unit_tests_and_integration_tests.sh $sarus_prefix_dir $build_type $host_uid $host_gid
 
