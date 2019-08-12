@@ -48,4 +48,5 @@ tests_docker_ci:
 
   artifacts:
     paths:
+      - build-Debug/sarus.tar.gz
       - build-Release/sarus.tar.gz
