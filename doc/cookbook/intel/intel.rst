@@ -1,6 +1,6 @@
-*************************
+***************************
 Intel Cluster Edition 19.01
-*************************
+***************************
 
 This section provides the instructions to build Intel Parallel Studio 2019 Update 1 based on the Centos 7 distribution: Intel Parallel Studio provides a complete environment to build an optimised appication, since it features compilers, communication and mathematical libraries.
 
