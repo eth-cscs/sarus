@@ -1,12 +1,19 @@
 #!/bin/bash
 
+set -ex
+
 sarus_src_dir=/sarus-source
 
 # Setup Spack bash integration
 . ${SPACK_ROOT}/share/spack/setup-env.sh
 
-# Import Spack package for Sarus
-cp -r $sarus_src_dir/spack/packages/sarus ${SPACK_LOCAL_REPO}/packages/
+# Create a local Spack repository for Sarus-specific dependencies
+export SPACK_LOCAL_REPO=${SPACK_ROOT}/var/spack/repos/cscs
+spack repo create ${SPACK_LOCAL_REPO}
+spack repo add ${SPACK_LOCAL_REPO}
+
+# Import Spack packages for Cpprestsdk, RapidJSON and Sarus
+cp -r $sarus_src_dir/spack/packages/* ${SPACK_LOCAL_REPO}/packages/
 
 # Create mirror with local sources
 export SPACK_LOCAL_MIRROR=${SPACK_ROOT}/mirror/
@@ -19,7 +26,11 @@ rm -rf spack-src
 cd
 spack mirror add local_filesystem file://${SPACK_LOCAL_MIRROR}
 
-# Install sarus
+# Install dependencies
+spack install --verbose cpprestsdk@2.10.0 ^boost@1.65.0
+spack install --verbose rapidjson@663f076
+
+# Install Sarus
 spack install --verbose sarus@develop
 
 # Check installation

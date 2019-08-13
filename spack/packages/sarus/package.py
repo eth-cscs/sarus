@@ -40,10 +40,12 @@ class Sarus(CMakePackage):
     version('1.0.0-rc5', 'd894a96fa350af8947f06e7e8c73d59f')
 
     variant('ssh', default=True,
-            description='Build and install the SSH hook and custom OpenSSH software to enable connections inside containers')
+            description='Build and install the SSH hook and custom OpenSSH software '
+                        'to enable connections inside containers')
     variant('runtime_security_checks', default=True,
-            description='Enable runtime security checks (root ownership of files, etc.). Strongly recommended for'
-                        'production deployments. Disable to simplify setup of test installations.')
+            description='Enable runtime security checks (root ownership of files, etc.). '
+                        'Strongly recommended for production deployments. '
+                        'Disable to simplify setup of test installations.')
 
     depends_on('boost@1.65.0')
     depends_on('cpprestsdk@2.10.0')

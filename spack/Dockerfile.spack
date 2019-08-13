@@ -22,17 +22,8 @@ RUN git clone https://github.com/spack/spack.git ${SPACK_ROOT} \
     && . ${SPACK_ROOT}/share/spack/setup-env.sh           \
     && spack bootstrap
 
-# Create a local Spack repository for Sarus-specific dependencies
-ENV SPACK_LOCAL_REPO=${SPACK_ROOT}/var/spack/repos/cscs
-RUN spack repo create ${SPACK_LOCAL_REPO} \
-    && spack repo add ${SPACK_LOCAL_REPO}
-
-COPY packages/cpprestsdk ${SPACK_LOCAL_REPO}/packages/cpprestsdk
-COPY packages/rapidjson ${SPACK_LOCAL_REPO}/packages/rapidjson
-
 # Install dependencies for Sarus
 RUN spack install --verbose boost@1.65.0
-RUN spack install --verbose cpprestsdk@2.10.0 ^boost@1.65.0
 RUN spack install --verbose --no-checksum libarchive@3.3.1
-RUN spack install --verbose rapidjson@663f076
+RUN FORCE_UNSAFE_CONFIGURE=1 spack install --verbose tar
 RUN spack install --verbose python@2.7.15
