@@ -34,6 +34,7 @@ add_supplementary_groups_to_docker_user() {
 build_sarus_archive() {
     local build_type=$1; shift
     local enable_security_checks=$1; shift
+    local build_dir=$1; shift
     local pwd_backup=$(pwd)
 
     local enable_coverage=FALSE
@@ -43,7 +44,6 @@ build_sarus_archive() {
 
     # build Sarus
     echo "Building Sarus (build type = ${build_type}, security checks = ${enable_security_checks})"
-    local build_dir=/sarus-source/build-${build_type}
     mkdir -p ${build_dir} && cd ${build_dir}
     local prefix_dir=${build_dir}/install/$(git describe --tags --dirty)-${build_type}
     cmake   -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc-gcov.cmake \
@@ -146,7 +146,7 @@ build_install_test_sarus() {
     docker run --tty --rm --user root --mount=src=$(pwd),dst=/sarus-source,type=bind ${docker_image_build} bash -c "
         . /sarus-source/CI/utility_functions.bash \
         && change_uid_gid_of_docker_user ${host_uid} ${host_gid} \
-        && sudo -u docker bash -c '. /sarus-source/CI/utility_functions.bash && build_sarus_archive ${build_type} ${security_checks}'"
+        && sudo -u docker bash -c '. /sarus-source/CI/utility_functions.bash && build_sarus_archive ${build_type} ${security_checks} ${build_dir}'"
 
     # Run tests
     local sarus_cached_home_dir=~/cache/ids/sarus/home_dir
