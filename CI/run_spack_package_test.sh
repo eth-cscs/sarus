@@ -16,8 +16,8 @@ spack repo add ${SPACK_LOCAL_REPO}
 cp -r $sarus_src_dir/spack/packages/* ${SPACK_LOCAL_REPO}/packages/
 
 # Create mirror with local sources
-export SPACK_LOCAL_MIRROR=${SPACK_ROOT}/mirror/
-export SARUS_MIRROR_DIR=${SPACK_LOCAL_MIRROR}/sarus/
+export SPACK_LOCAL_MIRROR=${SPACK_ROOT}/mirror
+export SARUS_MIRROR_DIR=${SPACK_LOCAL_MIRROR}/sarus
 mkdir -p ${SARUS_MIRROR_DIR}
 cp -r $sarus_src_dir ${SARUS_MIRROR_DIR}/spack-src
 cd ${SARUS_MIRROR_DIR}
@@ -25,10 +25,6 @@ tar -czf sarus-develop.tar.gz spack-src
 rm -rf spack-src
 cd
 spack mirror add local_filesystem file://${SPACK_LOCAL_MIRROR}
-
-# Install dependencies
-spack install --verbose cpprestsdk@2.10.0 ^boost@1.65.0
-spack install --verbose rapidjson@663f076
 
 # Install Sarus
 spack install --verbose sarus@develop
@@ -44,5 +40,3 @@ sarus run alpine cat /etc/os-release > sarus.out
 if [ "$(head -n 1 sarus.out)" != "NAME=\"Alpine Linux\"" ]; then
     exit 1
 fi
-
-

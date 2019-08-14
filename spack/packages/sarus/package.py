@@ -23,13 +23,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import inspect
-import subprocess
 from spack import *
 
 
 class Sarus(CMakePackage):
-    """Sarus is an OCI-compliant container runtime for HPC systems.-"""
+    """Sarus is an OCI-compliant container engine for HPC systems."""
 
     homepage = "https://github.com/eth-cscs/sarus"
     url      = "https://github.com/eth-cscs/sarus/archive/1.0.0-rc6.tar.gz"
@@ -51,9 +49,9 @@ class Sarus(CMakePackage):
     depends_on('boost@1.65.0')
     depends_on('cpprestsdk@2.10.0')
     depends_on('libarchive@3.3.1')
-    depends_on('rapidjson@663f076')
+    depends_on('rapidjson@663f076', type='build')
 
-    depends_on('python@2.7.15', type='build', when='@develop')
+    depends_on('python@2.7.15', type='run', when='@develop')
 
     def cmake_args(self):
         spec = self.spec
@@ -67,15 +65,3 @@ class Sarus(CMakePackage):
             make(*self.install_targets)
             mkdirp(prefix.var.sarus.OCIBundleDir)
 
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def test_installation(self):
-        # Check image pull
-        command = ["sarus", "pull", "alpine"]
-        subprocess.check_call(command)
-
-        # Check container run
-        command = ["sarus", "run", "alpine", "cat", "/etc/os-release"]
-        output = subprocess.check_call(command)
-        lines = [line for line in output.split('\n')]
-        assert 'NAME="Alpine Linux"' in lines[0]
