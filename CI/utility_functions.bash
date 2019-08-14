@@ -112,26 +112,28 @@ run_tests() {
     install_sarus_from_archive /opt/sarus ${build_dir}/sarus.tar.gz
     fail_on_error "Failed to install Sarus from archive"
 
-    sudo -u docker PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH PATH=/opt/sarus/default/bin:$PATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker nosetests -v /sarus-source/CI/src/integration_tests/test*.py \
+    sudo -u docker PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH PATH=/opt/sarus/default/bin:$PATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker nosetests -v /sarus-source/CI/src/integration_tests/test*.py
     fail_on_error "Python integration tests failed"
 
     if [ ${build_type} = "Debug" ]; then
         sudo -u docker mkdir ${build_dir}/gcov
         cd ${build_dir}/gcov
         sudo -u docker gcov --preserve-paths $(find ${build_dir}/src -name "*.gcno" |grep -v test |tr '\n' ' ')
+        fail_on_error "Failed to run gcov"
         sudo -u docker gcovr -r /sarus-source/src -k -g --object-directory ${build_dir}/gcov
+        fail_on_error "Failed to run gcovr"
     fi
 }
 
 build_install_test_sarus() {
     local build_type=$1; shift
     local security_checks=$1; shift
+    local build_folder=$1; shift
 
     local host_uid=$(id -u)
     local host_gid=$(id -g)
     local docker_image_build=ethcscs/sarus-ci-build:1.0.0
     local docker_image_run=ethcscs/sarus-ci-run:1.0.0
-    local build_folder=build-${build_type}
     local build_dir=/sarus-source/${build_folder}
 
     if [ ${security_checks} = TRUE ]; then
@@ -160,12 +162,8 @@ build_install_test_sarus() {
 }
 
 generate_slurm_conf() {
-    slurm_conf_file=$1
-
-    shift
-    controller=$1
-
-    shift
+    slurm_conf_file=$1; shift
+    controller=$1; shift
     servers=( "$@" )
 
     cat << EOF > $slurm_conf_file
