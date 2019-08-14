@@ -1,16 +1,15 @@
 stages:
   - test
 
-tests_docker_ci:
+sarus:
   stage: test
   script:
-
+    - . ./CI/utility_functions.bash
+  
     # Check version number
     - ./CI/check_that_version_file_is_up_to_date.sh
     # TODO: fix test below
     #      - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_build} /sarus-source/CI/check_version_from_cmake.sh
-
-    - . ./CI/utility_functions.bash
 
     # Debug version
     - build_type=Debug
@@ -18,9 +17,14 @@ tests_docker_ci:
     - build_folder=build-Debug
     - build_install_test_sarus ${build_type} ${security_checks} ${build_folder}
 
-    #  /sarus-source/CI/run_unit_tests_and_integration_tests.sh $sarus_prefix_dir $build_type $host_uid $host_gid
+    # Release-WithSecurityChecks version
+    - build_type=Release
+    - security_checks=TRUE
+    - build_folder=build-Release-WithSecurityChecks
+    - build_install_test_sarus ${build_type} ${security_checks} ${build_folder}
 
   artifacts:
     paths:
       - build-Debug/sarus.tar.gz
       - build-Release/sarus.tar.gz
+      - build-Release-WithSecurityChecks/sarus.tar.gz
