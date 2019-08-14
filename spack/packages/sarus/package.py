@@ -47,6 +47,7 @@ class Sarus(CMakePackage):
                         'Strongly recommended for production deployments. '
                         'Disable to simplify setup of test installations.')
 
+    depends_on('squashfs', type=('build', 'run'))
     depends_on('boost@1.65.0')
     depends_on('cpprestsdk@2.10.0')
     depends_on('libarchive@3.3.1')
