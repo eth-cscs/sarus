@@ -35,7 +35,6 @@ build_sarus_archive() {
     local build_type=$1; shift
     local enable_security_checks=$1; shift
     local build_dir=$1; shift
-    local pwd_backup=$(pwd)
 
     local enable_coverage=FALSE
     if [ "$build_type" = "Debug" ]; then
@@ -66,10 +65,8 @@ build_sarus_archive() {
     make install
     (cd ${prefix_dir}/bin && wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64 && chmod +x runc.amd64)
     (cd ${prefix_dir} && mkdir -p var/OCIBundleDir)
-    (cd ${prefix_dir}/.. && tar cfz ../${archive_name} *)
+    (cd ${prefix_dir}/.. && tar cz --owner=root --group=root --file=../${archive_name} *)
     echo "Successfully built archive"
-
-    cd ${pwd_backup}
 }
 
 install_sarus_from_archive() {
@@ -78,13 +75,19 @@ install_sarus_from_archive() {
     local pwd_backup=$(pwd)
 
     echo "Installing Sarus from archive ${archive}"
+
     mkdir -p ${root_dir}
+    fail_on_error "Failed to install Sarus"
     cd ${root_dir}
     rm -rf * #remove any other installation
     tar xf ${archive}
+    fail_on_error "Failed to install Sarus"
     local sarus_version=$(ls)
     ln -s ${sarus_version} default
+    fail_on_error "Failed to install Sarus"
     ./default/configure_installation.sh
+    fail_on_error "Failed to install Sarus"
+
     echo "Successfully installed Sarus"
 
     cd ${pwd_backup}

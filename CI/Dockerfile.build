@@ -1,9 +1,9 @@
 FROM alpine:3.9
 
-LABEL version="2.0.0"
+LABEL version="1.0.0"
 
 RUN apk update \
-    && apk add bash sudo shadow git cmake make gcc g++ squashfs-tools \
+    && apk add bash sudo shadow tar git cmake make gcc g++ squashfs-tools \
                perl linux-headers expat-dev openssl-dev zlib-dev
 
 # libarchive
