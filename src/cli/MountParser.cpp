@@ -29,8 +29,8 @@ MountParser::MountParser(bool isUserMount, std::shared_ptr<const common::Config>
 {
     if(isUserMount) {
         // Retrieve settings from Config struct
-        if (this->conf->json.get().HasMember("userMounts")) {
-            const rapidjson::Value& userMounts = this->conf->json.get()["userMounts"];
+        if (this->conf->json.HasMember("userMounts")) {
+            const rapidjson::Value& userMounts = this->conf->json["userMounts"];
             for (const auto& value : userMounts["notAllowedPrefixesOfPath"].GetArray()) {
                 validationSettings.destinationDisallowedWithPrefix.push_back(value.GetString());
             }

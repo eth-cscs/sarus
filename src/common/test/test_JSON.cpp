@@ -24,26 +24,26 @@ TEST_GROUP(JSONTestGroup) {
 };
 
 TEST(JSONTestGroup, validFile) {
-    sarus::common::Config config;
+    auto config = std::make_shared<sarus::common::Config>();
 
     boost::filesystem::path jsonFile(testSourceDir / "json/valid.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    config.json.initialize(jsonFile, jsonSchemaFile);
+    config->initializeJson(config, jsonFile, jsonSchemaFile);
 
-    CHECK_EQUAL(config.json.get()["OCIBundleDir"].GetString(), std::string("/var/sarus/OCIBundleDir"));
-    CHECK_EQUAL(config.json.get()["rootfsFolder"].GetString(), std::string("rootfsFolder"));
-    CHECK_EQUAL(config.json.get()["prefixDir"].GetString(), std::string("/opt/sarus"));
-    CHECK_EQUAL(config.json.get()["dirOfFilesToCopyInContainerEtc"].GetString(), std::string("/opt/sarus/etc"));
-    CHECK_EQUAL(config.json.get()["runcPath"].GetString(), std::string("/usr/bin/runc.amd64"));
-    CHECK_EQUAL(config.json.get()["ramFilesystemType"].GetString(), std::string("tmpfs"));
+    CHECK_EQUAL(config->json["OCIBundleDir"].GetString(), std::string("/var/sarus/OCIBundleDir"));
+    CHECK_EQUAL(config->json["rootfsFolder"].GetString(), std::string("rootfsFolder"));
+    CHECK_EQUAL(config->json["prefixDir"].GetString(), std::string("/opt/sarus"));
+    CHECK_EQUAL(config->json["dirOfFilesToCopyInContainerEtc"].GetString(), std::string("/opt/sarus/etc"));
+    CHECK_EQUAL(config->json["runcPath"].GetString(), std::string("/usr/bin/runc.amd64"));
+    CHECK_EQUAL(config->json["ramFilesystemType"].GetString(), std::string("tmpfs"));
 
-    const rapidjson::Value& site_mounts = config.json.get()["siteMounts"];
+    const rapidjson::Value& site_mounts = config->json["siteMounts"];
     CHECK_EQUAL(site_mounts[0]["type"].GetString(), std::string("bind"));
     CHECK_EQUAL(site_mounts[0]["source"].GetString(), std::string("/home"));
     CHECK_EQUAL(site_mounts[0]["destination"].GetString(), std::string("/home"));
     CHECK(site_mounts[0]["flags"].ObjectEmpty());
 
-    const rapidjson::Value& environment = config.json.get()["environment"];
+    const rapidjson::Value& environment = config->json["environment"];
     CHECK_EQUAL(environment["set"].Size(), 1);
     CHECK_EQUAL(environment["set"][0]["VAR_TO_SET_IN_CONTAINER"].GetString(), std::string("value"));
     CHECK_EQUAL(environment["prepend"].Size(), 1);
@@ -54,7 +54,7 @@ TEST(JSONTestGroup, validFile) {
     CHECK_EQUAL(environment["unset"][0].GetString(), std::string("VAR_TO_UNSET_IN_CONTAINER_0"));
     CHECK_EQUAL(environment["unset"][1].GetString(), std::string("VAR_TO_UNSET_IN_CONTAINER_1"));
 
-    const rapidjson::Value& user_mounts = config.json.get()["userMounts"];
+    const rapidjson::Value& user_mounts = config->json["userMounts"];
     CHECK_EQUAL(user_mounts["notAllowedPrefixesOfPath"].Size(), 2);
     CHECK_EQUAL(user_mounts["notAllowedPrefixesOfPath"][0].GetString(), std::string("/etc"));
     CHECK_EQUAL(user_mounts["notAllowedPrefixesOfPath"][1].GetString(), std::string("/var"));
@@ -63,35 +63,35 @@ TEST(JSONTestGroup, validFile) {
 }
 
 TEST(JSONTestGroup, minimumRequirementsFile) {
-    sarus::common::Config config;
+    auto config = std::make_shared<sarus::common::Config>();
 
     boost::filesystem::path jsonFile(testSourceDir / "json/min_required.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    config.json.initialize(jsonFile, jsonSchemaFile);
+    config->initializeJson(config, jsonFile, jsonSchemaFile);
 }
 
 TEST(JSONTestGroup, missingRequired) {
-    sarus::common::Config config;
+    auto config = std::make_shared<sarus::common::Config>();
 
     boost::filesystem::path jsonFile(testSourceDir / "json/missing_required.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    CHECK_THROWS(sarus::common::Error, config.json.initialize(jsonFile, jsonSchemaFile));
+    CHECK_THROWS(sarus::common::Error, config->initializeJson(config, jsonFile, jsonSchemaFile));
 }
 
 TEST(JSONTestGroup, relativePaths) {
-    sarus::common::Config config;
+    auto config = std::make_shared<sarus::common::Config>();
 
     boost::filesystem::path jsonFile(testSourceDir / "json/relative_paths.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    CHECK_THROWS(sarus::common::Error, config.json.initialize(jsonFile, jsonSchemaFile));
+    CHECK_THROWS(sarus::common::Error, config->initializeJson(config, jsonFile, jsonSchemaFile));
 }
 
 TEST(JSONTestGroup, siteMountWithoutType) {
-    sarus::common::Config config;
+    auto config = std::make_shared<sarus::common::Config>();
 
     boost::filesystem::path jsonFile(testSourceDir / "json/site_mount_without_type.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    CHECK_THROWS(sarus::common::Error, config.json.initialize(jsonFile, jsonSchemaFile));
+    CHECK_THROWS(sarus::common::Error, config->initializeJson(config, jsonFile, jsonSchemaFile));
 }
 
 

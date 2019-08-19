@@ -29,7 +29,7 @@ OCIBundleConfig::OCIBundleConfig(std::shared_ptr<const common::Config> config)
     , configsMerger{config, common::ImageMetadata{config->getMetadataFileOfImage()}}
     , document{new rj::Document{}}
     , allocator{&document->GetAllocator()}
-    , configFile{boost::filesystem::path{config->json.get()["OCIBundleDir"].GetString()} / "config.json"}
+    , configFile{boost::filesystem::path{config->json["OCIBundleDir"].GetString()} / "config.json"}
 {}
 
 void OCIBundleConfig::generateConfigFile() const {
@@ -114,7 +114,7 @@ rj::Value OCIBundleConfig::makeMemberProcess() const {
 rj::Value OCIBundleConfig::makeMemberRoot() const {
     auto root = rj::Value{rj::kObjectType};
     root.AddMember( "path",
-                    rj::Value{config->json.get()["rootfsFolder"].GetString(), *allocator},
+                    rj::Value{config->json["rootfsFolder"].GetString(), *allocator},
                     *allocator);
     root.AddMember( "readonly",
                     rj::Value{false},
@@ -246,8 +246,8 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
 }
 
 rj::Value OCIBundleConfig::makeMemberHooks() const {
-    if(config->json.get().HasMember("OCIHooks")) {
-        return rj::Value{   config->json.get()["OCIHooks"],
+    if(config->json.HasMember("OCIHooks")) {
+        return rj::Value{   config->json["OCIHooks"],
                             *allocator};
     }
     else {

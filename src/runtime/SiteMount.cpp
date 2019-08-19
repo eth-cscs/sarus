@@ -42,8 +42,8 @@ void SiteMount::performMount() const {
         SARUS_THROW_ERROR(message.str());
     }
 
-    auto rootfsDir = boost::filesystem::path{config->json.get()["OCIBundleDir"].GetString()} /
-        config->json.get()["rootfsFolder"].GetString();
+    auto rootfsDir = boost::filesystem::path{config->json["OCIBundleDir"].GetString()} /
+        config->json["rootfsFolder"].GetString();
     auto destinationReal = common::realpathWithinRootfs(rootfsDir, destination);
 
     validateMountDestination(destinationReal, *config);

@@ -288,7 +288,7 @@ void setOwner(const boost::filesystem::path& path, uid_t uid, gid_t gid) {
 
 bool isCentralizedRepositoryEnabled(const common::Config& config) {
     // centralized repository is enabled when a directory is specified
-    return config.json.get().HasMember("centralizedRepositoryDir");
+    return config.json.HasMember("centralizedRepositoryDir");
 }
 
 boost::filesystem::path getCentralizedRepositoryDirectory(const common::Config& config) {
@@ -297,11 +297,11 @@ boost::filesystem::path getCentralizedRepositoryDirectory(const common::Config& 
                             " because such feature is disabled. Please ask your system"
                             " administrator to enable the central read-only repository.");
     }
-    return config.json.get()["centralizedRepositoryDir"].GetString();
+    return config.json["centralizedRepositoryDir"].GetString();
 }
 
 boost::filesystem::path getLocalRepositoryDirectory(const common::Config& config) {
-    auto baseDir = boost::filesystem::path{ config.json.get()["localRepositoryBaseDir"].GetString() };
+    auto baseDir = boost::filesystem::path{ config.json["localRepositoryBaseDir"].GetString() };
     return getLocalRepositoryDirectory(baseDir, config.userIdentity.uid);
 }
 

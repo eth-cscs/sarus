@@ -36,8 +36,8 @@ TEST(UserMountsTestGroup, make_user_mount_test) {
 #endif
     auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
 
-    auto bundleDir = boost::filesystem::path{config->json.get()["OCIBundleDir"].GetString()};
-    auto rootfsDir = bundleDir / boost::filesystem::path{config->json.get()["rootfsFolder"].GetString()};
+    auto bundleDir = boost::filesystem::path{config->json["OCIBundleDir"].GetString()};
+    auto rootfsDir = bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()};
     auto overlayfsLowerDir = bundleDir / "overlay/rootfs-lower"; // hardcoded so in production code being tested
     common::createFoldersIfNecessary(overlayfsLowerDir);
 

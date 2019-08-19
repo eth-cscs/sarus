@@ -186,11 +186,11 @@ private:
         auto maps = std::vector<std::unordered_map<std::string, std::string>>{};
 
         try {
-            if(!conf->json.get().HasMember("siteMounts")) {
+            if(!conf->json.HasMember("siteMounts")) {
                 return maps;
             }
 
-            for(const auto& mount : conf->json.get()["siteMounts"].GetArray()) {
+            for(const auto& mount : conf->json["siteMounts"].GetArray()) {
                 auto map = std::unordered_map<std::string, std::string>{};
                 for(const auto& field : mount.GetObject()) {
                     if(field.name.GetString() == std::string{"flags"}) {

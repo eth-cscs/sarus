@@ -51,15 +51,6 @@ struct Config {
         boost::filesystem::path images;
     };
 
-    struct JSON {
-        JSON();
-        void initialize(const boost::filesystem::path& configFilename, const boost::filesystem::path& schemaFilename);
-        rapidjson::Document& get() { return *(this->file); }
-        const rapidjson::Document& get() const { return *(this->file); }
-    private:
-        std::shared_ptr<rapidjson::Document> file;
-    };
-
     struct UserIdentity {
         UserIdentity();
         uid_t uid;
@@ -84,13 +75,16 @@ struct Config {
         bool enableSSH = false;
     };
 
+    void initializeJson(std::shared_ptr<const common::Config> config,
+                        const boost::filesystem::path& configFilename,
+                        const boost::filesystem::path& schemaFilename);
     boost::filesystem::path getImageFile() const;
     boost::filesystem::path getMetadataFileOfImage() const;
 
     BuildTime buildTime;
     common::ImageID imageID;
     Directories directories;
-    JSON json;
+    rapidjson::Document json{ rapidjson::kObjectType };
     UserIdentity userIdentity;
     Authentication authentication;
     CommandRun commandRun;

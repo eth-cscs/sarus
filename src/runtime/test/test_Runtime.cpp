@@ -35,7 +35,7 @@ unsigned long getFilesystemType(const boost::filesystem::path& path) {
 }
 
 unsigned long getExpectedFilesystemTypeOfBundle(const common::Config& config) {
-    auto type = std::string{config.json.get()["ramFilesystemType"].GetString()};
+    auto type = std::string{config.json["ramFilesystemType"].GetString()};
     if(type == "tmpfs") {
         return TMPFS_MAGIC;
     }
@@ -59,10 +59,10 @@ TEST(RuntimeTestGroup, setupOCIBundle) {
     config->directories.images = boost::filesystem::path{__FILE__}.parent_path();
     config->imageID = common::ImageID{"", "", "", "test_image"};
 
-    auto bundleDir = boost::filesystem::path{config->json.get()["OCIBundleDir"].GetString()};
+    auto bundleDir = boost::filesystem::path{config->json["OCIBundleDir"].GetString()};
     auto overlayfsLowerDir = bundleDir / "overlay/rootfs-lower"; // hardcoded so in production code being tested
-    auto rootfsDir = bundleDir / boost::filesystem::path{config->json.get()["rootfsFolder"].GetString()};
-    auto dirOfFilesToCopyInContainerEtc = boost::filesystem::path{config->json.get()["dirOfFilesToCopyInContainerEtc"].GetString()};
+    auto rootfsDir = bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()};
+    auto dirOfFilesToCopyInContainerEtc = boost::filesystem::path{config->json["dirOfFilesToCopyInContainerEtc"].GetString()};
 
     // create test folders / files
     common::createFoldersIfNecessary(bundleDir);

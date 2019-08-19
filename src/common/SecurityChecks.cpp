@@ -99,7 +99,7 @@ void SecurityChecks::checkThatOCIHooksAreUntamperable() const {
 
     logMessage("Checking that OCI hooks are owned by root user", common::logType::INFO);
 
-    if(!config->json.get().HasMember("OCIHooks")) {
+    if(!config->json.HasMember("OCIHooks")) {
         logMessage( "Successfully checked that OCI hooks are owned by root user."
                     " The configuration doesn't contain OCI hooks to check.", common::logType::INFO);
         return; // no hooks to check
@@ -115,7 +115,7 @@ void SecurityChecks::checkThatOCIHooksAreUntamperable() const {
 void SecurityChecks::checkThatOCIHooksAreUntamperableByType(const std::string& hookType) const {
     logMessage(boost::format("Checking %s OCI hooks") % hookType, common::logType::DEBUG);
 
-    const auto& json = config->json.get();
+    const auto& json = config->json;
     if(!json["OCIHooks"].HasMember(hookType.c_str())) {
         logMessage(boost::format(   "Successfully checked %s OCI hooks."
                                     " The configuration doesn't contain %s OCI hooks to check.") % hookType % hookType,

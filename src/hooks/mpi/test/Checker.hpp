@@ -232,8 +232,8 @@ private:
         .parent_path()
         .parent_path()
         .parent_path() / "CI/dummy_libs/lib_dummy_1.so";
-    boost::filesystem::path bundleDir = boost::filesystem::path{ config.json.get()["OCIBundleDir"].GetString() };
-    boost::filesystem::path rootfsDir = bundleDir / config.json.get()["rootfsFolder"].GetString();
+    boost::filesystem::path bundleDir = boost::filesystem::path{ config.json["OCIBundleDir"].GetString() };
+    boost::filesystem::path rootfsDir = bundleDir / config.json["rootfsFolder"].GetString();
 
     std::vector<std::string> environmentVariables;
     std::vector<boost::filesystem::path> hostMpiLibs;

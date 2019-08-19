@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
         auto sarusInstallationPrefixDir = boost::filesystem::canonical("/proc/self/exe").parent_path().parent_path();
         auto configFile =  sarusInstallationPrefixDir / "etc/sarus.json";
         auto configSchemaFile = sarusInstallationPrefixDir / "etc/sarus.schema.json";
-        conf->json.initialize(configFile, configSchemaFile);
+        conf->initializeJson(conf, configFile, configSchemaFile);
 
         auto args = common::CLIArguments(argc, argv);
         auto command = cli::CLI{}.parseCommandLine(args, conf);

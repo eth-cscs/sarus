@@ -87,7 +87,7 @@ static void populateJSON(rapidjson::Document& document) {
 sarus::common::Config makeConfig() {
     auto config = common::Config{};
 
-    populateJSON(config.json.get());
+    populateJSON(config.json);
 
     auto repository = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-repository"));
     config.directories.repository = repository;

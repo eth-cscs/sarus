@@ -135,8 +135,8 @@ private:
 
 private:
     sarus::common::Config config = test_utility::config::makeConfig();
-    boost::filesystem::path bundleDir = boost::filesystem::path{ config.json.get()["OCIBundleDir"].GetString() };
-    boost::filesystem::path rootfsDir = bundleDir / config.json.get()["rootfsFolder"].GetString();
+    boost::filesystem::path bundleDir = boost::filesystem::path{ config.json["OCIBundleDir"].GetString() };
+    boost::filesystem::path rootfsDir = bundleDir / config.json["rootfsFolder"].GetString();
     boost::filesystem::path dummyLibsDir = boost::filesystem::path{__FILE__}
         .parent_path()
         .parent_path()

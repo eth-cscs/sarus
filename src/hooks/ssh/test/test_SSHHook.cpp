@@ -168,8 +168,8 @@ private:
     std::tuple<uid_t, gid_t> idsOfUser = test_utility::misc::getNonRootUserIds();
 
     sarus::common::Config config = test_utility::config::makeConfig();
-    boost::filesystem::path bundleDir = boost::filesystem::path{ config.json.get()["OCIBundleDir"].GetString() };
-    boost::filesystem::path rootfsDir = bundleDir / config.json.get()["rootfsFolder"].GetString();
+    boost::filesystem::path bundleDir = boost::filesystem::path{ config.json["OCIBundleDir"].GetString() };
+    boost::filesystem::path rootfsDir = bundleDir / config.json["rootfsFolder"].GetString();
     boost::filesystem::path localRepositoryBaseDir = boost::filesystem::absolute(
         sarus::common::makeUniquePathWithRandomSuffix("./sarus-test-localrepositorybase"));
     boost::filesystem::path localRepositoryDir =

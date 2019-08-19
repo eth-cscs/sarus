@@ -29,7 +29,7 @@ namespace test {
 TEST_GROUP(TimestampTestGroup) {
     std::tuple<uid_t, gid_t> idsOfUser = test_utility::misc::getNonRootUserIds();
     sarus::common::Config config = test_utility::config::makeConfig();
-    boost::filesystem::path bundleDir = boost::filesystem::path{ config.json.get()["OCIBundleDir"].GetString() };
+    boost::filesystem::path bundleDir = boost::filesystem::path{ config.json["OCIBundleDir"].GetString() };
     boost::filesystem::path logFile   = boost::filesystem::path{boost::filesystem::absolute("./timestamp_test.log")};
 };
 

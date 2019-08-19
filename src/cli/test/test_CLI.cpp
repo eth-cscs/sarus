@@ -107,7 +107,7 @@ TEST(CLITestGroup, UnrecognizedGlobalOptions) {
     CHECK_THROWS(common::Error, generateCommandFromCLIArguments({"sarus", "--mpi", "run"}));
 }
 
-common::Config generateConfig(const common::CLIArguments& args) {
+std::shared_ptr<common::Config> generateConfig(const common::CLIArguments& args) {
     auto commandName = args.argv()[0];
     auto cli = cli::CLI{};
     auto argsGroups = cli.groupArgumentsAndCorrespondingOptions(args);
@@ -115,19 +115,19 @@ common::Config generateConfig(const common::CLIArguments& args) {
     auto conf = std::make_shared<common::Config>(test_utility::config::makeConfig());
     auto factory = cli::CommandObjectsFactory{};
     auto command = factory.makeCommandObject(commandName, argsGroups, conf);
-    return *conf;
+    return conf;
 }
 
 TEST(CLITestGroup, generated_config_for_CommandLoad) {
     auto conf = generateConfig(
         {"load", "--temp-dir=/custom-temp-dir", "archive.tar", "library/image:tag"});
     auto expectedArchivePath = boost::filesystem::absolute("archive.tar");
-    CHECK_EQUAL(conf.directories.temp.string(), std::string{"/custom-temp-dir"});
-    CHECK_EQUAL(conf.archivePath.string(), expectedArchivePath.string());
-    CHECK_EQUAL(conf.imageID.server, std::string{"load"});
-    CHECK_EQUAL(conf.imageID.repositoryNamespace, std::string{"library"});
-    CHECK_EQUAL(conf.imageID.image, std::string{"image"});
-    CHECK_EQUAL(conf.imageID.tag, std::string{"tag"});
+    CHECK_EQUAL(conf->directories.temp.string(), std::string{"/custom-temp-dir"});
+    CHECK_EQUAL(conf->archivePath.string(), expectedArchivePath.string());
+    CHECK_EQUAL(conf->imageID.server, std::string{"load"});
+    CHECK_EQUAL(conf->imageID.repositoryNamespace, std::string{"library"});
+    CHECK_EQUAL(conf->imageID.image, std::string{"image"});
+    CHECK_EQUAL(conf->imageID.tag, std::string{"tag"});
 }
 
 TEST(CLITestGroup, generated_config_for_CommandPull) {
@@ -135,48 +135,48 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
         {"pull",
         "--temp-dir=/custom-temp-dir",
         "my.own.server:5000/user/image:tag"});
-    CHECK(conf.directories.temp.string() == "/custom-temp-dir");
-    CHECK(conf.imageID.server == "my.own.server:5000");
-    CHECK(conf.imageID.repositoryNamespace == "user");
-    CHECK(conf.imageID.image == "image");
-    CHECK(conf.imageID.tag == "tag");
+    CHECK(conf->directories.temp.string() == "/custom-temp-dir");
+    CHECK(conf->imageID.server == "my.own.server:5000");
+    CHECK(conf->imageID.repositoryNamespace == "user");
+    CHECK(conf->imageID.image == "image");
+    CHECK(conf->imageID.tag == "tag");
 }
 
 TEST(CLITestGroup, generated_config_for_CommandRmi) {
     auto conf = generateConfig({"rmi", "ubuntu"});
-    CHECK_EQUAL(conf.imageID.server, std::string{"index.docker.io"});
-    CHECK_EQUAL(conf.imageID.repositoryNamespace, std::string{"library"});
-    CHECK_EQUAL(conf.imageID.image, std::string{"ubuntu"});
-    CHECK_EQUAL(conf.imageID.tag, std::string{"latest"});
+    CHECK_EQUAL(conf->imageID.server, std::string{"index.docker.io"});
+    CHECK_EQUAL(conf->imageID.repositoryNamespace, std::string{"library"});
+    CHECK_EQUAL(conf->imageID.image, std::string{"ubuntu"});
+    CHECK_EQUAL(conf->imageID.tag, std::string{"latest"});
 }
 
 TEST(CLITestGroup, generated_config_for_CommandRun) {
     {
         auto conf = generateConfig({"run", "image"});
-        CHECK_EQUAL(conf.imageID.server, std::string{"index.docker.io"});
-        CHECK_EQUAL(conf.imageID.repositoryNamespace, std::string{"library"});
-        CHECK_EQUAL(conf.imageID.image, std::string{"image"});
-        CHECK_EQUAL(conf.imageID.tag, std::string{"latest"});
-        CHECK_EQUAL(conf.commandRun.useMPI, 0);
-        CHECK(conf.commandRun.execArgs.argc() == 0);
+        CHECK_EQUAL(conf->imageID.server, std::string{"index.docker.io"});
+        CHECK_EQUAL(conf->imageID.repositoryNamespace, std::string{"library"});
+        CHECK_EQUAL(conf->imageID.image, std::string{"image"});
+        CHECK_EQUAL(conf->imageID.tag, std::string{"latest"});
+        CHECK_EQUAL(conf->commandRun.useMPI, 0);
+        CHECK(conf->commandRun.execArgs.argc() == 0);
     }
     {
         auto conf = generateConfig({"run",
                                     "--mpi",
                                     "--mount=type=bind,source=/source,destination=/destination",
                                     "ubuntu", "bash", "-c", "ls /dev |grep nvidia"});
-        CHECK_EQUAL(conf.imageID.server, std::string{"index.docker.io"});
-        CHECK_EQUAL(conf.imageID.repositoryNamespace, std::string{"library"});
-        CHECK_EQUAL(conf.imageID.image, std::string{"ubuntu"});
-        CHECK_EQUAL(conf.imageID.tag, std::string{"latest"});
-        CHECK_EQUAL(conf.commandRun.useMPI, 1);
-        CHECK_EQUAL(conf.commandRun.mounts.size(), 2); // 1 site mount + 1 user mount
-        checkMountDynamicType<runtime::SiteMount>(*conf.commandRun.mounts[0]); // site mounts first
-        checkMountDynamicType<runtime::UserMount>(*conf.commandRun.mounts[1]);
-        CHECK(conf.commandRun.execArgs.argc() == 3);
-        CHECK_EQUAL(conf.commandRun.execArgs.argv()[0], std::string{"bash"});
-        CHECK_EQUAL(conf.commandRun.execArgs.argv()[1], std::string{"-c"});
-        CHECK_EQUAL(conf.commandRun.execArgs.argv()[2], std::string{"ls /dev |grep nvidia"});
+        CHECK_EQUAL(conf->imageID.server, std::string{"index.docker.io"});
+        CHECK_EQUAL(conf->imageID.repositoryNamespace, std::string{"library"});
+        CHECK_EQUAL(conf->imageID.image, std::string{"ubuntu"});
+        CHECK_EQUAL(conf->imageID.tag, std::string{"latest"});
+        CHECK_EQUAL(conf->commandRun.useMPI, 1);
+        CHECK_EQUAL(conf->commandRun.mounts.size(), 2); // 1 site mount + 1 user mount
+        checkMountDynamicType<runtime::SiteMount>(*conf->commandRun.mounts[0]); // site mounts first
+        checkMountDynamicType<runtime::UserMount>(*conf->commandRun.mounts[1]);
+        CHECK(conf->commandRun.execArgs.argc() == 3);
+        CHECK_EQUAL(conf->commandRun.execArgs.argv()[0], std::string{"bash"});
+        CHECK_EQUAL(conf->commandRun.execArgs.argv()[1], std::string{"-c"});
+        CHECK_EQUAL(conf->commandRun.execArgs.argv()[2], std::string{"ls /dev |grep nvidia"});
     }
 }
 

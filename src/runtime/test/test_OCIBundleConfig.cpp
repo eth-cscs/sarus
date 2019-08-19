@@ -33,7 +33,7 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     config->imageID = common::ImageID{"test", "test", "test", "test_image"};
 
     // create test bundle
-    auto bundleDir = boost::filesystem::path{config->json.get()["OCIBundleDir"].GetString()};
+    auto bundleDir = boost::filesystem::path{config->json["OCIBundleDir"].GetString()};
     auto actualConfigFile = bundleDir / "config.json";
     auto expectedConfigFile = boost::filesystem::path{__FILE__}.parent_path() / "expected_config.json";
     common::createFoldersIfNecessary(bundleDir);
