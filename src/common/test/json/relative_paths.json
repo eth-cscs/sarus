@@ -1,5 +1,5 @@
 {
-    "securityChecks": true,
+    "securityChecks": false,
     "OCIBundleDir": "/var/sarus/OCIBundleDir",
     "rootfsFolder": "rootfsFolder",
     "prefixDir": "opt/sarus",

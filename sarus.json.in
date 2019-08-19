@@ -53,6 +53,7 @@
             {
                 "path": "@PREFIX_DIR@/bin/ssh_hook",
                 "env": [
+                    "SARUS_PREFIX_DIR=@PREFIX_DIR@",
                     "SARUS_LOCAL_REPOSITORY_BASE_DIR=/home",
                     "SARUS_OPENSSH_DIR=@PREFIX_DIR@/openssh"
                 ],

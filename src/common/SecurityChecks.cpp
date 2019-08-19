@@ -17,7 +17,7 @@ namespace sarus {
 namespace common {
 
 #define SKIP_SECURITY_CHECK_IF_NECESSARY(message) { \
-    if(!config->buildTime.areRuntimeSecurityChecksEnabled) { \
+    if(!config->json["securityChecks"].GetBool()) { \
         logMessage(message, logType::INFO); \
         return; \
     } \

@@ -24,7 +24,8 @@ namespace config {
 static void populateJSON(rapidjson::Document& document) {
     auto& allocator = document.GetAllocator();
 
-    auto bundleDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-ocibundle"));
+    auto prefixDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-prefix-dir"));
+    auto bundleDir = prefixDir / "var/OCIBundle";
     auto dirOfFilesToCopyInContainerEtc = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-dirOfFilesToCopyInContainerEtc"));
 
     document.AddMember( "securityChecks",
@@ -35,6 +36,9 @@ static void populateJSON(rapidjson::Document& document) {
                         allocator);
     document.AddMember( "rootfsFolder",
                         rapidjson::Value{"rootfs", allocator},
+                        allocator);
+    document.AddMember( "prefixDir",
+                        rapidjson::Value{prefixDir.c_str(), allocator},
                         allocator);
     document.AddMember( "dirOfFilesToCopyInContainerEtc",
                         rapidjson::Value{dirOfFilesToCopyInContainerEtc.c_str(), allocator},
@@ -50,6 +54,9 @@ static void populateJSON(rapidjson::Document& document) {
                         allocator);
     document.AddMember( "mksquashfsPath",
                         rapidjson::Value{"/usr/bin/mksquashfs", allocator},
+                        allocator);
+    document.AddMember( "runcPath",
+                        rapidjson::Value{"/usr/bin/runc.amd64", allocator},
                         allocator);
 
     // siteMounts

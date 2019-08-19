@@ -29,6 +29,8 @@ receive its own name/location as the first argument, and the string
 ``start-sshd`` as positional argument. In addition, the following
 environment variables must be defined:
 
+* ``SARUS_PREFIX_DIR``: Absolute path to the installation directory of Sarus.
+
 * ``SARUS_LOCAL_REPOSITORY_BASE_DIR``: Absolute path to the base directory of
   local user repositories, as configured in the :ref:`corresponding parameter
   <config-reference-localRepositoryBaseDir>` of *sarus.json*.
@@ -45,6 +47,7 @@ The following is an example ``OCIHooks`` object enabling the SSH hook:
             {
                 "path": "/opt/sarus/bin/ssh_hook",
                 "env": [
+                    "SARUS_PREFIX_DIR=/opt/sarus",
                     "SARUS_LOCAL_REPOSITORY_BASE_DIR=/home",
                     "SARUS_OPENSSH_DIR=/opt/sarus/openssh"
                 ],
