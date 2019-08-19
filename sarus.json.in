@@ -1,4 +1,5 @@
 {
+    "securityChecks": true,
     "OCIBundleDir": "@PREFIX_DIR@/var/OCIBundleDir",
     "rootfsFolder": "rootfs",
     "prefixDir": "@PREFIX_DIR@",

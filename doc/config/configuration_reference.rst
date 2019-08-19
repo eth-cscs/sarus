@@ -15,6 +15,15 @@ using the ``SYSCONFDIR`` CMake option (see :doc:`/install/installation`).
 Configuration file entries
 ==========================
 
+.. _config-reference-securityChecks:
+
+securityChecks (bool, REQUIRED)
+-------------------------------
+Enable/disable runtime security checks to verify that security critical files
+are not tamperable by non-root users.
+
+Recommended value: ``true``
+
 .. _config-reference-OCIBundleDir:
 
 OCIBundleDir (string, REQUIRED)

@@ -27,6 +27,9 @@ static void populateJSON(rapidjson::Document& document) {
     auto bundleDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-ocibundle"));
     auto dirOfFilesToCopyInContainerEtc = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-dirOfFilesToCopyInContainerEtc"));
 
+    document.AddMember( "securityChecks",
+                        false,
+                        allocator);
     document.AddMember( "OCIBundleDir",
                         rapidjson::Value{bundleDir.c_str(), allocator},
                         allocator);

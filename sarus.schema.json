@@ -4,6 +4,9 @@
     "description": "Sarus configuration file",
     "type": "object",
     "properties": {
+        "securityChecks": {
+            "type": "boolean"
+        },
         "OCIBundleDir": {
             "$ref": "#/definitions/AbsolutePath"
         },

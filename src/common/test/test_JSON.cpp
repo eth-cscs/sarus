@@ -30,6 +30,7 @@ TEST(JSONTestGroup, validFile) {
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
     config->initializeJson(config, jsonFile, jsonSchemaFile);
 
+    CHECK_EQUAL(config->json["securityChecks"].GetBool(), true);
     CHECK_EQUAL(config->json["OCIBundleDir"].GetString(), std::string("/var/sarus/OCIBundleDir"));
     CHECK_EQUAL(config->json["rootfsFolder"].GetString(), std::string("rootfsFolder"));
     CHECK_EQUAL(config->json["prefixDir"].GetString(), std::string("/opt/sarus"));
