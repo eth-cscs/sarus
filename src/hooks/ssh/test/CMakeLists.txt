@@ -5,5 +5,4 @@ if(${ENABLE_SSH})
     set(object_files_directory "${CMAKE_BINARY_DIR}/src/hooks/ssh/CMakeFiles/hooks_ssh_library.dir")
 
     add_unit_test(hooks_ssh_SSHHook_AsRoot test_SSHHook.cpp "${link_libraries}")
-    add_unit_test(hooks_ssh_PasswdDB test_PasswdDB.cpp "${link_libraries}")
 endif(${ENABLE_SSH})

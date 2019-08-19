@@ -18,8 +18,7 @@
 #include <boost/optional.hpp>
 
 namespace sarus {
-namespace hooks {
-namespace ssh {
+namespace common {
 
 class PasswdDB {
 public:
@@ -47,6 +46,6 @@ private:
     std::vector<Entry> entries;
 };
 
-}}} // namespace
+}} // namespace
 
 #endif
