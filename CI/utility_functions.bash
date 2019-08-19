@@ -33,7 +33,6 @@ add_supplementary_groups_to_docker_user() {
 # build and package Sarus as a standalone archive ready for installation
 build_sarus_archive() {
     local build_type=$1; shift
-    local enable_security_checks=$1; shift
     local build_dir=$1; shift
 
     local enable_coverage=FALSE
@@ -42,7 +41,7 @@ build_sarus_archive() {
     fi
 
     # build Sarus
-    echo "Building Sarus (build type = ${build_type}, security checks = ${enable_security_checks})"
+    echo "Building Sarus (build type = ${build_type}"
     mkdir -p ${build_dir} && cd ${build_dir}
     local prefix_dir=${build_dir}/install/$(git describe --tags --dirty)-${build_type}
     cmake   -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc-gcov.cmake \
@@ -50,7 +49,6 @@ build_sarus_archive() {
             -Dcpprestsdk_INCLUDE_DIR=/opt/cpprestsdk/v2.10.0/include \
             -DCMAKE_BUILD_TYPE=${build_type} \
             -DBUILD_STATIC=TRUE \
-            -DENABLE_RUNTIME_SECURITY_CHECKS=${enable_security_checks} \
             -DENABLE_TESTS_WITH_GCOV=${enable_coverage} \
             -DENABLE_TESTS_WITH_VALGRIND=FALSE \
             -DENABLE_SSH=TRUE \
@@ -60,8 +58,9 @@ build_sarus_archive() {
     echo "Successfully built Sarus"
 
     # build archive
-    local archive_name="sarus.tar.gz"
     echo "Building archive ${archive_name}"
+    local archive_name="sarus.tar.gz"
+    rm -rf ${prefix_dir}/*
     make install
     (cd ${prefix_dir}/bin && wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64 && chmod +x runc.amd64)
     (cd ${prefix_dir} && mkdir -p var/OCIBundleDir)
@@ -97,7 +96,6 @@ run_tests() {
     local host_uid=$1; shift
     local host_gid=$1; shift
     local build_type=$1; shift
-    local security_checks=$1; shift
     local build_dir=$1; shift
 
     change_uid_gid_of_docker_user ${host_uid} ${host_gid}
@@ -133,18 +131,13 @@ run_tests() {
 
 build_install_test_sarus() {
     local build_type=$1; shift
-    local security_checks=$1; shift
-    local build_folder=$1; shift
+    local docker_image_build=$1; shift
+    local docker_image_run=$1; shift
 
     local host_uid=$(id -u)
     local host_gid=$(id -g)
-    local docker_image_build=ethcscs/sarus-ci-build:1.0.0
-    local docker_image_run=ethcscs/sarus-ci-run:1.0.0
+    local build_folder=build-${build_type}
     local build_dir=/sarus-source/${build_folder}
-
-    if [ ${security_checks} = TRUE ]; then
-        build_folder=${build-folder}-WithSecurityChecks
-    fi
 
     # Use cached build artifacts
     test -e ~/cache/ids/sarus/openssh.tar && mkdir -p ${build_folder}/dep && cp ~/cache/ids/sarus/openssh.tar ${build_folder}/dep/openssh.tar
@@ -154,7 +147,7 @@ build_install_test_sarus() {
     docker run --tty --rm --user root --mount=src=$(pwd),dst=/sarus-source,type=bind ${docker_image_build} bash -c "
         . /sarus-source/CI/utility_functions.bash \
         && change_uid_gid_of_docker_user ${host_uid} ${host_gid} \
-        && sudo -u docker bash -c '. /sarus-source/CI/utility_functions.bash && build_sarus_archive ${build_type} ${security_checks} ${build_dir}'"
+        && sudo -u docker bash -c '. /sarus-source/CI/utility_functions.bash && build_sarus_archive ${build_type} ${build_dir}'"
 
     # Run tests
     local sarus_cached_home_dir=~/cache/ids/sarus/home_dir
@@ -164,7 +157,7 @@ build_install_test_sarus() {
         --mount=src=${sarus_cached_home_dir},dst=/home/docker,type=bind \
         --mount=src=${sarus_cached_centralized_repository_dir},dst=/var/sarus/centralized_repository,type=bind \
         ${docker_image_run} \
-        bash -c ". /sarus-source/CI/utility_functions.bash && run_tests ${host_uid} ${host_gid} ${build_type} ${security_checks} ${build_dir}"
+        bash -c ". /sarus-source/CI/utility_functions.bash && run_tests ${host_uid} ${host_gid} ${build_type} ${build_dir}"
 }
 
 generate_slurm_conf() {

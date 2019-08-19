@@ -14,7 +14,6 @@ security checks disabled:
    $ mkdir build && cd build
    $ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc.cmake \
            -DCMAKE_INSTALL_PREFIX=/opt/sarus \
-           -DENABLE_RUNTIME_SECURITY_CHECKS=FALSE \
            ..
    $ make
 

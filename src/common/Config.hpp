@@ -39,7 +39,6 @@ struct Config {
         boost::filesystem::path configSchemaFile;
         boost::filesystem::path localRepositoryFolder = ".sarus";
         boost::filesystem::path openSshArchive;
-        bool areRuntimeSecurityChecksEnabled;
     };
 
     struct Directories {

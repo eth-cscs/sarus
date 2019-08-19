@@ -14,8 +14,6 @@ Config::BuildTime::BuildTime()
     , configFile{boost::filesystem::absolute("@SYSCONFDIR@/sarus.json")}
     , configSchemaFile{boost::filesystem::absolute("@SYSCONFDIR@/sarus.schema.json")}
     , openSshArchive{boost::filesystem::absolute("@OPENSSH_ARCHIVE@")}
-    , areRuntimeSecurityChecksEnabled{  "@ENABLE_RUNTIME_SECURITY_CHECKS@" == std::string{"true"}
-                                        || "@ENABLE_RUNTIME_SECURITY_CHECKS@" == std::string{"TRUE"}}
 {}
 
 }
