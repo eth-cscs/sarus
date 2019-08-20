@@ -23,6 +23,10 @@ sudo chmod +s bin/sarus
 exit_on_error "failed to chmod bin/sarus"
 echo "Successfully set Sarus as SUID root"
 
+echo "Creating cached passwd database"
+getent passwd >files_to_copy_in_container_etc/passwd
+echo "Successfully created cached passwd database"
+
 echo "Configuring etc/sarus.json"
 
 # create etc/sarus.json
