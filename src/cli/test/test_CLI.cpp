@@ -39,8 +39,8 @@ TEST_GROUP(CLITestGroup) {
 
 std::unique_ptr<cli::Command> generateCommandFromCLIArguments(const common::CLIArguments& args) {
     auto cli = cli::CLI{};
-    auto conf = std::make_shared<common::Config>(test_utility::config::makeConfig());
-    return cli.parseCommandLine(args, conf);
+    auto configRAII = test_utility::config::makeConfig();
+    return cli.parseCommandLine(args, configRAII.config);
 }
 
 template<class ExpectedDynamicType>
@@ -112,10 +112,10 @@ std::shared_ptr<common::Config> generateConfig(const common::CLIArguments& args)
     auto cli = cli::CLI{};
     auto argsGroups = cli.groupArgumentsAndCorrespondingOptions(args);
 
-    auto conf = std::make_shared<common::Config>(test_utility::config::makeConfig());
+    auto configRAII = test_utility::config::makeConfig();
     auto factory = cli::CommandObjectsFactory{};
-    auto command = factory.makeCommandObject(commandName, argsGroups, conf);
-    return conf;
+    auto command = factory.makeCommandObject(commandName, argsGroups, configRAII.config);
+    return configRAII.config;
 }
 
 TEST(CLITestGroup, generated_config_for_CommandLoad) {

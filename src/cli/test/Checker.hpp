@@ -66,10 +66,10 @@ public:
     }
 
     ~Checker() {
-        auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+        auto configRAII = test_utility::config::makeConfig();
         auto mountObject = std::unique_ptr<runtime::Mount>{};
 
-        auto parser = cli::MountParser{!isSiteMount, config};
+        auto parser = cli::MountParser{!isSiteMount, configRAII.config};
 
         auto map = common::convertListOfKeyValuePairsToMap(mountRequest);
 

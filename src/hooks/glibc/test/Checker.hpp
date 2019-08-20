@@ -98,10 +98,8 @@ public:
             GlibcHook{}.injectGlibcLibrariesIfNecessary();
         }
         catch(...) {
-            boost::filesystem::remove_all(bundleDir); // cleanup
             return;
         }
-        boost::filesystem::remove_all(bundleDir); // cleanup
         CHECK(false); // expected failure/exception didn't occur
     }
 
@@ -130,13 +128,12 @@ private:
         for(const auto& lib : containerLibs) {
             umount(lib.c_str());
         }
-        boost::filesystem::remove_all(bundleDir);
     }
 
 private:
-    sarus::common::Config config = test_utility::config::makeConfig();
-    boost::filesystem::path bundleDir = boost::filesystem::path{ config.json["OCIBundleDir"].GetString() };
-    boost::filesystem::path rootfsDir = bundleDir / config.json["rootfsFolder"].GetString();
+    test_utility::config::ConfigRAII configRAII = test_utility::config::makeConfig();
+    boost::filesystem::path bundleDir = boost::filesystem::path{ configRAII.config->json["OCIBundleDir"].GetString() };
+    boost::filesystem::path rootfsDir = bundleDir / configRAII.config->json["rootfsFolder"].GetString();
     boost::filesystem::path dummyLibsDir = boost::filesystem::path{__FILE__}
         .parent_path()
         .parent_path()

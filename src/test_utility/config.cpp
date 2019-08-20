@@ -21,12 +21,33 @@ using namespace sarus;
 namespace test_utility {
 namespace config {
 
+ConfigRAII::~ConfigRAII() {
+    {
+        auto dir = boost::filesystem::path{ config->json["prefixDir"].GetString() };
+        boost::filesystem::remove_all(dir);
+    }
+    {
+        auto dir = boost::filesystem::path{ config->json["OCIBundleDir"].GetString() };
+        boost::filesystem::remove_all(dir);
+    }
+    {
+        auto dir = boost::filesystem::path{ config->json["dirOfFilesToCopyInContainerEtc"].GetString() };
+        boost::filesystem::remove_all(dir);
+    }
+    {
+        auto dir = boost::filesystem::path{ config->json["localRepositoryBaseDir"].GetString() };
+        boost::filesystem::remove_all(dir);
+    }
+    boost::filesystem::remove_all(config->directories.repository);
+}
+
 static void populateJSON(rapidjson::Document& document) {
     auto& allocator = document.GetAllocator();
 
     auto prefixDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-prefix-dir"));
     auto bundleDir = prefixDir / "var/OCIBundle";
     auto dirOfFilesToCopyInContainerEtc = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-dirOfFilesToCopyInContainerEtc"));
+    auto localRepositoryBaseDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-localRepositoryBaseDir"));
 
     document.AddMember( "securityChecks",
                         false,
@@ -47,7 +68,7 @@ static void populateJSON(rapidjson::Document& document) {
                         rapidjson::Value{"/tmp", allocator},
                         allocator);
     document.AddMember( "localRepositoryBaseDir",
-                        rapidjson::Value{"/home", allocator},
+                        rapidjson::Value{localRepositoryBaseDir.c_str(), allocator},
                         allocator);
     document.AddMember( "ramFilesystemType",
                         rapidjson::Value{"ramfs"},
@@ -94,24 +115,25 @@ static void populateJSON(rapidjson::Document& document) {
     document.AddMember("userMounts", userMountsValue, allocator);
 }
 
-sarus::common::Config makeConfig() {
-    auto config = common::Config{};
+ConfigRAII makeConfig() {
+    auto raii = ConfigRAII{};
+    raii.config = std::make_shared<common::Config>();
 
-    populateJSON(config.json);
+    populateJSON(raii.config->json);
 
-    auto dirOfFilesToCopyInContainerEtc = boost::filesystem::path{ config.json["dirOfFilesToCopyInContainerEtc"].GetString() };
+    auto dirOfFilesToCopyInContainerEtc = boost::filesystem::path{ raii.config->json["dirOfFilesToCopyInContainerEtc"].GetString() };
     common::createFoldersIfNecessary(dirOfFilesToCopyInContainerEtc);
     common::executeCommand("getent passwd >" + dirOfFilesToCopyInContainerEtc.string() + "/passwd");
 
     auto repository = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-repository"));
-    config.directories.repository = repository;
-    config.directories.temp   = config.directories.repository / "temp";
-    config.directories.cache = config.directories.repository / "cache";
-    config.directories.images = config.directories.repository / "images";
+    raii.config->directories.repository = repository;
+    raii.config->directories.temp = raii.config->directories.repository / "temp";
+    raii.config->directories.cache = raii.config->directories.repository / "cache";
+    raii.config->directories.images = raii.config->directories.repository / "images";
 
-    config.commandRun.hostEnvironment = {{"key", "value"}};
+    raii.config->commandRun.hostEnvironment = {{"key", "value"}};
 
-    return config;
+    return raii;
 }
 
 }

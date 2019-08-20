@@ -51,7 +51,8 @@ TEST(MountUtilitiesTestGroup, validate_mount_source_test) {
 }
 
 TEST(MountUtilitiesTestGroup, validate_mount_destination_test) {
-    auto config = test_utility::config::makeConfig();
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = *configRAII.config;
     auto bundleDir = boost::filesystem::path{config.json["OCIBundleDir"].GetString()};
     auto rootfsDir = bundleDir / boost::filesystem::path{config.json["rootfsFolder"].GetString()};
     common::createFoldersIfNecessary(bundleDir / "overlay/rootfs-lower");
@@ -74,9 +75,6 @@ TEST(MountUtilitiesTestGroup, validate_mount_destination_test) {
     auto existingDir = boost::filesystem::path{"/file_in_squashfs_image"};
     common::createFoldersIfNecessary(rootfsDir / existingDir);
     runtime::validateMountDestination(rootfsDir / existingDir, config);
-
-    // Cleanup
-    boost::filesystem::remove_all(bundleDir);
 }
 
 TEST(MountUtilitiesTestGroup, bindMount) {

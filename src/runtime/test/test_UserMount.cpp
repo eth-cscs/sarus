@@ -34,7 +34,8 @@ IGNORE_TEST(UserMountsTestGroup, make_user_mount_test) {
 #else
 TEST(UserMountsTestGroup, make_user_mount_test) {
 #endif
-    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = configRAII.config;
 
     auto bundleDir = boost::filesystem::path{config->json["OCIBundleDir"].GetString()};
     auto rootfsDir = bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()};

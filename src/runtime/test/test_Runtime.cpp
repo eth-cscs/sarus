@@ -53,7 +53,8 @@ IGNORE_TEST(RuntimeTestGroup, setupOCIBundle) {
 TEST(RuntimeTestGroup, setupOCIBundle) {
 #endif
     // configure
-    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = configRAII.config;
     config->commandRun.execArgs = common::CLIArguments{"/bin/bash"};
     // hack to make the resulting image's file path = <repository dir>////test-image.squashfs
     config->directories.images = boost::filesystem::path{__FILE__}.parent_path();
@@ -108,8 +109,6 @@ TEST(RuntimeTestGroup, setupOCIBundle) {
     CHECK_EQUAL(umount(rootfsDir.c_str()), 0);
     CHECK_EQUAL(umount(overlayfsLowerDir.c_str()), 0);
     CHECK_EQUAL(umount(bundleDir.c_str()), 0);
-    boost::filesystem::remove_all(bundleDir);
-    boost::filesystem::remove_all(dirOfFilesToCopyInContainerEtc);
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();
