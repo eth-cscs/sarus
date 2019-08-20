@@ -10,9 +10,6 @@ namespace common {
 
 Config::BuildTime::BuildTime()
     : version{"@LATEST_GIT_TAG@"}
-    , prefixDir{boost::filesystem::absolute("@CMAKE_INSTALL_PREFIX@")}
-    , configFile{boost::filesystem::absolute("@SYSCONFDIR@/sarus.json")}
-    , configSchemaFile{boost::filesystem::absolute("@SYSCONFDIR@/sarus.schema.json")}
     , openSshArchive{boost::filesystem::absolute("@OPENSSH_ARCHIVE@")}
 {}
 

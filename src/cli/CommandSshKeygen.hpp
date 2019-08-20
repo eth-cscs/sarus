@@ -37,9 +37,9 @@ public:
         common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR="
             + common::getLocalRepositoryDirectory(*conf).string());
         common::setEnvironmentVariable("SARUS_OPENSSH_DIR="
-            + (conf->buildTime.prefixDir / "openssh").string());
+            + (conf->json["prefixDir"].GetString() + std::string{"/openssh"}));
         auto command = boost::format("%s/bin/ssh_hook keygen")
-            % conf->buildTime.prefixDir.string();
+            % conf->json["prefixDir"].GetString();
         common::executeCommand(command.str());
         common::Logger::getInstance().log("Successfully generated SSH keys", "CLI", common::logType::GENERAL);
     }

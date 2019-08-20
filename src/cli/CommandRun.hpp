@@ -217,7 +217,7 @@ private:
         common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR="
             + common::getLocalRepositoryDirectory(*conf).string());
         auto command = boost::format("%s/bin/ssh_hook check-localrepository-has-sshkeys")
-            % conf->buildTime.prefixDir.string();
+            % conf->json["prefixDir"].GetString();
         try {
             common::executeCommand(command.str());
         }
