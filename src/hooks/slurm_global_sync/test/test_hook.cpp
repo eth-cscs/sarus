@@ -21,14 +21,20 @@ namespace hooks {
 namespace slurm_global_sync {
 namespace test {
 
+sarus::common::Config makeConfig() {
+    auto config = test_utility::config::makeConfig();
+    std::tie(config.userIdentity.uid, config.userIdentity.gid) = test_utility::misc::getNonRootUserIds();
+    return config;
+}
+
 TEST_GROUP(SlurmGlobalSyncTestGroup) {
-    std::tuple<uid_t, gid_t> idsOfUser = test_utility::misc::getNonRootUserIds();
-    sarus::common::Config config = test_utility::config::makeConfig();
+    sarus::common::Config config = makeConfig();
+    std::tuple<uid_t, gid_t> idsOfUser = { config.userIdentity.uid, config.userIdentity.gid };
     boost::filesystem::path bundleDir = boost::filesystem::path{ config.json["OCIBundleDir"].GetString() };
     boost::filesystem::path rootfsDir = bundleDir / config.json["rootfsFolder"].GetString();
     boost::filesystem::path localRepositoryBaseDir = boost::filesystem::absolute(
         sarus::common::makeUniquePathWithRandomSuffix("./sarus-test-localrepositorybase"));
-    boost::filesystem::path localRepositoryDir = sarus::common::getLocalRepositoryDirectory(localRepositoryBaseDir, std::get<0>(idsOfUser));
+    boost::filesystem::path localRepositoryDir = sarus::common::getLocalRepositoryDirectory(config);
     boost::filesystem::path syncDir = localRepositoryDir / "slurm_global_sync/slurm-jobid-256";
 };
 

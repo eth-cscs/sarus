@@ -186,8 +186,7 @@ private:
     boost::filesystem::path rootfsDir = bundleDir / config.json["rootfsFolder"].GetString();
     boost::filesystem::path localRepositoryBaseDir = boost::filesystem::absolute(
         sarus::common::makeUniquePathWithRandomSuffix("./sarus-test-localrepositorybase"));
-    boost::filesystem::path localRepositoryDir =
-        sarus::common::getLocalRepositoryDirectory(localRepositoryBaseDir, std::get<0>(idsOfUser));
+    boost::filesystem::path localRepositoryDir = sarus::common::getLocalRepositoryDirectory(config);
     boost::filesystem::path opensshDirInHost = boost::filesystem::absolute(
         sarus::common::makeUniquePathWithRandomSuffix("./sarus-test-opensshstatic"));
     boost::filesystem::path opensshDirInContainer = rootfsDir / "opt/sarus/openssh";

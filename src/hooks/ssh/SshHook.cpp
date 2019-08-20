@@ -50,16 +50,16 @@ void SshHook::checkLocalRepositoryHasSshKeys() {
 }
 
 void SshHook::startSshd() {
-    localRepositoryBaseDir = sarus::common::getEnvironmentVariable("SARUS_LOCAL_REPOSITORY_BASE_DIR");
     opensshDirInHost = sarus::common::getEnvironmentVariable("SARUS_OPENSSH_DIR");
-    checkThatOpenSshIsUntamperable();
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
     if(!isHookEnabled) {
         return;
     }
-    localRepositoryDir = sarus::common::getLocalRepositoryDirectory(localRepositoryBaseDir, uidOfUser);
+    auto config = parseConfigJSONOfSarus(uidOfUser, gidOfUser);
+    sarus::common::SecurityChecks{config}.checkThatPathIsUntamperable(opensshDirInHost);
+    localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*config);
     sarus::common::copyFolder(opensshDirInHost, opensshDirInBundle);
     copyKeysIntoBundle();
     sarus::common::createFoldersIfNecessary(rootfsDir / "tmp/var/empty"); // sshd's chroot folder
@@ -87,20 +87,22 @@ void SshHook::parseConfigJSONOfBundle() {
     }
 }
 
+std::shared_ptr<sarus::common::Config> SshHook::parseConfigJSONOfSarus(uid_t uidOfUser, gid_t gidOfUser) const {
+    boost::filesystem::path sarusInstallationPrefixDir = sarus::common::getEnvironmentVariable("SARUS_PREFIX_DIR");
+    auto configFile =  sarusInstallationPrefixDir / "etc/sarus.json";
+    auto configSchemaFile = sarusInstallationPrefixDir / "etc/sarus.schema.json";
+    auto config = std::make_shared<sarus::common::Config>();
+    config->userIdentity.uid = uidOfUser;
+    config->userIdentity.gid = gidOfUser;
+    config->initializeJson(config, configFile, configSchemaFile);
+    return config;
+}
+
 void SshHook::sshKeygen(const boost::filesystem::path& outputFile) const {
     auto command = boost::format("%s/bin/ssh-keygen -t rsa -f %s -N \"\"")
         % opensshDirInHost
         % outputFile;
     sarus::common::executeCommand(command.str());
-}
-
-void SshHook::checkThatOpenSshIsUntamperable() const {
-    boost::filesystem::path sarusInstallationPrefixDir = sarus::common::getEnvironmentVariable("SARUS_PREFIX_DIR");
-    auto configFile =  sarusInstallationPrefixDir / "etc/sarus.json";
-    auto configSchemaFile = sarusInstallationPrefixDir / "etc/sarus.schema.json";
-    auto config = std::make_shared<sarus::common::Config>();
-    config->initializeJson(config, configFile, configSchemaFile);
-    sarus::common::SecurityChecks{std::move(config)}.checkThatPathIsUntamperable(opensshDirInHost);
 }
 
 void SshHook::copyKeysIntoBundle() const {

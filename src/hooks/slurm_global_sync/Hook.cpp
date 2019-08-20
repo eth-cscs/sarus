@@ -32,7 +32,12 @@ Hook::Hook() {
     }
 
     localRepositoryBaseDir = sarus::common::getEnvironmentVariable("SARUS_LOCAL_REPOSITORY_BASE_DIR");
-    localRepositoryDir = sarus::common::getLocalRepositoryDirectory(localRepositoryBaseDir, uidOfUser);
+    boost::filesystem::path sarusInstallationPrefixDir = sarus::common::getEnvironmentVariable("SARUS_PREFIX_DIR");
+    auto configFile =  sarusInstallationPrefixDir / "etc/sarus.json";
+    auto configSchemaFile = sarusInstallationPrefixDir / "etc/sarus.schema.json";
+    auto config = std::make_shared<sarus::common::Config>();
+    config->initializeJson(config, configFile, configSchemaFile);
+    localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*config);
 
     syncDir = localRepositoryDir / "slurm_global_sync" / ("slurm-jobid-" + slurmJobID);
     syncDirArrival = syncDir / "arrival";

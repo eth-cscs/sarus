@@ -12,11 +12,13 @@
 #define sarus_hooks_ssh_SshHook_hpp
 
 #include <tuple>
+#include <memory>
 #include <unordered_set>
 #include <sys/types.h>
 #include <boost/filesystem.hpp>
 
 #include <common/Error.hpp>
+#include <common/Config.hpp>
 
 
 namespace sarus {
@@ -31,6 +33,7 @@ public:
 
 private:
     void parseConfigJSONOfBundle();
+    std::shared_ptr<sarus::common::Config> parseConfigJSONOfSarus(uid_t uidOfUser, gid_t gidOfUser) const;
     void sshKeygen(const boost::filesystem::path& outputFile) const;
     void checkThatOpenSshIsUntamperable() const;
     void copyKeysIntoBundle() const;
@@ -53,7 +56,6 @@ private:
 
 private:
     bool isHookEnabled = false;
-    boost::filesystem::path localRepositoryBaseDir;
     boost::filesystem::path localRepositoryDir;
     boost::filesystem::path opensshDirInHost;
     boost::filesystem::path opensshDirInBundle;

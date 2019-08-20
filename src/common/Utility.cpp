@@ -41,6 +41,7 @@
 
 #include "common/Config.hpp"
 #include "common/Error.hpp"
+#include "common/PasswdDB.hpp"
 
 /**
  * Utility functions
@@ -240,14 +241,22 @@ std::string getHostname() {
     return hostname;
 }
 
-std::string getUsername(uid_t uid) {
-    return "docker";
-    struct passwd *result;
-    if((result = getpwuid(uid)) == nullptr) {
-        auto message = boost::format("failed to retrieve username with getpwuid(%s): %s") % uid % strerror(errno);
-        SARUS_THROW_ERROR(message.str());
+std::string getUsername(const common::Config& config) {
+    // get username from the cached passwd file of Sarus
+    // Note: this is usually done through the getpwuid fuction. However, musl failes to retrieve
+    // all the passwd entries from certain systems, e.g. LDAP at CSCS.
+    auto passwdFile = boost::filesystem::path{ config.json["dirOfFilesToCopyInContainerEtc"].GetString() } / "passwd";
+    auto passwd = common::PasswdDB{};
+    passwd.read(passwdFile);
+
+    for(const auto& entry : passwd.getEntries()) {
+        if(entry.uid == config.userIdentity.uid) {
+            return entry.loginName;
+        }
     }
-    return result->pw_name;
+
+    auto message = boost::format("Failed to retrieve username for uid=%d from %s") % config.userIdentity.uid % passwdFile;
+    SARUS_THROW_ERROR(message.str());
 }
 
 size_t getFileSize(const boost::filesystem::path& filename) {
@@ -302,12 +311,7 @@ boost::filesystem::path getCentralizedRepositoryDirectory(const common::Config& 
 
 boost::filesystem::path getLocalRepositoryDirectory(const common::Config& config) {
     auto baseDir = boost::filesystem::path{ config.json["localRepositoryBaseDir"].GetString() };
-    return getLocalRepositoryDirectory(baseDir, config.userIdentity.uid);
-}
-
-boost::filesystem::path getLocalRepositoryDirectory(const boost::filesystem::path& baseDir, uid_t uid) {
-    auto userDir = baseDir / getUsername(uid);
-    return userDir / common::Config::BuildTime{}.localRepositoryFolder;
+    return baseDir / getUsername(config) / common::Config::BuildTime{}.localRepositoryFolder;
 }
 
 /**

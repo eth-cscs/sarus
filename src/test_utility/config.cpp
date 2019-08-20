@@ -99,6 +99,10 @@ sarus::common::Config makeConfig() {
 
     populateJSON(config.json);
 
+    auto dirOfFilesToCopyInContainerEtc = boost::filesystem::path{ config.json["dirOfFilesToCopyInContainerEtc"].GetString() };
+    common::createFoldersIfNecessary(dirOfFilesToCopyInContainerEtc);
+    common::executeCommand("getent passwd >" + dirOfFilesToCopyInContainerEtc.string() + "/passwd");
+
     auto repository = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-repository"));
     config.directories.repository = repository;
     config.directories.temp   = config.directories.repository / "temp";
