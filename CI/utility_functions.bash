@@ -35,16 +35,19 @@ build_sarus_archive() {
     local build_type=$1; shift
     local build_dir=$1; shift
 
-    local enable_coverage=FALSE
     if [ "$build_type" = "Debug" ]; then
-        enable_coverage=TRUE
+        local enable_coverage=TRUE
+        local cmake_toolchain_file=../cmake/toolchain_files/gcc-gcov.cmake
+    else
+        local enable_coverage=FALSE
+        local cmake_toolchain_file=../cmake/toolchain_files/gcc.cmake
     fi
 
     # build Sarus
     echo "Building Sarus (build type = ${build_type}"
     mkdir -p ${build_dir} && cd ${build_dir}
     local prefix_dir=${build_dir}/install/$(git describe --tags --dirty)-${build_type}
-    cmake   -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc-gcov.cmake \
+    cmake   -DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file} \
             -DCMAKE_PREFIX_PATH="/opt/boost/1_65_0;/opt/cpprestsdk/v2.10.0;/opt/libarchive/3.3.1;/opt/rapidjson/rapidjson-master" \
             -Dcpprestsdk_INCLUDE_DIR=/opt/cpprestsdk/v2.10.0/include \
             -DCMAKE_BUILD_TYPE=${build_type} \
