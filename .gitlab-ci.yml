@@ -25,7 +25,6 @@ test_spack_package:
   stage: test
   only:
       - master
-      - spack
   script:
       - docker_image=ethcscs/sarus-spack:1.0.0-ubuntu16.04
       - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source $docker_image /sarus-source/CI/run_spack_package_test.sh
