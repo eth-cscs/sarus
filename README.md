@@ -1,6 +1,7 @@
 # Sarus - An OCI-compatible container engine for HPC
 
 [![License: BSD 3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![Documentation Status](https://readthedocs.org/projects/sarus/badge/?version=latest)](https://sarus.readthedocs.io/en/latest/?badge=latest)
 
 Sarus is a software to run Linux containers on High Performance Computing
 environments. Its development has been driven by the specific requirements of
@@ -26,10 +27,12 @@ Key features:
     - Uses an OCI-compliant runtime to spawn the container process
 
 
-## Building the documentation
+## Accessing the documentation
 
-The full documentation is located in the `doc` directory and can be built using
-Python 3 and Sphinx:
+The full documentation is available on [Read the Docs](https://sarus.readthedocs.io).
+
+If you wish to generate the documentation yourself, the sources are located in the `doc`
+directory and can be built using Python 3 and Sphinx:
 
 ```
 cd doc

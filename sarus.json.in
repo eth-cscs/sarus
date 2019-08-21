@@ -1,14 +1,13 @@
 {
     "securityChecks": true,
-    "OCIBundleDir": "@PREFIX_DIR@/var/OCIBundleDir",
+    "OCIBundleDir": "@CMAKE_INSTALL_PREFIX@/var/OCIBundleDir",
     "rootfsFolder": "rootfs",
-    "prefixDir": "@PREFIX_DIR@",
-    "dirOfFilesToCopyInContainerEtc": "@PREFIX_DIR@/files_to_copy_in_container_etc",
+    "prefixDir": "@CMAKE_INSTALL_PREFIX@",
+    "dirOfFilesToCopyInContainerEtc": "@CMAKE_INSTALL_PREFIX@/files_to_copy_in_container_etc",
     "tempDir": "/tmp",
     "localRepositoryBaseDir": "/home",
-    "centralizedRepositoryDir": "/var/sarus/centralized_repository",
     "mksquashfsPath": "@MKSQUASHFS_PATH@",
-    "runcPath": "@PREFIX_DIR@/bin/runc.amd64",
+    "runcPath": "@RUNC_PATH",
     "ramFilesystemType": "tmpfs",
     "siteMounts": [
         {
@@ -18,43 +17,13 @@
             "flags": {}
         }
     ],
-    "environment": {
-        "set": [
-            {"VAR_TO_SET_IN_CONTAINER": "value"}
-        ],
-        "prepend": [
-            {"VAR_WITH_LIST_OF_PATHS_IN_CONTAINER": "/path/to/prepend"}
-        ],
-        "append": [
-            {"VAR_WITH_LIST_OF_PATHS_IN_CONTAINER": "/path/to/append"}
-        ],
-        "unset": [
-            "VAR_TO_UNSET_IN_CONTAINER_0",
-            "VAR_TO_UNSET_IN_CONTAINER_1"
-        ]
-    },
-    "userMounts": {
-        "notAllowedPrefixesOfPath": [],
-        "notAllowedPaths": [
-            "/opt"
-        ]
-    },
     "OCIHooks": {
         "prestart": [
             {
-                "path": "@PREFIX_DIR@/bin/mpi_hook",
+                "path": "@CMAKE_INSTALL_PREFIX@/bin/ssh_hook",
                 "env": [
-                    "SARUS_MPI_LIBS=",
-                    "SARUS_MPI_DEPENDENCY_LIBS=",
-                    "SARUS_MPI_BIND_MOUNTS=",
-                    "PATH=/usr/sbin"
-                ]
-            },
-            {
-                "path": "@PREFIX_DIR@/bin/ssh_hook",
-                "env": [
-                    "SARUS_PREFIX_DIR=@PREFIX_DIR@",
-                    "SARUS_OPENSSH_DIR=@PREFIX_DIR@/openssh"
+                    "SARUS_PREFIX_DIR=@CMAKE_INSTALL_PREFIX@",
+                    "SARUS_OPENSSH_DIR=@CMAKE_INSTALL_PREFIX@/openssh"
                 ],
                 "args": [
                     "ssh_hook",

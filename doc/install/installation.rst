@@ -2,8 +2,69 @@
 Installation
 ************
 
-Installation
-============
+Sarus can be installed in two alternative ways:
+
+    - :ref:`Using the Spack package manager <installation-spack>`
+    - :ref:`Manual installation <installation-manual>`
+
+Whichever you choose, please also read the section about :ref:`Minimal configuration
+<installation-minimal-config>` and the :ref:`Additional remarks before startup
+<installation-before-startup>` to ensure everything is set to run Sarus.
+
+.. _installation-spack:
+
+Installing with Spack
+=====================
+
+Sarus provides `Spack <https://spack.io/>`_ packages for itself and its
+dependencies which are not yet covered by Spack's builtin repository.
+Installing with Spack is convenient because detection and installation of
+dependencies are handled automatically.
+
+As explained in the :ref:`execution requirements
+<requirements-permissions-execution>`, Sarus must be installed as a root-owned
+SUID binary. The straightforward way to achieve this is running the installation
+command with super-user privileges.
+Another option is to install as a regular user and ``chown`` to root after that.
+
+The installation procedure with Spack is as follows:
+
+.. code-block:: bash
+
+   # Setup Spack bash integration (if you haven't already done so)
+   . ${SPACK_ROOT}/share/spack/setup-env.sh
+
+   # Create a local Spack repository for Sarus-specific dependencies
+   export SPACK_LOCAL_REPO=${SPACK_ROOT}/var/spack/repos/cscs
+   spack repo create ${SPACK_LOCAL_REPO}
+   spack repo add ${SPACK_LOCAL_REPO}
+
+   # Import Spack packages for Cpprestsdk, RapidJSON and Sarus
+   cp -r <Sarus project root dir>/spack/packages/* ${SPACK_LOCAL_REPO}/packages/
+
+   # Install Sarus
+   spack install --verbose sarus
+
+By default, the latest tagged release will be installed. To get the bleeding edge,
+use the ``@develop`` version specifier.
+
+The Spack package for Sarus supports the following `variants <https://spack.readthedocs.io/en/latest/basic_usage.html#basic-variants>`
+to customize the installation:
+
+   - ``ssh``: Build and install the SSH hook and custom OpenSSH software to enable
+     connections inside containers [True].
+
+For example, in order to perform a quick installation without SSH we could use:
+
+.. code-block:: bash
+
+   spack install --verbose sarus ssh=False
+
+
+.. _installation-manual:
+
+Manual Installation
+===================
 
 Build
 -----
@@ -12,7 +73,7 @@ Change directory to the Sarus's sources:
 
 .. code-block:: bash
 
-   cd <sarus project root dir>
+   cd <Sarus project root dir>
 
 Create a new folder to build Sarus out-of-source:
 
@@ -72,18 +133,30 @@ install`` command with super-user privileges:
 
 Another option is to install as a regular user and ``chown`` to root after that.
 
+To complete the installation, create the directory in which Sarus will create the OCI
+bundle for containers. The location of this directory is configurable at any time, as
+described in the next section. As an example, taking default values:
+
+.. code-block:: bash
+
+    sudo mkdir <sarus installation dir>/var/sarus/OCIBundleDir
+
+
+.. _installation-minimal-config:
 
 Minimal configuration
 =====================
 
 At run time, Sarus takes its configuration options from a file named
 *sarus.json*. This file must be placed in the directory specified to CMake
-with ``SYSCONFDIR``, e.g. ``cmake -DSYSCONFDIR=/opt/sarus/default/etc``. If
-not specified, ``SYSCONFDIR`` defaults to ``CMAKE_INSTALL_PREFIX/etc``. For reference, a
-template with a default configuration named *sarus.json.example* is created in
+with ``SYSCONFDIR``, e.g. ``cmake -DSYSCONFDIR=/opt/sarus/default/etc``.
+If not specified, ``SYSCONFDIR`` defaults to ``CMAKE_INSTALL_PREFIX/etc``.
+When installing with Spack, ``SYSCONFDIR`` is set to ``<installation prefix>/etc``.
+
+A *sarus.json* file with a minimal configuration is automatically created in
 ``SYSCONFDIR`` as part of the installation step.
 
-Here we will highlight some key settings to complete a baseline configuration.
+Here we will highlight some key settings which form a baseline configuration.
 For the full details about configuration options and the structure of *sarus.json*
 please consult the :doc:`/config/configuration_reference`.
 
@@ -91,12 +164,8 @@ please consult the :doc:`/config/configuration_reference`.
   bundle for the container. This directory must satisfy the :ref:`security
   requirements <requirements-permissions-security>` for critical files and
   directories.
-  E.g., when using the default value of ``/var/sarus/OCIBundleDir``:
-
-  .. code-block:: bash
-
-      $ sudo mkdir -p /var/sarus/OCIBundleDir
-
+  By default, the OCI bundle directory is located in
+  ``<installation path>/var/sarus/OCIBundleDir``.
 * **localRepositoryBaseDir:** the starting path to individual user directories,
   where Sarus will create (if necessary) and access local repositories.
   The repositories will be located in ``<localRepositoryBaseDir>/<user name>/.sarus``.
@@ -112,7 +181,6 @@ please consult the :doc:`/config/configuration_reference`.
   and optionally ``flags`` for the mount. Please refer to the
   :ref:`configuration reference <config-reference-siteMounts>` for the complete
   format and features of these entries.
-
 * **ramFilesystemType:** the type of temporary filesystem Sarus will use to
   setup the base filesystem for the container. The OCI  bundle, and consequently
   the container's rootfs, will be generated in a filesystem of this type. The
@@ -126,6 +194,8 @@ please consult the :doc:`/config/configuration_reference`.
         Using the default recommended value, i.e. **tmpfs**, will not work on Cray
         Compute Nodes.
 
+
+.. _installation-before-startup:
 
 Additional remarks before startup
 =================================
@@ -145,7 +215,7 @@ by the system, remember to load them manually:
 
 
 Sarus's passwd cache
-----------------------
+--------------------
 
 During the installation, the passwd information is copied and cached into
 *<sarus install dir>/files_to_copy_in_container_etc/passwd*. The cache is supposed to allow the
