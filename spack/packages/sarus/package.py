@@ -40,10 +40,6 @@ class Sarus(CMakePackage):
     variant('ssh', default=True,
             description='Build and install the SSH hook and custom OpenSSH software '
                         'to enable connections inside containers')
-    variant('runtime_security_checks', default=True,
-            description='Enable runtime security checks (root ownership of files, etc.). '
-                        'Strongly recommended for production deployments. '
-                        'Disable to simplify setup of test installations.')
 
     depends_on('squashfs', type=('build', 'run'))
     depends_on('boost@1.65.0')
@@ -56,8 +52,7 @@ class Sarus(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = ['-DCMAKE_TOOLCHAIN_FILE=./cmake/toolchain_files/gcc-nowerror.cmake',
-                '-DENABLE_SSH=%s' % ('+ssh' in spec),
-                '-DENABLE_RUNTIME_SECURITY_CHECKS=%s' % ('+runtime_security_checks' in spec)]
+                '-DENABLE_SSH=%s' % ('+ssh' in spec)]
         return args
 
     def install(self, spec, prefix):

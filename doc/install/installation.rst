@@ -53,16 +53,12 @@ to customize the installation:
 
    - ``ssh``: Build and install the SSH hook and custom OpenSSH software to enable
      connections inside containers [True].
-   - ``runtime_security_checks``: Enable runtimes security checks (root ownership of files, etc.).
-     Disabling this may be convenient when rapidly iterating over test and development installations.
-     It is strongly recommended to keep these checks enabled for production deployments [True].
 
-For example, in order to perform a quick test installation without SSH and without security checks,
-we could use
+For example, in order to perform a quick installation without SSH we could use:
 
 .. code-block:: bash
 
-   spack install --verbose sarus ssh=False runtime_security_checks=False
+   spack install --verbose sarus ssh=False
 
 
 .. _installation-manual:
