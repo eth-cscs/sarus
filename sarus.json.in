@@ -6,8 +6,9 @@
     "dirOfFilesToCopyInContainerEtc": "@CMAKE_INSTALL_PREFIX@/files_to_copy_in_container_etc",
     "tempDir": "/tmp",
     "localRepositoryBaseDir": "/home",
+    "centralizedRepositoryDir": "/var/sarus/centralized_repository",
     "mksquashfsPath": "@MKSQUASHFS_PATH@",
-    "runcPath": "@RUNC_PATH",
+    "runcPath": "@RUNC_PATH@",
     "ramFilesystemType": "tmpfs",
     "siteMounts": [
         {

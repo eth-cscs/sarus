@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script finalizes the configuration of a Sarus installation made from the Sarus standalone archive.
-# The script is responsible for setting the corrent mode of the Sarus binary,
+# The script is responsible for setting the proper permissions of the Sarus binary,
 # as well as filling the missing parameters in the etc/sarus.json.
 
 function exit_on_error() {
@@ -38,8 +38,13 @@ cp etc/sarus.json.in etc/sarus.json
 exit_on_error "failed to create etc/sarus.json"
 
 # configure PREFIX_DIR
-sed -i etc/sarus.json -e "s|@PREFIX_DIR@|${prefix_dir}|g"
-exit_on_error "failed to set PREFIX_DIR in etc/sarus.json"
+sed -i etc/sarus.json -e "s|@CMAKE_INSTALL_PREFIX@|${prefix_dir}|g"
+exit_on_error "failed to set CMAKE_INSTALL_PREFIX in etc/sarus.json"
+
+# configure RUNC_PATH
+runc_path=${prefix_dir}/bin/runc.amd64
+sed -i etc/sarus.json -e "s|@RUNC_PATH@|${runc_path}|g"
+exit_on_error "failed to set RUNC_PATH in etc/sarus.json"
 
 # configure MKSQUASHFS_PATH
 mksquashfs_path=$(which mksquashfs)
