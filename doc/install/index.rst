@@ -1,6 +1,6 @@
-==========
-Setting up
-==========
+===================
+Custom installation
+===================
 
 .. toctree::
    :maxdepth: 2
