@@ -11,8 +11,7 @@ sarus:
 
     # Check version number
     - ./CI/check_that_version_file_is_up_to_date.sh
-    # TODO: fix test below
-    #      - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_build} /sarus-source/CI/check_version_from_cmake.sh
+    - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_build} /sarus-source/CI/check_version_from_cmake.sh
 
     # Debug version
     - build_type=Debug
