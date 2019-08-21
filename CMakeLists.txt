@@ -28,9 +28,6 @@ include_directories(${RapidJSON_INCLUDE_DIR})
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
-find_package(Boost REQUIRED COMPONENTS program_options system thread filesystem regex random)
-include_directories(${Boost_INCLUDE_DIRS})
-
 find_package(cpprestsdk REQUIRED)
 set(cpprestsdk_INCLUDE_DIR CACHE PATH "cpprestsdk's include directory. Specify this directory if cmake cannot find it automatically.")
 if(EXISTS ${cpprestsdk_INCLUDE_DIR})
@@ -43,9 +40,13 @@ include_directories(${LibArchive_INCLUDE_DIRS})
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
+find_package(Boost REQUIRED COMPONENTS program_options system thread filesystem regex random)
+include_directories(${Boost_INCLUDE_DIRS})
+
 find_program(GIT_PATH git)
 find_program(MKSQUASHFS_PATH mksquashfs)
 find_program(MKFSXFS_PATH mkfs.xfs)
+find_program(RUNC_PATH runc)
 find_program(RUNC_PATH runc.amd64)
 
 execute_process(COMMAND ${GIT_PATH} describe --tags --dirty
@@ -61,5 +62,5 @@ add_subdirectory(dep)
 add_subdirectory(files_to_copy_in_container_etc)
 add_subdirectory(src)
 
-configure_file(sarus.json.in ${CMAKE_BINARY_DIR}/sarus.json.example)
-install(FILES ${CMAKE_BINARY_DIR}/sarus.json.example sarus.schema.json DESTINATION ${SYSCONFDIR})
+configure_file(sarus.json.in ${CMAKE_BINARY_DIR}/sarus.json)
+install(FILES ${CMAKE_BINARY_DIR}/sarus.json sarus.schema.json DESTINATION ${SYSCONFDIR})

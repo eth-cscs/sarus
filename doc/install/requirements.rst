@@ -62,9 +62,14 @@ Additional dependencies
 * `C++ REST SDK <https://github.com/Microsoft/cpprestsdk>`_ v2.10.0
 * `RapidJSON <http://rapidjson.org/index.html>`_ commit 663f076
 
-.. note::
+.. important::
     We recommend these versions as they are the ones routinely used for build
     integration and testing, thus guaranteed to work.
+
+.. note::
+    If you plan to install Sarus using the Spack package manager, you can skip
+    the rest of this section, since these dependencies will be installed by
+    Spack itself.
 
 As the specific software versions listed above may not be provided by the system
 package manager, we suggest to install from source:
