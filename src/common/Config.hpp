@@ -34,9 +34,6 @@ struct Config {
     struct BuildTime {
         BuildTime();
         std::string version;
-        boost::filesystem::path prefixDir;
-        boost::filesystem::path configFile;
-        boost::filesystem::path configSchemaFile;
         boost::filesystem::path localRepositoryFolder = ".sarus";
         boost::filesystem::path openSshArchive;
     };

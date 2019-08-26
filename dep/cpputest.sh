@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 cpputest_dir=$(pwd)/cpputest
@@ -18,4 +18,4 @@ cd $cpputest_dir/src
 make && make install
 
 # cleanup
-#cd $cpputest_dir && rm -rf $cpputest_dir/src
+rm -rf $cpputest_dir/src

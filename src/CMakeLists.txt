@@ -10,7 +10,6 @@ endif(${ENABLE_TESTS_WITH_GCOV})
 
 # sarus executable
 add_executable(sarus "main.cpp")
-
 target_link_libraries(sarus cli_library common_library)
 install(TARGETS sarus DESTINATION ${CMAKE_INSTALL_PREFIX}/bin PERMISSIONS
     SETUID OWNER_READ OWNER_WRITE OWNER_EXECUTE

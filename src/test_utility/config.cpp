@@ -46,7 +46,7 @@ static void populateJSON(rapidjson::Document& document) {
 
     auto prefixDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-prefix-dir"));
     auto bundleDir = prefixDir / "var/OCIBundle";
-    auto dirOfFilesToCopyInContainerEtc = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-dirOfFilesToCopyInContainerEtc"));
+    auto dirOfFilesToCopyInContainerEtc = prefixDir / "dirOfFilesToCopyInContainerEtc";
     auto localRepositoryBaseDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-localRepositoryBaseDir"));
 
     document.AddMember( "securityChecks",
@@ -124,6 +124,7 @@ ConfigRAII makeConfig() {
     auto dirOfFilesToCopyInContainerEtc = boost::filesystem::path{ raii.config->json["dirOfFilesToCopyInContainerEtc"].GetString() };
     common::createFoldersIfNecessary(dirOfFilesToCopyInContainerEtc);
     common::executeCommand("getent passwd >" + dirOfFilesToCopyInContainerEtc.string() + "/passwd");
+    common::executeCommand("getent group >" + dirOfFilesToCopyInContainerEtc.string() + "/group");
 
     auto repository = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-repository"));
     raii.config->directories.repository = repository;
