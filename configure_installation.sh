@@ -1,8 +1,11 @@
 #!/bin/bash
 
 # This script finalizes the configuration of a Sarus installation made from the Sarus standalone archive.
-# The script is responsible for setting the proper permissions of the Sarus binary,
-# as well as filling the missing parameters in the etc/sarus.json.
+# The script is responsible for:
+# - setting the proper permissions of the Sarus binary
+# - creating the cached passwd database
+# - creating the cached group database
+# - filling the missing parameters in the etc/sarus.json.
 
 function exit_on_error() {
     local last_command_exit_code=$?
@@ -26,6 +29,10 @@ echo "Successfully set Sarus as SUID root"
 echo "Creating cached passwd database"
 getent passwd >files_to_copy_in_container_etc/passwd
 echo "Successfully created cached passwd database"
+
+echo "Creating cached group database"
+getent group >files_to_copy_in_container_etc/group
+echo "Successfully created cached group database"
 
 echo "Configuring etc/sarus.json"
 
