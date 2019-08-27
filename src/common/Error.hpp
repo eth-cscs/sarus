@@ -19,6 +19,8 @@
 
 #include <boost/filesystem.hpp>
 
+#include <common/LogLevel.hpp>
+
 
 namespace sarus {
 namespace common {
@@ -46,8 +48,9 @@ public:
     };
 
 public:
-    Error(const ErrorTraceEntry& entry)
-        : errorTrace{ entry }
+    Error(LogLevel logLevel, const ErrorTraceEntry& entry)
+        : logLevel{ logLevel }
+        , errorTrace{ entry }
     {}
 
     void appendErrorTraceEntry(const ErrorTraceEntry& entry) {
@@ -58,7 +61,16 @@ public:
         return errorTrace;
     }
 
+    LogLevel getLogLevel() const {
+        return logLevel;
+    }
+
+    void setLogLevel(LogLevel value) {
+        logLevel = value;
+    }
+
 private:
+    LogLevel logLevel = LogLevel::ERROR;
     std::vector<ErrorTraceEntry> errorTrace;
 };
 
@@ -76,28 +88,45 @@ inline bool operator!=(const Error::ErrorTraceEntry& lhs, const Error::ErrorTrac
 } // namespace
 } // namespace
 
+
+// SARUS_THROW_ERROR macros
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#define SARUS_THROW_ERROR(errorMessage) { \
+#define SARUS_GET_OVERLOADED_THROW_ERROR(_1, _2, NAME, ...) NAME
+
+#define SARUS_THROW_ERROR_2(errorMessage, logLevel) { \
     auto stackTraceEntry = sarus::common::Error::ErrorTraceEntry{errorMessage, __FILENAME__, __LINE__, __func__}; \
-    throw sarus::common::Error{stackTraceEntry}; \
+    throw sarus::common::Error{logLevel, stackTraceEntry}; \
 }
 
-#define SARUS_RETHROW_ERROR(stdException, errorMessage) { \
+#define SARUS_THROW_ERROR_1(errorMessage) SARUS_THROW_ERROR_2(errorMessage, sarus::common::LogLevel::ERROR)
+
+#define SARUS_THROW_ERROR(...) SARUS_GET_OVERLOADED_THROW_ERROR(__VA_ARGS__, SARUS_THROW_ERROR_2, SARUS_THROW_ERROR_1)(__VA_ARGS__)
+
+
+// SARUS_RETHROW_ERROR macros
+#define SARUS_GET_OVERLOADED_RETHROW_ERROR(_1, _2, _3, NAME, ...) NAME
+
+#define SARUS_RETHROW_ERROR_3(stdException, errorMessage, logLevel) { \
     auto errorTraceEntry = sarus::common::Error::ErrorTraceEntry{errorMessage, __FILENAME__, __LINE__, __func__}; \
     const auto* cp = dynamic_cast<const sarus::common::Error*>(&stdException); \
     if(cp) { /* check if dynamic type is common::Error */ \
         assert(!std::is_const<decltype(stdException)>{}); /* a common::Error object must be caught as non-const reference because we need to modify its internal error trace */ \
         auto* p = const_cast<sarus::common::Error*>(cp); \
+        p->setLogLevel(logLevel); \
         p->appendErrorTraceEntry(errorTraceEntry); \
         throw; \
     } \
     else { \
         auto previousErrorTraceEntry = sarus::common::Error::ErrorTraceEntry{stdException.what(), "unknown file", -1, "\"unknown function\""}; \
-        auto error = sarus::common::Error{previousErrorTraceEntry}; \
+        auto error = sarus::common::Error{logLevel, previousErrorTraceEntry}; \
         error.appendErrorTraceEntry(errorTraceEntry); \
         throw error; \
     } \
 }
+
+#define SARUS_RETHROW_ERROR_2(exception, errorMessage) SARUS_RETHROW_ERROR_3(exception, errorMessage, sarus::common::LogLevel::ERROR)
+
+#define SARUS_RETHROW_ERROR(...) SARUS_GET_OVERLOADED_RETHROW_ERROR(__VA_ARGS__, SARUS_RETHROW_ERROR_3, SARUS_RETHROW_ERROR_2)(__VA_ARGS__)
 
 #endif

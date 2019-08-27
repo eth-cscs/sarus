@@ -16,13 +16,12 @@
 
 #include <boost/format.hpp>
 
+#include "common/LogLevel.hpp"
 #include "common/Error.hpp"
 
 
 namespace sarus {
 namespace common {
-
-enum LogLevel {DEBUG, INFO, WARN, ERROR, GENERAL};
 
 class Logger {
 public:

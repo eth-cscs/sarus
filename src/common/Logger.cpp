@@ -66,6 +66,10 @@ namespace common {
     }
 
     void Logger::logErrorTrace( const common::Error& error, const std::string& systemName, std::ostream& errStream) {
+        if(error.getLogLevel() < level) {
+            return;
+        }
+
         log("Error trace (most nested error last):", systemName, LogLevel::ERROR, std::cout, errStream);
 
         const auto& trace = error.getErrorTrace();

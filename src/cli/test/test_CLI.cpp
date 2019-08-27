@@ -56,13 +56,13 @@ void checkMountDynamicType(const runtime::Mount& command) {
 TEST(CLITestGroup, LogLevel) {
     auto& logger = common::Logger::getInstance();
     generateCommandFromCLIArguments({"sarus"});
-    CHECK_EQUAL(logger.getLevel(), common::LogLevel::WARN);
+    CHECK(logger.getLevel() == common::LogLevel::WARN);
 
     generateCommandFromCLIArguments({"sarus", "--verbose"});
-    CHECK_EQUAL(logger.getLevel(), common::LogLevel::INFO);
+    CHECK(logger.getLevel() == common::LogLevel::INFO);
 
     generateCommandFromCLIArguments({"sarus", "--debug"});
-    CHECK_EQUAL(logger.getLevel(), common::LogLevel::DEBUG);
+    CHECK(logger.getLevel() == common::LogLevel::DEBUG);
 }
 
 TEST(CLITestGroup, CommandTypes) {
