@@ -33,7 +33,7 @@ std::tuple<common::PathRAII, common::ImageMetadata, std::string> PulledImage::ex
  */
 void PulledImage::initializeListOfLayersAndMetadata(web::json::value &manifest) {
     log(boost::format("initializing list of layers and metadata from image's manifest"),
-        common::logType::DEBUG);
+        common::LogLevel::DEBUG);
 
     if(!manifest.has_field(U("history")) ) {
         SARUS_THROW_ERROR("manifest does not have \"history\" field.");
@@ -132,7 +132,7 @@ void PulledImage::initializeListOfLayersAndMetadata(web::json::value &manifest) 
     }
 
     log(boost::format("successfully initialized list of layers and metadata from image's manifest"),
-        common::logType::DEBUG);
+        common::LogLevel::DEBUG);
 }
 
 }

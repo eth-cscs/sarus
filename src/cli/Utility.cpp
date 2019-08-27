@@ -83,7 +83,7 @@ common::ImageID parseImageID(const common::CLIArguments& imageArgs) {
  * Parse the input ID of container image
  */ 
 common::ImageID parseImageID(const std::string &input) {
-    printLog( boost::format("parsing image ID"), common::logType::DEBUG);
+    printLog( boost::format("parsing image ID"), common::LogLevel::DEBUG);
 
     std::string server;
     std::string repositoryNamespace;
@@ -129,18 +129,18 @@ common::ImageID parseImageID(const std::string &input) {
 
     auto imageID = common::ImageID{ server, repositoryNamespace, image, tag };
 
-    printLog(boost::format("successfully parsed image ID %s") % imageID, common::logType::DEBUG);
+    printLog(boost::format("successfully parsed image ID %s") % imageID, common::LogLevel::DEBUG);
 
     return imageID;
 }
 
-void printLog(const std::string& message, common::logType logType, std::ostream& outStream, std::ostream& errStream) {
+void printLog(const std::string& message, common::LogLevel LogLevel, std::ostream& outStream, std::ostream& errStream) {
     auto systemName = "CLI";
-    common::Logger::getInstance().log(message, systemName, logType, outStream, errStream);
+    common::Logger::getInstance().log(message, systemName, LogLevel, outStream, errStream);
 }
 
-void printLog(const boost::format& message, common::logType logType, std::ostream& outStream, std::ostream& errStream) {
-    printLog(message.str(), logType, outStream, errStream);
+void printLog(const boost::format& message, common::LogLevel LogLevel, std::ostream& outStream, std::ostream& errStream) {
+    printLog(message.str(), LogLevel, outStream, errStream);
 }
 
 } // namespace

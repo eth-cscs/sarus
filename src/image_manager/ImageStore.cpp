@@ -42,7 +42,7 @@ namespace image_manager {
     void ImageStore::addImage(const common::SarusImage& image) {
         printLog(   boost::format("Adding image %s to metadata file %s")
                     % image.imageID % metadataFile,
-                    common::logType::INFO);
+                    common::LogLevel::INFO);
 
         common::Lockfile lock{metadataFile};
         auto metadata = readRepositoryMetadata();
@@ -64,7 +64,7 @@ namespace image_manager {
 
         atomicallyUpdateMetadataFile(metadata);
 
-        printLog(boost::format("Successfully added image"), common::logType::INFO);
+        printLog(boost::format("Successfully added image"), common::LogLevel::INFO);
     }
 
     /**
@@ -73,7 +73,7 @@ namespace image_manager {
     void ImageStore::removeImage(const common::ImageID& imageID) {
         printLog(   boost::format("Removing image %s from metadata file %s")
                     % imageID % metadataFile,
-                    common::logType::INFO);
+                    common::LogLevel::INFO);
 
         common::Lockfile lock{metadataFile};
 
@@ -81,7 +81,7 @@ namespace image_manager {
         const rj::Value* imageMetadata = nullptr;
         auto uniqueKey = imageID.getUniqueKey();
 
-        printLog(boost::format("looking up unique key %s in metadata file") % uniqueKey, common::logType::DEBUG);
+        printLog(boost::format("looking up unique key %s in metadata file") % uniqueKey, common::LogLevel::DEBUG);
         
         // look for image's metadata
         for(const auto& image : metadata["images"].GetArray()) {
@@ -97,7 +97,7 @@ namespace image_manager {
             SARUS_THROW_ERROR(message.str());
         }
 
-        printLog(boost::format("Success to find unique key"), common::logType::DEBUG);
+        printLog(boost::format("Success to find unique key"), common::LogLevel::DEBUG);
 
         // remove image
         try {
@@ -115,7 +115,7 @@ namespace image_manager {
             SARUS_RETHROW_ERROR(e, message.str());
         }
 
-        printLog(boost::format("Successfully removed image"), common::logType::INFO);
+        printLog(boost::format("Successfully removed image"), common::LogLevel::INFO);
     }
 
     /**
@@ -145,7 +145,7 @@ namespace image_manager {
             images.push_back(image);
         }
 
-        printLog(boost::format("Successfully created list of images."), common::logType::DEBUG);
+        printLog(boost::format("Successfully created list of images."), common::LogLevel::DEBUG);
         
         return images;
     }
@@ -155,7 +155,7 @@ namespace image_manager {
 
         // if metadata already exists, load it
         if (boost::filesystem::exists(metadataFile)) {
-            printLog( boost::format("metadata already exists. Try to read json.") , common::logType::DEBUG);
+            printLog( boost::format("metadata already exists. Try to read json.") , common::LogLevel::DEBUG);
             metadata = common::readJSON(metadataFile);
         }
         // otherwise create new metadata with empty images array
@@ -215,7 +215,7 @@ namespace image_manager {
     void ImageStore::atomicallyUpdateMetadataFile(const rapidjson::Value& metadata) const {
         auto metadataFileTemp = common::makeUniquePathWithRandomSuffix(metadataFile);
 
-        printLog( boost::format("Update metadata: %s") % metadataFile, common::logType::DEBUG);
+        printLog( boost::format("Update metadata: %s") % metadataFile, common::LogLevel::DEBUG);
 
         try {
             common::writeJSON(metadata, metadataFileTemp);
@@ -226,11 +226,11 @@ namespace image_manager {
             SARUS_RETHROW_ERROR(e, message.str());
         }
 
-        printLog( boost::format("Success to update metadata: %s") % metadataFile, common::logType::DEBUG);
+        printLog( boost::format("Success to update metadata: %s") % metadataFile, common::LogLevel::DEBUG);
     }
 
-    void ImageStore::printLog(const boost::format &message, common::logType logType) const {
-        common::Logger::getInstance().log( message.str(), sysname, logType);
+    void ImageStore::printLog(const boost::format &message, common::LogLevel LogLevel) const {
+        common::Logger::getInstance().log( message.str(), sysname, LogLevel);
     }
     
 } // namespace

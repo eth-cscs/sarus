@@ -73,7 +73,7 @@ private:
     }
 
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
-        cli::utility::printLog( boost::format("parsing CLI arguments of load command"), common::logType::DEBUG);
+        cli::utility::printLog( boost::format("parsing CLI arguments of load command"), common::LogLevel::DEBUG);
 
         // the load command arguments (load [options] <archive> <image>) are composed
         // by exactly three groups of arguments (load + archive + image)
@@ -100,7 +100,7 @@ private:
             SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of load command");
         }
 
-        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::logType::DEBUG);
+        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
     }
 
     void parsePathOfArchiveToBeLoaded(const common::CLIArguments& archiveArgs) {

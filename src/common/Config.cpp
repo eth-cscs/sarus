@@ -24,13 +24,13 @@ namespace common {
 void Config::Directories::initialize(bool useCentralizedRepository, const common::Config& config) {
     if(useCentralizedRepository) {
         common::logMessage( boost::format("initializing CLI config's directories for centralized repository"),
-                            common::logType::DEBUG);
+                            common::LogLevel::DEBUG);
         repository = common::getCentralizedRepositoryDirectory(config);
         images = repository / "images";
     }
     else {
         common::logMessage( boost::format("initializing CLI config's directories for local repository"),
-                            common::logType::DEBUG);
+                            common::LogLevel::DEBUG);
         repository = common::getLocalRepositoryDirectory(config);
         images = repository / "images";
     }

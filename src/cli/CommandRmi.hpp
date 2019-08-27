@@ -71,7 +71,7 @@ private:
     }
 
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
-        cli::utility::printLog(boost::format("parsing CLI arguments of rmi command"), common::logType::DEBUG);
+        cli::utility::printLog(boost::format("parsing CLI arguments of rmi command"), common::LogLevel::DEBUG);
 
         // the arguments of the rmi command (rmi <image>) are composed by exactly two groups of arguments (rmi + image)
         if(argsGroups.size() != 2) {
@@ -94,7 +94,7 @@ private:
             SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of rmi command");
         }
 
-        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::logType::DEBUG);
+        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
     }
 
 private:

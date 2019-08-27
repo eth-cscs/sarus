@@ -31,8 +31,8 @@ boost::filesystem::path InputImage::makeTemporaryExpansionDirectory() const {
 
 void InputImage::expandLayers(  const std::vector<boost::filesystem::path>& layersPaths,
                                 const boost::filesystem::path& expandDir) const {
-    log(boost::format("expanding image layers"), common::logType::INFO);
-    log(boost::format("> expanding image layers ..."), common::logType::GENERAL);
+    log(boost::format("expanding image layers"), common::LogLevel::INFO);
+    log(boost::format("> expanding image layers ..."), common::LogLevel::GENERAL);
 
     auto timeStart = std::chrono::system_clock::now();
 
@@ -50,7 +50,7 @@ void InputImage::expandLayers(  const std::vector<boost::filesystem::path>& laye
             SARUS_THROW_ERROR("Missing layer archive: " + archivePath.string());
         }
 
-        log(boost::format("> %-15.15s: %s") % "extracting" % archivePath, common::logType::GENERAL);
+        log(boost::format("> %-15.15s: %s") % "extracting" % archivePath, common::LogLevel::GENERAL);
 
         // extract layer tarfile & get whiteouts list
         auto whiteouts = readWhiteoutsInLayer(archivePath);
@@ -76,13 +76,13 @@ void InputImage::expandLayers(  const std::vector<boost::filesystem::path>& laye
         }
     }
 
-    log(boost::format("making expanded layers readable by the world"), common::logType::DEBUG);
+    log(boost::format("making expanded layers readable by the world"), common::LogLevel::DEBUG);
 
     auto timeEnd = std::chrono::system_clock::now();
     auto timeElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeEnd - timeStart).count() / double(1000);
-    log(boost::format("Elapsed time expansion: %s [s]") % timeElapsed, common::logType::INFO);
+    log(boost::format("Elapsed time expansion: %s [s]") % timeElapsed, common::LogLevel::INFO);
 
-    log(boost::format("successfully expanded image layers"), common::logType::INFO);
+    log(boost::format("successfully expanded image layers"), common::LogLevel::INFO);
 }
 
 // Extract the specified archive into the current working directory
@@ -97,7 +97,7 @@ void InputImage::extractArchive(const boost::filesystem::path& archivePath,
 void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::path& archivePath,
                                                     const std::vector<std::string> &excludePattern,
                                                     const boost::filesystem::path& expandDir) const {
-    log(boost::format("extracting archive %s") % archivePath, common::logType::DEBUG);
+    log(boost::format("extracting archive %s") % archivePath, common::LogLevel::DEBUG);
 
     auto cwd = boost::filesystem::current_path();
     common::changeDirectory(expandDir);
@@ -152,19 +152,19 @@ void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::pat
             // copying the data, then we will issue an error.
             log(boost::format("archive: error while reading header of entry %s (%s)")
                 % archive_entry_pathname(entry) % archive_error_string(arc),
-                common::logType::INFO);
+                common::LogLevel::INFO);
         }
 
-        log(boost::format("archive: processing entry %s") % archive_entry_pathname(entry), common::logType::DEBUG);
+        log(boost::format("archive: processing entry %s") % archive_entry_pathname(entry), common::LogLevel::DEBUG);
 
         // if entry maches excluded pattern, memorize entry and skip extracting
         if ( archive_match_excluded(matchToExclude, entry) ) {
-            log(boost::format("archive: skipping (excluded) entry"), common::logType::DEBUG);
+            log(boost::format("archive: skipping (excluded) entry"), common::LogLevel::DEBUG);
             continue;
         }
         
         // write entry
-        log(boost::format("archive: writing entry"), common::logType::DEBUG);
+        log(boost::format("archive: writing entry"), common::LogLevel::DEBUG);
         r = archive_write_header(ext, entry);
         if (r < ARCHIVE_OK) {
             auto message = boost::format("archive %s: error while writing header of entry %s (%s)")
@@ -172,7 +172,7 @@ void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::pat
             SARUS_THROW_ERROR(message.str());
         }
         else if (archive_entry_size(entry) > 0) {
-            log(boost::format("archive: copying data of entry"), common::logType::DEBUG);
+            log(boost::format("archive: copying data of entry"), common::LogLevel::DEBUG);
             copyDataOfArchiveEntry(archivePath, arc, ext, entry);
         }
     
@@ -185,7 +185,7 @@ void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::pat
         else if(r < ARCHIVE_OK) {
             log(   boost::format("archive %s: error while finishing to write entry %s (%s)")
                         % archivePath % archive_entry_pathname(entry) % archive_error_string(arc),
-                        common::logType::INFO);
+                        common::LogLevel::INFO);
         }
     }
 
@@ -197,11 +197,11 @@ void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::pat
 
     common::changeDirectory(cwd); // move back to original working dir
 
-    log(boost::format("successfully extracted archive %s") % archivePath, common::logType::DEBUG);
+    log(boost::format("successfully extracted archive %s") % archivePath, common::LogLevel::DEBUG);
 }
 
 std::vector<boost::filesystem::path> InputImage::readWhiteoutsInLayer(const boost::filesystem::path& layerArchive) const {
-    log(boost::format("reading whiteout files in layer archive %s") % layerArchive, common::logType::DEBUG);
+    log(boost::format("reading whiteout files in layer archive %s") % layerArchive, common::LogLevel::DEBUG);
 
     auto whiteouts = std::vector<boost::filesystem::path>{};
 
@@ -239,13 +239,13 @@ std::vector<boost::filesystem::path> InputImage::readWhiteoutsInLayer(const boos
             // copying the data, then we will issue an error.
             log(boost::format("archive: error while reading header of entry %s (%s)")
                 % archive_entry_pathname(entry) % archive_error_string(arc),
-                common::logType::INFO);
+                common::LogLevel::INFO);
         }
 
-        log(boost::format("archive: processing entry %s") % archive_entry_pathname(entry), common::logType::DEBUG);
+        log(boost::format("archive: processing entry %s") % archive_entry_pathname(entry), common::LogLevel::DEBUG);
     
         if(archive_match_excluded(match, entry)) {
-            log(boost::format("archive: entry is whiteout"), common::logType::DEBUG);
+            log(boost::format("archive: entry is whiteout"), common::LogLevel::DEBUG);
             whiteouts.push_back(archive_entry_pathname(entry));
         }
     }
@@ -254,14 +254,14 @@ std::vector<boost::filesystem::path> InputImage::readWhiteoutsInLayer(const boos
     archive_read_close(arc);
     archive_read_free(arc);
 
-    log(boost::format("successfully read whiteout files"), common::logType::DEBUG);
+    log(boost::format("successfully read whiteout files"), common::LogLevel::DEBUG);
 
     return whiteouts;
 }
 
 void InputImage::applyWhiteouts(const std::vector<boost::filesystem::path>& whiteouts,
                                 const boost::filesystem::path& expandDir) const {
-    log(boost::format("Applying whiteouts"), common::logType::INFO);
+    log(boost::format("Applying whiteouts"), common::LogLevel::INFO);
 
     for(const auto& whiteout : whiteouts) {
         auto whiteoutFile = expandDir / whiteout;
@@ -271,15 +271,15 @@ void InputImage::applyWhiteouts(const std::vector<boost::filesystem::path>& whit
         bool isOpaqueWhiteout = whiteoutFile.filename() == ".wh..wh..opq";
         if(isOpaqueWhiteout) {
             auto target = whiteoutFile.parent_path();
-            log(boost::format("Applying opaque whiteout to target directory %s") % target, common::logType::DEBUG);
+            log(boost::format("Applying opaque whiteout to target directory %s") % target, common::LogLevel::DEBUG);
             if(!boost::filesystem::is_directory(target)) {
                 log(boost::format("Skipping whiteout because target %s is not a directory") % target,
-                    common::logType::DEBUG);
+                    common::LogLevel::DEBUG);
                 continue;
             }
             for(boost::filesystem::directory_iterator end, it(target); it != end; ++it) {
                 if(!boost::filesystem::remove_all(it->path())) {
-                    log(boost::format("Failed to whiteout %s") % it->path(), common::logType::ERROR);
+                    log(boost::format("Failed to whiteout %s") % it->path(), common::LogLevel::ERROR);
                 }
             }
         }
@@ -288,14 +288,14 @@ void InputImage::applyWhiteouts(const std::vector<boost::filesystem::path>& whit
         else {
             auto target = whiteoutFile.parent_path();
             target /= whiteoutFile.filename().c_str() + 4; // remove leading ".wh." characters in filename
-            log(boost::format("Applying regular whiteout to %s") % target, common::logType::DEBUG);
+            log(boost::format("Applying regular whiteout to %s") % target, common::LogLevel::DEBUG);
             if(!boost::filesystem::remove_all(target)) {
-                log(boost::format("Failed to whiteout %s") % target, common::logType::ERROR);
+                log(boost::format("Failed to whiteout %s") % target, common::LogLevel::ERROR);
             }
         }
     }
 
-    log(boost::format("Successfully applied whiteouts"), common::logType::INFO);
+    log(boost::format("Successfully applied whiteouts"), common::LogLevel::INFO);
 }
 
 void InputImage::copyDataOfArchiveEntry(const boost::filesystem::path& archivePath,
@@ -330,15 +330,15 @@ void InputImage::copyDataOfArchiveEntry(const boost::filesystem::path& archivePa
     else if (r < ARCHIVE_OK) {
         auto message = boost::format("Failed to copy data from archive %s. Error while copying entry %s: %s")
             % archivePath % archive_entry_pathname(entry) % archive_error_string(in);
-        log(message, common::logType::INFO);
+        log(message, common::LogLevel::INFO);
     }
 }
 
-void InputImage::log(const boost::format &message, common::logType level) const {
+void InputImage::log(const boost::format &message, common::LogLevel level) const {
     log(message.str(), level);
 }
 
-void InputImage::log(const std::string& message, common::logType level) const {
+void InputImage::log(const std::string& message, common::LogLevel level) const {
     common::Logger::getInstance().log(message, "InputImage", level);
 }
 

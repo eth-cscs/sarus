@@ -60,13 +60,13 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
 
     // configure logger
     if(values.count("debug")) {
-        logger.setLevel(common::logType::DEBUG);
+        logger.setLevel(common::LogLevel::DEBUG);
     }
     else if(values.count("verbose")) {
-        logger.setLevel(common::logType::INFO);
+        logger.setLevel(common::LogLevel::INFO);
     }
     else {
-        logger.setLevel(common::logType::WARN);
+        logger.setLevel(common::LogLevel::WARN);
     }
 
     // --help option

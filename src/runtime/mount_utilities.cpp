@@ -87,7 +87,7 @@ bool isPathOnBindMountableDevice(const boost::filesystem::path& path, const comm
     auto rootfsDir = bundleDir / config.json.get()["rootfsFolder"].GetString();
 
     auto pathDevice = getDevice(path);
-    utility::logMessage(boost::format("Target device: %d") % pathDevice, common::logType::DEBUG);
+    utility::logMessage(boost::format("Target device: %d") % pathDevice, common::LogLevel::DEBUG);
 
     auto allowedDevices = std::vector<dev_t>{};
     allowedDevices.reserve(4);
@@ -99,7 +99,7 @@ bool isPathOnBindMountableDevice(const boost::filesystem::path& path, const comm
     auto lowerLayer = bundleDir / "overlay/rootfs-lower";
     allowedDevices.push_back(getDevice(lowerLayer));
     for(const auto& dev : allowedDevices) {
-        utility::logMessage(boost::format("Allowed device: %d") % dev, common::logType::DEBUG);
+        utility::logMessage(boost::format("Allowed device: %d") % dev, common::LogLevel::DEBUG);
     }
 
     bool isPathOnAllowedDevice = std::find( allowedDevices.cbegin(),

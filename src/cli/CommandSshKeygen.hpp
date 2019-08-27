@@ -41,7 +41,7 @@ public:
         auto command = boost::format("%s/bin/ssh_hook keygen")
             % conf->buildTime.prefixDir.string();
         common::executeCommand(command.str());
-        common::Logger::getInstance().log("Successfully generated SSH keys", "CLI", common::logType::GENERAL);
+        common::Logger::getInstance().log("Successfully generated SSH keys", "CLI", common::LogLevel::GENERAL);
     }
 
     bool requiresRootPrivileges() const override {
@@ -61,7 +61,7 @@ public:
 
 private:
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
-        cli::utility::printLog(boost::format("parsing CLI arguments of ssh-keygen command"), common::logType::DEBUG);
+        cli::utility::printLog(boost::format("parsing CLI arguments of ssh-keygen command"), common::LogLevel::DEBUG);
 
         // the ssh-keygen command arguments are composed by exactly one group of arguments
         if(argsGroups.size() > 1) {
@@ -71,7 +71,7 @@ private:
         conf->useCentralizedRepository = false;
         conf->directories.initialize(conf->useCentralizedRepository, *conf);
 
-        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::logType::DEBUG);
+        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
     }
 
 private:

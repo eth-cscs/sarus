@@ -110,7 +110,7 @@ private:
     }
 
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
-        cli::utility::printLog(boost::format("parsing CLI arguments of images command"), common::logType::DEBUG);
+        cli::utility::printLog(boost::format("parsing CLI arguments of images command"), common::LogLevel::DEBUG);
 
         // the images command arguments are composed by exactly one group of arguments
         if(argsGroups.size() > 1) {
@@ -132,7 +132,7 @@ private:
             SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of pull command");
         }
 
-        cli::utility::printLog( boost::format("successfully parsed CLI arguments"), common::logType::DEBUG);
+        cli::utility::printLog( boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
     }
 
     boost::format makeFormat(   const std::vector<common::SarusImage>& images,

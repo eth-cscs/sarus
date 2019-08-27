@@ -37,7 +37,7 @@ UserMount::UserMount(   const boost::filesystem::path& source,
 
 void UserMount::performMount() const {
     common::logMessage(boost::format("Performing User Mount: source = %s; target = %s; mount flags = %d")
-        % source.string() % destination.string() % mountFlags, common::logType::DEBUG);
+        % source.string() % destination.string() % mountFlags, common::LogLevel::DEBUG);
 
     // backup user + group ids
     auto backupUid = geteuid();

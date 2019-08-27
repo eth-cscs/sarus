@@ -39,12 +39,12 @@ namespace image_manager {
         issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled();
         issueWarningIfIsCentralizedRepositoryAndIsNotRootUser();
 
-        printLog(boost::format("Pulling image %s") % config->imageID, common::logType::INFO);
+        printLog(boost::format("Pulling image %s") % config->imageID, common::LogLevel::INFO);
 
         auto pulledImage = puller.pull();
         processImage(pulledImage);
 
-        printLog(boost::format("Successfully pulled image"), common::logType::INFO);
+        printLog(boost::format("Successfully pulled image"), common::LogLevel::INFO);
     }
 
     /**
@@ -54,12 +54,12 @@ namespace image_manager {
         issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled();
         issueWarningIfIsCentralizedRepositoryAndIsNotRootUser();
 
-        printLog(boost::format("Loading image archive %s") % archive, common::logType::INFO);
+        printLog(boost::format("Loading image archive %s") % archive, common::LogLevel::INFO);
 
         auto loadedImage = LoadedImage{config, archive};
         processImage(loadedImage);
         
-        printLog(boost::format("Successfully loaded image archive"), common::logType::INFO);
+        printLog(boost::format("Successfully loaded image archive"), common::LogLevel::INFO);
     }
 
     /**
@@ -76,7 +76,7 @@ namespace image_manager {
         issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled();
         issueWarningIfIsCentralizedRepositoryAndIsNotRootUser();
 
-        printLog(boost::format("removing image %s") % config->imageID, common::logType::INFO);
+        printLog(boost::format("removing image %s") % config->imageID, common::LogLevel::INFO);
 
         try {
             imageStore.removeImage(config->imageID);
@@ -86,8 +86,8 @@ namespace image_manager {
             SARUS_RETHROW_ERROR(e, message.str());
         }
 
-        printLog(boost::format("removed image %s") % config->imageID, common::logType::GENERAL);
-        printLog(boost::format("successfully removed image"), common::logType::INFO);
+        printLog(boost::format("removed image %s") % config->imageID, common::LogLevel::GENERAL);
+        printLog(boost::format("successfully removed image"), common::LogLevel::INFO);
     }
 
     void ImageManager::processImage(const InputImage& image) {
@@ -132,12 +132,12 @@ namespace image_manager {
         if(config->useCentralizedRepository && !isRoot) {
             auto message = boost::format("attempting to perform an operation on the"
                 " centralized repository without root privileges");
-            printLog(message, common::logType::WARN);
+            printLog(message, common::LogLevel::WARN);
         }
     }
 
-    void ImageManager::printLog(const boost::format& message, common::logType logType) const {
-        common::Logger::getInstance().log(message.str(), sysname, logType);
+    void ImageManager::printLog(const boost::format& message, common::LogLevel LogLevel) const {
+        common::Logger::getInstance().log(message.str(), sysname, LogLevel);
     }
 
 } // namespace

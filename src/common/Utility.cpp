@@ -168,7 +168,7 @@ std::string executeCommand(const std::string& command) {
 }
 
 void forkExecWait(const common::CLIArguments& args, const boost::optional<boost::filesystem::path>& chrootJail) {
-    logMessage(boost::format("Executing %s") % args, common::logType::DEBUG);
+    logMessage(boost::format("Executing %s") % args, common::LogLevel::DEBUG);
 
     // fork and execute
     auto pid = fork();
@@ -213,7 +213,7 @@ void forkExecWait(const common::CLIArguments& args, const boost::optional<boost:
         }
     }
 
-    logMessage(boost::format("Successfully executed %s") % args, common::logType::DEBUG);
+    logMessage(boost::format("Successfully executed %s") % args, common::LogLevel::DEBUG);
 }
 
 void SetStdinEcho(bool flag)
@@ -771,11 +771,11 @@ rapidjson::Document convertCppRestJsonToRapidJson(web::json::value& cppRest) {
     }
 }
 
-void logMessage(const boost::format& message, logType level) {
+void logMessage(const boost::format& message, LogLevel level) {
     logMessage(message.str(), level);
 }
 
-void logMessage(const std::string& message, logType level) {
+void logMessage(const std::string& message, LogLevel level) {
     auto subsystemName = "CommonUtility";
     common::Logger::getInstance().log(message, subsystemName, level);
 }

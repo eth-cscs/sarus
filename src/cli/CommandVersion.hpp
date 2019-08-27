@@ -32,7 +32,7 @@ public:
     {}
 
     void execute() override {
-        common::Logger::getInstance().log(conf->buildTime.version, "CommandVersion", common::logType::GENERAL);
+        common::Logger::getInstance().log(conf->buildTime.version, "CommandVersion", common::LogLevel::GENERAL);
     }
 
     bool requiresRootPrivileges() const override {

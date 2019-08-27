@@ -19,8 +19,8 @@ namespace sarus {
 namespace runtime {
 namespace utility {
 
-void logMessage(const boost::format&, common::logType);
-void logMessage(const std::string&, common::logType);
+void logMessage(const boost::format&, common::LogLevel);
+void logMessage(const std::string&, common::LogLevel);
 
 } // namespace
 } // namespace
