@@ -23,7 +23,7 @@ class TestProcessIdentity(unittest.TestCase):
     def test_process_identity(self):
         host_uid = os.getuid()
         host_gid = os.getgid()
-        host_supplementary_gids = os.getgroups()
+        host_supplementary_gids = set(os.getgroups())
 
         # Retrieve ids from container
         util.pull_image_if_necessary(is_centralized_repository=False, image=self._IMAGE_NAME)
@@ -41,7 +41,7 @@ class TestProcessIdentity(unittest.TestCase):
         output = util.run_command_in_container(is_centralized_repository=False,
                                                image=self._IMAGE_NAME,
                                                command=["id", "-G"])
-        container_supplementary_gids = [int(group) for group in output[0].split()]
+        container_supplementary_gids = {int(group) for group in output[0].split()}
 
         # Checks
         self.assertEqual(host_uid, container_uid)
