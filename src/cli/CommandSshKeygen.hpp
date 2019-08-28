@@ -27,10 +27,12 @@ class CommandSshKeygen : public Command {
 public:
     CommandSshKeygen() = default;
 
-    CommandSshKeygen(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config> conf)
-        : conf{std::move(conf)}
+    CommandSshKeygen(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config> config)
+        : conf{std::move(config)}
     {
         parseCommandArguments(argsGroups);
+        conf->useCentralizedRepository = false;
+        conf->directories.initialize(conf->useCentralizedRepository, *conf);
     }
 
     void execute() override {
@@ -63,13 +65,20 @@ private:
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
         cli::utility::printLog(boost::format("parsing CLI arguments of ssh-keygen command"), common::LogLevel::DEBUG);
 
-        // the ssh-keygen command arguments are composed by exactly one group of arguments
+        // the ssh-keygen command doesn't support additional arguments
         if(argsGroups.size() > 1) {
-            SARUS_THROW_ERROR("failed to parse CLI arguments of ssh-keygen command (too many arguments provided)");
+            auto message = boost::format("Command 'ssh-keygen' doesn't support additional arguments"
+                                         "\nSee 'sarus help ssh-keygen'");
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
 
-        conf->useCentralizedRepository = false;
-        conf->directories.initialize(conf->useCentralizedRepository, *conf);
+        if(argsGroups[0].argc() > 1) {
+            auto message = boost::format("Command 'ssh-keygen' doesn't support options"
+                                         "\nSee 'sarus help ssh-keygen'");
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        }
 
         cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
     }

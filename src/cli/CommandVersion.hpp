@@ -27,9 +27,11 @@ class CommandVersion : public Command {
 public:
     CommandVersion() = default;
 
-    CommandVersion(const std::deque<common::CLIArguments>&, std::shared_ptr<const common::Config> conf)
+    CommandVersion(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<const common::Config> conf)
         : conf{std::move(conf)}
-    {}
+    {
+        parseCommandArguments(argsGroups);
+    }
 
     void execute() override {
         common::Logger::getInstance().log(conf->buildTime.version, "CommandVersion", common::LogLevel::GENERAL);
@@ -48,6 +50,28 @@ public:
             .setUsage("sarus version")
             .setDescription(getBriefDescription());
         std::cout << printer;
+    }
+
+private:
+    void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
+        cli::utility::printLog(boost::format("parsing CLI arguments of version command"), common::LogLevel::DEBUG);
+
+        // the version command doesn't support additional arguments
+        if(argsGroups.size() > 1) {
+            auto message = boost::format("Command 'version' doesn't support additional arguments"
+                                         "\nSee 'sarus help version'");
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        }
+        // the version command doesn't support options
+        if(argsGroups[0].argc() > 1) {
+            auto message = boost::format("Command 'version' doesn't support options"
+                                         "\nSee 'sarus help version'");
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        }
+
+        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
     }
 
 private:

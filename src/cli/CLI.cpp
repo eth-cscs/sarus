@@ -52,7 +52,7 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
     }
     catch (const std::exception& e) {
         auto message = boost::format("Error while parsing the command line: %s") % e.what();
-        logger.log(message, "CLI", common::LogLevel::GENERAL);
+        logger.log(message, "CLI", common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
     }
 
@@ -67,6 +67,10 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
         logger.setLevel(common::LogLevel::WARN);
     }
 
+    // drop first argument
+    // (string "sarus" and the related general options that we have already parsed)
+    argsGroups.pop_front();
+
     // --help option
     if(values.count("help")) {
         return factory.makeCommandObject("help", argsGroups, std::move(conf));
@@ -78,22 +82,18 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
     }
 
     // no command name => return help command
-    if(argsGroups.size() == 1) {
+    if(argsGroups.empty()) {
         return factory.makeCommandObject("help");
     }
 
-    auto commandName = std::string{argsGroups[1].argv()[0]};
+    auto commandName = std::string{argsGroups.front().argv()[0]};
 
     // process help command of another command
     bool isCommandHelpFollowedByAnArgument =
-        commandName == "help" && argsGroups.size() > 2;
+        commandName == "help" && argsGroups.size() > 1;
     if(isCommandHelpFollowedByAnArgument) {
         return parseCommandHelpOfCommand(argsGroups);
     }
-
-    // drop first argument
-    // (string "sarus" and the related general options that we have already parsed)
-    argsGroups.pop_front();
 
     return factory.makeCommandObject(commandName, argsGroups, std::move(conf));
 }
@@ -133,7 +133,7 @@ std::deque<common::CLIArguments> CLI::groupArgumentsAndCorrespondingOptions(cons
 
 std::unique_ptr<cli::Command> CLI::parseCommandHelpOfCommand(const std::deque<common::CLIArguments>& argsGroups) const {
     auto factory = cli::CommandObjectsFactory{};
-    auto commandName = std::string{ argsGroups[2].argv()[0] };
+    auto commandName = std::string{ argsGroups[1].argv()[0] };
     if(!factory.isValidCommandName(commandName)) {
         auto message = boost::format("unknown help topic: %s") % commandName;
         SARUS_THROW_ERROR(message.str());

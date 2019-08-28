@@ -51,9 +51,9 @@ std::vector<std::string> CommandObjectsFactory::getCommandNames() const {
 
 std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(const std::string& commandName) const {
     if(!isValidCommandName(commandName)) {
-        auto message = boost::format("\"%s\" is not a Sarus command")
+        auto message = boost::format("'%s' is not a Sarus command\nSee 'sarus help'")
             % commandName;
-        common::Logger::getInstance().log(message, "CommandObjectsFactory", common::LogLevel::GENERAL);
+        common::Logger::getInstance().log(message, "CommandObjectsFactory", common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
     }
     auto it = map.find(commandName);
@@ -65,9 +65,9 @@ std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(
     const std::deque<common::CLIArguments>& commandArgsGroups,
     std::shared_ptr<common::Config> config) const {
     if(!isValidCommandName(commandName)) {
-        auto message = boost::format("\"%s\" is not a Sarus command")
+        auto message = boost::format("'%s' is not a Sarus command\nSee 'sarus help'")
             % commandName;
-        common::Logger::getInstance().log(message, "CommandObjectsFactory", common::LogLevel::GENERAL);
+        common::Logger::getInstance().log(message, "CommandObjectsFactory", common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
     }
     auto it = mapWithArguments.find(commandName);

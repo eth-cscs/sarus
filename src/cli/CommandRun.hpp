@@ -52,7 +52,7 @@ public:
                 "Failed to check the SSH keys. Hint: try to generate the SSH keys"
                 " with the \"sarus ssh-keygen\" command first",
                 "CLI",
-                common::LogLevel::GENERAL);
+                common::LogLevel::GENERAL, std::cerr);
             return;
         }
 
