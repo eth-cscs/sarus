@@ -50,7 +50,6 @@ int main(int argc, char* argv[]) {
         command->execute();
     }
     catch(const common::Error& e) {
-        logger.log("Caught exception in main function", "main", common::LogLevel::ERROR);
         logger.logErrorTrace(e, "main");
         return 1;
     }

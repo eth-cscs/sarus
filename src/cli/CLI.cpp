@@ -50,12 +50,10 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
                 .run(), values);
         boost::program_options::notify(values); // throw if options are invalid
     }
-    catch (const boost::program_options::error& e) {
-        auto message = boost::format("Error while parsing the command line: %s") % e.what();
-        SARUS_THROW_ERROR(message.str());
-    }
     catch (const std::exception& e) {
-        SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments");
+        auto message = boost::format("Error while parsing the command line: %s") % e.what();
+        logger.log(message, "CLI", common::LogLevel::GENERAL);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
     }
 
     // configure logger
