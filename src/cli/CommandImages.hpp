@@ -129,7 +129,7 @@ private:
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch(std::exception& e) {
-            SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of pull command");
+            SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of images command");
         }
 
         cli::utility::printLog( boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
