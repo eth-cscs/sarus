@@ -164,7 +164,7 @@ please consult the :doc:`/config/configuration_reference`.
   requirements <requirements-permissions-security>` for critical files and
   directories.
   By default, the OCI bundle directory is located in
-  ``<installation path>/var/sarus/OCIBundleDir``.
+  ``<installation path>/var/OCIBundleDir``.
 * **localRepositoryBaseDir:** the starting path to individual user directories,
   where Sarus will create (if necessary) and access local repositories.
   The repositories will be located in ``<localRepositoryBaseDir>/<user name>/.sarus``.

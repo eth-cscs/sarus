@@ -28,13 +28,16 @@ You can quickly install Sarus by following the simple steps below.
     cd /opt/sarus/1.0.0-rc8
     ./configure_installation.sh
 
-.. note::
+.. important::
     The configuration script requires the program mksquashfs to be installed
     on the system, which is typically available through the squashfs-tools package.
 
 .. note::
     You can refer to the section :doc:`Custom installation </install/index>`
-    if you want to build and install Sarus from scratch.
+    if you want to build Sarus from source or from the Spack package manager.
+
+    Please note that the configuration script will create a minimal working configuration.
+    For enabling additional features, please refer to the the :doc:`/config/configuration_reference`.
 
 Use Sarus
 =========

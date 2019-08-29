@@ -24,6 +24,8 @@ are not tamperable by non-root users.
 
 Recommended value: ``true``
 
+Refer to the :ref:`security requirements <requirements-permissions-security>`.
+
 .. _config-reference-OCIBundleDir:
 
 OCIBundleDir (string, REQUIRED)
@@ -244,6 +246,7 @@ Example configuration file
 .. code-block:: json
 
     {
+        "securityChecks": true,
         "OCIBundleDir": "/var/sarus/OCIBundleDir",
         "rootfsFolder": "rootfs",
         "prefixDir": "/opt/sarus",

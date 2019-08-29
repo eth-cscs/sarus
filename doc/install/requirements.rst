@@ -205,5 +205,3 @@ The checked directories are:
     ``sarus.json``.
   - If the :doc:`SSH Hook </config/ssh-hook>` is enabled in ``sarus.json``,
     the directory of the custom OpenSSH software.
-    This location is determined at build time and is set to
-    ``<CMAKE_INSTALL_PREFIX>/openssh``.

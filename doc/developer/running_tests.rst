@@ -5,17 +5,8 @@ Running unit and integration tests
 Unit tests
 ==========
 
-In order to run Sarus unit tests, it is advised to build Sarus with runtime
-security checks disabled:
-
-.. code-block:: bash
-
-   $ cd <sarus project root dir>
-   $ mkdir build && cd build
-   $ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc.cmake \
-           -DCMAKE_INSTALL_PREFIX=/opt/sarus \
-           ..
-   $ make
+In order to run Sarus unit tests, it is advised to disable the security checks
+in the *sarus.json* file.
 
 Disabling security checks prevents some tests from failing because some files
 (e.g. artifacts to test JSON parsing and validation) are not root-owned and
@@ -85,8 +76,7 @@ is not necessary if running integration tests as root):
 
    Integration tests are not exposed to the risk of failing when runtime security
    checks are enabled, like unit tests are. To test a configuration more similar
-   to a production deployment, re-build and install Sarus with runtime security checks
-   enabled.
+   to a production deployment, re-enable security checks in the *sarus.json* file.
 
 We can run the tests from the parent directory of the related Python scripts:
 
