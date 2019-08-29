@@ -35,11 +35,10 @@ build_sarus_archive() {
     local build_type=$1; shift
     local build_dir=$1; shift
 
+    # do code coverage with debug build
     if [ "$build_type" = "Debug" ]; then
-        local enable_coverage=TRUE
         local cmake_toolchain_file=../cmake/toolchain_files/gcc-gcov.cmake
     else
-        local enable_coverage=FALSE
         local cmake_toolchain_file=../cmake/toolchain_files/gcc.cmake
     fi
 
@@ -52,7 +51,6 @@ build_sarus_archive() {
             -Dcpprestsdk_INCLUDE_DIR=/opt/cpprestsdk/v2.10.0/include \
             -DCMAKE_BUILD_TYPE=${build_type} \
             -DBUILD_STATIC=TRUE \
-            -DENABLE_TESTS_WITH_GCOV=${enable_coverage} \
             -DENABLE_TESTS_WITH_VALGRIND=FALSE \
             -DENABLE_SSH=TRUE \
             -DCMAKE_INSTALL_PREFIX=${prefix_dir} \

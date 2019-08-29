@@ -116,7 +116,6 @@ order to customize your build:
      It is strongly recommended to keep these checks enabled for production deployments [TRUE].
    - ENABLE_SSH: build and install the SSH hook and custom OpenSSH software to enable
      connections inside containers [TRUE].
-   - ENABLE_TESTS_WITH_GCOV: run gcov after each unit test to collect coverage information [FALSE].
    - ENABLE_TESTS_WITH_VALGRIND: run each unit test through valgrind [FALSE].
 
 Install

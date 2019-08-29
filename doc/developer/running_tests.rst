@@ -44,10 +44,10 @@ executable.
 Generating coverage data
 ------------------------
 
-If the build was configured with the CMake ``ENABLE_TESTS_WITH_GCOV`` enabled,
+If the build was configured with the CMake toolchain file ``gcc-gcov.cmake``,
 the unit tests executables automatically generate ``gcov`` files with raw
-coverage data. We can process and summarize these data using the `gcovr <https://gcovr.com/>`_
-utility:
+coverage data. We can process and summarize these data using `gcov` and the
+`gcovr <https://gcovr.com/>`_ utility:
 
 .. note::
 
@@ -56,12 +56,14 @@ utility:
 
 .. code-block:: bash
 
-   # Command general form
-   $ gcovr -r <sarus project root dir>/src -k -g --object-directory <build dir>/src
-
-   # Assuming that we are in the build directory and that the project root
-   # is the parent directory
-   $ gcovr -r ../src -k -g --object-directory $(pwd)/src
+   # Assuming that we are in the project's root directory and Sarus was built in the
+   # 'build' subdirectory
+   root_dir=$(pwd)
+   build_dir=$(pwd)/build
+   mkdir ${build_dir}/gcov
+   cd ${build_dir}/gcov
+   gcov --preserve-paths $(find ${build_dir}/src -name "*.gcno" |grep -v test |tr '\n' ' ')
+   gcovr -r ${root_dir}/src -k -g --object-directory ${build_dir}/gcov
 
 
 Integration tests
