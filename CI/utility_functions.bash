@@ -161,6 +161,7 @@ build_install_test_sarus() {
         --mount=src=${sarus_cached_centralized_repository_dir},dst=/var/sarus/centralized_repository,type=bind \
         ${docker_image_run} \
         bash -c ". /sarus-source/CI/utility_functions.bash && run_tests ${host_uid} ${host_gid} ${build_type} ${build_dir}"
+    ./CI/run_integration_tests_for_virtual_cluster.sh ${build_dir} ${sarus_cached_home_dir}
 }
 
 generate_slurm_conf() {
