@@ -1,11 +1,11 @@
 stages:
   - test
 
-standalone_archive:
+
+standalone_archive_debug:
   stage: test
   script:
     - . ./CI/utility_functions.bash
-
     - docker_image_build=ethcscs/sarus-ci-build:1.0.0
     - docker_image_run=ethcscs/sarus-ci-run:1.0.0
 
@@ -13,18 +13,34 @@ standalone_archive:
     - ./CI/check_that_version_file_is_up_to_date.sh
     - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_build} /sarus-source/CI/check_version_from_cmake.sh
 
-    # Debug version
+    # Build, install, test
     - build_type=Debug
-    - build_install_test_sarus ${build_type} ${docker_image_build} ${docker_image_run}
-
-    # Release version
-    - build_type=Release
     - build_install_test_sarus ${build_type} ${docker_image_build} ${docker_image_run}
 
   artifacts:
     paths:
       - build-Debug/sarus.tar.gz
+
+
+standalone_archive_release:
+  stage: test
+  script:
+    - . ./CI/utility_functions.bash
+    - docker_image_build=ethcscs/sarus-ci-build:1.0.0
+    - docker_image_run=ethcscs/sarus-ci-run:1.0.0
+
+    # Check version number
+    - ./CI/check_that_version_file_is_up_to_date.sh
+    - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_build} /sarus-source/CI/check_version_from_cmake.sh
+
+    # Build, install, test
+    - build_type=Release
+    - build_install_test_sarus ${build_type} ${docker_image_build} ${docker_image_run}
+
+  artifacts:
+    paths:
       - build-Release/sarus.tar.gz
+
 
 spack_package:
   stage: test
