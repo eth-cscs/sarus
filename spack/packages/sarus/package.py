@@ -52,7 +52,7 @@ class Sarus(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = ['-DCMAKE_TOOLCHAIN_FILE=./cmake/toolchain_files/gcc-nowerror.cmake',
+        args = ['-DCMAKE_TOOLCHAIN_FILE=./cmake/toolchain_files/gcc.cmake',
                 '-DENABLE_SSH=%s' % ('+ssh' in spec)]
         return args
 

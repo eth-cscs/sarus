@@ -44,7 +44,7 @@ build_sarus_archive() {
     fi
 
     # build Sarus
-    echo "Building Sarus (build type = ${build_type}"
+    echo "Building Sarus (build type = ${build_type})"
     mkdir -p ${build_dir} && cd ${build_dir}
     local prefix_dir=${build_dir}/install/$(git describe --tags --dirty)-${build_type}
     cmake   -DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file} \
@@ -61,8 +61,8 @@ build_sarus_archive() {
     echo "Successfully built Sarus"
 
     # build archive
-    echo "Building archive ${archive_name}"
     local archive_name="sarus.tar.gz"
+    echo "Building archive ${archive_name}"
     rm -rf ${prefix_dir}/*
     make install
     (cd ${prefix_dir}/bin && wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64 && chmod +x runc.amd64)

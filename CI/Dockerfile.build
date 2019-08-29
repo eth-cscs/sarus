@@ -50,7 +50,8 @@ RUN cd /opt \
 RUN cd /opt \
     && mkdir rapidjson && cd rapidjson \
     && wget -O rapidjson-master.tar.gz https://github.com/Tencent/rapidjson/archive/master.tar.gz \
-    && tar xzf rapidjson-master.tar.gz && cd rapidjson-master
+    && tar xzf rapidjson-master.tar.gz \
+    && rm rapidjson-master.tar.gz
 
 RUN adduser -h /home/docker -s /bin/bash -D  docker docker
 RUN echo "docker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
