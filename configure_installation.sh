@@ -16,13 +16,18 @@ function exit_on_error() {
     fi
 }
 
+if [ "$EUID" -ne 0 ]; then
+    echo "ERROR: you need to run this script as root" >&2
+    exit 1
+fi
+
 prefix_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd ${prefix_dir}
 
 echo "Setting Sarus as SUID root"
-sudo chown root:root bin/sarus
+chown root:root bin/sarus
 exit_on_error "failed to chown bin/sarus"
-sudo chmod +s bin/sarus
+chmod +s bin/sarus
 exit_on_error "failed to chmod bin/sarus"
 echo "Successfully set Sarus as SUID root"
 
