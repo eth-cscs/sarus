@@ -29,7 +29,7 @@ test_utility::config::ConfigRAII makeConfig() {
 
 TEST_GROUP(SlurmGlobalSyncTestGroup) {
     test_utility::config::ConfigRAII configRAII = makeConfig();
-    std::tuple<uid_t, gid_t> idsOfUser = { configRAII.config->userIdentity.uid, configRAII.config->userIdentity.gid };
+    std::tuple<uid_t, gid_t> idsOfUser{ configRAII.config->userIdentity.uid, configRAII.config->userIdentity.gid };
     boost::filesystem::path prefixDir = configRAII.config->json["prefixDir"].GetString();
     boost::filesystem::path bundleDir = configRAII.config->json["OCIBundleDir"].GetString();
     boost::filesystem::path rootfsDir = bundleDir / configRAII.config->json["rootfsFolder"].GetString();
