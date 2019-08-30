@@ -6,5 +6,4 @@ These files are needed to setup basic container features,
 like information about file owners in shared directories,
 or networking with other computing nodes.
 
-These files are installed in the directory specified by the
-CMake variable DIR_OF_FILES_TO_COPY_IN_CONTAINER_ETC.
+These files are installed in the directory ${CMAKE_INSTALL_PREFIX}/files_to_copy_in_container_etc.

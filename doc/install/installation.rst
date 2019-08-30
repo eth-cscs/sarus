@@ -110,7 +110,6 @@ order to customize your build:
 
    - CMAKE_INSTALL_PREFIX: installation directory of Sarus [/usr/local].
    - SYSCONFDIR: directory with the configuration files of Sarus [<CMAKE_INSTALL_PREFIX>/etc].
-   - DIR_OF_FILES_TO_COPY_IN_CONTAINER_ETC: directory with configuration files that are copied into the container [<CMAKE_INSTALL_PREFIX>/files_to_copy_in_container_etc].
    - ENABLE_RUNTIME_SECURITY_CHECKS: Enable runtime security checks (root ownership of files, etc.).
      Disabling this may be convenient when rapidly iterating over test and development installations.
      It is strongly recommended to keep these checks enabled for production deployments [TRUE].
