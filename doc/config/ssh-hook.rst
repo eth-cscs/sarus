@@ -48,7 +48,6 @@ The following is an example ``OCIHooks`` object enabling the SSH hook:
                 "path": "/opt/sarus/bin/ssh_hook",
                 "env": [
                     "SARUS_PREFIX_DIR=/opt/sarus",
-                    "SARUS_LOCAL_REPOSITORY_BASE_DIR=/home",
                     "SARUS_OPENSSH_DIR=/opt/sarus/openssh"
                 ],
                 "args": [
