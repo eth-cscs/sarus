@@ -59,5 +59,5 @@ class Sarus(CMakePackage):
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             make(*self.install_targets)
-            mkdirp(prefix.var.sarus.OCIBundleDir)
+            mkdirp(prefix.var.OCIBundleDir)
 
