@@ -8,8 +8,7 @@ The runtime configuration parameters of Sarus are read from a file called
 <requirements-permissions-execution>` that Sarus requires in order to exercise
 its functions, the configuration file must satisfy specific :ref:`security
 requirements <requirements-permissions-security>` regarding its location and
-ownership. The location for the configuration file can be set at build-time
-using the ``SYSCONFDIR`` CMake option (see :doc:`/install/installation`).
+ownership.
 
 
 Configuration file entries

@@ -154,9 +154,7 @@ During installation
 * Write permissions to:
     - The Sarus installation directory. This will be passed through the
       ``CMAKE_INSTALL_PREFIX`` option to CMake.
-    - The directory for Sarus's configuration files. This is passed through
-      the ``SYSCONFDIR`` option to CMake. The default value is
-      ``<CMAKE_INSTALL_PREFIX>/etc``.
+    - The directory for Sarus's configuration files ``<CMAKE_INSTALL_PREFIX>/etc``.
 
 .. _requirements-permissions-execution:
 
@@ -191,8 +189,7 @@ during privileged execution meet the following restrictions:
 
 The files checked for the security conditions are:
 
-  - ``sarus.json`` in Sarus's configuration directory. The directory
-    location is set with the ``SYSCONFDIR`` option to CMake.
+  - ``sarus.json`` in Sarus's configuration directory ``<CMAKE_INSTALL_PREFIX>/etc``.
   - The ``mksquashfs`` utility pointed by ``mksquashfsPath`` in ``sarus.json``.
   - The OCI-compliant runtime pointed by ``runcPath`` in ``sarus.json``.
   - All the OCI hooks executables entered in ``sarus.json``.

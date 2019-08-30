@@ -15,7 +15,6 @@ if(${BUILD_STATIC})
     set(CMAKE_LINK_SEARCH_END_STATIC TRUE)
 endif(${BUILD_STATIC})
 
-set(SYSCONFDIR ${CMAKE_INSTALL_PREFIX}/etc CACHE PATH "Configuration files directory [$CMAKE_INSTALL_PREFIX/etc]")
 set(LIBEXECDIR ${CMAKE_INSTALL_PREFIX}/libexec CACHE PATH "libexec directory [$CMAKE_INSTALL_PREFIX/libexec]")
 set(ENABLE_SSH TRUE CACHE BOOL "Build a statically-linked ssh to be executed inside the container [TRUE]")
 
@@ -66,7 +65,7 @@ add_subdirectory(files_to_copy_in_container_etc)
 add_subdirectory(src)
 
 configure_file(sarus.json.in ${CMAKE_BINARY_DIR}/sarus.json)
-install(FILES ${CMAKE_BINARY_DIR}/sarus.json sarus.json.in sarus.schema.json DESTINATION ${SYSCONFDIR})
+install(FILES ${CMAKE_BINARY_DIR}/sarus.json sarus.json.in sarus.schema.json DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)
 install(FILES configure_installation.sh DESTINATION ${CMAKE_INSTALL_PREFIX} PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE

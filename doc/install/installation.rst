@@ -109,7 +109,6 @@ Below are listed the Sarus-specific options that can be passed to CMake in
 order to customize your build:
 
    - CMAKE_INSTALL_PREFIX: installation directory of Sarus [/usr/local].
-   - SYSCONFDIR: directory with the configuration files of Sarus [<CMAKE_INSTALL_PREFIX>/etc].
    - ENABLE_RUNTIME_SECURITY_CHECKS: Enable runtime security checks (root ownership of files, etc.).
      Disabling this may be convenient when rapidly iterating over test and development installations.
      It is strongly recommended to keep these checks enabled for production deployments [TRUE].
@@ -146,13 +145,10 @@ Minimal configuration
 =====================
 
 At run time, Sarus takes its configuration options from a file named
-*sarus.json*. This file must be placed in the directory specified to CMake
-with ``SYSCONFDIR``, e.g. ``cmake -DSYSCONFDIR=/opt/sarus/default/etc``.
-If not specified, ``SYSCONFDIR`` defaults to ``CMAKE_INSTALL_PREFIX/etc``.
-When installing with Spack, ``SYSCONFDIR`` is set to ``<installation prefix>/etc``.
+*sarus.json*. This file must be placed in the directory ``CMAKE_INSTALL_PREFIX/etc``.
 
 A *sarus.json* file with a minimal configuration is automatically created in
-``SYSCONFDIR`` as part of the installation step.
+``CMAKE_INSTALL_PREFIX/etc`` as part of the installation step.
 
 Here we will highlight some key settings which form a baseline configuration.
 For the full details about configuration options and the structure of *sarus.json*
