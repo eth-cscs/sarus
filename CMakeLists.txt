@@ -61,7 +61,7 @@ endif(NOT LATEST_GIT_TAG)
 message(STATUS "Sarus version: " ${LATEST_GIT_TAG})
 
 add_subdirectory(dep)
-add_subdirectory(files_to_copy_in_container_etc)
+add_subdirectory(files_to_install)
 add_subdirectory(src)
 
 configure_file(sarus.json.in ${CMAKE_BINARY_DIR}/sarus.json)
