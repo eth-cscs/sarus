@@ -148,7 +148,7 @@ void Runtime::setupDevFilesystem() const {
 
 void Runtime::copyEtcFilesIntoRootfs() const {
     utility::logMessage("Copying files_to_copy_in_container_etc into rootfs", common::logType::INFO);
-    auto dirOfFilesToCopyInContainerEtc = boost::filesystem::path{config->json["dirOfFilesToCopyInContainerEtc"].GetString()};
+    auto prefixDir = boost::filesystem::path{config->json["prefixDir"].GetString()};
     common::createFoldersIfNecessary(rootfsDir / "etc", config->userIdentity.uid, config->userIdentity.gid);
 
     common::copyFile(   "/etc/hosts",
@@ -159,15 +159,15 @@ void Runtime::copyEtcFilesIntoRootfs() const {
                         rootfsDir / "etc/resolv.conf",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    common::copyFile(   dirOfFilesToCopyInContainerEtc / "nsswitch.conf",
+    common::copyFile(   prefixDir / "etc/container/nsswitch.conf",
                         rootfsDir / "etc/nsswitch.conf",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    common::copyFile(   dirOfFilesToCopyInContainerEtc / "passwd",
+    common::copyFile(   prefixDir / "etc/passwd",
                         rootfsDir / "etc/passwd",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    common::copyFile(   dirOfFilesToCopyInContainerEtc / "group",
+    common::copyFile(   prefixDir / "etc/group",
                         rootfsDir / "etc/group",
                         config->userIdentity.uid, config->userIdentity.gid);
 

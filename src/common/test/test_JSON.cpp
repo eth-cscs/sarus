@@ -34,7 +34,6 @@ TEST(JSONTestGroup, validFile) {
     CHECK_EQUAL(config->json["OCIBundleDir"].GetString(), std::string("/var/sarus/OCIBundleDir"));
     CHECK_EQUAL(config->json["rootfsFolder"].GetString(), std::string("rootfsFolder"));
     CHECK_EQUAL(config->json["prefixDir"].GetString(), std::string("/opt/sarus"));
-    CHECK_EQUAL(config->json["dirOfFilesToCopyInContainerEtc"].GetString(), std::string("/opt/sarus/etc"));
     CHECK_EQUAL(config->json["runcPath"].GetString(), std::string("/usr/bin/runc.amd64"));
     CHECK_EQUAL(config->json["ramFilesystemType"].GetString(), std::string("tmpfs"));
 

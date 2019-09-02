@@ -63,13 +63,13 @@ TEST(RuntimeTestGroup, setupOCIBundle) {
     auto bundleDir = boost::filesystem::path{config->json["OCIBundleDir"].GetString()};
     auto overlayfsLowerDir = bundleDir / "overlay/rootfs-lower"; // hardcoded so in production code being tested
     auto rootfsDir = bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()};
-    auto dirOfFilesToCopyInContainerEtc = boost::filesystem::path{config->json["dirOfFilesToCopyInContainerEtc"].GetString()};
+    auto prefixDir = boost::filesystem::path{config->json["prefixDir"].GetString()};
 
     // create test folders / files
     common::createFoldersIfNecessary(bundleDir);
-    common::createFileIfNecessary(dirOfFilesToCopyInContainerEtc / "nsswitch.conf");
-    common::createFileIfNecessary(dirOfFilesToCopyInContainerEtc / "passwd");
-    common::createFileIfNecessary(dirOfFilesToCopyInContainerEtc / "group");
+    common::createFileIfNecessary(prefixDir / "etc/container/nsswitch.conf");
+    common::createFileIfNecessary(prefixDir / "etc/passwd");
+    common::createFileIfNecessary(prefixDir / "etc/group");
 
     // create dummy metadata file in image repo
     auto metadataFile = boost::filesystem::path(config->directories.images / (config->imageID.getUniqueKey() + ".meta"));

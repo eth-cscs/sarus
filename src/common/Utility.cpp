@@ -245,7 +245,7 @@ std::string getUsername(const common::Config& config) {
     // get username from the cached passwd file of Sarus
     // Note: this is usually done through the getpwuid fuction. However, musl failes to retrieve
     // all the passwd entries from certain systems, e.g. LDAP at CSCS.
-    auto passwdFile = boost::filesystem::path{ config.json["dirOfFilesToCopyInContainerEtc"].GetString() } / "passwd";
+    auto passwdFile = boost::filesystem::path{ config.json["prefixDir"].GetString() } / "etc/passwd";
     auto passwd = common::PasswdDB{};
     passwd.read(passwdFile);
 

@@ -1,9 +1,19 @@
-At installation time, the CMakeLists.txt in this directory generates
-and installs the configuration files to be copied into the container's
-/etc (e.g. /etc/passwd, /etc/groups, /etc/nsswitch.conf, ...).
 
-These files are needed to setup basic container features,
-like information about file owners in shared directories,
-or networking with other computing nodes.
+Basic instructions to get started with Sarus follow below. Please refer to the Sarus
+documentation for more information on how to install, configure and use Sarus.
 
-These files are installed in the directory ${CMAKE_INSTALL_PREFIX}/files_to_copy_in_container_etc.
+1. Extract this archive in the installation directory.
+
+   cd /opt/sarus
+   sudo tar xf sarus.tar.gz
+
+2. Run the configuration script to finalize the installation of Sarus.
+
+    cd /opt/sarus/1.0.0-rc8 # adapt folder name to actual version of Sarus
+    sudo ./configure_installation.sh
+
+3. Use Sarus, e.g.:
+
+    export PATH=/opt/sarus/1.0.0-rc8/bin:$PATH
+    sarus images
+    sarus run alpine cat /etc/os-release

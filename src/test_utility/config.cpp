@@ -31,10 +31,6 @@ ConfigRAII::~ConfigRAII() {
         boost::filesystem::remove_all(dir);
     }
     {
-        auto dir = boost::filesystem::path{ config->json["dirOfFilesToCopyInContainerEtc"].GetString() };
-        boost::filesystem::remove_all(dir);
-    }
-    {
         auto dir = boost::filesystem::path{ config->json["localRepositoryBaseDir"].GetString() };
         boost::filesystem::remove_all(dir);
     }
@@ -46,7 +42,6 @@ static void populateJSON(rapidjson::Document& document) {
 
     auto prefixDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-prefix-dir"));
     auto bundleDir = prefixDir / "var/OCIBundle";
-    auto dirOfFilesToCopyInContainerEtc = prefixDir / "dirOfFilesToCopyInContainerEtc";
     auto localRepositoryBaseDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-localRepositoryBaseDir"));
 
     document.AddMember( "securityChecks",
@@ -60,9 +55,6 @@ static void populateJSON(rapidjson::Document& document) {
                         allocator);
     document.AddMember( "prefixDir",
                         rapidjson::Value{prefixDir.c_str(), allocator},
-                        allocator);
-    document.AddMember( "dirOfFilesToCopyInContainerEtc",
-                        rapidjson::Value{dirOfFilesToCopyInContainerEtc.c_str(), allocator},
                         allocator);
     document.AddMember( "tempDir",
                         rapidjson::Value{"/tmp", allocator},
@@ -121,10 +113,10 @@ ConfigRAII makeConfig() {
 
     populateJSON(raii.config->json);
 
-    auto dirOfFilesToCopyInContainerEtc = boost::filesystem::path{ raii.config->json["dirOfFilesToCopyInContainerEtc"].GetString() };
-    common::createFoldersIfNecessary(dirOfFilesToCopyInContainerEtc);
-    common::executeCommand("getent passwd >" + dirOfFilesToCopyInContainerEtc.string() + "/passwd");
-    common::executeCommand("getent group >" + dirOfFilesToCopyInContainerEtc.string() + "/group");
+    auto prefixDir = boost::filesystem::path{ raii.config->json["prefixDir"].GetString() };
+    common::createFoldersIfNecessary(prefixDir / "etc");
+    common::executeCommand("getent passwd >" + prefixDir.string() + "/etc/passwd");
+    common::executeCommand("getent group >" + prefixDir.string() + "/etc/group");
 
     auto repository = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-repository"));
     raii.config->directories.repository = repository;

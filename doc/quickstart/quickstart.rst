@@ -26,9 +26,12 @@ You can quickly install Sarus by following the simple steps below.
 .. code-block:: bash
 
     cd /opt/sarus/1.0.0-rc8
-    ./configure_installation.sh
+    sudo ./configure_installation.sh
 
 .. important::
+    The configuration script needs to run with root privilege in order to
+    set Sarus as a root-owned SUID program.
+
     The configuration script requires the program mksquashfs to be installed
     on the system, which is typically available through the squashfs-tools package.
 

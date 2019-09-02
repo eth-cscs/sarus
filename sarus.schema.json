@@ -16,9 +16,6 @@
         "prefixDir": {
             "$ref": "#/definitions/AbsolutePath"
         },
-        "dirOfFilesToCopyInContainerEtc": {
-            "$ref": "#/definitions/AbsolutePath"
-        },
         "tempDir": {
             "$ref": "#/definitions/AbsolutePath"
         },
@@ -107,7 +104,6 @@
         "OCIBundleDir",
         "rootfsFolder",
         "prefixDir",
-        "dirOfFilesToCopyInContainerEtc",
         "tempDir",
         "localRepositoryBaseDir",
         "mksquashfsPath",

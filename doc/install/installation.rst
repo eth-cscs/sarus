@@ -212,9 +212,9 @@ Sarus's passwd cache
 --------------------
 
 During the installation, the passwd information is copied and cached into
-*<sarus install dir>/files_to_copy_in_container_etc/passwd*. The cache is supposed to allow the
-Sarus runtime to perform quicker accesses to the passwd information. However,
-since the cache is created/updated only once at installation time, it can
+*<sarus install dir>/etc/passwd*. The cache allows to bypass the host's passwd database,
+e.g. LDAP, which could be tricky to configure and access from the container.
+However, since the cache is created/updated only once at installation time, it can
 quickly get out-of-sync with the actual passwd information of the system. A
 possible solution/workaround is to periodically run a cron job to refresh the
 cache. E.g. a cron job and a script like the ones below would do:
@@ -230,4 +230,4 @@ cache. E.g. a cron job and a script like the ones below would do:
 
     #!/bin/bash
 
-    /usr/bin/getent passwd > <sarus install dir>/files_to_copy_in_container_etc/passwd
+    /usr/bin/getent passwd > <sarus install dir>/etc/passwd

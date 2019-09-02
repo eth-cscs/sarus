@@ -53,14 +53,6 @@ This path is used to find all needed Sarus-specific utilities.
 
 Recommended value: ``/opt/sarus/<version>``
 
-dirOfFilesToCopyInContainerEtc (string, REQUIRED)
--------------------------------------------------
-Absolute path to the directory containing the files that will be automatically
-copied by Sarus into the container's /etc folder. Such files are:
-hosts, resolv.conf, nsswitch.conf, passwd, group.
-
-Recommended value: ``/opt/sarus/<version>/files_to_copy_in_container_etc``
-
 .. _config-reference-tempDir:
 
 tempDir (string, REQUIRED)
@@ -249,7 +241,6 @@ Example configuration file
         "OCIBundleDir": "/var/sarus/OCIBundleDir",
         "rootfsFolder": "rootfs",
         "prefixDir": "/opt/sarus",
-        "dirOfFilesToCopyInContainerEtc": "/opt/sarus/files_to_copy_in_container_etc",
         "tempDir": "/tmp",
         "localRepositoryBaseDir": "/home",
         "centralizedRepositoryDir": "/var/sarus/centralized_repository",
