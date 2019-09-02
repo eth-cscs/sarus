@@ -31,7 +31,6 @@ Hook::Hook() {
         return;
     }
 
-    localRepositoryBaseDir = sarus::common::getEnvironmentVariable("SARUS_LOCAL_REPOSITORY_BASE_DIR");
     boost::filesystem::path sarusInstallationPrefixDir = sarus::common::getEnvironmentVariable("SARUS_PREFIX_DIR");
     auto configFile =  sarusInstallationPrefixDir / "etc/sarus.json";
     auto configSchemaFile = sarusInstallationPrefixDir / "etc/sarus.schema.json";
