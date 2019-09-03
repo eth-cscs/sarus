@@ -33,7 +33,6 @@ TEST_GROUP(SlurmGlobalSyncTestGroup) {
     boost::filesystem::path prefixDir = configRAII.config->json["prefixDir"].GetString();
     boost::filesystem::path bundleDir = configRAII.config->json["OCIBundleDir"].GetString();
     boost::filesystem::path rootfsDir = bundleDir / configRAII.config->json["rootfsFolder"].GetString();
-    boost::filesystem::path localRepositoryBaseDir = configRAII.config->json["localRepositoryBaseDir"].GetString();
     boost::filesystem::path localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*configRAII.config);
     boost::filesystem::path configJsonSchema = boost::filesystem::path{__FILE__}
         .parent_path()
@@ -89,7 +88,6 @@ TEST(SlurmGlobalSyncTestGroup, test_high_level_synchronization) {
     createSarusJSON(*configRAII.config, configJsonSchema, prefixDir);
     createOCIBundleConfigJSON(bundleDir, rootfsDir, idsOfUser);
     sarus::common::setEnvironmentVariable("SARUS_PREFIX_DIR=" + prefixDir.string());
-    sarus::common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_BASE_DIR=" + localRepositoryBaseDir.string());
     test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
     // simulate arrival + departure of other process
@@ -106,7 +104,6 @@ TEST(SlurmGlobalSyncTestGroup, test_internals) {
     createSarusJSON(*configRAII.config, configJsonSchema, prefixDir);
     createOCIBundleConfigJSON(bundleDir, rootfsDir, idsOfUser);
     sarus::common::setEnvironmentVariable("SARUS_PREFIX_DIR=" + prefixDir.string());
-    sarus::common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_BASE_DIR=" + localRepositoryBaseDir.string());
     test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
     auto hook = Hook{};
