@@ -31,10 +31,6 @@ environment variables must be defined:
 
 * ``SARUS_PREFIX_DIR``: Absolute path to the installation directory of Sarus.
 
-* ``SARUS_LOCAL_REPOSITORY_BASE_DIR``: Absolute path to the base directory of
-  local user repositories, as configured in the :ref:`corresponding parameter
-  <config-reference-localRepositoryBaseDir>` of *sarus.json*.
-
 * ``SARUS_OPENSSH_DIR``: Absolute path to the location of Sarus's custom
   OpenSSH software.
 

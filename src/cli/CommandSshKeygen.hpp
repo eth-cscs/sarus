@@ -34,8 +34,7 @@ public:
     }
 
     void execute() override {
-        common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR="
-            + common::getLocalRepositoryDirectory(*conf).string());
+        common::setEnvironmentVariable(std::string{"SARUS_PREFIX_DIR="} + conf->json["prefixDir"].GetString());
         common::setEnvironmentVariable("SARUS_OPENSSH_DIR="
             + (conf->json["prefixDir"].GetString() + std::string{"/openssh"}));
         auto command = boost::format("%s/bin/ssh_hook keygen")

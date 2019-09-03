@@ -29,7 +29,10 @@ namespace hooks {
 namespace ssh {
 
 void SshHook::generateSshKeys() {
-    localRepositoryDir = sarus::common::getEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR");
+    uidOfUser = getuid(); // keygen command is executed with user identity
+    gidOfUser = getgid();
+    auto config = parseConfigJSONOfSarus(uidOfUser, gidOfUser);
+    localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*config);
     opensshDirInHost = sarus::common::getEnvironmentVariable("SARUS_OPENSSH_DIR");
     boost::filesystem::remove_all(localRepositoryDir / "ssh"); // remove previously existing keys (if any)
     sarus::common::createFoldersIfNecessary(localRepositoryDir / "ssh");

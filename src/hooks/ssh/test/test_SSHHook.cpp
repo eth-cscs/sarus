@@ -55,8 +55,8 @@ public:
         sarus::common::executeCommand(extractArchiveCommand.str());
 
         sarus::common::setEnvironmentVariable("SARUS_PREFIX_DIR=" + prefixDir.string());
-        sarus::common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR=" + localRepositoryDir.string());
         sarus::common::setEnvironmentVariable("SARUS_OPENSSH_DIR=" + opensshDirInHost.string());
+        sarus::common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR=" + localRepositoryDir.string());
 
         // bundle test environment
         createOCIBundleConfigJSON();
