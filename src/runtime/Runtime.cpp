@@ -147,7 +147,7 @@ void Runtime::setupDevFilesystem() const {
 }
 
 void Runtime::copyEtcFilesIntoRootfs() const {
-    utility::logMessage("Copying files_to_copy_in_container_etc into rootfs", common::logType::INFO);
+    utility::logMessage("Copying /etc files into rootfs", common::logType::INFO);
     auto prefixDir = boost::filesystem::path{config->json["prefixDir"].GetString()};
     common::createFoldersIfNecessary(rootfsDir / "etc", config->userIdentity.uid, config->userIdentity.gid);
 
@@ -171,7 +171,7 @@ void Runtime::copyEtcFilesIntoRootfs() const {
                         rootfsDir / "etc/group",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    utility::logMessage("Successfully copied files_to_copy_in_container_etc into rootfs", common::logType::INFO);
+    utility::logMessage("Successfully copied /etc files into rootfs", common::logType::INFO);
 }
 
 
