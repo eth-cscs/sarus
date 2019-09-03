@@ -55,7 +55,6 @@ public:
         sarus::common::executeCommand(extractArchiveCommand.str());
 
         sarus::common::setEnvironmentVariable("SARUS_PREFIX_DIR=" + prefixDir.string());
-        sarus::common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_BASE_DIR=" + localRepositoryBaseDir.string());
         sarus::common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR=" + localRepositoryDir.string());
         sarus::common::setEnvironmentVariable("SARUS_OPENSSH_DIR=" + opensshDirInHost.string());
 
@@ -93,7 +92,6 @@ public:
         boost::filesystem::remove_all(bundleDir);
 
         // host test environment
-        boost::filesystem::remove_all(localRepositoryBaseDir);
         boost::filesystem::remove_all(opensshDirInHost);
     }
 
@@ -189,7 +187,6 @@ private:
     boost::filesystem::path prefixDir = configRAII.config->json["prefixDir"].GetString();
     boost::filesystem::path bundleDir = configRAII.config->json["OCIBundleDir"].GetString();
     boost::filesystem::path rootfsDir = bundleDir / configRAII.config->json["rootfsFolder"].GetString();
-    boost::filesystem::path localRepositoryBaseDir = configRAII.config->json["localRepositoryBaseDir"].GetString();
     boost::filesystem::path localRepositoryDir;
     boost::filesystem::path opensshDirInHost = boost::filesystem::absolute(
         sarus::common::makeUniquePathWithRandomSuffix("./sarus-test-opensshstatic"));
