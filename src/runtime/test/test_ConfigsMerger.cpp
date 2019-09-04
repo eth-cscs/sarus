@@ -22,7 +22,8 @@ TEST_GROUP(ConfigsMergerTestGroup) {
 };
 
 TEST(ConfigsMergerTestGroup, cwd) {
-    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = configRAII.config;
     auto metadata = common::ImageMetadata{};
 
     // no cwd in metadata
@@ -34,7 +35,8 @@ TEST(ConfigsMergerTestGroup, cwd) {
 }
 
 TEST(ConfigsMergerTestGroup, environment) {
-    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = configRAII.config;
     auto metadata = common::ImageMetadata{};
 
     // only host environment
@@ -77,7 +79,8 @@ void checkNvidiaEnvironmentVariables(const std::unordered_map<std::string, std::
 }
 
 TEST(ConfigsMergerTestGroup, nvidia_environment) {
-    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = configRAII.config;
     auto metadata = common::ImageMetadata{};
 
     // Single device
@@ -132,7 +135,8 @@ TEST(ConfigsMergerTestGroup, nvidia_environment) {
 }
 
 TEST(ConfigsMergerTestGroup, mpi_environment) {
-    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = configRAII.config;
     auto metadata = common::ImageMetadata{};
 
     // No MPI option
@@ -152,17 +156,19 @@ TEST(ConfigsMergerTestGroup, mpi_environment) {
     }
 }
 
-TEST(ConfigsMergerTestGroup, command_to_execute) {  
+TEST(ConfigsMergerTestGroup, command_to_execute) {
     // only CLI cmd
     {
-        auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+        auto configRAII = test_utility::config::makeConfig();
+        auto& config = configRAII.config;
         config->commandRun.execArgs = common::CLIArguments{"cmd-cli"};
         auto metadata = common::ImageMetadata{};
         CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == common::CLIArguments{"cmd-cli"}));
     }
     // only metadata cmd
     {
-        auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+        auto configRAII = test_utility::config::makeConfig();
+        auto& config = configRAII.config;
         config->commandRun.execArgs = common::CLIArguments{};
         auto metadata = common::ImageMetadata{};
         metadata.cmd = common::CLIArguments{"cmd-metadata"};
@@ -170,7 +176,8 @@ TEST(ConfigsMergerTestGroup, command_to_execute) {
     }
     // CLI cmd overrides metadata cmd
     {
-        auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+        auto configRAII = test_utility::config::makeConfig();
+        auto& config = configRAII.config;
         config->commandRun.execArgs = common::CLIArguments{"cmd-cli"};
         auto metadata = common::ImageMetadata{};
         metadata.cmd = common::CLIArguments{"cmd-metadata"};
@@ -178,14 +185,16 @@ TEST(ConfigsMergerTestGroup, command_to_execute) {
     }
     // only CLI entrypoint
     {
-        auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+        auto configRAII = test_utility::config::makeConfig();
+        auto& config = configRAII.config;
         config->commandRun.entrypoint = common::CLIArguments{"entry-cli"};
         auto metadata = common::ImageMetadata{};
         CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == common::CLIArguments{"entry-cli"}));
     }
     // only metadata entrypoint
     {
-        auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+        auto configRAII = test_utility::config::makeConfig();
+        auto& config = configRAII.config;
         auto metadata = common::ImageMetadata{};
         metadata.entry = common::CLIArguments{"entry-metadata"};
         CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == common::CLIArguments{"entry-metadata"}));
@@ -194,7 +203,8 @@ TEST(ConfigsMergerTestGroup, command_to_execute) {
     {
         // metadata entrypoint + metadata cmd
         {
-            auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+            auto configRAII = test_utility::config::makeConfig();
+            auto& config = configRAII.config;
             auto metadata = common::ImageMetadata{};
             metadata.cmd = common::CLIArguments{"cmd-metadata"};
             metadata.entry = common::CLIArguments{"entry-metadata"};
@@ -202,7 +212,8 @@ TEST(ConfigsMergerTestGroup, command_to_execute) {
         }
         // CLI entrypoint + CLI cmd
         {
-            auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+            auto configRAII = test_utility::config::makeConfig();
+            auto& config = configRAII.config;
             config->commandRun.execArgs = common::CLIArguments{"cmd-cli"};
             config->commandRun.entrypoint = common::CLIArguments{"entry-cli"};
             auto metadata = common::ImageMetadata{};
@@ -210,7 +221,8 @@ TEST(ConfigsMergerTestGroup, command_to_execute) {
         }
         // metadata entrypoint + CLI cmd
         {
-            auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+            auto configRAII = test_utility::config::makeConfig();
+            auto& config = configRAII.config;
             config->commandRun.execArgs = common::CLIArguments{"cmd-cli"};
             auto metadata = common::ImageMetadata{};
             metadata.entry = common::CLIArguments{"entry-metadata"};
@@ -218,7 +230,8 @@ TEST(ConfigsMergerTestGroup, command_to_execute) {
         }
         // CLI entrypoint overrides metadata entrypoint and metadata cmd
         {
-            auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+            auto configRAII = test_utility::config::makeConfig();
+            auto& config = configRAII.config;
             config->commandRun.entrypoint = common::CLIArguments{"entry-cli"};
             auto metadata = common::ImageMetadata{};
             metadata.cmd = common::CLIArguments{"cmd-metadata"};

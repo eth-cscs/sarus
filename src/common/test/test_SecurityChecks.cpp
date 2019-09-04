@@ -13,6 +13,7 @@
 
 #include "common/Utility.hpp"
 #include "common/SecurityChecks.hpp"
+#include "test_utility/config.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
 using namespace sarus;
@@ -21,9 +22,9 @@ TEST_GROUP(SecurityChecksTestGroup) {
 };
 
 TEST(SecurityChecksTestGroup, checkThatPathIsUntamperable) {
-    auto config = std::make_shared<common::Config>();
-    config->buildTime.areRuntimeSecurityChecksEnabled = true;
-    auto securityChecks = common::SecurityChecks{std::move(config)};
+    auto configRAII = test_utility::config::makeConfig();
+    configRAII.config->json["securityChecks"] = true;
+    auto securityChecks = common::SecurityChecks{configRAII.config};
 
     std::tuple<uid_t, gid_t> rootIds{0, 0};
     std::tuple<uid_t, gid_t> nonRootIds{1000, 1000};

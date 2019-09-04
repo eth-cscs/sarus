@@ -6,7 +6,8 @@
 script_dir=$(cd $(dirname "$0") && pwd)
 cd $script_dir
 
-cached_home_dir=$1
+build_dir=$1; shift
+cached_home_dir=$1; shift
 
 virtual_cluster_dir=
 
@@ -47,7 +48,8 @@ create_cluster_folder_with_unique_id() {
 adapt_docker_compose_file() {
     sed -i $virtual_cluster_dir/docker-compose.yml -e "s/@host_uid@/$(id -u)/g"
     sed -i $virtual_cluster_dir/docker-compose.yml -e "s/@host_gid@/$(id -g)/g"
-    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@cached_home_dir@#$cached_home_dir#g"
+    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@cached_home_dir@#${cached_home_dir}#g"
+    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@build_dir@#${build_dir}#g"
 }
 
 start_cluster() {
@@ -81,7 +83,7 @@ run_tests() {
     local test_files=$(cd $script_dir/src/integration_tests_for_virtual_cluster && ls test_*.py)
     local tests_dir_in_container=/sarus-source/CI/src
     cd $virtual_cluster_dir
-    docker-compose exec --user=docker -T controller bash -c "cd $tests_dir_in_container/integration_tests_for_virtual_cluster && PATH=/opt/sarus/bin:\$PATH PYTHONPATH=$tests_dir_in_container:\$PYTHONPATH nosetests -v $test_files"
+    docker-compose exec --user=docker -T controller bash -c "cd $tests_dir_in_container/integration_tests_for_virtual_cluster && PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=$tests_dir_in_container:\$PYTHONPATH nosetests -v $test_files"
     cleanup_and_exit_if_last_command_failed
     log "successfully run integration tests in virtual cluster"
 }

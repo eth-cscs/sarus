@@ -32,8 +32,19 @@ namespace test {
 
 class Helper {
 public:
-    void setupTestEnvironment() const {
+    Helper() {
+        configRAII.config->userIdentity.uid = std::get<0>(idsOfUser);
+        configRAII.config->userIdentity.gid = std::get<1>(idsOfUser);
+        localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*configRAII.config);
+    }
+
+    void setupTestEnvironment() {
         // host test environment
+        configRAII.config->json["securityChecks"].SetBool(false);
+        sarus::common::createFoldersIfNecessary(prefixDir / "etc");
+        sarus::common::writeJSON(configRAII.config->json, prefixDir / "etc/sarus.json");
+        sarus::common::copyFile(configJsonSchema, prefixDir / "etc/sarus.schema.json");
+
         sarus::common::createFoldersIfNecessary(localRepositoryDir);
         sarus::common::setOwner(localRepositoryDir, std::get<0>(idsOfUser), std::get<1>(idsOfUser));
 
@@ -43,9 +54,9 @@ public:
             % opensshDirInHost;
         sarus::common::executeCommand(extractArchiveCommand.str());
 
-        sarus::common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_BASE_DIR=" + localRepositoryBaseDir.string());
-        sarus::common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR=" + localRepositoryDir.string());
+        sarus::common::setEnvironmentVariable("SARUS_PREFIX_DIR=" + prefixDir.string());
         sarus::common::setEnvironmentVariable("SARUS_OPENSSH_DIR=" + opensshDirInHost.string());
+        sarus::common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR=" + localRepositoryDir.string());
 
         // bundle test environment
         createOCIBundleConfigJSON();
@@ -81,7 +92,6 @@ public:
         boost::filesystem::remove_all(bundleDir);
 
         // host test environment
-        boost::filesystem::remove_all(localRepositoryBaseDir);
         boost::filesystem::remove_all(opensshDirInHost);
     }
 
@@ -167,13 +177,17 @@ private:
     std::tuple<uid_t, gid_t> idsOfRoot{0, 0};
     std::tuple<uid_t, gid_t> idsOfUser = test_utility::misc::getNonRootUserIds();
 
-    sarus::common::Config config = test_utility::config::makeConfig();
-    boost::filesystem::path bundleDir = boost::filesystem::path{ config.json.get()["OCIBundleDir"].GetString() };
-    boost::filesystem::path rootfsDir = bundleDir / config.json.get()["rootfsFolder"].GetString();
-    boost::filesystem::path localRepositoryBaseDir = boost::filesystem::absolute(
-        sarus::common::makeUniquePathWithRandomSuffix("./sarus-test-localrepositorybase"));
-    boost::filesystem::path localRepositoryDir =
-        sarus::common::getLocalRepositoryDirectory(localRepositoryBaseDir, std::get<0>(idsOfUser));
+    test_utility::config::ConfigRAII configRAII = test_utility::config::makeConfig();
+    boost::filesystem::path configJsonSchema = boost::filesystem::path{__FILE__}
+        .parent_path()
+        .parent_path()
+        .parent_path()
+        .parent_path()
+        .parent_path() / "sarus.schema.json";
+    boost::filesystem::path prefixDir = configRAII.config->json["prefixDir"].GetString();
+    boost::filesystem::path bundleDir = configRAII.config->json["OCIBundleDir"].GetString();
+    boost::filesystem::path rootfsDir = bundleDir / configRAII.config->json["rootfsFolder"].GetString();
+    boost::filesystem::path localRepositoryDir;
     boost::filesystem::path opensshDirInHost = boost::filesystem::absolute(
         sarus::common::makeUniquePathWithRandomSuffix("./sarus-test-opensshstatic"));
     boost::filesystem::path opensshDirInContainer = rootfsDir / "opt/sarus/openssh";

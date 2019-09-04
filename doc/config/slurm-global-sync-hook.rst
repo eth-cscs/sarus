@@ -46,9 +46,7 @@ Sarus configuration
 The program is meant to be run as a **prestart** hook and does not accept any
 argument. The only required configuration setting is the following environment variable:
 
-* ``SARUS_LOCAL_REPOSITORY_BASE_DIR``: Absolute path to the base directory of
-  local user repositories, as configured in the :ref:`corresponding parameter
-  <config-reference-localRepositoryBaseDir>` of *sarus.json*.
+* ``SARUS_PREFIX_DIR``: Absolute path to the installation directory of Sarus.
 
 The following is an example ``OCIHooks`` object enabling the MPI hook:
 
@@ -59,7 +57,7 @@ The following is an example ``OCIHooks`` object enabling the MPI hook:
             {
                 "path": "/opt/sarus/bin/slurm_global_sync_hook",
                 "env": [
-                    "SARUS_LOCAL_REPOSITORY_BASE_DIR=/home"
+                    "SARUS_PREFIX_DIR=/opt/sarus/default"
                 ]
             }
         ]

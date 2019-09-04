@@ -16,8 +16,7 @@
 #include "common/Error.hpp"
 
 namespace sarus {
-namespace hooks {
-namespace ssh {
+namespace common {
 
 void PasswdDB::read(const boost::filesystem::path& file) {
     std::ifstream is{file.c_str()};
@@ -88,4 +87,4 @@ std::vector<std::string> PasswdDB::splitLine(const std::string& line) const {
     return tokens;
 }
 
-}}} // namespace
+}} // namespace

@@ -1,0 +1,60 @@
+FROM alpine:3.9
+
+LABEL version="1.0.0"
+
+RUN apk update \
+    && apk add bash sudo shadow tar git cmake make gcc g++ squashfs-tools \
+               perl linux-headers expat-dev openssl-dev zlib-dev
+
+# libarchive
+RUN cd /opt/ \
+    && mkdir -p libarchive/3.3.1 \
+    && cd libarchive/3.3.1 \
+    && wget https://github.com/libarchive/libarchive/archive/v3.3.1.tar.gz \
+    && tar xvf v3.3.1.tar.gz \
+    && mv libarchive-3.3.1 src \
+    && mkdir src/build-cmake && cd src/build-cmake \
+    && cmake -DCMAKE_INSTALL_PREFIX:PATH=../.. .. \
+    && make -j$(nproc) \
+    && make install \
+    && cd ../.. \
+    && rm -r src
+
+# boost
+RUN cd /opt \
+    && mkdir -p boost/1_65_0 && cd boost/1_65_0 \
+    && wget https://downloads.sourceforge.net/project/boost/boost/1.65.0/boost_1_65_0.tar.bz2 \
+    && tar xf boost_1_65_0.tar.bz2 \
+    && mv boost_1_65_0 src && cd src \
+    && ./bootstrap.sh \
+    && ./b2 -j$(nproc) install --prefix=.. \
+    && cd .. \
+    && rm -r src
+
+# cpprestsdk
+RUN cd /opt \
+    && ln -s /usr/include/locale.h /usr/include/xlocale.h \
+    && mkdir -p cpprestsdk/v2.10.0 && cd cpprestsdk/v2.10.0 \
+    && wget https://github.com/Microsoft/cpprestsdk/archive/v2.10.0.tar.gz \
+    && tar xf v2.10.0.tar.gz \
+    && mv cpprestsdk-2.10.0 src && cd src/Release \
+    && mkdir build && cd build \
+    && cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=0 -DWERROR=FALSE -DCMAKE_PREFIX_PATH=../../../../../boost/1_65_0 -DCMAKE_INSTALL_PREFIX=../../.. .. \
+    && sed -i /opt/cpprestsdk/v2.10.0/src/Release/include/cpprest/asyncrt_utils.h -e '1s/^/#include <sys\/time.h>\n/' \
+    && make -j$(nproc) \
+    && make install \
+    && cd ../../.. \
+    && rm -r src
+
+#rapidjson
+RUN cd /opt \
+    && mkdir rapidjson && cd rapidjson \
+    && wget -O rapidjson-master.tar.gz https://github.com/Tencent/rapidjson/archive/master.tar.gz \
+    && tar xzf rapidjson-master.tar.gz \
+    && rm rapidjson-master.tar.gz
+
+RUN adduser -h /home/docker -s /bin/bash -D  docker docker
+RUN echo "docker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+USER docker
+WORKDIR /home/docker
+CMD ["/bin/bash"]

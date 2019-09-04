@@ -41,6 +41,7 @@
 
 #include "common/Config.hpp"
 #include "common/Error.hpp"
+#include "common/PasswdDB.hpp"
 
 /**
  * Utility functions
@@ -240,13 +241,22 @@ std::string getHostname() {
     return hostname;
 }
 
-std::string getUsername(uid_t uid) {
-    struct passwd *result;
-    if((result = getpwuid(uid)) == nullptr) {
-        auto message = boost::format("failed to retrieve username with getpwuid(%s): %s") % uid % strerror(errno);
-        SARUS_THROW_ERROR(message.str());
+std::string getUsername(const common::Config& config) {
+    // get username from the cached passwd file of Sarus
+    // Note: this is usually done through the getpwuid fuction. However, musl failes to retrieve
+    // all the passwd entries from certain systems, e.g. LDAP at CSCS.
+    auto passwdFile = boost::filesystem::path{ config.json["prefixDir"].GetString() } / "etc/passwd";
+    auto passwd = common::PasswdDB{};
+    passwd.read(passwdFile);
+
+    for(const auto& entry : passwd.getEntries()) {
+        if(entry.uid == config.userIdentity.uid) {
+            return entry.loginName;
+        }
     }
-    return result->pw_name;
+
+    auto message = boost::format("Failed to retrieve username for uid=%d from %s") % config.userIdentity.uid % passwdFile;
+    SARUS_THROW_ERROR(message.str());
 }
 
 size_t getFileSize(const boost::filesystem::path& filename) {
@@ -287,7 +297,7 @@ void setOwner(const boost::filesystem::path& path, uid_t uid, gid_t gid) {
 
 bool isCentralizedRepositoryEnabled(const common::Config& config) {
     // centralized repository is enabled when a directory is specified
-    return config.json.get().HasMember("centralizedRepositoryDir");
+    return config.json.HasMember("centralizedRepositoryDir");
 }
 
 boost::filesystem::path getCentralizedRepositoryDirectory(const common::Config& config) {
@@ -296,17 +306,12 @@ boost::filesystem::path getCentralizedRepositoryDirectory(const common::Config& 
                             " because such feature is disabled. Please ask your system"
                             " administrator to enable the central read-only repository.");
     }
-    return config.json.get()["centralizedRepositoryDir"].GetString();
+    return config.json["centralizedRepositoryDir"].GetString();
 }
 
 boost::filesystem::path getLocalRepositoryDirectory(const common::Config& config) {
-    auto baseDir = boost::filesystem::path{ config.json.get()["localRepositoryBaseDir"].GetString() };
-    return getLocalRepositoryDirectory(baseDir, config.userIdentity.uid);
-}
-
-boost::filesystem::path getLocalRepositoryDirectory(const boost::filesystem::path& baseDir, uid_t uid) {
-    auto userDir = baseDir / getUsername(uid);
-    return userDir / common::Config::BuildTime{}.localRepositoryFolder;
+    auto baseDir = boost::filesystem::path{ config.json["localRepositoryBaseDir"].GetString() };
+    return baseDir / getUsername(config) / common::Config::BuildTime{}.localRepositoryFolder;
 }
 
 /**
@@ -677,12 +682,12 @@ rapidjson::Document readJSON(const boost::filesystem::path& filename) {
     return json;
 }
 
-rapidjson::Document readAndValidateJSON(const boost::filesystem::path& configFilename, const rapidjson::SchemaDocument& schema) {
+rapidjson::Document readAndValidateJSON(const boost::filesystem::path& jsonFile, const rapidjson::SchemaDocument& schema) {
     rapidjson::Document json;
 
     // Use a reader object to parse the JSON storing configuration settings
     try {
-        std::ifstream configInputStream(configFilename.string());
+        std::ifstream configInputStream(jsonFile.string());
         rapidjson::IStreamWrapper configStreamWrapper(configInputStream);
         // Parse JSON from reader, validate the SAX events, and populate the configuration Document.
         rapidjson::SchemaValidatingReader<rapidjson::kParseDefaultFlags, rapidjson::IStreamWrapper, rapidjson::UTF8<> > reader(configStreamWrapper, schema);
@@ -714,7 +719,7 @@ rapidjson::Document readAndValidateJSON(const boost::filesystem::path& configFil
                 SARUS_THROW_ERROR(message.str());
             }
             else {
-                auto message = boost::format("Error parsing configuration file: %s") % configFilename;
+                auto message = boost::format("Error parsing JSON file: %s") % jsonFile;
                 SARUS_THROW_ERROR(message.str());
             }
         }
@@ -723,7 +728,7 @@ rapidjson::Document readAndValidateJSON(const boost::filesystem::path& configFil
         throw;
     }
     catch (const std::exception& e) {
-        auto message = boost::format("Error reading configuration file %s") % configFilename;
+        auto message = boost::format("Error reading JSON file %s") % jsonFile;
         SARUS_RETHROW_ERROR(e, message.str());
     }
 

@@ -5,18 +5,8 @@ Running unit and integration tests
 Unit tests
 ==========
 
-In order to run Sarus unit tests, it is advised to build Sarus with runtime
-security checks disabled:
-
-.. code-block:: bash
-
-   $ cd <sarus project root dir>
-   $ mkdir build && cd build
-   $ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc.cmake \
-           -DCMAKE_INSTALL_PREFIX=/opt/sarus \
-           -DENABLE_RUNTIME_SECURITY_CHECKS=FALSE \
-           ..
-   $ make
+In order to run Sarus unit tests, it is advised to disable the security checks
+in the *sarus.json* file.
 
 Disabling security checks prevents some tests from failing because some files
 (e.g. artifacts to test JSON parsing and validation) are not root-owned and
@@ -45,10 +35,10 @@ executable.
 Generating coverage data
 ------------------------
 
-If the build was configured with the CMake ``ENABLE_TESTS_WITH_GCOV`` enabled,
+If the build was configured with the CMake toolchain file ``gcc-gcov.cmake``,
 the unit tests executables automatically generate ``gcov`` files with raw
-coverage data. We can process and summarize these data using the `gcovr <https://gcovr.com/>`_
-utility:
+coverage data. We can process and summarize these data using `gcov` and the
+`gcovr <https://gcovr.com/>`_ utility:
 
 .. note::
 
@@ -57,12 +47,14 @@ utility:
 
 .. code-block:: bash
 
-   # Command general form
-   $ gcovr -r <sarus project root dir>/src -k -g --object-directory <build dir>/src
-
-   # Assuming that we are in the build directory and that the project root
-   # is the parent directory
-   $ gcovr -r ../src -k -g --object-directory $(pwd)/src
+   # Assuming that we are in the project's root directory and Sarus was built in the
+   # 'build' subdirectory
+   root_dir=$(pwd)
+   build_dir=$(pwd)/build
+   mkdir ${build_dir}/gcov
+   cd ${build_dir}/gcov
+   gcov --preserve-paths $(find ${build_dir}/src -name "*.gcno" |grep -v test |tr '\n' ' ')
+   gcovr -r ${root_dir}/src -k -g --object-directory ${build_dir}/gcov
 
 
 Integration tests
@@ -84,8 +76,7 @@ is not necessary if running integration tests as root):
 
    Integration tests are not exposed to the risk of failing when runtime security
    checks are enabled, like unit tests are. To test a configuration more similar
-   to a production deployment, re-build and install Sarus with runtime security checks
-   enabled.
+   to a production deployment, re-enable security checks in the *sarus.json* file.
 
 We can run the tests from the parent directory of the related Python scripts:
 

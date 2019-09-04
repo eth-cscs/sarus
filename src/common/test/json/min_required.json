@@ -1,8 +1,8 @@
 {
+    "securityChecks": false,
     "OCIBundleDir": "/var/sarus/OCIBundleDir",
     "rootfsFolder": "rootfsFolder",
     "prefixDir": "/opt/sarus",
-    "dirOfFilesToCopyInContainerEtc": "/opt/sarus/etc",
     "tempDir": "/tmp",
     "localRepositoryBaseDir" : "/home",
     "mksquashfsPath": "/usr/sbin/mksquashfs",

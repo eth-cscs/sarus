@@ -36,7 +36,7 @@ SquashfsImage::SquashfsImage(   const common::Config& config,
     auto start = std::chrono::system_clock::now();
 
     
-    boost::filesystem::path mksquashfsPath(config.json.get()["mksquashfsPath"].GetString());
+    boost::filesystem::path mksquashfsPath(config.json["mksquashfsPath"].GetString());
     auto mksquashfsCommand = mksquashfsPath.string() + " " + expandedImage.string() + " " + pathTemp.getPath().string();
     common::executeCommand(mksquashfsCommand);
     boost::filesystem::rename(pathTemp.getPath(), pathOfImage); // atomically create/replace squashfs file
