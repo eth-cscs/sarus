@@ -4,12 +4,11 @@ Configuration file reference
 
 The runtime configuration parameters of Sarus are read from a file called
 *sarus.json*, which is expected to be a valid `JSON document
-<https://www.json.org/>`_. Given the :ref:`privileges
-<requirements-permissions-execution>` that Sarus requires in order to exercise
-its functions, the configuration file must satisfy specific :ref:`security
-requirements <requirements-permissions-security>` regarding its location and
-ownership.
-
+<https://www.json.org/>`_ located in ``<installation path>/etc``.
+Given the :ref:`privileges <requirements-permissions-execution>` that Sarus
+requires in order to exercise its functions, the configuration file must satisfy
+specific :ref:`security requirements <requirements-permissions-security>`
+regarding its location and ownership.
 
 Configuration file entries
 ==========================

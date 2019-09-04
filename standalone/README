@@ -1,6 +1,13 @@
+# Sarus
+#
+# Copyright (c) 2018-2019, ETH Zurich. All rights reserved.
+#
+# Please, refer to the LICENSE files in the licenses directory.
+# SPDX-License-Identifier: BSD-3-Clause
 
-Basic instructions to get started with Sarus follow below. Please refer to the Sarus
-documentation for more information on how to install, configure and use Sarus.
+Basic instructions to get started with Sarus follow below. Please refer to
+the Sarus documentation for more information on how to install, configure
+and use Sarus (https://sarus.readthedocs.io).
 
 1. Extract this archive in the installation directory.
 
@@ -17,3 +24,4 @@ documentation for more information on how to install, configure and use Sarus.
     export PATH=/opt/sarus/1.0.0-rc8/bin:$PATH
     sarus images
     sarus run alpine cat /etc/os-release
+
