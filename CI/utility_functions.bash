@@ -112,9 +112,6 @@ run_tests() {
     find ${build_dir} -name "*.gcda" -exec chown docker:docker {} \;
     fail_on_error "Failed to chown *.gcda files (necessary to update code coverage as non-root user)"
 
-    sudo -u docker /sarus-source/CI/run_documentation_build_test.sh
-    fail_on_error "Documentation build test failed"
-
     install_sarus_from_archive /opt/sarus ${build_dir}/sarus.tar.gz
     fail_on_error "Failed to install Sarus from archive"
 

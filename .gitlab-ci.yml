@@ -2,16 +2,23 @@ stages:
   - test
 
 
+check_version_numbers_and_doc_build:
+  stage: test
+  script:
+    - docker_image_build=ethcscs/sarus-ci-build:1.0.0
+    - docker_image_run=ethcscs/sarus-ci-run:1.0.0
+
+    - ./CI/check_that_version_file_is_up_to_date.sh
+    - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_build} /sarus-source/CI/check_version_from_cmake.sh
+    - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_run} /sarus-source/CI/run_documentation_build_test.sh
+
+
 standalone_archive_debug:
   stage: test
   script:
     - . ./CI/utility_functions.bash
     - docker_image_build=ethcscs/sarus-ci-build:1.0.0
     - docker_image_run=ethcscs/sarus-ci-run:1.0.0
-
-    # Check version number
-    - ./CI/check_that_version_file_is_up_to_date.sh
-    - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_build} /sarus-source/CI/check_version_from_cmake.sh
 
     # Build, install, test
     - build_type=Debug
@@ -28,10 +35,6 @@ standalone_archive_release:
     - . ./CI/utility_functions.bash
     - docker_image_build=ethcscs/sarus-ci-build:1.0.0
     - docker_image_run=ethcscs/sarus-ci-run:1.0.0
-
-    # Check version number
-    - ./CI/check_that_version_file_is_up_to_date.sh
-    - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_build} /sarus-source/CI/check_version_from_cmake.sh
 
     # Build, install, test
     - build_type=Release
