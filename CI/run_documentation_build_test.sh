@@ -5,10 +5,16 @@ log() {
     echo "[ LOG ]  $message"
 }
 
+cleanup() {
+    rm -rf /home/docker/sarus-git
+    rm -rf /home/docker/sarus-static
+}
+
 cleanup_and_exit_if_last_command_failed() {
     local last_command_exit_code=$?
     if [ $last_command_exit_code -ne 0 ]; then
         log "command failed"
+        cleanup
         exit 1
     fi
 }
@@ -51,3 +57,4 @@ check_git_repo() {
 log "Checking documentation build process"
 check_static_snapshot
 check_git_repo
+cleanup
