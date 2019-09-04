@@ -18,11 +18,10 @@ Configuration file entries
 securityChecks (bool, REQUIRED)
 -------------------------------
 Enable/disable runtime security checks to verify that security critical files
-are not tamperable by non-root users.
+are not tamperable by non-root users. Refer to the section about :ref:`security
+requirements <requirements-permissions-security>` for more details on these checks.
 
 Recommended value: ``true``
-
-Refer to the :ref:`security requirements <requirements-permissions-security>`.
 
 .. _config-reference-OCIBundleDir:
 

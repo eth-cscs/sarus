@@ -32,8 +32,8 @@ You can quickly install Sarus by following the simple steps below.
     The configuration script needs to run with root privilege in order to
     set Sarus as a root-owned SUID program.
 
-    The configuration script requires the program mksquashfs to be installed
-    on the system, which is typically available through the squashfs-tools package.
+    The configuration script requires the program ``mksquashfs`` to be installed
+    on the system, which is typically available through the ``squashfs-tools`` package.
 
     Also note that the configuration script will create a minimal working configuration.
     For enabling additional features, please refer to the the :doc:`/config/configuration_reference`.

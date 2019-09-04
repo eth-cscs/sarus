@@ -48,7 +48,7 @@ The installation procedure with Spack is as follows:
 By default, the latest tagged release will be installed. To get the bleeding edge,
 use the ``@develop`` version specifier.
 
-The Spack package for Sarus supports the following `variants <https://spack.readthedocs.io/en/latest/basic_usage.html#basic-variants>`
+The Spack package for Sarus supports the following `variants <https://spack.readthedocs.io/en/latest/basic_usage.html#basic-variants>`_
 to customize the installation:
 
    - ``ssh``: Build and install the SSH hook and custom OpenSSH software to enable
@@ -109,9 +109,6 @@ Below are listed the Sarus-specific options that can be passed to CMake in
 order to customize your build:
 
    - CMAKE_INSTALL_PREFIX: installation directory of Sarus [/usr/local].
-   - ENABLE_RUNTIME_SECURITY_CHECKS: Enable runtime security checks (root ownership of files, etc.).
-     Disabling this may be convenient when rapidly iterating over test and development installations.
-     It is strongly recommended to keep these checks enabled for production deployments [TRUE].
    - ENABLE_SSH: build and install the SSH hook and custom OpenSSH software to enable
      connections inside containers [TRUE].
    - ENABLE_TESTS_WITH_VALGRIND: run each unit test through valgrind [FALSE].
@@ -136,7 +133,7 @@ described in the next section. As an example, taking default values:
 
 .. code-block:: bash
 
-    sudo mkdir <sarus installation dir>/var/sarus/OCIBundleDir
+    sudo mkdir <sarus installation dir>/var/OCIBundleDir
 
 
 .. _installation-minimal-config:
@@ -154,6 +151,10 @@ Here we will highlight some key settings which form a baseline configuration.
 For the full details about configuration options and the structure of *sarus.json*
 please consult the :doc:`/config/configuration_reference`.
 
+* **securityChecks:** enable runtime security checks (root ownership of files, etc.).
+  Disabling this may be convenient when rapidly iterating over test and development
+  installations. It is strongly recommended to keep these checks enabled for
+  production deployments
 * **OCIBundleDir:** the absolute path to where Sarus will create the OCI
   bundle for the container. This directory must satisfy the :ref:`security
   requirements <requirements-permissions-security>` for critical files and
