@@ -22,7 +22,8 @@ TEST_GROUP(SquashfsImageTestGroup) {
 };
 
 TEST(SquashfsImageTestGroup, testSquashfsImage) {
-    auto config = test_utility::config::makeConfig();
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = *configRAII.config;
     config.imageID = {"server", "repositoryNamespace", "image", "tag"};
 
     common::PathRAII repository{config.directories.repository};

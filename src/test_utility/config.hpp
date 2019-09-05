@@ -15,12 +15,19 @@
 #ifndef sarus_test_utility_config_hpp
 #define sarus_test_utility_config_hpp
 
+#include <memory>
+
 #include "common/Config.hpp"
 
 namespace test_utility {
 namespace config {
 
-sarus::common::Config makeConfig();
+struct ConfigRAII {
+    ~ConfigRAII();
+    std::shared_ptr<sarus::common::Config> config;
+};
+
+ConfigRAII makeConfig();
 
 }
 }

@@ -21,3 +21,4 @@ increasing complexity, providing a smooth learning curve.
    gromacs/gromacs.rst
    tensorflow_horovod/tf_hvd.rst
    pyfr/pyfr.rst
+   intel/intel.rst

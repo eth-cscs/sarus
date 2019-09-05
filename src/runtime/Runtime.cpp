@@ -32,8 +32,8 @@ namespace runtime {
 
 Runtime::Runtime(std::shared_ptr<const common::Config> config)
     : config{config}
-    , bundleDir{ boost::filesystem::path{config->json.get()["OCIBundleDir"].GetString()} }
-    , rootfsDir{ bundleDir / boost::filesystem::path{config->json.get()["rootfsFolder"].GetString()} }
+    , bundleDir{ boost::filesystem::path{config->json["OCIBundleDir"].GetString()} }
+    , rootfsDir{ bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()} }
     , bundleConfig{config}
     , securityChecks{config}
 {}
@@ -63,7 +63,7 @@ void Runtime::executeContainer() const {
     auto extraFileDescriptors = std::to_string(countExtraFileDescriptors());
 
     // execute runc
-    auto runcPath = config->json.get()["runcPath"].GetString();
+    auto runcPath = config->json["runcPath"].GetString();
     auto args = common::CLIArguments{runcPath, "run", "--no-pivot", "--preserve-fds", extraFileDescriptors, containerID};
     common::forkExecWait(args);
 
@@ -86,7 +86,7 @@ void Runtime::setupMountIsolation() const {
 
 void Runtime::setupRamFilesystem() const {
     utility::logMessage("Setting up RAM filesystem", common::logType::INFO);
-    const char* ramFilesystemType = config->json.get()["ramFilesystemType"].GetString();
+    const char* ramFilesystemType = config->json["ramFilesystemType"].GetString();
 
     if(mount(NULL, bundleDir.c_str(), ramFilesystemType, MS_NOSUID|MS_NODEV, NULL) != 0) {
         auto message = boost::format("Failed to setup %s filesystem on %s: %s")
@@ -133,7 +133,7 @@ void Runtime::mountImageIntoRootfs() const {
 void Runtime::setupDevFilesystem() const {
     utility::logMessage("Setting up /dev filesystem", common::logType::INFO);
 
-    const char* ramFilesystemType = config->json.get()["ramFilesystemType"].GetString();
+    const char* ramFilesystemType = config->json["ramFilesystemType"].GetString();
     common::createFoldersIfNecessary(rootfsDir / "dev");
     auto flags = MS_NOSUID | MS_STRICTATIME;
     auto* options = "mode=755,size=65536k";
@@ -149,8 +149,8 @@ void Runtime::setupDevFilesystem() const {
 }
 
 void Runtime::copyEtcFilesIntoRootfs() const {
-    utility::logMessage("Copying files_to_copy_in_container_etc into rootfs", common::logType::INFO);
-    auto dirOfFilesToCopyInContainerEtc = boost::filesystem::path{config->json.get()["dirOfFilesToCopyInContainerEtc"].GetString()};
+    utility::logMessage("Copying /etc files into rootfs", common::logType::INFO);
+    auto prefixDir = boost::filesystem::path{config->json["prefixDir"].GetString()};
     common::createFoldersIfNecessary(rootfsDir / "etc", config->userIdentity.uid, config->userIdentity.gid);
 
     common::copyFile(   "/etc/hosts",
@@ -161,19 +161,19 @@ void Runtime::copyEtcFilesIntoRootfs() const {
                         rootfsDir / "etc/resolv.conf",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    common::copyFile(   dirOfFilesToCopyInContainerEtc / "nsswitch.conf",
+    common::copyFile(   prefixDir / "etc/container/nsswitch.conf",
                         rootfsDir / "etc/nsswitch.conf",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    common::copyFile(   dirOfFilesToCopyInContainerEtc / "passwd",
+    common::copyFile(   prefixDir / "etc/passwd",
                         rootfsDir / "etc/passwd",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    common::copyFile(   dirOfFilesToCopyInContainerEtc / "group",
+    common::copyFile(   prefixDir / "etc/group",
                         rootfsDir / "etc/group",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    utility::logMessage("Successfully copied files_to_copy_in_container_etc into rootfs", common::logType::INFO);
+    utility::logMessage("Successfully copied /etc files into rootfs", common::logType::INFO);
 }
 
 

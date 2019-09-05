@@ -12,13 +12,12 @@
 #include <streambuf>
 #include <boost/filesystem.hpp>
 
-#include "hooks/ssh/PasswdDB.hpp"
+#include "common/PasswdDB.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
 
 namespace sarus {
-namespace hooks {
-namespace ssh {
+namespace common {
 namespace test {
 
 TEST_GROUP(PasswdDBTestGroup) {
@@ -97,6 +96,6 @@ TEST(PasswdDBTestGroup, testWrite) {
     boost::filesystem::remove_all(file);
 }
 
-}}}} // namespace
+}}} // namespace
 
 SARUS_UNITTEST_MAIN_FUNCTION();

@@ -14,8 +14,8 @@ fi
 mkdir -p $cpputest_dir/src
 tar xf "cpputest-3.7dev.tar.gz" -C $cpputest_dir/src --strip-components=1
 cd $cpputest_dir/src
-./configure --prefix=$cpputest_dir
+./configure --prefix=$cpputest_dir --disable-memory-leak-detection
 make && make install
 
 # cleanup
-cd $cpputest_dir && rm -rf $cpputest_dir/src
+rm -rf $cpputest_dir/src

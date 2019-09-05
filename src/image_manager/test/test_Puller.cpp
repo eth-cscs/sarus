@@ -21,7 +21,8 @@ TEST_GROUP(PullerTestGroup) {
 };
 
 TEST(PullerTestGroup, testGetManifest) {
-    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = configRAII.config;
     config->imageID = common::ImageID{"index.docker.io", "library", "hello-world", "latest"};
 
     auto puller = image_manager::Puller{config};
@@ -35,9 +36,6 @@ TEST(PullerTestGroup, testGetManifest) {
     CHECK( manifest.at(U("tag"))  == web::json::value(config->imageID.tag) );
 
     puller.pull();
-
-    // cleanup
-    boost::filesystem::remove_all(config->directories.repository);
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();

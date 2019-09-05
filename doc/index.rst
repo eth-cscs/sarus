@@ -32,6 +32,7 @@ Key features:
    :maxdepth: 2
    :caption: Contents:
 
+   quickstart/quickstart
    overview/overview
    install/index
    config/index

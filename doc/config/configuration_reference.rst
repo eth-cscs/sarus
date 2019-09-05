@@ -4,16 +4,24 @@ Configuration file reference
 
 The runtime configuration parameters of Sarus are read from a file called
 *sarus.json*, which is expected to be a valid `JSON document
-<https://www.json.org/>`_. Given the :ref:`privileges
-<requirements-permissions-execution>` that Sarus requires in order to exercise
-its functions, the configuration file must satisfy specific :ref:`security
-requirements <requirements-permissions-security>` regarding its location and
-ownership. The location for the configuration file can be set at build-time
-using the ``SYSCONFDIR`` CMake option (see :doc:`/install/installation`).
-
+<https://www.json.org/>`_ located in ``<installation path>/etc``.
+Given the :ref:`privileges <requirements-permissions-execution>` that Sarus
+requires in order to exercise its functions, the configuration file must satisfy
+specific :ref:`security requirements <requirements-permissions-security>`
+regarding its location and ownership.
 
 Configuration file entries
 ==========================
+
+.. _config-reference-securityChecks:
+
+securityChecks (bool, REQUIRED)
+-------------------------------
+Enable/disable runtime security checks to verify that security critical files
+are not tamperable by non-root users. Refer to the section about :ref:`security
+requirements <requirements-permissions-security>` for more details on these checks.
+
+Recommended value: ``true``
 
 .. _config-reference-OCIBundleDir:
 
@@ -42,14 +50,6 @@ Absolute path to the base directory where Sarus has been installed.
 This path is used to find all needed Sarus-specific utilities.
 
 Recommended value: ``/opt/sarus/<version>``
-
-dirOfFilesToCopyInContainerEtc (string, REQUIRED)
--------------------------------------------------
-Absolute path to the directory containing the files that will be automatically
-copied by Sarus into the container's /etc folder. Such files are:
-hosts, resolv.conf, nsswitch.conf, passwd, group.
-
-Recommended value: ``/opt/sarus/<version>/files_to_copy_in_container_etc``
 
 .. _config-reference-tempDir:
 
@@ -235,10 +235,10 @@ Example configuration file
 .. code-block:: json
 
     {
+        "securityChecks": true,
         "OCIBundleDir": "/var/sarus/OCIBundleDir",
         "rootfsFolder": "rootfs",
         "prefixDir": "/opt/sarus",
-        "dirOfFilesToCopyInContainerEtc": "/opt/sarus/files_to_copy_in_container_etc",
         "tempDir": "/tmp",
         "localRepositoryBaseDir": "/home",
         "centralizedRepositoryDir": "/var/sarus/centralized_repository",

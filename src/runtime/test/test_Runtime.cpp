@@ -25,7 +25,7 @@ using namespace sarus;
 TEST_GROUP(RuntimeTestGroup) {
 };
 
-__fsword_t getFilesystemType(const boost::filesystem::path& path) {
+unsigned long getFilesystemType(const boost::filesystem::path& path) {
     struct statfs sb;
     if(statfs(path.c_str(), &sb) != 0) {
         auto message = boost::format("Failed to statfs %s") % path;
@@ -34,8 +34,8 @@ __fsword_t getFilesystemType(const boost::filesystem::path& path) {
     return sb.f_type;
 }
 
-__fsword_t getExpectedFilesystemTypeOfBundle(const common::Config& config) {
-    auto type = std::string{config.json.get()["ramFilesystemType"].GetString()};
+unsigned long getExpectedFilesystemTypeOfBundle(const common::Config& config) {
+    auto type = std::string{config.json["ramFilesystemType"].GetString()};
     if(type == "tmpfs") {
         return TMPFS_MAGIC;
     }
@@ -53,22 +53,23 @@ IGNORE_TEST(RuntimeTestGroup, setupOCIBundle) {
 TEST(RuntimeTestGroup, setupOCIBundle) {
 #endif
     // configure
-    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = configRAII.config;
     config->commandRun.execArgs = common::CLIArguments{"/bin/bash"};
     // hack to make the resulting image's file path = <repository dir>////test-image.squashfs
     config->directories.images = boost::filesystem::path{__FILE__}.parent_path();
     config->imageID = common::ImageID{"", "", "", "test_image"};
 
-    auto bundleDir = boost::filesystem::path{config->json.get()["OCIBundleDir"].GetString()};
+    auto bundleDir = boost::filesystem::path{config->json["OCIBundleDir"].GetString()};
     auto overlayfsLowerDir = bundleDir / "overlay/rootfs-lower"; // hardcoded so in production code being tested
-    auto rootfsDir = bundleDir / boost::filesystem::path{config->json.get()["rootfsFolder"].GetString()};
-    auto dirOfFilesToCopyInContainerEtc = boost::filesystem::path{config->json.get()["dirOfFilesToCopyInContainerEtc"].GetString()};
+    auto rootfsDir = bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()};
+    auto prefixDir = boost::filesystem::path{config->json["prefixDir"].GetString()};
 
     // create test folders / files
     common::createFoldersIfNecessary(bundleDir);
-    common::createFileIfNecessary(dirOfFilesToCopyInContainerEtc / "nsswitch.conf");
-    common::createFileIfNecessary(dirOfFilesToCopyInContainerEtc / "passwd");
-    common::createFileIfNecessary(dirOfFilesToCopyInContainerEtc / "group");
+    common::createFileIfNecessary(prefixDir / "etc/container/nsswitch.conf");
+    common::createFileIfNecessary(prefixDir / "etc/passwd");
+    common::createFileIfNecessary(prefixDir / "etc/group");
 
     // create dummy metadata file in image repo
     auto metadataFile = boost::filesystem::path(config->directories.images / (config->imageID.getUniqueKey() + ".meta"));
@@ -108,8 +109,6 @@ TEST(RuntimeTestGroup, setupOCIBundle) {
     CHECK_EQUAL(umount(rootfsDir.c_str()), 0);
     CHECK_EQUAL(umount(overlayfsLowerDir.c_str()), 0);
     CHECK_EQUAL(umount(bundleDir.c_str()), 0);
-    boost::filesystem::remove_all(bundleDir);
-    boost::filesystem::remove_all(dirOfFilesToCopyInContainerEtc);
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();

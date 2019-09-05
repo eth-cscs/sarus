@@ -21,16 +21,16 @@ TEST_GROUP(PulledImageTestGroup) {
 };
 
 TEST(PulledImageTestGroup, test) {
-    auto config = std::make_shared<common::Config>(test_utility::config::makeConfig());
-    config->imageID = {"index.docker.io", "library", "alpine", "3.8"};
+    auto configRAII = test_utility::config::makeConfig();
+    configRAII.config->imageID = {"index.docker.io", "library", "alpine", "3.8"};
 
     // pull
-    auto puller = image_manager::Puller{config};
+    auto puller = image_manager::Puller{configRAII.config};
     auto manifest = puller.getManifest();
     puller.pull();
 
     // expand
-    auto pulledImage = PulledImage{config, manifest};
+    auto pulledImage = PulledImage{configRAII.config, manifest};
     common::PathRAII expandedImage;
     common::ImageMetadata metadata;
     std::tie(expandedImage, metadata, std::ignore) = pulledImage.expand();
@@ -46,9 +46,6 @@ TEST(PulledImageTestGroup, test) {
     expectedMetadata.cmd = common::CLIArguments{"/bin/sh"};
     expectedMetadata.env["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
     CHECK(metadata == expectedMetadata);
-
-    // cleanup
-    boost::filesystem::remove_all(config->directories.repository);
 }
 
 }}} // namespace
