@@ -32,11 +32,11 @@ exit_on_error "failed to chmod bin/sarus"
 echo "Successfully set Sarus as SUID root"
 
 echo "Creating cached passwd database"
-getent passwd >files_to_copy_in_container_etc/passwd
+getent passwd > etc/passwd
 echo "Successfully created cached passwd database"
 
 echo "Creating cached group database"
-getent group >files_to_copy_in_container_etc/group
+getent group > etc/group
 echo "Successfully created cached group database"
 
 echo "Configuring etc/sarus.json"
