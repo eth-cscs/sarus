@@ -42,24 +42,21 @@ void Config::Directories::initialize(bool useCentralizedRepository, const common
         temp = boost::filesystem::absolute(tempFromCLI);
     }
     else {
-        temp = boost::filesystem::path(config.json.get()["tempDir"].GetString());
+        temp = boost::filesystem::path(config.json["tempDir"].GetString());
     }
 }
 
-Config::JSON::JSON()
-    : file{new rapidjson::Document{rapidjson::kObjectType}}
-{}
-
-void Config::JSON::initialize(const boost::filesystem::path& configFilename, const boost::filesystem::path& schemaFilename) {
-    auto securityChecks = SecurityChecks{std::make_shared<common::Config>()};
-    securityChecks.checkThatPathIsUntamperable(configFilename);
-
+void Config::initializeJson(std::shared_ptr<const common::Config> config,
+                            const boost::filesystem::path& configFilename,
+                            const boost::filesystem::path& schemaFilename) {
     auto schema = common::readJSON(schemaFilename);
     rapidjson::SchemaDocument schemaDoc(schema); // convert to SchemaDocument
-    auto json = common::readAndValidateJSON(configFilename, schemaDoc);
-    file = std::make_shared<rapidjson::Document>(std::move(json));
+    json = common::readAndValidateJSON(configFilename, schemaDoc);
 
-    securityChecks.checkThatBinariesInSarusJsonAreUntamperable(*file);
+    auto securityChecks = SecurityChecks{config};
+    securityChecks.checkThatPathIsUntamperable(schemaFilename);
+    securityChecks.checkThatPathIsUntamperable(configFilename);
+    securityChecks.checkThatBinariesInSarusJsonAreUntamperable(json);
 }
 
 Config::UserIdentity::UserIdentity() {

@@ -92,8 +92,8 @@ void UserMount::performMount() const {
         SARUS_THROW_ERROR("Failed to re-assume original user auxiliary gids");
     }
 
-    auto rootfsDir = boost::filesystem::path{ config->json.get()["OCIBundleDir"].GetString() }
-        / config->json.get()["rootfsFolder"].GetString();
+    auto rootfsDir = boost::filesystem::path{ config->json["OCIBundleDir"].GetString() }
+        / config->json["rootfsFolder"].GetString();
     auto destinationReal = common::realpathWithinRootfs(rootfsDir, destination);
 
     validateMountDestination(destinationReal, *config);

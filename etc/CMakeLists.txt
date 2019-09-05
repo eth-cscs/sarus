@@ -1,0 +1,6 @@
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/container/nsswitch.conf DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/container)
+install(CODE "execute_process(COMMAND bash -c \"getent passwd >${CMAKE_CURRENT_BINARY_DIR}/passwd\")")
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/passwd DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)
+install(CODE "execute_process(COMMAND bash -c \"getent group >${CMAKE_CURRENT_BINARY_DIR}/group\")")
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/group DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)

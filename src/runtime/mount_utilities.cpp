@@ -15,7 +15,6 @@
 #include "mount_utilities.hpp"
 
 #include <errno.h>
-#include <sys/stat.h>
 
 #include <boost/format.hpp>
 
@@ -83,8 +82,8 @@ void validateMountDestination(const boost::filesystem::path& destination, const 
 
 
 bool isPathOnBindMountableDevice(const boost::filesystem::path& path, const common::Config& config) {
-    auto bundleDir = boost::filesystem::path(config.json.get()["OCIBundleDir"].GetString());
-    auto rootfsDir = bundleDir / config.json.get()["rootfsFolder"].GetString();
+    auto bundleDir = boost::filesystem::path(config.json["OCIBundleDir"].GetString());
+    auto rootfsDir = bundleDir / config.json["rootfsFolder"].GetString();
 
     auto pathDevice = getDevice(path);
     utility::logMessage(boost::format("Target device: %d") % pathDevice, common::LogLevel::DEBUG);

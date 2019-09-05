@@ -34,12 +34,8 @@ struct Config {
     struct BuildTime {
         BuildTime();
         std::string version;
-        boost::filesystem::path prefixDir;
-        boost::filesystem::path configFile;
-        boost::filesystem::path configSchemaFile;
         boost::filesystem::path localRepositoryFolder = ".sarus";
         boost::filesystem::path openSshArchive;
-        bool areRuntimeSecurityChecksEnabled;
     };
 
     struct Directories {
@@ -49,15 +45,6 @@ struct Config {
         boost::filesystem::path temp;
         std::string tempFromCLI;
         boost::filesystem::path images;
-    };
-
-    struct JSON {
-        JSON();
-        void initialize(const boost::filesystem::path& configFilename, const boost::filesystem::path& schemaFilename);
-        rapidjson::Document& get() { return *(this->file); }
-        const rapidjson::Document& get() const { return *(this->file); }
-    private:
-        std::shared_ptr<rapidjson::Document> file;
     };
 
     struct UserIdentity {
@@ -84,13 +71,16 @@ struct Config {
         bool enableSSH = false;
     };
 
+    void initializeJson(std::shared_ptr<const common::Config> config,
+                        const boost::filesystem::path& configFilename,
+                        const boost::filesystem::path& schemaFilename);
     boost::filesystem::path getImageFile() const;
     boost::filesystem::path getMetadataFileOfImage() const;
 
     BuildTime buildTime;
     common::ImageID imageID;
     Directories directories;
-    JSON json;
+    rapidjson::Document json{ rapidjson::kObjectType };
     UserIdentity userIdentity;
     Authentication authentication;
     CommandRun commandRun;

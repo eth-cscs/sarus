@@ -4,6 +4,9 @@
     "description": "Sarus configuration file",
     "type": "object",
     "properties": {
+        "securityChecks": {
+            "type": "boolean"
+        },
         "OCIBundleDir": {
             "$ref": "#/definitions/AbsolutePath"
         },
@@ -11,9 +14,6 @@
             "$ref": "#/definitions/Folder"
         },
         "prefixDir": {
-            "$ref": "#/definitions/AbsolutePath"
-        },
-        "dirOfFilesToCopyInContainerEtc": {
             "$ref": "#/definitions/AbsolutePath"
         },
         "tempDir": {
@@ -100,10 +100,10 @@
         }
     },
     "required": [
+        "securityChecks",
         "OCIBundleDir",
         "rootfsFolder",
         "prefixDir",
-        "dirOfFilesToCopyInContainerEtc",
         "tempDir",
         "localRepositoryBaseDir",
         "mksquashfsPath",

@@ -41,7 +41,7 @@ Below is an example of how the system administrator should configure the ``OCIHo
                 {
                     "path": "<sarus prefix>/bin/ssh_hook",
                     "env": [
-                        "SARUS_LOCAL_REPOSITORY_BASE_DIR=<e.g. /home>",
+                        "SARUS_PREFIX_DIR=<sarus prefix>",
                         "SARUS_OPENSSH_DIR=<sarus prefix>/openssh"
                     ],
                     "args": [
@@ -82,9 +82,9 @@ in turn executes the SSH hook with the "keygen" CLI argument.
 
 The hook performs the following operations:
 
-1. Read from the environment variables the location of the custom OpenSSH as well as the location of the
-   user's local repository.
-2. Execute the program "ssh-keygen" to generate two pairs of public/private keys. One pair will be used by
+1. Read from the environment variables the location of the custom OpenSSH.
+2. Read from sarus.json the location of the user's local repository.
+3. Execute the program "ssh-keygen" to generate two pairs of public/private keys. One pair will be used by
    the SSH daemon, the other pair will be used by the SSH client.
 
 How the existance of the SSH keys is checked
@@ -107,17 +107,17 @@ specified the SSH hook with the "start-sshd" CLI argument.
 
 The hook performs the following operations:
 
-1. Read from the environment variables the location of the custom OpenSSH as well as the
-   location of the user's local repository.
-2. Read from stdin the container's state as defined in the OCI specification.
-3. Enter the container's mount namespaces in order to access the container's OCI bundle.
-4. Enter the container's pid namespace in order to start the sshd process inside the container.
-5. Read the container's environment variables from the OCI bundle's config.json in order to determine whether
+1. Read from the environment variables the location of the custom OpenSSH
+2. Read from sarus.json the location of the user's local repository.
+3. Read from stdin the container's state as defined in the OCI specification.
+4. Enter the container's mount namespaces in order to access the container's OCI bundle.
+5. Enter the container's pid namespace in order to start the sshd process inside the container.
+6. Read the container's environment variables from the OCI bundle's config.json in order to determine whether
    the SSH hook is enabled.
-6. If the SSH hook is disabled exit.
-7. Bind mount the custom OpenSSH (executables + configuration files) into the container.
-8. Copy the SSH keys into the container.
-9. Add an "sshd" user to /etc/passwd if necessary.
-10. Chroot to the container and start sshd inside the container.
-11. Bind mount the custom "ssh" binary into the container's /usr/bin, thus the shell
+7. If the SSH hook is disabled exit.
+8. Bind mount the custom OpenSSH (executables + configuration files) into the container.
+9. Copy the SSH keys into the container.
+10. Add an "sshd" user to /etc/passwd if necessary.
+11. Chroot to the container and start sshd inside the container.
+12. Bind mount the custom "ssh" binary into the container's /usr/bin, thus the shell
     will pick the custom binary when the command "ssh" is executed.

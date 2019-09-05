@@ -21,32 +21,55 @@ using namespace sarus;
 namespace test_utility {
 namespace config {
 
+ConfigRAII::~ConfigRAII() {
+    {
+        auto dir = boost::filesystem::path{ config->json["prefixDir"].GetString() };
+        boost::filesystem::remove_all(dir);
+    }
+    {
+        auto dir = boost::filesystem::path{ config->json["OCIBundleDir"].GetString() };
+        boost::filesystem::remove_all(dir);
+    }
+    {
+        auto dir = boost::filesystem::path{ config->json["localRepositoryBaseDir"].GetString() };
+        boost::filesystem::remove_all(dir);
+    }
+    boost::filesystem::remove_all(config->directories.repository);
+}
+
 static void populateJSON(rapidjson::Document& document) {
     auto& allocator = document.GetAllocator();
 
-    auto bundleDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-ocibundle"));
-    auto dirOfFilesToCopyInContainerEtc = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-dirOfFilesToCopyInContainerEtc"));
+    auto prefixDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-prefix-dir"));
+    auto bundleDir = prefixDir / "var/OCIBundle";
+    auto localRepositoryBaseDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-localRepositoryBaseDir"));
 
+    document.AddMember( "securityChecks",
+                        false,
+                        allocator);
     document.AddMember( "OCIBundleDir",
                         rapidjson::Value{bundleDir.c_str(), allocator},
                         allocator);
     document.AddMember( "rootfsFolder",
                         rapidjson::Value{"rootfs", allocator},
                         allocator);
-    document.AddMember( "dirOfFilesToCopyInContainerEtc",
-                        rapidjson::Value{dirOfFilesToCopyInContainerEtc.c_str(), allocator},
+    document.AddMember( "prefixDir",
+                        rapidjson::Value{prefixDir.c_str(), allocator},
                         allocator);
     document.AddMember( "tempDir",
                         rapidjson::Value{"/tmp", allocator},
                         allocator);
     document.AddMember( "localRepositoryBaseDir",
-                        rapidjson::Value{"/home", allocator},
+                        rapidjson::Value{localRepositoryBaseDir.c_str(), allocator},
                         allocator);
     document.AddMember( "ramFilesystemType",
                         rapidjson::Value{"ramfs"},
                         allocator);
     document.AddMember( "mksquashfsPath",
                         rapidjson::Value{"/usr/bin/mksquashfs", allocator},
+                        allocator);
+    document.AddMember( "runcPath",
+                        rapidjson::Value{"/usr/bin/runc.amd64", allocator},
                         allocator);
 
     // siteMounts
@@ -84,20 +107,26 @@ static void populateJSON(rapidjson::Document& document) {
     document.AddMember("userMounts", userMountsValue, allocator);
 }
 
-sarus::common::Config makeConfig() {
-    auto config = common::Config{};
+ConfigRAII makeConfig() {
+    auto raii = ConfigRAII{};
+    raii.config = std::make_shared<common::Config>();
 
-    populateJSON(config.json.get());
+    populateJSON(raii.config->json);
+
+    auto prefixDir = boost::filesystem::path{ raii.config->json["prefixDir"].GetString() };
+    common::createFoldersIfNecessary(prefixDir / "etc");
+    common::executeCommand("getent passwd >" + prefixDir.string() + "/etc/passwd");
+    common::executeCommand("getent group >" + prefixDir.string() + "/etc/group");
 
     auto repository = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-repository"));
-    config.directories.repository = repository;
-    config.directories.temp   = config.directories.repository / "temp";
-    config.directories.cache = config.directories.repository / "cache";
-    config.directories.images = config.directories.repository / "images";
+    raii.config->directories.repository = repository;
+    raii.config->directories.temp = raii.config->directories.repository / "temp";
+    raii.config->directories.cache = raii.config->directories.repository / "cache";
+    raii.config->directories.images = raii.config->directories.repository / "images";
 
-    config.commandRun.hostEnvironment = {{"key", "value"}};
+    raii.config->commandRun.hostEnvironment = {{"key", "value"}};
 
-    return config;
+    return raii;
 }
 
 }
