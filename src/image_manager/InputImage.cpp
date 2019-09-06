@@ -25,7 +25,14 @@ InputImage::InputImage(std::shared_ptr<const common::Config> config)
 
 boost::filesystem::path InputImage::makeTemporaryExpansionDirectory() const {
     auto tempExpansionDir = common::makeUniquePathWithRandomSuffix(config->directories.temp / "expansion-directory");
-    common::createFoldersIfNecessary(tempExpansionDir);
+    try {
+        common::createFoldersIfNecessary(tempExpansionDir);
+    }
+    catch(common::Error& e) {
+        auto message = boost::format("Invalid temporary directory %s") % config->directories.temp;
+        log(message, common::LogLevel::GENERAL, std::cerr);
+        SARUS_RETHROW_ERROR(e, message.str(), common::LogLevel::DEBUG);
+    }
     return tempExpansionDir;
 }
 
@@ -334,12 +341,14 @@ void InputImage::copyDataOfArchiveEntry(const boost::filesystem::path& archivePa
     }
 }
 
-void InputImage::log(const boost::format &message, common::LogLevel level) const {
-    log(message.str(), level);
+void InputImage::log(   const boost::format &message, common::LogLevel level,
+                        std::ostream& outStream, std::ostream& errStream) const {
+    log(message.str(), level, outStream, errStream);
 }
 
-void InputImage::log(const std::string& message, common::LogLevel level) const {
-    common::Logger::getInstance().log(message, "InputImage", level);
+void InputImage::log(   const std::string& message, common::LogLevel level,
+                        std::ostream& outStream, std::ostream& errStream) const {
+    common::Logger::getInstance().log(message, "InputImage", level, outStream, errStream);
 }
 
 }} // namespace

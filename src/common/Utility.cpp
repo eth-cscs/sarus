@@ -354,8 +354,15 @@ void createFoldersIfNecessary(const boost::filesystem::path& path, uid_t uid, gi
 
     for(const auto& element : path) {
         currentPath /= element;
-        if(!boost::filesystem::exists(currentPath)) {    
-            if(!boost::filesystem::create_directory(currentPath)) {
+        if(!boost::filesystem::exists(currentPath)) {
+            bool created = false;
+            try {
+                created = boost::filesystem::create_directory(currentPath);
+            } catch(const std::exception& e) {
+                auto message = boost::format("Failed to create directory %s") % currentPath;
+                SARUS_RETHROW_ERROR(e, message.str());
+            }
+            if(!created) {
                 // the creation might have failed because another process cuncurrently
                 // created the same directory. So check whether the directory was indeed
                 // created by another process.
