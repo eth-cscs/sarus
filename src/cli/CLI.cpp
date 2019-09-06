@@ -136,6 +136,12 @@ std::unique_ptr<cli::Command> CLI::parseCommandHelpOfCommand(const std::deque<co
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
     }
+    if(argsGroups.size() > 2) {
+        auto message = boost::format("Command 'help' doesn't support extra argument '%s'"
+                                     "\nSee 'sarus help help'") % argsGroups[2].argv()[0];
+        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+    }
     auto factory = cli::CommandObjectsFactory{};
     auto commandName = std::string{ argsGroups[1].argv()[0] };
     return factory.makeCommandObjectHelpOfCommand(commandName);
