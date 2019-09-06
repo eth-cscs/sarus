@@ -75,6 +75,15 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help pull'"
         self._check(command, expected_message)
 
+        command = ["sarus", "pull", "alpine", "--invalid-option"]
+        expected_message = ("Invalid image ID [\"alpine\", \"--invalid-option\"]\n"
+                           "The image ID is expected to be a single token without options")
+        self._check(command, expected_message)
+
+        command = ["sarus", "pull", "///"]
+        expected_message = ("Invalid image ID '///'")
+        self._check(command, expected_message)
+
     def test_command_sshkeygen(self):
         command = ["sarus", "ssh-keygen", "--invalid-option"]
         expected_message = "Command 'ssh-keygen' doesn't support options\nSee 'sarus help ssh-keygen'"
