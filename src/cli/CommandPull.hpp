@@ -101,7 +101,9 @@ private:
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch (std::exception& e) {
-            SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of pull command");
+            auto message = boost::format("%s\nSee 'sarus help pull'") % e.what();
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
 
         cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);

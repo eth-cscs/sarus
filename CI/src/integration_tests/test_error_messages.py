@@ -70,6 +70,11 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Invalid temporary directory \"/invalid-dir\""
         self._check(command, expected_message)
 
+    def test_command_pull(self):
+        command = ["sarus", "pull", "--invalid-option", "alpine:latest"]
+        expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help pull'"
+        self._check(command, expected_message)
+
     def test_command_sshkeygen(self):
         command = ["sarus", "ssh-keygen", "--invalid-option"]
         expected_message = "Command 'ssh-keygen' doesn't support options\nSee 'sarus help ssh-keygen'"
