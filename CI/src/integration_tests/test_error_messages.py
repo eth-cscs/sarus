@@ -44,6 +44,11 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Command 'help' doesn't support extra argument 'extra-argument'\nSee 'sarus help help'"
         self._check(command, expected_message)
 
+    def test_command_images(self):
+        command = ["sarus", "images", "--invalid-option"]
+        expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help images'"
+        self._check(command, expected_message)
+
     def test_command_sshkeygen(self):
         command = ["sarus", "ssh-keygen", "--invalid-option"]
         expected_message = "Command 'ssh-keygen' doesn't support options\nSee 'sarus help ssh-keygen'"

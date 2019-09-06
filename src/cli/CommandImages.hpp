@@ -96,7 +96,8 @@ public:
     void printHelpMessage() const override {
         auto printer = cli::HelpMessage()
             .setUsage("sarus images")
-            .setDescription(getBriefDescription());
+            .setDescription(getBriefDescription())
+            .setOptionsDescription(optionsDescription);
         std::cout << printer;
     }
 
@@ -129,7 +130,9 @@ private:
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch(std::exception& e) {
-            SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of images command");
+            auto message = boost::format("%s\nSee 'sarus help images'") % e.what();
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
 
         cli::utility::printLog( boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
