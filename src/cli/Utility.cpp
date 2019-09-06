@@ -57,7 +57,7 @@ static std::string getImageTag(const std::string& in) {
  */
 bool isValidCLIInputImageID(const std::string& imageID) {
     boost::cmatch matches;
-    boost::regex disallowedPattern("..");
+    boost::regex disallowedPattern(".*\\.\\..*");
 
     if (boost::regex_match(imageID.c_str(), matches, disallowedPattern)) {
         return false;
