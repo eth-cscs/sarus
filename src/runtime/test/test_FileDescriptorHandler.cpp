@@ -47,9 +47,11 @@ TEST(RuntimeTestGroup, prepareFileDescriptorsToPreserve) {
     auto testFD0 = open(boost::filesystem::path{testDir/"file0"}.string().c_str(), O_RDONLY);
     auto testFD1 = open(boost::filesystem::path{testDir/"file1"}.string().c_str(), O_RDONLY);
     auto testFD2 = open(boost::filesystem::path{testDir/"file2"}.string().c_str(), O_RDONLY);
-    CHECK_EQUAL(testFD0, 3);
-    CHECK_EQUAL(testFD1, 4);
-    CHECK_EQUAL(testFD2, 5);
+
+    auto openFDs = common::countFilesInDirectory("/proc/self/fd") - 1; // subtract 1 to remove the fd opened by reading /proc/self/fd itself
+
+    // extra file descriptors do not include stdio
+    auto expectedExtraFDs = openFDs - 3;
 
     // test base case (nothing to do)
     handler.prepareFileDescriptorsToPreserve();
@@ -58,35 +60,37 @@ TEST(RuntimeTestGroup, prepareFileDescriptorsToPreserve) {
     // test PMI_FD
     config->commandRun.hostEnvironment["PMI_FD"] = std::to_string(testFD2);
     handler.prepareFileDescriptorsToPreserve();
-    CHECK_EQUAL(handler.getExtraFileDescriptors(), std::string("3"));
-    CHECK_EQUAL(config->commandRun.hostEnvironment["PMI_FD"], std::string("5"));
-    CHECK_EQUAL(close(6), 0); // cleanup duplicated file descriptor
+    CHECK_EQUAL(std::to_string(expectedExtraFDs), handler.getExtraFileDescriptors());
+    CHECK_EQUAL(std::to_string(testFD2), config->commandRun.hostEnvironment["PMI_FD"]);
+    CHECK_EQUAL(0, close(testFD2+1)); // cleanup duplicated file descriptor
     config->commandRun.hostEnvironment["PMI_FD"] = std::to_string(testFD2); // reset environment variable
 
     // test close-on-exec, PMI_FD
+    expectedExtraFDs -= 1;
     fcntl(testFD1, F_SETFD, FD_CLOEXEC);
     handler.prepareFileDescriptorsToPreserve();
-    CHECK_EQUAL(handler.getExtraFileDescriptors(), std::string("2"));
-    CHECK_EQUAL(config->commandRun.hostEnvironment["PMI_FD"], std::string("4"));
-    CHECK_EQUAL(close(4), 0); // cleanup duplicated file descriptor
+    CHECK_EQUAL(std::to_string(expectedExtraFDs), handler.getExtraFileDescriptors());
+    CHECK_EQUAL(std::to_string(testFD1), config->commandRun.hostEnvironment["PMI_FD"]);
+    CHECK_EQUAL(0, close(testFD1)); // cleanup duplicated file descriptor
     config->commandRun.hostEnvironment["PMI_FD"] = std::to_string(testFD2); // reset environment variable
 
-    // test gap, PMI_FD (fd 4 should be free from previous test)
+    // test gap, PMI_FD (testFD1 should be free from previous test)
     handler.prepareFileDescriptorsToPreserve();
-    CHECK_EQUAL(handler.getExtraFileDescriptors(), std::string("2"));
-    CHECK_EQUAL(config->commandRun.hostEnvironment["PMI_FD"], std::string("4"));
-    CHECK_EQUAL(close(4), 0); // cleanup duplicated file descriptor
+    CHECK_EQUAL(std::to_string(expectedExtraFDs), handler.getExtraFileDescriptors());
+    CHECK_EQUAL(std::to_string(testFD1), config->commandRun.hostEnvironment["PMI_FD"]);
+    CHECK_EQUAL(0, close(testFD1)); // cleanup duplicated file descriptor
     config->commandRun.hostEnvironment["PMI_FD"] = std::to_string(testFD2); // reset environment variable
 
-    // test gap, close-on-exec, PMI_FD (fd 4 should be free from previous test)
+    // test gap, close-on-exec, PMI_FD (testFD1 should be free from previous test)
+    expectedExtraFDs -= 1;
     fcntl(testFD0, F_SETFD, FD_CLOEXEC);
     handler.prepareFileDescriptorsToPreserve();
-    CHECK_EQUAL(handler.getExtraFileDescriptors(), std::string("1"));
-    CHECK_EQUAL(config->commandRun.hostEnvironment["PMI_FD"], std::string("3"));
+    CHECK_EQUAL(std::to_string(expectedExtraFDs), handler.getExtraFileDescriptors());
+    CHECK_EQUAL(std::to_string(testFD0), config->commandRun.hostEnvironment["PMI_FD"]);
 
     // cleanup
-    close(3);
-    close(5);
+    close(testFD0);
+    close(testFD2);
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();
