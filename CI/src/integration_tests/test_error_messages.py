@@ -58,6 +58,14 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help load'"
         self._check(command, expected_message)
 
+        command = ["sarus", "load", "archive.tar"]
+        expected_message = "Bad number of arguments for command 'load'\nSee 'sarus help load'"
+        self._check(command, expected_message)
+
+        command = ["sarus", "load", "archive.tar", "imageid", "extra-argument"]
+        expected_message = "Bad number of arguments for command 'load'\nSee 'sarus help load'"
+        self._check(command, expected_message)
+
     def test_command_sshkeygen(self):
         command = ["sarus", "ssh-keygen", "--invalid-option"]
         expected_message = "Command 'ssh-keygen' doesn't support options\nSee 'sarus help ssh-keygen'"
