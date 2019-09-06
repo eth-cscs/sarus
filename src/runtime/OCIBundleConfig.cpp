@@ -149,23 +149,6 @@ rj::Value OCIBundleConfig::makeMemberMounts() const {
 
         mounts.PushBack(element, *allocator);
     }
-    // dev/shm
-    {
-        auto element = rj::Value{rj::kObjectType};
-        element.AddMember("destination", rj::Value{"/dev/shm"}, *allocator);
-        element.AddMember("type", rj::Value{"tmpfs"}, *allocator);
-        element.AddMember("source", rj::Value{"shm"}, *allocator);
-
-        auto options = rj::Value{rj::kArrayType};
-        options.PushBack(rj::Value{"nosuid"}, *allocator);
-        options.PushBack(rj::Value{"noexec"}, *allocator);
-        options.PushBack(rj::Value{"nodev"}, *allocator);
-        options.PushBack(rj::Value{"mode=1777"}, *allocator);
-        options.PushBack(rj::Value{"size=65536k"}, *allocator);
-        element.AddMember("options", options, *allocator);
-
-        mounts.PushBack(element, *allocator);
-    }
     // dev/mqueue
     {
         auto element = rj::Value{rj::kObjectType};

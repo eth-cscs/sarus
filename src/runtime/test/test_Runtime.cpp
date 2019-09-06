@@ -105,6 +105,7 @@ TEST(RuntimeTestGroup, setupOCIBundle) {
     CHECK(boost::filesystem::exists(bundleDir / "config.json"));
 
     // cleanup
+    CHECK_EQUAL(umount((rootfsDir / "dev/shm").c_str()), 0);
     CHECK_EQUAL(umount((rootfsDir / "dev").c_str()), 0);
     CHECK_EQUAL(umount(rootfsDir.c_str()), 0);
     CHECK_EQUAL(umount(overlayfsLowerDir.c_str()), 0);
