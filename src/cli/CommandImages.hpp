@@ -113,9 +113,12 @@ private:
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
         cli::utility::printLog(boost::format("parsing CLI arguments of images command"), common::LogLevel::DEBUG);
 
-        // the images command arguments are composed by exactly one group of arguments
+        // the images command doesn't support additional arguments
         if(argsGroups.size() > 1) {
-            SARUS_THROW_ERROR("failed to parse CLI arguments of images command (too many arguments provided)");
+            auto message = boost::format("Command 'images' doesn't support extra argument '%s'"
+                                        "\nSee 'sarus help images'") % argsGroups[1].argv()[0];
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
 
         try {
