@@ -16,6 +16,7 @@
 #include "common/Config.hpp"
 #include "common/SecurityChecks.hpp"
 #include "runtime/OCIBundleConfig.hpp"
+#include "runtime/FileDescriptorHandler.hpp"
 
 
 namespace sarus {
@@ -23,8 +24,8 @@ namespace runtime {
 
 class Runtime {
 public:
-    Runtime(std::shared_ptr<const common::Config>);
-    void setupOCIBundle() const;
+    Runtime(std::shared_ptr<common::Config>);
+    void setupOCIBundle();
     void executeContainer() const;
 
 private:
@@ -35,13 +36,13 @@ private:
     void copyEtcFilesIntoRootfs() const;
     void performCustomMounts() const;
     void remountRootfsWithNoSuid() const;
-    int  countExtraFileDescriptors() const;
 
 private:
-    std::shared_ptr<const common::Config> config;
+    std::shared_ptr<common::Config> config;
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
     OCIBundleConfig bundleConfig;
+    FileDescriptorHandler descriptorHandler;
     common::SecurityChecks securityChecks;
 };
 

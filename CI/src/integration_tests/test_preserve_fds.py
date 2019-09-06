@@ -21,33 +21,25 @@ class TestPreserveFDS(unittest.TestCase):
     _IMAGE_NAME = "debian:stretch"
 
     def test_preserve_fds(self):
-        test_file_1 = open("/tmp/test1", "w")
-        test_file_2 = open("/tmp/test2", "w")
-        test_file_3 = open("/tmp/test3", "w")
-        test_file_4 = open("/tmp/test4", "w")
+        test_file = open("/tmp/test1", "w+")
+        test_fd = test_file.fileno()
 
-        host_fds = os.listdir("/proc/self/fd")
+        # Test preservation of PMI_FD inside the container
+        host_environment = os.environ.copy()
+        host_environment["PMI_FD"] = str(test_fd)
 
         util.pull_image_if_necessary(is_centralized_repository=False, image=self._IMAGE_NAME)
 
-        # Check without LISTEN_FDS
-        output = util.run_command_in_container(is_centralized_repository=False,
-                                               image=self._IMAGE_NAME,
-                                               command=["dir", "/proc/self/fd"])
-        container_fds = re.split("\W+", output[0])
+        command = ["bash", "-c", "echo fd-preservation-test >&${PMI_FD}"]
+        sarus_options = ["--mount=type=bind,source=/tmp,destination=/tmp"]
 
-        self.assertEqual(len(host_fds), len(container_fds))
+        util.run_command_in_container(is_centralized_repository=False,
+                                      image=self._IMAGE_NAME,
+                                      command=command,
+                                      options_of_run_command=sarus_options,
+                                      environment=host_environment)
 
-        # Check with LISTEN_FDS
-        os.environ["LISTEN_FDS"] = "3"
-        output = util.run_command_in_container(is_centralized_repository=False,
-                                               image=self._IMAGE_NAME,
-                                               command=["dir", "/proc/self/fd"])
-        container_fds = re.split("\W+", output[0])
+        test_file.seek(0)
+        self.assertEqual(test_file.readline()[:-1], "fd-preservation-test")
 
-        self.assertEqual(len(host_fds)-3, len(container_fds))
-
-        test_file_1.close()
-        test_file_2.close()
-        test_file_3.close()
-        test_file_4.close()
+        test_file.close()
