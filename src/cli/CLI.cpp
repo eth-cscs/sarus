@@ -89,8 +89,7 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
     auto commandName = std::string{argsGroups.front().argv()[0]};
 
     // process help command of another command
-    bool isCommandHelpFollowedByAnArgument =
-        commandName == "help" && argsGroups.size() > 1;
+    bool isCommandHelpFollowedByAnArgument = commandName == "help" && argsGroups.size() > 1;
     if(isCommandHelpFollowedByAnArgument) {
         return parseCommandHelpOfCommand(argsGroups);
     }
@@ -132,6 +131,11 @@ std::deque<common::CLIArguments> CLI::groupArgumentsAndCorrespondingOptions(cons
 }
 
 std::unique_ptr<cli::Command> CLI::parseCommandHelpOfCommand(const std::deque<common::CLIArguments>& argsGroups) const {
+    if(argsGroups[0].argc() > 1) {
+        auto message = boost::format("Command 'help' doesn't support options");
+        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+    }
     auto factory = cli::CommandObjectsFactory{};
     auto commandName = std::string{ argsGroups[1].argv()[0] };
     if(!factory.isValidCommandName(commandName)) {
