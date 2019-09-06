@@ -138,10 +138,6 @@ std::unique_ptr<cli::Command> CLI::parseCommandHelpOfCommand(const std::deque<co
     }
     auto factory = cli::CommandObjectsFactory{};
     auto commandName = std::string{ argsGroups[1].argv()[0] };
-    if(!factory.isValidCommandName(commandName)) {
-        auto message = boost::format("unknown help topic: %s") % commandName;
-        SARUS_THROW_ERROR(message.str());
-    }
     return factory.makeCommandObjectHelpOfCommand(commandName);
 }
 
