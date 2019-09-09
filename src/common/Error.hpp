@@ -107,18 +107,18 @@ inline bool operator!=(const Error::ErrorTraceEntry& lhs, const Error::ErrorTrac
 // SARUS_RETHROW_ERROR macros
 #define SARUS_GET_OVERLOADED_RETHROW_ERROR(_1, _2, _3, NAME, ...) NAME
 
-#define SARUS_RETHROW_ERROR_3(stdException, errorMessage, logLevel) { \
+#define SARUS_RETHROW_ERROR_3(exception, errorMessage, logLevel) { \
     auto errorTraceEntry = sarus::common::Error::ErrorTraceEntry{errorMessage, __FILENAME__, __LINE__, __func__}; \
-    const auto* cp = dynamic_cast<const sarus::common::Error*>(&stdException); \
+    const auto* cp = dynamic_cast<const sarus::common::Error*>(&exception); \
     if(cp) { /* check if dynamic type is common::Error */ \
-        assert(!std::is_const<decltype(stdException)>{}); /* a common::Error object must be caught as non-const reference because we need to modify its internal error trace */ \
+        assert(!std::is_const<decltype(exception)>{}); /* a common::Error object must be caught as non-const reference because we need to modify its internal error trace */ \
         auto* p = const_cast<sarus::common::Error*>(cp); \
         p->setLogLevel(logLevel); \
         p->appendErrorTraceEntry(errorTraceEntry); \
         throw; \
     } \
     else { \
-        auto previousErrorTraceEntry = sarus::common::Error::ErrorTraceEntry{stdException.what(), "unknown file", -1, "\"unknown function\""}; \
+        auto previousErrorTraceEntry = sarus::common::Error::ErrorTraceEntry{exception.what(), "unknown file", -1, "\"unknown function\""}; \
         auto error = sarus::common::Error{logLevel, previousErrorTraceEntry}; \
         error.appendErrorTraceEntry(errorTraceEntry); \
         throw error; \
