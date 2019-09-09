@@ -35,6 +35,9 @@ OCIBundleConfig::OCIBundleConfig(std::shared_ptr<const common::Config> config)
 void OCIBundleConfig::generateConfigFile() const {
     utility::logMessage("Generating bundle's config file", common::logType::INFO);
     makeJsonDocument();
+    common::createFileIfNecessary(configFile);
+    boost::filesystem::permissions(configFile, boost::filesystem::perms::owner_read |
+                                               boost::filesystem::perms::owner_write);
     common::writeJSON(*document, configFile);
     utility::logMessage("Successfully generated bundle's config file", common::logType::INFO);
 }
