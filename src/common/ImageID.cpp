@@ -27,12 +27,17 @@ bool operator==(const ImageID& lhs, const ImageID& rhs) {
 }
 
 std::ostream& operator<<(std::ostream& os, const ImageID& imageID) {
-    os << imageID.getUniqueKey();
+    auto format =  boost::format{"%s/%s/%s:%s"}
+        % imageID.server
+        % imageID.repositoryNamespace
+        % imageID.image
+        % imageID.tag;
+    os << format;
     return os;
 }
 
 std::string ImageID::getUniqueKey() const {
-    auto format =  boost::format("%s/%s/%s/%s");
+    auto format =  boost::format{"%s/%s/%s/%s"};
     return (format
             % server
             % repositoryNamespace

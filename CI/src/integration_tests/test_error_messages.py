@@ -6,6 +6,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import unittest
+import os
 import subprocess
 
 import common.util as util
@@ -84,6 +85,10 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = ("Invalid image ID '///'")
         self._check(command, expected_message)
 
+        command = ["sarus", "pull", "invalid-image-1kds710dkj"]
+        expected_message = ("Failed to pull image 'index.docker.io/library/invalid-image-1kds710dkj:latest'\nIs the image ID correct?")
+        self._check(command, expected_message)
+
     def test_command_sshkeygen(self):
         command = ["sarus", "ssh-keygen", "--invalid-option"]
         expected_message = "Command 'ssh-keygen' doesn't support options\nSee 'sarus help ssh-keygen'"
@@ -107,12 +112,16 @@ class TestErrorMessages(unittest.TestCase):
         self.assertEqual(actual_message, expected_message)
 
     def _get_sarus_error_output(self, command):
-        try:
-            subprocess.check_output(command, stderr=subprocess.STDOUT)
-            raise Exception("Sarus didn't generate any error, but at least one was expected.")
-        except subprocess.CalledProcessError as ex:
-            output_without_trailing_whitespaces = ex.output.rstrip()
-            return output_without_trailing_whitespaces
+        with open(os.devnull, 'wb') as devnull:
+            proc = subprocess.Popen(command,
+                                    stdout=devnull,
+                                    stderr=subprocess.PIPE)
+            stderr = proc.communicate()[1]
+            if proc.returncode == 0:
+                raise Exception("Sarus didn't generate any error, but at least one was expected.")
+            else:
+                stderr_without_trailing_whitespaces = stderr.rstrip()
+                return stderr_without_trailing_whitespaces
 
 
 if __name__ == "__main__":

@@ -330,9 +330,12 @@ namespace image_manager {
         response = client.request(request).get();
 
         if(response.status_code() != status_codes::OK) {
-            auto message = boost::format("Received http_response status code(%s): %s")
+            auto message = boost::format{"Failed to pull image '%s'\nIs the image ID correct?"} % config->imageID;
+            printLog(message, common::LogLevel::GENERAL, std::cerr);
+
+            message = boost::format{"Failed to pull manifest. Received http_response status code(%s): %s"}
                 % response.status_code() % response.reason_phrase();
-            SARUS_THROW_ERROR(message.str());
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
         
         this->manifest = response.extract_json(true).get();
@@ -497,9 +500,10 @@ namespace image_manager {
     /**
      * Show and logging message with LogLevel
      */
-    void Puller::printLog(const boost::format &message, common::LogLevel LogLevel)
+    void Puller::printLog(  const boost::format &message, common::LogLevel LogLevel,
+                            std::ostream& outStream, std::ostream& errStream)
     {
-        common::Logger::getInstance().log(message.str(), sysname, LogLevel);
+        common::Logger::getInstance().log(message.str(), sysname, LogLevel, outStream, errStream);
     }
     
 } // namespace

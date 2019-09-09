@@ -45,7 +45,8 @@ private:
     void downloadStream(const std::string &uri, const std::string &path, const boost::filesystem::path &filename);
     std::string requestAuthToken();
     bool checkSum(const std::string &digest, const boost::filesystem::path &filename);
-    void printLog(const boost::format &message, common::LogLevel LogLevel);
+    void printLog(  const boost::format &message, common::LogLevel LogLevel,
+                    std::ostream& outStream = std::cout, std::ostream& errStream = std::cerr);
     std::unique_ptr<web::http::client::http_client> setupHttpClientWithCredential(const std::string& server);
 
 private:
