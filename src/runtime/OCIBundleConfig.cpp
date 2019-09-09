@@ -152,6 +152,24 @@ rj::Value OCIBundleConfig::makeMemberMounts() const {
 
         mounts.PushBack(element, *allocator);
     }
+    // dev/shm - bind mounted from host to allow communication between processes that use it
+    {
+        auto element = rj::Value{rj::kObjectType};
+        element.AddMember("destination", rj::Value{"/dev/shm"}, *allocator);
+        element.AddMember("type", rj::Value{"bind"}, *allocator);
+        element.AddMember("source", rj::Value{"/dev/shm"}, *allocator);
+
+        auto options = rj::Value{rj::kArrayType};
+        options.PushBack(rj::Value{"nosuid"}, *allocator);
+        options.PushBack(rj::Value{"noexec"}, *allocator);
+        options.PushBack(rj::Value{"nodev"}, *allocator);
+        options.PushBack(rj::Value{"rbind"}, *allocator);
+        options.PushBack(rj::Value{"slave"}, *allocator);
+        options.PushBack(rj::Value{"rw"}, *allocator);
+        element.AddMember("options", options, *allocator);
+
+        mounts.PushBack(element, *allocator);
+    }
     // dev/mqueue
     {
         auto element = rj::Value{rj::kObjectType};

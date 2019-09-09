@@ -38,6 +38,19 @@
 			]
 		},
 		{
+			"destination": "/dev/shm",
+			"type": "bind",
+			"source": "/dev/shm",
+			"options": [
+				"nosuid",
+				"noexec",
+				"nodev",
+				"rbind",
+				"slave",
+                "rw"
+			]
+        },
+		{
 			"destination": "/dev/mqueue",
 			"type": "mqueue",
 			"source": "mqueue",

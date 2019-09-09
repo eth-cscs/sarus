@@ -147,16 +147,6 @@ void Runtime::setupDevFilesystem() const {
         SARUS_THROW_ERROR(message.str());
     }
 
-    // Bind mount /dev/shm from the host to allow communication between processes that use it
-    try {
-        common::createFoldersIfNecessary(rootfsDir / "dev/shm");
-        bindMount("/dev/shm", rootfsDir / "dev/shm");
-    }
-    catch(common::Error& e) {
-        auto message = boost::format("Failed to setup /dev/shm filesystem");
-        SARUS_RETHROW_ERROR(e, message.str());
-    }
-
     utility::logMessage("Successfully set up /dev filesystem", common::logType::INFO);
 }
 
