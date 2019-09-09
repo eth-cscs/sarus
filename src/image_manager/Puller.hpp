@@ -32,18 +32,17 @@ namespace image_manager {
 class Puller {
 public:
     Puller(std::shared_ptr<const common::Config> config);
-    web::json::value getManifest();
-    std::string getManifestPath();
     PulledImage pull();
+    web::json::value retrieveImageManifest();
 
 private:    
-    web::json::value getManifest(const std::string &token);
+    std::string makeImageManifestUri();
     std::string getParam(std::string &header, const std::string& param);
-    std::string getUri(const std::string &server);
+    std::string getServerUri(const std::string &server);
     void saveImage(web::json::value fsLayers);
     void saveLayer(const std::string &digest);
     void downloadStream(const std::string &uri, const std::string &path, const boost::filesystem::path &filename);
-    std::string requestAuthToken();
+    std::string requestAuthorizationToken();
     bool checkSum(const std::string &digest, const boost::filesystem::path &filename);
     void printLog(  const boost::format &message, common::LogLevel LogLevel,
                     std::ostream& outStream = std::cout, std::ostream& errStream = std::cerr);
@@ -58,15 +57,8 @@ private:
     /** digest when layer tarfile is empty */
     const std::string EMPTY_TAR_SHA256 = "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4";
 
-    /** max download retry */
-    const int RETRY_MAX = 3;
-
-    /** image manifest */
-    web::json::value manifest;
-
-    /** authorization token */
-    std::string token;
-
+    const int MAX_DOWNLOAD_RETRIES = 3;
+    std::string authorizationToken;
 };
 
 }
