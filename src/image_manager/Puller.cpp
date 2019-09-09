@@ -288,9 +288,19 @@ namespace image_manager {
         printLog(boost::format("Retrieving image manifest from %s") % config->imageID.server,
                  common::LogLevel::INFO);
 
-        authorizationToken = requestAuthorizationToken();
+        // get authorization token
+        try {
+            authorizationToken = requestAuthorizationToken();
+        }
+        catch(common::Error& e) {
+            auto message = boost::format{"Failed authentication for image '%s'"
+                    "\nDid you perform a login with the proper credentials?"
+                    "\nSee 'sarus help pull' (--login option)"}
+                    % config->imageID;
+            printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_RETHROW_ERROR(e, message.str(), common::LogLevel::DEBUG);
+        }
 
-        // request new image manifest
         web::http::client::http_client      client( getServerUri(config->imageID.server) );
         web::http::http_request             request(methods::GET);
         web::http::http_response            response;
