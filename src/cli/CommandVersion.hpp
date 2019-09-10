@@ -64,7 +64,7 @@ private:
             SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
         // the version command doesn't support options
-        if(argsGroups[0].argc() > 1) {
+        if(!argsGroups.empty() && argsGroups[0].argc() > 1) {
             auto message = boost::format("Command 'version' doesn't support options"
                                          "\nSee 'sarus help version'");
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);

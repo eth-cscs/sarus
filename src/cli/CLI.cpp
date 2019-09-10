@@ -73,11 +73,13 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
 
     // --help option
     if(values.count("help")) {
+        argsGroups.clear(); // --help overrides other arguments and options
         return factory.makeCommandObject("help", argsGroups, std::move(conf));
     }
 
     // --version option
     if(values.count("version")) {
+        argsGroups.clear(); // --version overrides other arguments and options
         return factory.makeCommandObject("version", argsGroups, std::move(conf));
     }
 
