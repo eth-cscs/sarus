@@ -125,7 +125,16 @@ inline bool operator!=(const Error::ErrorTraceEntry& lhs, const Error::ErrorTrac
     } \
 }
 
-#define SARUS_RETHROW_ERROR_2(exception, errorMessage) SARUS_RETHROW_ERROR_3(exception, errorMessage, sarus::common::LogLevel::ERROR)
+#define SARUS_RETHROW_ERROR_2(exception, errorMessage) { \
+    const auto* cp = dynamic_cast<const sarus::common::Error*>(&exception); \
+    if(cp) { \
+        /* get log level if dynamic type is common::Error */ \
+        SARUS_RETHROW_ERROR_3(exception, errorMessage, cp->getLogLevel()) \
+    } \
+    else { \
+        SARUS_RETHROW_ERROR_3(exception, errorMessage, sarus::common::LogLevel::ERROR) \
+    } \
+}
 
 #define SARUS_RETHROW_ERROR(...) SARUS_GET_OVERLOADED_RETHROW_ERROR(__VA_ARGS__, SARUS_RETHROW_ERROR_3, SARUS_RETHROW_ERROR_2)(__VA_ARGS__)
 
