@@ -29,7 +29,7 @@ TEST(PasswdDBTestGroup, testRead) {
     std::ofstream of{file.c_str()};
     of  << "loginName0:x:1000:1001:UserNameOrCommentField0:/home/dir0"
         << std::endl
-        << "loginName1:encryptedPassword1:2000:2001:UserNameOrCommentField1:/home/dir1:/optional/UserCommandInterpreter1"
+        << "loginName1:encryptedPass1:4294967294:4294967294:UserNameOrCommentField1:/home/dir1:/optional/UserCommandInterpreter1"
         << std::endl;
 
     // read from file
@@ -48,9 +48,9 @@ TEST(PasswdDBTestGroup, testRead) {
     CHECK(!entries[0].userCommandInterpreter);
 
     CHECK(entries[1].loginName == "loginName1");
-    CHECK(entries[1].encryptedPassword == "encryptedPassword1");
-    CHECK(entries[1].uid == 2000);
-    CHECK(entries[1].gid == 2001);
+    CHECK(entries[1].encryptedPassword == "encryptedPass1");
+    CHECK(entries[1].uid == 4294967294UL);
+    CHECK(entries[1].gid == 4294967294UL);
     CHECK(entries[1].userNameOrCommentField == "UserNameOrCommentField1");
     CHECK(entries[1].userHomeDirectory == "/home/dir1");
     CHECK(*entries[1].userCommandInterpreter == "/optional/UserCommandInterpreter1");
