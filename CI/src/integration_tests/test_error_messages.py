@@ -63,6 +63,14 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Bad number of arguments for command 'load'\nSee 'sarus help load'"
         self._check(command, expected_message)
 
+        command = ["sarus", "load"]
+        expected_message = "Bad number of arguments for command 'load'\nSee 'sarus help load'"
+        self._check(command, expected_message)
+
+        command = ["sarus", "load", "archive.tar"]
+        expected_message = "Bad number of arguments for command 'load'\nSee 'sarus help load'"
+        self._check(command, expected_message)
+
         command = ["sarus", "load", "archive.tar", "imageid", "extra-argument"]
         expected_message = "Bad number of arguments for command 'load'\nSee 'sarus help load'"
         self._check(command, expected_message)
@@ -74,6 +82,10 @@ class TestErrorMessages(unittest.TestCase):
     def test_command_pull(self):
         command = ["sarus", "pull", "--invalid-option", "alpine:latest"]
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help pull'"
+        self._check(command, expected_message)
+
+        command = ["sarus", "pull"]
+        expected_message = "Bad number of arguments for command 'pull'\nSee 'sarus help pull'"
         self._check(command, expected_message)
 
         command = ["sarus", "pull", "alpine:latest", "extra-argument"]
@@ -112,6 +124,10 @@ class TestErrorMessages(unittest.TestCase):
     def test_command_rmi(self):
         command = ["sarus", "rmi", "--invalid-option", "alpine:latest"]
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help rmi'"
+        self._check(command, expected_message)
+
+        command = ["sarus", "rmi"]
+        expected_message = "Bad number of arguments for command 'rmi'\nSee 'sarus help rmi'"
         self._check(command, expected_message)
 
         command = ["sarus", "rmi", "alpine:latest", "extra-argument"]
