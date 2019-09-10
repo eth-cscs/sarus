@@ -134,6 +134,14 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Bad number of arguments for command 'rmi'\nSee 'sarus help rmi'"
         self._check(command, expected_message)
 
+        command = ["sarus", "rmi", "///"]
+        expected_message = "Invalid image ID '///'"
+        self._check(command, expected_message)
+
+        command = ["sarus", "rmi", "invalid-image-9as7302j"]
+        expected_message = "Cannot find image 'index.docker.io/library/invalid-image-9as7302j:latest'"
+        self._check(command, expected_message)
+
     def test_command_sshkeygen(self):
         command = ["sarus", "ssh-keygen", "--invalid-option"]
         expected_message = "Command 'ssh-keygen' doesn't support options\nSee 'sarus help ssh-keygen'"

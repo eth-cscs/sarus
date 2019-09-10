@@ -78,13 +78,7 @@ namespace image_manager {
 
         printLog(boost::format("removing image %s") % config->imageID, common::LogLevel::INFO);
 
-        try {
-            imageStore.removeImage(config->imageID);
-        }
-        catch(common::Error& e) {
-            auto message = boost::format("Failed to remove image %s") % config->imageID;
-            SARUS_RETHROW_ERROR(e, message.str());
-        }
+        imageStore.removeImage(config->imageID);
 
         printLog(boost::format("removed image %s") % config->imageID, common::LogLevel::GENERAL);
         printLog(boost::format("successfully removed image"), common::LogLevel::INFO);

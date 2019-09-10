@@ -92,9 +92,9 @@ namespace image_manager {
         }
 
         if (!imageMetadata) {
-            auto message = boost::format("failed to find unique key %s in metadata file %s")
-                % uniqueKey % metadataFile;
-            SARUS_THROW_ERROR(message.str());
+            auto message = boost::format("Cannot find image '%s'") % config->imageID;
+            printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
 
         printLog(boost::format("Success to find unique key"), common::LogLevel::DEBUG);
@@ -229,8 +229,9 @@ namespace image_manager {
         printLog( boost::format("Success to update metadata: %s") % metadataFile, common::LogLevel::DEBUG);
     }
 
-    void ImageStore::printLog(const boost::format &message, common::LogLevel LogLevel) const {
-        common::Logger::getInstance().log( message.str(), sysname, LogLevel);
+    void ImageStore::printLog(  const boost::format &message, common::LogLevel LogLevel,
+                                std::ostream& out, std::ostream& err) const {
+        common::Logger::getInstance().log( message.str(), sysname, LogLevel, out, err);
     }
     
 } // namespace
