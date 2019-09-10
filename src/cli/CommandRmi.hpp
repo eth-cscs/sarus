@@ -73,9 +73,12 @@ private:
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
         cli::utility::printLog(boost::format("parsing CLI arguments of rmi command"), common::LogLevel::DEBUG);
 
-        // the arguments of the rmi command (rmi <image>) are composed by exactly two groups of arguments (rmi + image)
+        // the rmi command expects exactly two arguments
         if(argsGroups.size() != 2) {
-            SARUS_THROW_ERROR("failed to parse CLI arguments of rmi command (bad number of arguments provided)");
+            auto message = boost::format("Bad number of arguments for command 'rmi'"
+                                        "\nSee 'sarus help rmi'");
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
 
         try {
