@@ -76,6 +76,10 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help pull'"
         self._check(command, expected_message)
 
+        command = ["sarus", "pull", "alpine:latest", "extra-argument"]
+        expected_message = "Bad number of arguments for command 'pull'\nSee 'sarus help pull'"
+        self._check(command, expected_message)
+
         command = ["sarus", "pull", "alpine", "--invalid-option"]
         expected_message = ("Invalid image ID [\"alpine\", \"--invalid-option\"]\n"
                            "The image ID is expected to be a single token without options")

@@ -77,10 +77,12 @@ private:
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
         cli::utility::printLog(boost::format("parsing CLI arguments of pull command"), common::LogLevel::DEBUG);
 
-        // the pull command arguments (pull [options] <image>) are composed
-        // by exacly two groups of arguments (pull + image)
+        // the pull command expects exactly two arguments
         if(argsGroups.size() != 2) {
-            SARUS_THROW_ERROR("failed to parse CLI arguments of pull command (bad number of arguments)");
+            auto message = boost::format("Bad number of arguments for command 'pull'"
+                                        "\nSee 'sarus help pull'");
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
 
         try {
