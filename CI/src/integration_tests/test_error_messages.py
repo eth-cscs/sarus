@@ -142,6 +142,15 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Cannot find image 'index.docker.io/library/invalid-image-9as7302j:latest'"
         self._check(command, expected_message)
 
+    def test_command_run(self):
+        command = ["sarus", "run", "--invalid-option", "alpine:latest", "true"]
+        expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help run'"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "///", "true"]
+        expected_message = "Invalid image ID '///'"
+        self._check(command, expected_message)
+
     def test_command_sshkeygen(self):
         command = ["sarus", "ssh-keygen", "--invalid-option"]
         expected_message = "Command 'ssh-keygen' doesn't support options\nSee 'sarus help ssh-keygen'"

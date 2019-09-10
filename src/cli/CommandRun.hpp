@@ -130,7 +130,6 @@ private:
             boost::program_options::notify(values);
 
             conf->useCentralizedRepository = values.count("centralized-repository");
-            conf->directories.initialize(conf->useCentralizedRepository, *conf);
 
             if(values.count("tty")) {
                 conf->commandRun.allocatePseudoTTY = true;
@@ -150,8 +149,6 @@ private:
                 conf->commandRun.enableSSH = true;
             }
 
-            conf->imageID = cli::utility::parseImageID(argsGroups[1]);
-
             makeSiteMountObjects();
             makeUserMountObjects();
 
@@ -159,8 +156,14 @@ private:
             conf->commandRun.execArgs = std::accumulate(argsGroups.cbegin()+2, argsGroups.cend(), common::CLIArguments{});
         }
         catch (std::exception& e) {
-            SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of run command");
+            auto message = boost::format("%s\nSee 'sarus help run'") % e.what();
+            cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
+
+        conf->directories.initialize(conf->useCentralizedRepository, *conf);
+        conf->imageID = cli::utility::parseImageID(argsGroups[1]);
+
 
         cli::utility::printLog("successfully parsed CLI arguments", common::LogLevel::DEBUG);
     }
