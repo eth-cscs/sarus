@@ -69,14 +69,14 @@ private:
             auto message = boost::format("Command 'ssh-keygen' doesn't support additional arguments"
                                          "\nSee 'sarus help ssh-keygen'");
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         if(argsGroups[0].argc() > 1) {
             auto message = boost::format("Command 'ssh-keygen' doesn't support options"
                                          "\nSee 'sarus help ssh-keygen'");
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);

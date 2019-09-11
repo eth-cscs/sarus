@@ -61,14 +61,14 @@ private:
             auto message = boost::format("Command 'version' doesn't support extra argument '%s'"
                                          "\nSee 'sarus help version'") % argsGroups[1].argv()[0];
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
         // the version command doesn't support options
         if(!argsGroups.empty() && argsGroups[0].argc() > 1) {
             auto message = boost::format("Command 'version' doesn't support options"
                                          "\nSee 'sarus help version'");
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);

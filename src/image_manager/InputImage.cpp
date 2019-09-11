@@ -31,7 +31,7 @@ boost::filesystem::path InputImage::makeTemporaryExpansionDirectory() const {
     catch(common::Error& e) {
         auto message = boost::format("Invalid temporary directory %s") % config->directories.temp;
         log(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_RETHROW_ERROR(e, message.str(), common::LogLevel::DEBUG);
+        SARUS_RETHROW_ERROR(e, message.str(), common::LogLevel::INFO);
     }
     return tempExpansionDir;
 }

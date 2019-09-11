@@ -80,7 +80,7 @@ private:
             auto message = boost::format("Bad number of arguments for command 'load'"
                                         "\nSee 'sarus help load'");
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         try {
@@ -101,7 +101,7 @@ private:
         catch (std::exception& e) {
             auto message = boost::format("%s\nSee 'sarus help load'") % e.what();
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);

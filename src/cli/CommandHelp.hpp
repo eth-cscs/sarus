@@ -32,7 +32,7 @@ public:
         if(!argsGroups.empty() && argsGroups[0].argc() > 1) {
             auto message = boost::format("Command 'help' doesn't support options");
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
     }
 

@@ -82,7 +82,7 @@ private:
             auto message = boost::format("Bad number of arguments for command 'pull'"
                                         "\nSee 'sarus help pull'");
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         try {
@@ -103,7 +103,7 @@ private:
         catch (std::exception& e) {
             auto message = boost::format("%s\nSee 'sarus help pull'") % e.what();
             cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         conf->directories.initialize(conf->useCentralizedRepository, *conf);

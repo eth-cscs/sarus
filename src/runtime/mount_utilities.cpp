@@ -33,7 +33,7 @@ void validateMountSource(const boost::filesystem::path& source) {
     if (!boost::filesystem::exists(source)) {
         auto message = boost::format("Invalid mount request: mount source '%s' doesn't exist") % source.string();
         utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 }
 
@@ -43,7 +43,7 @@ void validateMountDestination(const boost::filesystem::path& destination, const 
     if(destination == "") {
         auto message = boost::format("Invalid mount request: empty mount destination");
         utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
     /* If the destination does not exist, check its parents */
@@ -71,7 +71,7 @@ void validateMountDestination(const boost::filesystem::path& destination, const 
             auto message = boost::format("Invalid mount request: mount destination '%s' is not on an allowed device for mounts")
                 % destination;
             utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
     }
     /* If destination exists, check it is on an allowed device */
@@ -79,7 +79,7 @@ void validateMountDestination(const boost::filesystem::path& destination, const 
         auto message = boost::format("Invalid mount request: mount destination '%s' is not on an allowed device for mounts")
                 % destination;
         utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 }
 

@@ -51,7 +51,7 @@ public:
             auto message = boost::format("Failed to check the SSH keys. Hint: try to"
                                          " generate the SSH keys with 'sarus ssh-keygen'.");
             common::Logger::getInstance().log(message, "CLI", common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         verifyThatImageIsAvailable();
@@ -150,7 +150,7 @@ private:
         catch (std::exception& e) {
             auto message = boost::format("%s\nSee 'sarus help run'") % e.what();
             cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         // the remaining arguments (after image) are all part of the command to be executed in the container

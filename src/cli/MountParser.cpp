@@ -72,7 +72,7 @@ std::unique_ptr<runtime::Mount> MountParser::parseMountRequest(const std::unorde
         auto message = boost::format("Invalid mount request '%s': 'type' must be specified")
             % convertRequestMapToString(requestMap);
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
     // Check that one and only one of the key variants for the destination is in use
@@ -83,13 +83,13 @@ std::unique_ptr<runtime::Mount> MountParser::parseMountRequest(const std::unorde
         auto message = boost::format("Invalid mount request '%s': no destination specified. "
                 "Use one of 'destination', 'dst' or 'target'.") % convertRequestMapToString(requestMap);
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
     if (destination_count ? (dst_count || target_count) : (dst_count && target_count)) {
         auto message = boost::format("Invalid mount request '%s': multiple formats used to specify mount destination. "
                 "Use only one of 'destination', 'dst' or 'target'.") % convertRequestMapToString(requestMap);
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
     // Parse sub-options for different mount types separately
@@ -100,7 +100,7 @@ std::unique_ptr<runtime::Mount> MountParser::parseMountRequest(const std::unorde
         auto message = boost::format("Invalid mount request '%s': '%s' is not a valid mount type")
             % convertRequestMapToString(requestMap) % requestMap.at("type");
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 }
 
@@ -114,7 +114,7 @@ std::unique_ptr<runtime::Mount> MountParser::parseBindMountRequest(const std::un
                                          "Use either 'source' or 'src'.")
                 % convertRequestMapToString(requestMap);
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
         source = requestMap.at("source");
     }
@@ -125,7 +125,7 @@ std::unique_ptr<runtime::Mount> MountParser::parseBindMountRequest(const std::un
         auto message = boost::format("Invalid mount request '%s': no source specified. User either 'source' or 'src'.")
             % convertRequestMapToString(requestMap);
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
     validateMountSource(source);
@@ -177,7 +177,7 @@ unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::s
                 auto message = boost::format("Invalid mount request '%s': option 'readonly' is not allowed")
                     % convertRequestMapToString(requestMap);
                 utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
             }
             flags |= MS_RDONLY;
         }
@@ -187,7 +187,7 @@ unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::s
                     auto message = boost::format("Invalid mount request '%s': option 'bind-propagation=recursive' is not allowed")
                         % convertRequestMapToString(requestMap);
                     utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                    SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+                    SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
                 }
                 flags |= MS_REC;
             }
@@ -196,7 +196,7 @@ unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::s
                     auto message = boost::format("Invalid mount request '%s': option 'bind-propagation=slave' is not allowed")
                         % convertRequestMapToString(requestMap);
                     utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                    SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+                    SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
                 }
                 flags |= MS_SLAVE;
             }
@@ -205,7 +205,7 @@ unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::s
                     auto message = boost::format("Invalid mount request '%s': option 'bind-propagation=rslave' is not allowed")
                         % convertRequestMapToString(requestMap);
                     utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                    SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+                    SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
                 }
                 flags |= MS_SLAVE;
                 flags |= MS_REC;
@@ -215,7 +215,7 @@ unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::s
                     auto message = boost::format("Invalid mount request '%s': option 'bind-propagation=private' is not allowed")
                         % convertRequestMapToString(requestMap);
                     utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                    SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+                    SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
                 }
                 flags |= MS_PRIVATE;
             }
@@ -224,7 +224,7 @@ unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::s
                     auto message = boost::format("Invalid mount request '%s': option 'bind-propagation=rprivate' is not allowed")
                         % convertRequestMapToString(requestMap);
                     utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                    SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+                    SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
                 }
                 flags |= MS_PRIVATE;
                 flags |= MS_REC;
@@ -233,14 +233,14 @@ unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::s
                 auto message = boost::format("Invalid mount request '%s': '%s' is not a valid bind propagation value")
                     % convertRequestMapToString(requestMap) % opt.second;
                 utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
             }
         }
         else {
             auto message = boost::format("Invalid mount request '%s': '%s' is not a valid bind mount option")
                 % convertRequestMapToString(requestMap) % opt.first;
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
     }
 
@@ -251,14 +251,14 @@ void MountParser::validateMountSource(const boost::filesystem::path& source) {
     if (source == "") {
         auto message = boost::format("Invalid mount source (empty)");
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
     if (source.is_relative()) {
         auto message = boost::format("Invalid mount source '%s': only absolute paths are allowed")
             % source.string();
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
     for (const auto& disallowed_prefix : validationSettings.sourceDisallowedWithPrefix) {
@@ -266,7 +266,7 @@ void MountParser::validateMountSource(const boost::filesystem::path& source) {
             auto message = boost::format("Invalid mount source '%s': mounts from '%s' and its subdirectories are not allowed")
                 % source.string() % disallowed_prefix;
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
     }
     for (const auto& disallowed : validationSettings.sourceDisallowedExact) {
@@ -274,7 +274,7 @@ void MountParser::validateMountSource(const boost::filesystem::path& source) {
             auto message = boost::format("Invalid mount source '%s': mounts from '%s' are not allowed")
                 % source.string() % disallowed;
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
     }
 }
@@ -283,14 +283,14 @@ void MountParser::validateMountDestination(const boost::filesystem::path& destin
     if (destination == "") {
         auto message = boost::format("Invalid mount destination (empty)");
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
     if (destination.is_relative()) {
         auto message = boost::format("Invalid mount destination '%s': only absolute paths are allowed")
             % destination.string();
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
     for (const auto& disallowed_prefix : validationSettings.destinationDisallowedWithPrefix) {
@@ -298,7 +298,7 @@ void MountParser::validateMountDestination(const boost::filesystem::path& destin
             auto message = boost::format("Invalid mount destination '%s': mounts to '%s' and its subdirectories are not allowed")
                 % destination.string() % disallowed_prefix;
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
     }
     for (const auto& disallowed : validationSettings.destinationDisallowedExact) {
@@ -306,7 +306,7 @@ void MountParser::validateMountDestination(const boost::filesystem::path& destin
             auto message = boost::format("Invalid mount destination '%s': mounts to '%s' are not allowed")
                 % destination.string() % disallowed;
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
     }
 }

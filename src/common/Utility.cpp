@@ -520,7 +520,7 @@ std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(
         if(std::distance(keyBegin, keyEnd) == 0) {
             auto message = boost::format("Error: found empty key in '%s'. Expected a list of key-value pairs.") % kvList;
             logMessage(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         auto key = std::string(keyBegin, keyEnd);
@@ -535,7 +535,7 @@ std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(
                 auto message = boost::format("Error: found empty value for key '%s' in '%s'. Expected a list of key-value pairs.")
                     % key % kvList;
                 logMessage(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
             }
 
             value = std::string(valueBegin, valueEnd);
@@ -552,7 +552,7 @@ std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(
             auto message = boost::format("Error: found duplicated key '%s' in '%s'. Expected a list of unique key-value pairs.")
                 % key % kvList;
             logMessage(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         map[key] = value;
@@ -564,7 +564,7 @@ std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(
                 auto message = boost::format("Error: list of key-value pairs '%s' is malformed (list terminates with '%s')")
                     % kvList % kvList.back();
                 logMessage(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
             }
         }
     }

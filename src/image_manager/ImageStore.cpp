@@ -94,7 +94,7 @@ namespace image_manager {
         if (!imageMetadata) {
             auto message = boost::format("Cannot find image '%s'") % config->imageID;
             printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         printLog(boost::format("Success to find unique key"), common::LogLevel::DEBUG);

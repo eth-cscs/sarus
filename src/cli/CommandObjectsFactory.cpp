@@ -54,7 +54,7 @@ std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(const std
         auto message = boost::format("'%s' is not a Sarus command\nSee 'sarus help'")
             % commandName;
         common::Logger::getInstance().log(message, "CommandObjectsFactory", common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
     auto it = map.find(commandName);
     return it->second();
@@ -68,7 +68,7 @@ std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(
         auto message = boost::format("'%s' is not a Sarus command\nSee 'sarus help'")
             % commandName;
         common::Logger::getInstance().log(message, "CommandObjectsFactory", common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
     auto it = mapWithArguments.find(commandName);
     return it->second(commandArgsGroups, std::move(config));

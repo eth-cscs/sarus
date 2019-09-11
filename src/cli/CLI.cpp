@@ -53,7 +53,7 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
     catch (const std::exception& e) {
         auto message = boost::format("Error while parsing the command line: %s") % e.what();
         logger.log(message, "CLI", common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
     // configure logger
@@ -136,13 +136,13 @@ std::unique_ptr<cli::Command> CLI::parseCommandHelpOfCommand(const std::deque<co
     if(argsGroups[0].argc() > 1) {
         auto message = boost::format("Command 'help' doesn't support options");
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
     if(argsGroups.size() > 2) {
         auto message = boost::format("Command 'help' doesn't support extra argument '%s'"
                                      "\nSee 'sarus help help'") % argsGroups[2].argv()[0];
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
     auto factory = cli::CommandObjectsFactory{};
     auto commandName = std::string{ argsGroups[1].argv()[0] };

@@ -298,7 +298,7 @@ namespace image_manager {
                     "\nSee 'sarus help pull' (--login option)"}
                     % config->imageID;
             printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_RETHROW_ERROR(e, message.str(), common::LogLevel::DEBUG);
+            SARUS_RETHROW_ERROR(e, message.str(), common::LogLevel::INFO);
         }
 
         web::http::client::http_client      client( getServerUri(config->imageID.server) );
@@ -321,7 +321,7 @@ namespace image_manager {
 
             message = boost::format{"Failed to pull manifest. Received http_response status code(%s): %s"}
                 % response.status_code() % response.reason_phrase();
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
         
         auto manifest = response.extract_json(true).get();

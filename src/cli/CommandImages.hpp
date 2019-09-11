@@ -118,7 +118,7 @@ private:
             auto message = boost::format("Command 'images' doesn't support extra argument '%s'"
                                         "\nSee 'sarus help images'") % argsGroups[1].argv()[0];
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         try {
@@ -135,7 +135,7 @@ private:
         catch(std::exception& e) {
             auto message = boost::format("%s\nSee 'sarus help images'") % e.what();
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         cli::utility::printLog( boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
