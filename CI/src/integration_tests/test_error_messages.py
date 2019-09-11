@@ -7,6 +7,7 @@
 
 import unittest
 import os
+import shutil
 import subprocess
 
 import common.util as util
@@ -157,6 +158,12 @@ class TestErrorMessages(unittest.TestCase):
 
         command = ["sarus", "run", "--mount=src=/invalid-s87dfs9,dst=/dst,type=bind", "alpine:latest", "true"]
         expected_message = "Invalid mount request: mount source '/invalid-s87dfs9' doesn't exist"
+        self._check(command, expected_message)
+
+        sarus_ssh_dir = os.getenv("HOME") + "/.sarus/ssh"
+        shutil.rmtree(sarus_ssh_dir, ignore_errors=True) # remove ssh keys
+        command = ["sarus", "run", "--ssh", "alpine:latest", "true"]
+        expected_message = "Failed to check the SSH keys. Hint: try to generate the SSH keys with 'sarus ssh-keygen'."
         self._check(command, expected_message)
 
     def test_command_sshkeygen(self):

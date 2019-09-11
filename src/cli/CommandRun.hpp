@@ -48,12 +48,10 @@ public:
         cli::utility::printLog("Executing run command", common::LogLevel::INFO);
 
         if(conf->commandRun.enableSSH && !checkSshKeysInLocalRepository()) {
-            common::Logger::getInstance().log(
-                "Failed to check the SSH keys. Hint: try to generate the SSH keys"
-                " with the \"sarus ssh-keygen\" command first",
-                "CLI",
-                common::LogLevel::GENERAL, std::cerr);
-            return;
+            auto message = boost::format("Failed to check the SSH keys. Hint: try to"
+                                         " generate the SSH keys with 'sarus ssh-keygen'.");
+            common::Logger::getInstance().log(message, "CLI", common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
 
         verifyThatImageIsAvailable();
