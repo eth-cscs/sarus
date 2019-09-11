@@ -22,11 +22,18 @@ class FileDescriptorHandler {
 public:
     FileDescriptorHandler(std::shared_ptr<common::Config>);
     void prepareFileDescriptorsToPreserve();
-    std::string getExtraFileDescriptors() const {return extraFileDescriptors;};
+    int getExtraFileDescriptors() const {return extraFileDescriptors;};
+
+private:
+    void detectFileDescriptorsToPreserve();
+    void closeUnwantedFileDescriptors();
+    void updateExtraFileDescriptors(int fd);
 
 private:
     std::shared_ptr<common::Config> config;
-    std::string extraFileDescriptors;
+    std::unordered_map<std::string, std::string> hostEnvironment;
+    std::unordered_map<std::string, unsigned int> fileDescriptorsToPreserve;
+    int extraFileDescriptors;
 };
 
 }

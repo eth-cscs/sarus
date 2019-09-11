@@ -64,8 +64,9 @@ void Runtime::executeContainer() const {
 
     // execute runc
     auto runcPath = config->json["runcPath"].GetString();
+    auto extraFileDescriptors = std::to_string(descriptorHandler.getExtraFileDescriptors());
     auto args = common::CLIArguments{runcPath, "run", "--no-pivot",
-                                     "--preserve-fds", descriptorHandler.getExtraFileDescriptors(),
+                                     "--preserve-fds", extraFileDescriptors,
                                      containerID};
     common::forkExecWait(args);
 
