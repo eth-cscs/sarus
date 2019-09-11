@@ -151,6 +151,14 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Invalid image ID '///'"
         self._check(command, expected_message)
 
+        command = ["sarus", "run", "--mount=xyz", "alpine:latest", "true"]
+        expected_message = "Invalid mount request 'xyz': 'type' must be specified"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--mount=src=/invalid-s87dfs9,dst=/dst,type=bind", "alpine:latest", "true"]
+        expected_message = "Invalid mount request: mount source '/invalid-s87dfs9' doesn't exist"
+        self._check(command, expected_message)
+
     def test_command_sshkeygen(self):
         command = ["sarus", "ssh-keygen", "--invalid-option"]
         expected_message = "Command 'ssh-keygen' doesn't support options\nSee 'sarus help ssh-keygen'"

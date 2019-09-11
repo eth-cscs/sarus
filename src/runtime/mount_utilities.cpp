@@ -31,8 +31,9 @@ namespace runtime {
 void validateMountSource(const boost::filesystem::path& source) {
     // check that directory exists, i.e. is visible to user
     if (!boost::filesystem::exists(source)) {
-        auto message = boost::format("Custom mount source location doesn't exist: %s") % source;
-        SARUS_THROW_ERROR(message.str());
+        auto message = boost::format("Invalid mount request: mount source '%s' doesn't exist") % source.string();
+        utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
     }
 }
 
@@ -40,7 +41,9 @@ void validateMountSource(const boost::filesystem::path& source) {
 void validateMountDestination(const boost::filesystem::path& destination, const common::Config& config) {
     /* Check that destination is valid */
     if(destination == "") {
-        SARUS_THROW_ERROR("Custom mount destination is invalid.");
+        auto message = boost::format("Invalid mount request: empty mount destination");
+        utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
     }
 
     /* If the destination does not exist, check its parents */
@@ -65,18 +68,18 @@ void validateMountDestination(const boost::filesystem::path& destination, const 
         }
 
         if(!isPathOnBindMountableDevice(*deepestExistingFolder, config)) {
-            auto message =
-                boost::format("Custom mount destination is not on an allowed device for custom mounts: %s")
+            auto message = boost::format("Invalid mount request: mount destination '%s' is not on an allowed device for mounts")
                 % destination;
-            SARUS_THROW_ERROR(message.str());
+            utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
     }
     /* If destination exists, check it is on an allowed device */
     else if (!isPathOnBindMountableDevice(destination, config)) {
-        auto message =
-            boost::format("Custom mount destination is not on an allowed device for custom mounts: %s")
-            % destination;
-        SARUS_THROW_ERROR(message.str());
+        auto message = boost::format("Invalid mount request: mount destination '%s' is not on an allowed device for mounts")
+                % destination;
+        utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
     }
 }
 

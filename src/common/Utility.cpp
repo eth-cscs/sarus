@@ -520,7 +520,9 @@ std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(
 
         // check for empty key
         if(std::distance(keyBegin, keyEnd) == 0) {
-            SARUS_THROW_ERROR("error while parsing a malformed list of key-value pairs (found empty key)");
+            auto message = boost::format("Error: found empty key in '%s'. Expected a list of key-value pairs.") % kvList;
+            logMessage(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
 
         auto key = std::string(keyBegin, keyEnd);
@@ -532,7 +534,10 @@ std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(
             auto valueEnd = std::find(valueBegin, kvList.cend(), pairSeparator);
 
             if(std::distance(valueBegin, valueEnd) == 0) {
-                SARUS_THROW_ERROR("error while parsing a malformed list of key-value pairs (found empty value)");
+                auto message = boost::format("Error: found empty value for key '%s' in '%s'. Expected a list of key-value pairs.")
+                    % key % kvList;
+                logMessage(message, common::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
             }
 
             value = std::string(valueBegin, valueEnd);
@@ -546,7 +551,10 @@ std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(
 
         // check for duplicated keys
         if(map.find(key) != map.cend()) {
-            SARUS_THROW_ERROR("error while parsing a malformed list of key-value pairs (found duplicated key)");
+            auto message = boost::format("Error: found duplicated key '%s' in '%s'. Expected a list of unique key-value pairs.")
+                % key % kvList;
+            logMessage(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
 
         map[key] = value;
@@ -555,7 +563,10 @@ std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(
         if(keyBegin != kvList.cend()) {
             ++keyBegin;
             if(keyBegin == kvList.cend()) {
-                SARUS_THROW_ERROR("error while parsing a malformed list of key-value pairs (list terminated with \",\")");
+                auto message = boost::format("Error: list of key-value pairs '%s' is malformed (list terminates with '%s')")
+                    % kvList % kvList.back();
+                logMessage(message, common::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
             }
         }
     }
@@ -783,13 +794,13 @@ rapidjson::Document convertCppRestJsonToRapidJson(web::json::value& cppRest) {
     }
 }
 
-void logMessage(const boost::format& message, LogLevel level) {
-    logMessage(message.str(), level);
+void logMessage(const boost::format& message, LogLevel level, std::ostream& out, std::ostream& err) {
+    logMessage(message.str(), level, out, err);
 }
 
-void logMessage(const std::string& message, LogLevel level) {
+void logMessage(const std::string& message, LogLevel level, std::ostream& out, std::ostream& err) {
     auto subsystemName = "CommonUtility";
-    common::Logger::getInstance().log(message, subsystemName, level);
+    common::Logger::getInstance().log(message, subsystemName, level, out, err);
 }
 
 } // namespace

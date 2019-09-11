@@ -148,12 +148,6 @@ private:
             if(values.count("ssh")) {
                 conf->commandRun.enableSSH = true;
             }
-
-            makeSiteMountObjects();
-            makeUserMountObjects();
-
-            // the remaining arguments (after image) are all part of the command to be executed in the container
-            conf->commandRun.execArgs = std::accumulate(argsGroups.cbegin()+2, argsGroups.cend(), common::CLIArguments{});
         }
         catch (std::exception& e) {
             auto message = boost::format("%s\nSee 'sarus help run'") % e.what();
@@ -161,9 +155,13 @@ private:
             SARUS_THROW_ERROR(message.str(), common::LogLevel::DEBUG);
         }
 
+        // the remaining arguments (after image) are all part of the command to be executed in the container
+        conf->commandRun.execArgs = std::accumulate(argsGroups.cbegin()+2, argsGroups.cend(), common::CLIArguments{});
         conf->directories.initialize(conf->useCentralizedRepository, *conf);
         conf->imageID = cli::utility::parseImageID(argsGroups[1]);
 
+        makeSiteMountObjects();
+        makeUserMountObjects();
 
         cli::utility::printLog("successfully parsed CLI arguments", common::LogLevel::DEBUG);
     }
