@@ -41,7 +41,7 @@ std::string removeWhitespaces(const std::string&);
 std::string replaceString(std::string &buf, const std::string& from, const std::string& to);
 std::string eraseFirstAndLastDoubleQuote(const std::string& buf);
 std::string executeCommand(const std::string& command);
-void forkExecWait(const common::CLIArguments& args, const boost::optional<boost::filesystem::path>& chrootJail = {});
+int forkExecWait(const common::CLIArguments& args, const boost::optional<boost::filesystem::path>& chrootJail = {});
 void SetStdinEcho(bool);
 std::string getHostname();
 std::string getUsername(const common::Config&);

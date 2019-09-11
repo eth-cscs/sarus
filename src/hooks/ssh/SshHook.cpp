@@ -186,7 +186,12 @@ void SshHook::patchPasswdIfNecessary() const {
 }
 
 void SshHook::startSshdInContainer() const {
-    sarus::common::forkExecWait({"/opt/sarus/openssh/sbin/sshd"}, rootfsDir);
+    auto status = sarus::common::forkExecWait({"/opt/sarus/openssh/sbin/sshd"}, rootfsDir);
+    if(status != 0) {
+        auto message = boost::format("/opt/sarus/openssh/sbin/sshd exited with status %d")
+            % status;
+        SARUS_THROW_ERROR(message.str());
+    }
 }
 
 }}} // namespace

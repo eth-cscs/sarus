@@ -168,7 +168,7 @@ std::string executeCommand(const std::string& command) {
     return commandOutput;
 }
 
-void forkExecWait(const common::CLIArguments& args, const boost::optional<boost::filesystem::path>& chrootJail) {
+int forkExecWait(const common::CLIArguments& args, const boost::optional<boost::filesystem::path>& chrootJail) {
     logMessage(boost::format("Executing %s") % args, common::LogLevel::DEBUG);
 
     // fork and execute
@@ -207,14 +207,12 @@ void forkExecWait(const common::CLIArguments& args, const boost::optional<boost:
                 % args;
             SARUS_THROW_ERROR(message.str());
         }
-        else if(WEXITSTATUS(status) != 0) {
-            auto message = boost::format("Subprocess %s exited with error status %s")
-                % args % WEXITSTATUS(status);
-            SARUS_THROW_ERROR(message.str());
-        }
-    }
 
-    logMessage(boost::format("Successfully executed %s") % args, common::LogLevel::DEBUG);
+        logMessage( boost::format("%s exited with status %d") % args % WEXITSTATUS(status),
+                    common::LogLevel::DEBUG);
+
+        return WEXITSTATUS(status);
+    }
 }
 
 void SetStdinEcho(bool flag)

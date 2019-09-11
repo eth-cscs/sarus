@@ -166,6 +166,15 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Failed to check the SSH keys. Hint: try to generate the SSH keys with 'sarus ssh-keygen'."
         self._check(command, expected_message)
 
+        command = ["sarus", "run", "alpine:latest", "invalid-command-2lk32ldk2"]
+        expected_message = ("container_linux.go:345: starting container process caused"
+                            " \"exec: \\\"invalid-command-2lk32ldk2\\\": executable file not found in $PATH\"")
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "alpine:latest", "ls", "invalid-directory-2lk32ldk2"]
+        expected_message = "ls: invalid-directory-2lk32ldk2: No such file or directory"
+        self._check(command, expected_message)
+
     def test_command_sshkeygen(self):
         command = ["sarus", "ssh-keygen", "--invalid-option"]
         expected_message = "Command 'ssh-keygen' doesn't support options\nSee 'sarus help ssh-keygen'"

@@ -63,7 +63,12 @@ void Runtime::executeContainer() const {
     // execute runc
     auto runcPath = config->json["runcPath"].GetString();
     auto args = common::CLIArguments{runcPath, "run", "--no-pivot", containerID};
-    common::forkExecWait(args);
+    auto status = common::forkExecWait(args);
+    if(status != 0) {
+        auto message = boost::format("%s exited with code %d") % args % status;
+        utility::logMessage(message, common::LogLevel::INFO);
+        exit(status);
+    }
 
     utility::logMessage("Successfully executed " + containerID, common::LogLevel::INFO);
 }
