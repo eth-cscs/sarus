@@ -148,6 +148,10 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help run'"
         self._check(command, expected_message)
 
+        command = ["sarus", "run"]
+        expected_message = "Bad number of arguments for command 'run'\nSee 'sarus help run'"
+        self._check(command, expected_message)
+
         command = ["sarus", "run", "///", "true"]
         expected_message = "Invalid image ID '///'"
         self._check(command, expected_message)

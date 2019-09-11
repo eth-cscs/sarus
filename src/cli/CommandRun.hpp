@@ -111,10 +111,12 @@ private:
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
         cli::utility::printLog("parsing CLI arguments of run command", common::LogLevel::DEBUG);
 
-        // the run command arguments (run [options] <image> [commands to execute]) are composed
-        // by at least two groups of arguments (run + image)
+        // the run command expects at least two arguments (run + image)
         if(argsGroups.size() < 2) {
-            SARUS_THROW_ERROR("failed to parse CLI arguments of run command (too few arguments provided)");
+            auto message = boost::format("Bad number of arguments for command 'run'"
+                                        "\nSee 'sarus help run'");
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         try {
