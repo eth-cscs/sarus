@@ -139,8 +139,8 @@ std::unique_ptr<cli::Command> CLI::parseCommandHelpOfCommand(const std::deque<co
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
     if(argsGroups.size() > 2) {
-        auto message = boost::format("Command 'help' doesn't support extra argument '%s'"
-                                     "\nSee 'sarus help help'") % argsGroups[2].argv()[0];
+        auto message = boost::format("Bad number of arguments for command 'help'"
+                                     "\nSee 'sarus help help'");
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }

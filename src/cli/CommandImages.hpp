@@ -115,8 +115,7 @@ private:
 
         // the images command doesn't support additional arguments
         if(argsGroups.size() > 1) {
-            auto message = boost::format("Command 'images' doesn't support extra argument '%s'"
-                                        "\nSee 'sarus help images'") % argsGroups[1].argv()[0];
+            auto message = boost::format("Bad number of arguments for command 'images'\nSee 'sarus help images'");
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }

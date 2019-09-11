@@ -38,20 +38,20 @@ namespace common {
         : level{ common::LogLevel::WARN }
     {}
 
-    void Logger::log(const std::string& message, const std::string& systemName, const common::LogLevel& LogLevel,
+    void Logger::log(const std::string& message, const std::string& systemName, const common::LogLevel& logLevel,
     		std::ostream& out_stream, std::ostream& err_stream) {
-        if(LogLevel < level) {
+        if(logLevel < level) {
             return;
         }
 
-        auto fullLogMessage = makeSubmessageWithTimestamp(LogLevel)
-            + makeSubmessageWithSarusInstanceID(LogLevel)
-            + makeSubmessageWithSystemName(LogLevel, systemName)
-            + makeSubmessageWithLogLevel(LogLevel)
+        auto fullLogMessage = makeSubmessageWithTimestamp(logLevel)
+            + makeSubmessageWithSarusInstanceID(logLevel)
+            + makeSubmessageWithSystemName(logLevel, systemName)
+            + makeSubmessageWithLogLevel(logLevel)
             + message;
 
         // WARNING and ERROR messages go to stderr
-        if ( LogLevel == common::LogLevel::WARN || LogLevel == common::LogLevel::ERROR ) {
+        if ( logLevel == common::LogLevel::WARN || logLevel == common::LogLevel::ERROR ) {
             err_stream << fullLogMessage << std::endl;
         }
         // rest goes to stdout
@@ -60,9 +60,9 @@ namespace common {
         }
     }
 
-    void Logger::log(const boost::format& message, const std::string& systemName, const common::LogLevel& LogLevel,
+    void Logger::log(const boost::format& message, const std::string& systemName, const common::LogLevel& logLevel,
     		std::ostream& out_stream, std::ostream& err_stream) {
-        log(message.str(), systemName, LogLevel, out_stream, err_stream);
+        log(message.str(), systemName, logLevel, out_stream, err_stream);
     }
 
     void Logger::logErrorTrace( const common::Error& error, const std::string& systemName, std::ostream& errStream) {
@@ -81,8 +81,8 @@ namespace common {
         }
     }
 
-    std::string Logger::makeSubmessageWithTimestamp(common::LogLevel LogLevel) const {
-        if(LogLevel == common::LogLevel::GENERAL) {
+    std::string Logger::makeSubmessageWithTimestamp(common::LogLevel logLevel) const {
+        if(logLevel == common::LogLevel::GENERAL) {
             return "";
         }
 
@@ -96,8 +96,8 @@ namespace common {
         return timestamp.str();
     }
 
-    std::string Logger::makeSubmessageWithSarusInstanceID(common::LogLevel LogLevel) const {
-        if(LogLevel == common::LogLevel::GENERAL) {
+    std::string Logger::makeSubmessageWithSarusInstanceID(common::LogLevel logLevel) const {
+        if(logLevel == common::LogLevel::GENERAL) {
             return "";
         }
 
@@ -105,16 +105,16 @@ namespace common {
         return id.str();
     }
 
-    std::string Logger::makeSubmessageWithSystemName(common::LogLevel LogLevel, const std::string& systemName) const {
-        if(LogLevel == common::LogLevel::GENERAL) {
+    std::string Logger::makeSubmessageWithSystemName(common::LogLevel logLevel, const std::string& systemName) const {
+        if(logLevel == common::LogLevel::GENERAL) {
             return "";
         }
 
         return "[" + systemName + "] ";
     }
 
-    std::string Logger::makeSubmessageWithLogLevel(common::LogLevel LogLevel) const {
-        switch(LogLevel) {
+    std::string Logger::makeSubmessageWithLogLevel(common::LogLevel logLevel) const {
+        switch(logLevel) {
             case common::LogLevel::DEBUG:   return "[DEBUG] ";
             case common::LogLevel::INFO :   return "[INFO] ";
             case common::LogLevel::WARN :   return "[WARN] ";

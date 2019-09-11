@@ -328,9 +328,9 @@ namespace image_manager {
 
         // check manifest
         if ( manifest.has_field(U("errors")) ) {
-            auto message = boost::format(   "Failed to get manifest. Possible reasons: bad image ID specified"
-                                            " or access to repository denied (try with --login)."
-                                            " Downloaded manifest has 'errors' field: %s") % manifest.serialize();
+            auto message = boost::format("Failed to retrieve manifest for image %s."
+                                         " Downloaded manifest has 'errors' field: %s")
+                % config->imageID % manifest.serialize();
             SARUS_THROW_ERROR(message.str());
         }
 

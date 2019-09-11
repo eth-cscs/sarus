@@ -43,7 +43,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "help", "run", "extra-argument"]
-        expected_message = "Command 'help' doesn't support extra argument 'extra-argument'\nSee 'sarus help help'"
+        expected_message = "Bad number of arguments for command 'help'\nSee 'sarus help help'"
         self._check(command, expected_message)
 
     def test_command_images(self):
@@ -52,7 +52,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "images", "extra-argument"]
-        expected_message = "Command 'images' doesn't support extra argument 'extra-argument'\nSee 'sarus help images'"
+        expected_message = "Bad number of arguments for command 'images'\nSee 'sarus help images'"
         self._check(command, expected_message)
 
     def test_command_load(self):
@@ -184,8 +184,8 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Command 'ssh-keygen' doesn't support options\nSee 'sarus help ssh-keygen'"
         self._check(command, expected_message)
 
-        command = ["sarus", "ssh-keygen", "additional_argument"]
-        expected_message = "Command 'ssh-keygen' doesn't support additional arguments\nSee 'sarus help ssh-keygen'"
+        command = ["sarus", "ssh-keygen", "extra-argument"]
+        expected_message = "Command 'ssh-keygen' doesn't support extra arguments\nSee 'sarus help ssh-keygen'"
         self._check(command, expected_message)
 
     def test_command_version(self):
@@ -194,7 +194,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "version", "extra-argument"]
-        expected_message = "Command 'version' doesn't support extra argument 'extra-argument'\nSee 'sarus help version'"
+        expected_message = "Command 'version' doesn't support extra arguments\nSee 'sarus help version'"
         self._check(command, expected_message)
 
     def _check(self, command, expected_message):

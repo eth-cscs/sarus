@@ -27,9 +27,9 @@ class Logger {
 public:
     static Logger& getInstance();
 
-    void log(const std::string& message, const std::string& sysName, const common::LogLevel& LogLevel,
+    void log(const std::string& message, const std::string& sysName, const common::LogLevel& logLevel,
     		std::ostream& out_stream = std::cout, std::ostream& err_stream = std::cerr);
-    void log(const boost::format& message, const std::string& sysName, const common::LogLevel& LogLevel,
+    void log(const boost::format& message, const std::string& sysName, const common::LogLevel& logLevel,
     		std::ostream& out_stream = std::cout, std::ostream& err_stream = std::cerr);
     void logErrorTrace(const common::Error& error, const std::string& sysName, std::ostream& errStream = std::cerr);
     void setLevel(common::LogLevel logLevel) { level = logLevel; };
@@ -40,11 +40,11 @@ private:
     Logger(const Logger&) = delete;
     Logger(Logger&&) = delete;
 
-    std::string makeSubmessageWithTimestamp(common::LogLevel LogLevel) const;
-    std::string makeSubmessageWithSarusInstanceID(common::LogLevel LogLevel) const;
-    std::string makeSubmessageWithSystemName(   common::LogLevel LogLevel,
+    std::string makeSubmessageWithTimestamp(common::LogLevel logLevel) const;
+    std::string makeSubmessageWithSarusInstanceID(common::LogLevel logLevel) const;
+    std::string makeSubmessageWithSystemName(   common::LogLevel logLevel,
                                                 const std::string& systemName) const;
-    std::string makeSubmessageWithLogLevel(common::LogLevel LogLevel) const;
+    std::string makeSubmessageWithLogLevel(common::LogLevel logLevel) const;
 
 private:
     common::LogLevel level;

@@ -38,7 +38,7 @@ void functionThatThrowsFromStdException() {
 }
 
 void functionThatThrowsWithLogLevelDebug() {
-    SARUS_THROW_ERROR("first error message", common::LogLevel::INFO);
+    SARUS_THROW_ERROR("first error message", common::LogLevel::DEBUG);
 }
 
 void functionThatRethrowsWithLogLevelDebug() {
