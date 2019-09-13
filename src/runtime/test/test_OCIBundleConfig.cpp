@@ -51,9 +51,11 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
 
     // check
     CHECK(boost::filesystem::exists(actualConfigFile));
-    auto expected = common::removeWhitespaces(common::readFile(expectedConfigFile));
-    auto actual = common::removeWhitespaces(common::readFile(actualConfigFile));
-    CHECK_EQUAL(expected, actual);
+    auto expectedPermissions = boost::filesystem::perms::owner_read | boost::filesystem::perms::owner_write;
+    CHECK_EQUAL(expectedPermissions, boost::filesystem::status(actualConfigFile).permissions())
+    auto expectedContent = common::removeWhitespaces(common::readFile(expectedConfigFile));
+    auto actualContent = common::removeWhitespaces(common::readFile(actualConfigFile));
+    CHECK_EQUAL(expectedContent, actualContent);
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();
