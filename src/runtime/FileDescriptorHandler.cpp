@@ -69,6 +69,7 @@ void FileDescriptorHandler::prepareFileDescriptorsToPreserve() {
                 auto message = boost::format("Could not duplicate %s file descriptor. Dup error: %s") % fdName % strerror(errno);
                 SARUS_THROW_ERROR(message.str());
             }
+            utility::logMessage(boost::format("New %s fd: %d") % fdName % newFd, common::logType::DEBUG);
             close(fd);
             fileDescriptorsToPreserve[newFd] = fdName;
             fileDescriptorsToPreserve.erase(it);

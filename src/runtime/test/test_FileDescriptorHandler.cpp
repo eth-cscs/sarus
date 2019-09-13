@@ -62,6 +62,7 @@ TEST(RuntimeTestGroup, prepareFileDescriptorsToPreserve) {
     handler.prepareFileDescriptorsToPreserve();
     CHECK_EQUAL(1, handler.getExtraFileDescriptors());
     CHECK_EQUAL(std::to_string(3), config->commandRun.hostEnvironment["PMI_FD"]);
+    CHECK_EQUAL(std::string("file0"), boost::filesystem::canonical("/proc/self/fd/3").filename().string());
     CHECK_EQUAL(0, close(3)); //cleanup
 
     // test PMI_FD on highest test fd
@@ -71,6 +72,7 @@ TEST(RuntimeTestGroup, prepareFileDescriptorsToPreserve) {
     handler.prepareFileDescriptorsToPreserve();
     CHECK_EQUAL(1, handler.getExtraFileDescriptors());
     CHECK_EQUAL(std::to_string(3), config->commandRun.hostEnvironment["PMI_FD"]);
+    CHECK_EQUAL(std::string("file2"), boost::filesystem::canonical("/proc/self/fd/3").filename().string());
     CHECK_EQUAL(0, close(3)); //cleanup
 
     // test PMI_FD on highest test fd with gap (close fds before it)
@@ -82,6 +84,7 @@ TEST(RuntimeTestGroup, prepareFileDescriptorsToPreserve) {
     handler.prepareFileDescriptorsToPreserve();
     CHECK_EQUAL(1, handler.getExtraFileDescriptors());
     CHECK_EQUAL(std::to_string(3), config->commandRun.hostEnvironment["PMI_FD"]);
+    CHECK_EQUAL(std::string("file2"), boost::filesystem::canonical("/proc/self/fd/3").filename().string());
     CHECK_EQUAL(0, close(3)); //cleanup
 }
 
