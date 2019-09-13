@@ -26,13 +26,11 @@ public:
 
 private:
     void detectFileDescriptorsToPreserve();
-    void closeUnwantedFileDescriptors();
-    void updateExtraFileDescriptors(int fd);
+    std::vector<int> getOpenFileDescriptors() const;
 
 private:
     std::shared_ptr<common::Config> config;
-    std::unordered_map<std::string, std::string> hostEnvironment;
-    std::unordered_map<std::string, unsigned int> fileDescriptorsToPreserve;
+    std::unordered_map<int, std::string> fileDescriptorsToPreserve;
     int extraFileDescriptors;
 };
 
