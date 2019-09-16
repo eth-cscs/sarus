@@ -30,15 +30,16 @@
 namespace sarus {
 namespace runtime {
 
-Runtime::Runtime(std::shared_ptr<const common::Config> config)
+Runtime::Runtime(std::shared_ptr<common::Config> config)
     : config{config}
     , bundleDir{ boost::filesystem::path{config->json["OCIBundleDir"].GetString()} }
     , rootfsDir{ bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()} }
     , bundleConfig{config}
+    , descriptorHandler{config}
     , securityChecks{config}
 {}
 
-void Runtime::setupOCIBundle() const {
+void Runtime::setupOCIBundle() {
     utility::logMessage("Setting up OCI Bundle", common::LogLevel::INFO);
     setupMountIsolation();
     setupRamFilesystem();
@@ -47,6 +48,7 @@ void Runtime::setupOCIBundle() const {
     copyEtcFilesIntoRootfs();
     performCustomMounts();
     remountRootfsWithNoSuid();
+    descriptorHandler.prepareFileDescriptorsToPreserve();
     bundleConfig.generateConfigFile();
     securityChecks.checkThatPathIsUntamperable(bundleConfig.getConfigFile());
     securityChecks.checkThatOCIHooksAreUntamperable();
@@ -62,7 +64,10 @@ void Runtime::executeContainer() const {
 
     // execute runc
     auto runcPath = config->json["runcPath"].GetString();
-    auto args = common::CLIArguments{runcPath, "run", "--no-pivot", containerID};
+    auto extraFileDescriptors = std::to_string(descriptorHandler.getExtraFileDescriptors());
+    auto args = common::CLIArguments{runcPath, "run", "--no-pivot",
+                                     "--preserve-fds", extraFileDescriptors,
+                                     containerID};
     auto status = common::forkExecWait(args);
     if(status != 0) {
         auto message = boost::format("%s exited with code %d") % args % status;

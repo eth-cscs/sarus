@@ -39,16 +39,17 @@
 		},
 		{
 			"destination": "/dev/shm",
-			"type": "tmpfs",
-			"source": "shm",
+			"type": "bind",
+			"source": "/dev/shm",
 			"options": [
 				"nosuid",
 				"noexec",
 				"nodev",
-				"mode=1777",
-				"size=65536k"
+				"rbind",
+				"slave",
+                "rw"
 			]
-		},
+        },
 		{
 			"destination": "/dev/mqueue",
 			"type": "mqueue",

@@ -35,6 +35,9 @@ OCIBundleConfig::OCIBundleConfig(std::shared_ptr<const common::Config> config)
 void OCIBundleConfig::generateConfigFile() const {
     utility::logMessage("Generating bundle's config file", common::LogLevel::INFO);
     makeJsonDocument();
+    common::createFileIfNecessary(configFile);
+    boost::filesystem::permissions(configFile, boost::filesystem::perms::owner_read |
+                                               boost::filesystem::perms::owner_write);
     common::writeJSON(*document, configFile);
     utility::logMessage("Successfully generated bundle's config file", common::LogLevel::INFO);
 }
@@ -149,19 +152,20 @@ rj::Value OCIBundleConfig::makeMemberMounts() const {
 
         mounts.PushBack(element, *allocator);
     }
-    // dev/shm
+    // dev/shm - bind mounted from host to allow communication between processes that use it
     {
         auto element = rj::Value{rj::kObjectType};
         element.AddMember("destination", rj::Value{"/dev/shm"}, *allocator);
-        element.AddMember("type", rj::Value{"tmpfs"}, *allocator);
-        element.AddMember("source", rj::Value{"shm"}, *allocator);
+        element.AddMember("type", rj::Value{"bind"}, *allocator);
+        element.AddMember("source", rj::Value{"/dev/shm"}, *allocator);
 
         auto options = rj::Value{rj::kArrayType};
         options.PushBack(rj::Value{"nosuid"}, *allocator);
         options.PushBack(rj::Value{"noexec"}, *allocator);
         options.PushBack(rj::Value{"nodev"}, *allocator);
-        options.PushBack(rj::Value{"mode=1777"}, *allocator);
-        options.PushBack(rj::Value{"size=65536k"}, *allocator);
+        options.PushBack(rj::Value{"rbind"}, *allocator);
+        options.PushBack(rj::Value{"slave"}, *allocator);
+        options.PushBack(rj::Value{"rw"}, *allocator);
         element.AddMember("options", options, *allocator);
 
         mounts.PushBack(element, *allocator);

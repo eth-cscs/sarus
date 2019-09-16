@@ -432,6 +432,19 @@ void changeDirectory(const boost::filesystem::path& path) {
     }
 }
 
+int countFilesInDirectory(const boost::filesystem::path& path) {
+    if (!boost::filesystem::exists(path) || !boost::filesystem::is_directory(path)) {
+        auto message = boost::format("Failed to count files in %s: path is not an existing directory.") % path;
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    auto path_iterator = boost::filesystem::directory_iterator(path);
+
+    // The directory_iterator() ctor without arguments always creates the "end" iterator
+    auto numberOfFiles = static_cast<int>(std::distance(path_iterator, boost::filesystem::directory_iterator()));
+    return numberOfFiles;
+}
+
 static bool isSymlink(const boost::filesystem::path& path) {
     struct stat sb;
     if (lstat(path.string().c_str(), &sb) != 0) {

@@ -45,7 +45,7 @@ directory will become the root filesystem of the container.
 Recommended value: ``rootfs``
 
 prefixDir (string, REQUIRED)
------------------------------
+----------------------------
 Absolute path to the base directory where Sarus has been installed.
 This path is used to find all needed Sarus-specific utilities.
 
@@ -54,7 +54,7 @@ Recommended value: ``/opt/sarus/<version>``
 .. _config-reference-tempDir:
 
 tempDir (string, REQUIRED)
----------------------------
+--------------------------
 Absolute path to the directory where Sarus will create a temporary folder
 to expand layers when pulling and loading images
 
@@ -64,7 +64,7 @@ Recommended value: ``/tmp``
 .. _config-reference-localRepositoryBaseDir:
 
 localRepositoryBaseDir (string, REQUIRED)
-------------------------------------------
+-----------------------------------------
 Absolute base path to individual user directories, where Sarus will create
 (if necessary) and access local image repositories. The repositories will be
 located in ``<localRepositoryBaseDir>/<user name>/.sarus``.
@@ -74,7 +74,7 @@ Recommended value: ``/home``
 .. _config-reference-centralizedRepositoryDir:
 
 centralizedRepositoryDir (string, OPTIONAL)
---------------------------------------------
+-------------------------------------------
 Absolute path to where Sarus will create (if necessary) and access the
 system-wide centralized image repository. This repository is intended to satisfy
 use cases where an image can only be broadcasted to the users, without allowing
