@@ -44,13 +44,9 @@ public:
         << "\n"
         << "Commands:\n";
 
-        auto factory = CommandObjectsFactory{};
-        auto commandNames = factory.getCommandNames();
-        std::sort(commandNames.begin(), commandNames.end());
-        for(const auto& name : commandNames) {
-            auto description = factory.makeCommandObject(name)->getBriefDescription();
-            std::cout << "   " << name << ": " << description << "\n";
-        }
+        printCommands();
+
+        std::cout << "\nRun 'sarus help COMMAND' for more information about a command" << std::endl;
     }
 
     bool requiresRootPrivileges() const override {
@@ -66,6 +62,30 @@ public:
             .setUsage("sarus help [COMMAND]")
             .setDescription(getBriefDescription());
         std::cout << printer;
+    }
+
+private:
+    void printCommands() const {
+        auto factory = CommandObjectsFactory{};
+        auto commandNames = factory.getCommandNames();
+        if(commandNames.empty()) {
+            return;
+        }
+        std::sort(commandNames.begin(), commandNames.end()); // print commands in alphabetical order
+        
+        // make format
+        auto it = std::max_element(commandNames.cbegin(), commandNames.cend(),
+            [](const std::string& a, const std::string& b){
+                return a.size() < b.size();
+            });
+        auto maxLength = it->size();
+        auto format = boost::format("   %-" + std::to_string(maxLength + 3) + "." + std::to_string(maxLength + 3) + "s%s");
+
+        // print commands
+        for(const auto& name : commandNames) {
+            auto description = factory.makeCommandObject(name)->getBriefDescription();
+            std::cout << format % name % description << std::endl;
+        }
     }
 };
 
