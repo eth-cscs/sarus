@@ -25,6 +25,7 @@ namespace utility {
 std::tuple<boost::filesystem::path, pid_t> parseStateOfContainerFromStdin();
 std::unordered_map<std::string, std::string> parseEnvironmentVariablesFromOCIBundle(const boost::filesystem::path&);
 void enterNamespacesOfProcess(pid_t);
+void useSarusStdoutStderrIfAvailable(const std::unordered_map<std::string, std::string>& env);
 
 }}}} // namespace
 

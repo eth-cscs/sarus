@@ -16,6 +16,8 @@
 #include <boost/filesystem.hpp>
 #include <sys/types.h>
 
+#include "common/Logger.hpp"
+
 namespace sarus {
 namespace hooks {
 namespace glibc {
@@ -30,13 +32,15 @@ private:
     bool containerHasGlibc() const;
     std::vector<boost::filesystem::path> get64bitContainerLibraries() const;
     boost::optional<boost::filesystem::path> findLibc(const std::vector<boost::filesystem::path>& libs) const;
-    bool containerGlibcIsNewerOrSame(
+    bool containerGlibcHasToBeReplaced(
         const boost::filesystem::path& hostLibc,
         const boost::filesystem::path& containerLibc) const;
     void verifyThatHostAndContainerGlibcAreABICompatible(
         const boost::filesystem::path& hostLibc,
         const boost::filesystem::path& containerLibc) const;
     void replaceGlibcLibrariesInContainer() const;
+    void logMessage(const boost::format& message, sarus::common::logType,
+                    std::ostream& out=std::cout, std::ostream& err=std::cerr) const;
 
 private:
     boost::filesystem::path bundleDir;
