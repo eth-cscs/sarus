@@ -26,17 +26,18 @@ namespace runtime {
 FileDescriptorHandler::FileDescriptorHandler(std::shared_ptr<common::Config> config)
     : config{config}
     , extraFileDescriptors{0}
-{detectFileDescriptorsToPreserve();}
+{}
 
-void FileDescriptorHandler::detectFileDescriptorsToPreserve(){
+void FileDescriptorHandler::preservePMIFdIfAny() {
     auto& hostEnvironment = config->commandRun.hostEnvironment;
-    if (hostEnvironment.count("PMI_FD") > 0) {
-        auto fd = std::stoi(hostEnvironment.at("PMI_FD"));
+    auto it = hostEnvironment.find("PMI_FD");
+    if (it != hostEnvironment.cend()) {
+        auto fd = std::stoi(it->second);
         fileDescriptorsToPreserve[fd] = "PMI_FD";
     }
 }
 
-void FileDescriptorHandler::prepareFileDescriptorsToPreserve() {
+void FileDescriptorHandler::applyChangesToFdsAndEnvVariables() {
     if (fileDescriptorsToPreserve.empty()) {
         return;
     }

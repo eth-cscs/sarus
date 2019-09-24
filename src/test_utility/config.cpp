@@ -40,9 +40,9 @@ ConfigRAII::~ConfigRAII() {
 static void populateJSON(rapidjson::Document& document) {
     auto& allocator = document.GetAllocator();
 
-    auto prefixDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-prefix-dir"));
+    auto prefixDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("sarus-test-prefix-dir"));
     auto bundleDir = prefixDir / "var/OCIBundle";
-    auto localRepositoryBaseDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-localRepositoryBaseDir"));
+    auto localRepositoryBaseDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("sarus-test-localRepositoryBaseDir"));
 
     document.AddMember( "securityChecks",
                         false,

@@ -21,7 +21,8 @@ namespace runtime {
 class FileDescriptorHandler {
 public:
     FileDescriptorHandler(std::shared_ptr<common::Config>);
-    void prepareFileDescriptorsToPreserve();
+    void preservePMIFdIfAny();
+    void applyChangesToFdsAndEnvVariables();
     int getExtraFileDescriptors() const {return extraFileDescriptors;};
 
 private:

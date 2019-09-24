@@ -48,7 +48,8 @@ void Runtime::setupOCIBundle() {
     copyEtcFilesIntoRootfs();
     performCustomMounts();
     remountRootfsWithNoSuid();
-    descriptorHandler.prepareFileDescriptorsToPreserve();
+    descriptorHandler.preservePMIFdIfAny();
+    descriptorHandler.applyChangesToFdsAndEnvVariables();
     bundleConfig.generateConfigFile();
     securityChecks.checkThatPathIsUntamperable(bundleConfig.getConfigFile());
     securityChecks.checkThatOCIHooksAreUntamperable();
