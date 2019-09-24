@@ -96,6 +96,32 @@ TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariables) {
     CHECK_EQUAL(std::to_string(3), config->commandRun.hostEnvironment["PMI_FD"]);
     CHECK_EQUAL(testFiles[2].string(), boost::filesystem::canonical("/proc/self/fd/3").string());
     closeFiles(testFDs);
+
+    // test Sarus stdout and stderr fds
+    testFDs = openFiles(testFiles);
+    handler = runtime::FileDescriptorHandler{config};
+    handler.preserveSarusStdoutAndStderr();
+    handler.applyChangesToFdsAndEnvVariables();
+    CHECK_EQUAL(2, handler.getExtraFileDescriptors());
+    CHECK_EQUAL(std::to_string(3), config->commandRun.hostEnvironment["SARUS_STDOUT_FD"]);
+    CHECK_EQUAL(std::to_string(4), config->commandRun.hostEnvironment["SARUS_STDERR_FD"]);
+    CHECK(boost::filesystem::canonical("/proc/self/fd/1") == boost::filesystem::canonical("/proc/self/fd/3"));
+    CHECK(boost::filesystem::canonical("/proc/self/fd/2") == boost::filesystem::canonical("/proc/self/fd/4"));
+
+    // test Sarus stdout and stderr + PMI (file2)
+    testFDs = openFiles(testFiles);
+    config->commandRun.hostEnvironment["PMI_FD"] = std::to_string(testFDs[2]);
+    handler = runtime::FileDescriptorHandler{config};
+    handler.preserveSarusStdoutAndStderr();
+    handler.preservePMIFdIfAny();
+    handler.applyChangesToFdsAndEnvVariables();
+    CHECK_EQUAL(3, handler.getExtraFileDescriptors());
+    CHECK_EQUAL(std::to_string(3), config->commandRun.hostEnvironment["SARUS_STDOUT_FD"]);
+    CHECK_EQUAL(std::to_string(4), config->commandRun.hostEnvironment["SARUS_STDERR_FD"]);
+    CHECK_EQUAL(std::to_string(5), config->commandRun.hostEnvironment["PMI_FD"]);
+    CHECK(boost::filesystem::canonical("/proc/self/fd/1") == boost::filesystem::canonical("/proc/self/fd/3"));
+    CHECK(boost::filesystem::canonical("/proc/self/fd/2") == boost::filesystem::canonical("/proc/self/fd/4"));
+    CHECK_EQUAL(testFiles[2].string(), boost::filesystem::canonical("/proc/self/fd/5").string());
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();

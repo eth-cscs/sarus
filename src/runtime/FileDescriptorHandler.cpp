@@ -26,64 +26,83 @@ namespace runtime {
 FileDescriptorHandler::FileDescriptorHandler(std::shared_ptr<common::Config> config)
     : config{config}
     , extraFileDescriptors{0}
-{}
+{
+    // preserve stdio file descriptors by default
+    fileDescriptorsToPreserve[0] = {"stdin", {}, false};
+    fileDescriptorsToPreserve[1] = {"stdout", {}, false};
+    fileDescriptorsToPreserve[2] = {"stderr", {}, false};
+}
 
 void FileDescriptorHandler::preservePMIFdIfAny() {
     auto& hostEnvironment = config->commandRun.hostEnvironment;
     auto it = hostEnvironment.find("PMI_FD");
     if (it != hostEnvironment.cend()) {
         auto fd = std::stoi(it->second);
-        fileDescriptorsToPreserve[fd] = "PMI_FD";
+        fileDescriptorsToPreserve[fd] = { "PMI", std::string{"PMI_FD"}, false };
     }
 }
 
+void FileDescriptorHandler::preserveSarusStdoutAndStderr() {
+    // Note: force duplication of stdout and stderr file descriptors because runc
+    // replaces them prior executing the hooks, i.e. the Sarus's stdout and stderr
+    // wouldn't be accessible from the hooks if not duplicated.
+    fileDescriptorsToPreserve[1] = { "stdout", std::string{"SARUS_STDOUT_FD"}, true };
+    fileDescriptorsToPreserve[2] = { "stderr", std::string{"SARUS_STDERR_FD"}, true };
+}
+
 void FileDescriptorHandler::applyChangesToFdsAndEnvVariables() {
-    if (fileDescriptorsToPreserve.empty()) {
-        return;
-    }
-    utility::logMessage(boost::format("Preparing file descriptors to preserve into the container"), common::logType::INFO);
+    utility::logMessage("Applying changes to file descriptors and environment variables", common::logType::INFO);
 
-    for(const auto& fd : getOpenFileDescriptors()) {
-        // Skip stdio descriptors
-        if(fd <= 2) {
-            continue;
-        }
-
-        // Close unwanted file descriptors
+    // close unwanted file descriptors
+    for(auto fd: getOpenFileDescriptors()) {
         auto it = fileDescriptorsToPreserve.find(fd);
         if(it == fileDescriptorsToPreserve.cend()) {
             utility::logMessage(boost::format("Closing file descriptor %d") % fd, common::logType::DEBUG);
             close(fd);
-            continue;
         }
+    }
+
+    // process file descriptors to preserve
+    for(auto fd : getOpenFileDescriptors()) {
+        const auto& fdInfo = fileDescriptorsToPreserve[fd];
+        int newFd;
 
         // Ensure file descriptor to preserve is on the lowest available value
-        const auto& fdName = it->second;
-        if(fd == extraFileDescriptors + 3) {
-            utility::logMessage(boost::format("No need to duplicate %s file descriptor %d") % fdName % fd,
+        bool isAtLowestAvailableValue = (fd <= 3 + extraFileDescriptors);
+        if(isAtLowestAvailableValue && !fdInfo.forceDup) {
+            utility::logMessage(boost::format("No need to duplicate %s file descriptor %d") % fdInfo.name % fd,
                                 common::logType::DEBUG);
+            newFd = fd;
         }
         else {
-            utility::logMessage(boost::format("Duplicating %s fd %d") % fdName % fd, common::logType::DEBUG);
-            auto newFd = dup(fd);
+            utility::logMessage(boost::format("Duplicating %s fd %d") % fdInfo.name % fd, common::logType::DEBUG);
+            newFd = dup(fd);
             if (newFd == -1) {
-                auto message = boost::format("Could not duplicate %s file descriptor. Dup error: %s") % fdName % strerror(errno);
+                auto message = boost::format("Could not duplicate %s file descriptor. Dup error: %s") % fdInfo.name % strerror(errno);
                 SARUS_THROW_ERROR(message.str());
             }
-            utility::logMessage(boost::format("New %s fd: %d") % fdName % newFd, common::logType::DEBUG);
-            close(fd);
-            fileDescriptorsToPreserve[newFd] = fdName;
-            fileDescriptorsToPreserve.erase(it);
+            utility::logMessage(boost::format("New %s fd: %d") % fdInfo.name % newFd, common::logType::DEBUG);
+            if(!fdInfo.forceDup) {
+                close(fd);
+            }
         }
-        ++extraFileDescriptors;
+
+        if(fd > 2 && fdInfo.forceDup) {
+            ++extraFileDescriptors;
+        }
+
+        if(newFd > 2) {
+            ++extraFileDescriptors;
+        }
+
+        if(fdInfo.envVariable) {
+            utility::logMessage(boost::format("Setting env variable %s=%d") % *fdInfo.envVariable % newFd, common::logType::DEBUG);
+            config->commandRun.hostEnvironment[*fdInfo.envVariable] = std::to_string(newFd);
+        }
     }
 
-    // Use-case-specific actions
-    for (const auto& it : fileDescriptorsToPreserve) {
-        if (it.second == "PMI_FD") {
-            config->commandRun.hostEnvironment["PMI_FD"] = std::to_string(it.first);
-        }
-    }
+    utility::logMessage(boost::format("Total extra file descriptors: %d") % extraFileDescriptors, common::logType::DEBUG);
+    utility::logMessage("Successfully applied changes to file descriptors and environment variables", common::logType::INFO);
 }
 
 std::vector<int> FileDescriptorHandler::getOpenFileDescriptors() const {
