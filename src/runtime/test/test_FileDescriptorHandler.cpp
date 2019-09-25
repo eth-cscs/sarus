@@ -103,11 +103,11 @@ TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariables) {
     // test Sarus stdout stderr fds
     testFDs = openFiles(testFiles);
     handler = runtime::FileDescriptorHandler{config};
-    handler.preserveSarusStdoutAndStderr();
+    handler.passStdoutAndStderrToHooks();
     handler.applyChangesToFdsAndEnvVariables();
     CHECK_EQUAL(2, handler.getExtraFileDescriptors());
-    CHECK_EQUAL(std::to_string(3), config->commandRun.hostEnvironment["SARUS_STDOUT_FD"]);
-    CHECK_EQUAL(std::to_string(4), config->commandRun.hostEnvironment["SARUS_STDERR_FD"]);
+    CHECK_EQUAL(std::to_string(3), config->commandRun.hooksEnvironment["SARUS_STDOUT_FD"]);
+    CHECK_EQUAL(std::to_string(4), config->commandRun.hooksEnvironment["SARUS_STDERR_FD"]);
     CHECK(boost::filesystem::canonical("/proc/self/fd/1") == boost::filesystem::canonical("/proc/self/fd/3"));
     CHECK(boost::filesystem::canonical("/proc/self/fd/2") == boost::filesystem::canonical("/proc/self/fd/4"));
 
@@ -115,12 +115,12 @@ TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariables) {
     testFDs = openFiles(testFiles);
     config->commandRun.hostEnvironment["PMI_FD"] = std::to_string(testFDs[2]);
     handler = runtime::FileDescriptorHandler{config};
-    handler.preserveSarusStdoutAndStderr();
+    handler.passStdoutAndStderrToHooks();
     handler.preservePMIFdIfAny();
     handler.applyChangesToFdsAndEnvVariables();
     CHECK_EQUAL(3, handler.getExtraFileDescriptors());
-    CHECK_EQUAL(std::to_string(3), config->commandRun.hostEnvironment["SARUS_STDOUT_FD"]);
-    CHECK_EQUAL(std::to_string(4), config->commandRun.hostEnvironment["SARUS_STDERR_FD"]);
+    CHECK_EQUAL(std::to_string(3), config->commandRun.hooksEnvironment["SARUS_STDOUT_FD"]);
+    CHECK_EQUAL(std::to_string(4), config->commandRun.hooksEnvironment["SARUS_STDERR_FD"]);
     CHECK_EQUAL(std::to_string(5), config->commandRun.hostEnvironment["PMI_FD"]);
     CHECK(boost::filesystem::canonical("/proc/self/fd/1") == boost::filesystem::canonical("/proc/self/fd/3"));
     CHECK(boost::filesystem::canonical("/proc/self/fd/2") == boost::filesystem::canonical("/proc/self/fd/4"));

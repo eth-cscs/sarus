@@ -35,8 +35,7 @@ void GlibcHook::injectGlibcLibrariesIfNecessary() {
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     sarus::hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
-    auto envOCIBundle = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
-    hooks::common::utility::useSarusStdoutStderrIfAvailable(envOCIBundle);
+    hooks::common::utility::useSarusStdoutStderrIfAvailable();
     parseEnvironmentVariables();
     auto hostLibc = findLibc(hostLibraries);
     if(!hostLibc) {

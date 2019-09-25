@@ -34,7 +34,6 @@ private:
     rapidjson::Value makeMemberRoot() const;
     rapidjson::Value makeMemberMounts() const;
     rapidjson::Value makeMemberLinux() const;
-    rapidjson::Value makeMemberHooks() const;
 
 private:
     std::shared_ptr<const common::Config> config;

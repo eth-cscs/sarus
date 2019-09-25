@@ -28,9 +28,9 @@ FileDescriptorHandler::FileDescriptorHandler(std::shared_ptr<common::Config> con
     , extraFileDescriptors{0}
 {
     // preserve stdio file descriptors by default
-    fileDescriptorsToPreserve[0] = {"stdin", {}, false};
-    fileDescriptorsToPreserve[1] = {"stdout", {}, false};
-    fileDescriptorsToPreserve[2] = {"stderr", {}, false};
+    fileDescriptorsToPreserve[0] = {"stdin", {}, {}, false};
+    fileDescriptorsToPreserve[1] = {"stdout", {}, {}, false};
+    fileDescriptorsToPreserve[2] = {"stderr", {}, {}, false};
 }
 
 void FileDescriptorHandler::preservePMIFdIfAny() {
@@ -38,16 +38,16 @@ void FileDescriptorHandler::preservePMIFdIfAny() {
     auto it = hostEnvironment.find("PMI_FD");
     if (it != hostEnvironment.cend()) {
         auto fd = std::stoi(it->second);
-        fileDescriptorsToPreserve[fd] = { "PMI", std::string{"PMI_FD"}, false };
+        fileDescriptorsToPreserve[fd] = { "PMI", std::string{"PMI_FD"}, {}, false };
     }
 }
 
-void FileDescriptorHandler::preserveSarusStdoutAndStderr() {
+void FileDescriptorHandler::passStdoutAndStderrToHooks() {
     // Note: force duplication of stdout and stderr file descriptors because runc
     // replaces them prior executing the hooks, i.e. the Sarus's stdout and stderr
     // wouldn't be accessible from the hooks if not duplicated.
-    fileDescriptorsToPreserve[1] = { "stdout", std::string{"SARUS_STDOUT_FD"}, true };
-    fileDescriptorsToPreserve[2] = { "stderr", std::string{"SARUS_STDERR_FD"}, true };
+    fileDescriptorsToPreserve[1] = { "stdout", {}, std::string{"SARUS_STDOUT_FD"}, true };
+    fileDescriptorsToPreserve[2] = { "stderr", {}, std::string{"SARUS_STDERR_FD"}, true };
 }
 
 void FileDescriptorHandler::applyChangesToFdsAndEnvVariables() {
@@ -95,9 +95,14 @@ void FileDescriptorHandler::applyChangesToFdsAndEnvVariables() {
             ++extraFileDescriptors;
         }
 
-        if(fdInfo.envVariable) {
-            utility::logMessage(boost::format("Setting env variable %s=%d") % *fdInfo.envVariable % newFd, common::logType::DEBUG);
-            config->commandRun.hostEnvironment[*fdInfo.envVariable] = std::to_string(newFd);
+        if(fdInfo.containerEnvVariable) {
+            utility::logMessage(boost::format("Setting container env variable %s=%d") % *fdInfo.containerEnvVariable % newFd, common::logType::DEBUG);
+            config->commandRun.hostEnvironment[*fdInfo.containerEnvVariable] = std::to_string(newFd);
+        }
+
+        if(fdInfo.hookEnvVariable) {
+            utility::logMessage(boost::format("Setting hooks env variable %s=%d") % *fdInfo.hookEnvVariable % newFd, common::logType::DEBUG);
+            config->commandRun.hooksEnvironment[*fdInfo.hookEnvVariable] = std::to_string(newFd);
         }
     }
 

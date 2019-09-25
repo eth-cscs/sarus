@@ -49,7 +49,7 @@ void Runtime::setupOCIBundle() {
     performCustomMounts();
     remountRootfsWithNoSuid();
     descriptorHandler.preservePMIFdIfAny();
-    descriptorHandler.preserveSarusStdoutAndStderr();
+    descriptorHandler.passStdoutAndStderrToHooks();
     descriptorHandler.applyChangesToFdsAndEnvVariables();
     bundleConfig.generateConfigFile();
     securityChecks.checkThatPathIsUntamperable(bundleConfig.getConfigFile());

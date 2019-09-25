@@ -16,6 +16,7 @@
 
 #include "common/Utility.hpp"
 
+namespace rj = rapidjson;
 using namespace sarus;
 
 namespace test_utility {
@@ -37,7 +38,7 @@ ConfigRAII::~ConfigRAII() {
     boost::filesystem::remove_all(config->directories.repository);
 }
 
-static void populateJSON(rapidjson::Document& document) {
+static void populateJSON(rj::Document& document) {
     auto& allocator = document.GetAllocator();
 
     auto prefixDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("sarus-test-prefix-dir"));
@@ -48,45 +49,45 @@ static void populateJSON(rapidjson::Document& document) {
                         false,
                         allocator);
     document.AddMember( "OCIBundleDir",
-                        rapidjson::Value{bundleDir.c_str(), allocator},
+                        rj::Value{bundleDir.c_str(), allocator},
                         allocator);
     document.AddMember( "rootfsFolder",
-                        rapidjson::Value{"rootfs", allocator},
+                        rj::Value{"rootfs", allocator},
                         allocator);
     document.AddMember( "prefixDir",
-                        rapidjson::Value{prefixDir.c_str(), allocator},
+                        rj::Value{prefixDir.c_str(), allocator},
                         allocator);
     document.AddMember( "tempDir",
-                        rapidjson::Value{"/tmp", allocator},
+                        rj::Value{"/tmp", allocator},
                         allocator);
     document.AddMember( "localRepositoryBaseDir",
-                        rapidjson::Value{localRepositoryBaseDir.c_str(), allocator},
+                        rj::Value{localRepositoryBaseDir.c_str(), allocator},
                         allocator);
     document.AddMember( "ramFilesystemType",
-                        rapidjson::Value{"ramfs"},
+                        rj::Value{"ramfs"},
                         allocator);
     document.AddMember( "mksquashfsPath",
-                        rapidjson::Value{"/usr/bin/mksquashfs", allocator},
+                        rj::Value{"/usr/bin/mksquashfs", allocator},
                         allocator);
     document.AddMember( "runcPath",
-                        rapidjson::Value{"/usr/bin/runc.amd64", allocator},
+                        rj::Value{"/usr/bin/runc.amd64", allocator},
                         allocator);
 
     // siteMounts
-    rapidjson::Value siteMountsValue(rapidjson::kArrayType);
-    rapidjson::Value mountValue(rapidjson::kObjectType);
+    rj::Value siteMountsValue(rj::kArrayType);
+    rj::Value mountValue(rj::kObjectType);
     mountValue.AddMember(   "type",
-                            rapidjson::Value{"bind", allocator},
+                            rj::Value{"bind", allocator},
                             allocator);
     mountValue.AddMember(   "source",
-                            rapidjson::Value{"/source", allocator},
+                            rj::Value{"/source", allocator},
                             allocator);
     mountValue.AddMember(   "destination",
-                            rapidjson::Value{"/destination", allocator},
+                            rj::Value{"/destination", allocator},
                             allocator);
-    rapidjson::Value flagsValue(rapidjson::kObjectType);
+    rj::Value flagsValue(rj::kObjectType);
     flagsValue.AddMember(   "bind-propagation",
-                            rapidjson::Value{"slave", allocator},
+                            rj::Value{"slave", allocator},
                             allocator);
     mountValue.AddMember(   "flags",
                             flagsValue,
@@ -95,16 +96,25 @@ static void populateJSON(rapidjson::Document& document) {
     document.AddMember("siteMounts", siteMountsValue, allocator);
 
     // userMounts
-    rapidjson::Value userMountsValue(rapidjson::kObjectType);
-    rapidjson::Value disallowWithPrefixValue(rapidjson::kArrayType);
+    rj::Value userMountsValue(rj::kObjectType);
+    rj::Value disallowWithPrefixValue(rj::kArrayType);
     disallowWithPrefixValue.PushBack("/etc", allocator);
     disallowWithPrefixValue.PushBack("/var", allocator);
     disallowWithPrefixValue.PushBack("/opt/sarus", allocator);
     userMountsValue.AddMember("notAllowedPrefixesOfPath", disallowWithPrefixValue, allocator);
-    rapidjson::Value disallowExactValue(rapidjson::kArrayType);
+    rj::Value disallowExactValue(rj::kArrayType);
     disallowExactValue.PushBack("/opt", allocator);
     userMountsValue.AddMember("notAllowedPaths", disallowExactValue, allocator);
     document.AddMember("userMounts", userMountsValue, allocator);
+
+    // OCIHooks
+    auto hook = rj::Value{ rj::kObjectType };
+    hook.AddMember("path", rj::Value{"/bin/hook"}, allocator);
+    hook.AddMember("env", rj::Value{rj::kArrayType}, allocator);
+    auto hooks = rj::Value{ rj::kObjectType };
+    hooks.AddMember("prestart", rj::Value{rj::kArrayType}, allocator);
+    hooks["prestart"].GetArray().PushBack(hook, allocator);
+    document.AddMember("OCIHooks", hooks, allocator);
 }
 
 ConfigRAII makeConfig() {

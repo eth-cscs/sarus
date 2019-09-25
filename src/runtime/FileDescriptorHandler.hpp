@@ -24,7 +24,7 @@ class FileDescriptorHandler {
 public:
     FileDescriptorHandler(std::shared_ptr<common::Config>);
     void preservePMIFdIfAny();
-    void preserveSarusStdoutAndStderr();
+    void passStdoutAndStderrToHooks();
     void applyChangesToFdsAndEnvVariables();
     int getExtraFileDescriptors() const {return extraFileDescriptors;};
 
@@ -35,7 +35,8 @@ private:
 private:
     struct FileDescriptorInfo {
         std::string name;
-        boost::optional<std::string> envVariable;
+        boost::optional<std::string> containerEnvVariable;
+        boost::optional<std::string> hookEnvVariable;
         bool forceDup;
     };
 

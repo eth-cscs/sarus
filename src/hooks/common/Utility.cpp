@@ -80,15 +80,12 @@ void enterNamespacesOfProcess(pid_t pid) {
     }
 }
 
-static void replaceFdIfAvailable(   const std::unordered_map<std::string, std::string>& env,
-                                    int oldfd,
-                                    const std::string& newfdEnvVariable) {
-    auto it = env.find(newfdEnvVariable);
-    if(it == env.cend()) {
+static void replaceFdIfAvailable(int oldfd, const std::string& newfdEnvVariable) {
+    char* p;
+    if((p = getenv(newfdEnvVariable.c_str())) == nullptr) {
         return;
     }
-
-    auto newfd = std::stoi(it->second);
+    auto newfd = std::stoi(p);
     if(dup2(newfd, oldfd) == -1) {
         auto message = boost::format("Failed to use %s with 'dup(%d, %d)': %s")
             % newfdEnvVariable
@@ -99,9 +96,9 @@ static void replaceFdIfAvailable(   const std::unordered_map<std::string, std::s
     }
 }
 
-void useSarusStdoutStderrIfAvailable(const std::unordered_map<std::string, std::string>& env) {
-    replaceFdIfAvailable(env, 1, "SARUS_STDOUT_FD");
-    replaceFdIfAvailable(env, 2, "SARUS_STDERR_FD");
+void useSarusStdoutStderrIfAvailable() {
+    replaceFdIfAvailable(1, "SARUS_STDOUT_FD");
+    replaceFdIfAvailable(2, "SARUS_STDERR_FD");
 }
 
 }}}} // namespace
