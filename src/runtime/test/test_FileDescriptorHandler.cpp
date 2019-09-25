@@ -35,7 +35,10 @@ std::vector<int> openFiles(const std::vector<boost::filesystem::path>& testFiles
 
 void closeFiles(std::vector<int>& fds) {
     for(auto fd : fds) {
-        close(fd);
+        if(fcntl(fd, F_GETFD) == -1) {
+            continue; // invalid file descriptor
+        }
+        CHECK_EQUAL(0, close(fd));
     }
 }
 
@@ -97,7 +100,7 @@ TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariables) {
     CHECK_EQUAL(testFiles[2].string(), boost::filesystem::canonical("/proc/self/fd/3").string());
     closeFiles(testFDs);
 
-    // test Sarus stdout and stderr fds
+    // test Sarus stdout stderr fds
     testFDs = openFiles(testFiles);
     handler = runtime::FileDescriptorHandler{config};
     handler.preserveSarusStdoutAndStderr();
@@ -108,7 +111,7 @@ TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariables) {
     CHECK(boost::filesystem::canonical("/proc/self/fd/1") == boost::filesystem::canonical("/proc/self/fd/3"));
     CHECK(boost::filesystem::canonical("/proc/self/fd/2") == boost::filesystem::canonical("/proc/self/fd/4"));
 
-    // test Sarus stdout and stderr + PMI (file2)
+    // test Sarus stdout stderr + PMI
     testFDs = openFiles(testFiles);
     config->commandRun.hostEnvironment["PMI_FD"] = std::to_string(testFDs[2]);
     handler = runtime::FileDescriptorHandler{config};
