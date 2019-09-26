@@ -54,9 +54,9 @@ void FileDescriptorHandler::applyChangesToFdsAndEnvVariables() {
     utility::logMessage("Applying changes to file descriptors and environment variables", common::logType::INFO);
 
     // close unwanted file descriptors
-    for(auto fd: getOpenFileDescriptors()) {
-        auto it = fileDescriptorsToPreserve.find(fd);
-        if(it == fileDescriptorsToPreserve.cend()) {
+    for(auto fd : getOpenFileDescriptors()) {
+        bool toBePreserved = fileDescriptorsToPreserve.find(fd) != fileDescriptorsToPreserve.cend();
+        if(!toBePreserved) {
             utility::logMessage(boost::format("Closing file descriptor %d") % fd, common::logType::DEBUG);
             close(fd);
         }

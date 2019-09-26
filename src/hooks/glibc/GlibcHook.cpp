@@ -116,8 +116,8 @@ bool GlibcHook::containerGlibcHasToBeReplaced(  const boost::filesystem::path& h
     auto containerVersion = sarus::common::parseLibcVersion(containerSymlinkTarget);
 
     if(containerVersion < hostVersion) {
-        auto message = boost::format("Detected glibc %d.%d in the container. Replacing it with glibc %d.%d."
-                                     " Please consider upgrading the container image to a distribution with a newer glibc.")
+        auto message = boost::format("Detected glibc %1%.%2% (< %3%.%4%) in the container. Replacing it with glibc %3%.%4% from the host."
+                                     " Please consider upgrading the container image to a distribution with glibc >= %3%.%4%.")
             % std::get<0>(containerVersion) % std::get<1>(containerVersion)
             % std::get<0>(hostVersion) % std::get<1>(hostVersion);
         logMessage(message, sarus::common::logType::GENERAL, std::cerr);

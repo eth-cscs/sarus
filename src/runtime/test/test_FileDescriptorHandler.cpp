@@ -52,7 +52,7 @@ TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariables) {
     auto& config = configRAII.config;
     auto prefixDir = boost::filesystem::path{config->json["prefixDir"].GetString()};
 
-    // open test files
+    // test files
     auto testDir = prefixDir / "test";
     auto testFiles = std::vector<boost::filesystem::path>{
         prefixDir / "test/file0",
