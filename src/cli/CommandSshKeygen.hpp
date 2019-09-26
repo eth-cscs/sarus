@@ -66,7 +66,7 @@ private:
 
         // the ssh-keygen command doesn't support additional arguments
         if(argsGroups.size() > 1) {
-            auto message = boost::format("Command 'ssh-keygen' doesn't support extra arguments"
+            auto message = boost::format("Bad number of arguments for command 'ssh-keygen'"
                                          "\nSee 'sarus help ssh-keygen'");
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);

@@ -58,7 +58,7 @@ private:
 
         // the version command doesn't support additional arguments
         if(argsGroups.size() > 1) {
-            auto message = boost::format("Command 'version' doesn't support extra arguments"
+            auto message = boost::format("Bad number of arguments for command 'version'"
                                          "\nSee 'sarus help version'");
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);

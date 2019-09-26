@@ -10,7 +10,7 @@
 
 #include "CommandObjectsFactory.hpp"
 
-#include "common/Logger.hpp"
+#include "cli/Utility.hpp"
 #include "cli/CommandHelp.hpp"
 #include "cli/CommandHelpOfCommand.hpp"
 #include "cli/CommandImages.hpp"
@@ -53,7 +53,7 @@ std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(const std
     if(!isValidCommandName(commandName)) {
         auto message = boost::format("'%s' is not a Sarus command\nSee 'sarus help'")
             % commandName;
-        common::Logger::getInstance().log(message, "CommandObjectsFactory", common::LogLevel::GENERAL, std::cerr);
+        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
     auto it = map.find(commandName);
@@ -67,7 +67,7 @@ std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(
     if(!isValidCommandName(commandName)) {
         auto message = boost::format("'%s' is not a Sarus command\nSee 'sarus help'")
             % commandName;
-        common::Logger::getInstance().log(message, "CommandObjectsFactory", common::LogLevel::GENERAL, std::cerr);
+        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
     auto it = mapWithArguments.find(commandName);
