@@ -185,7 +185,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "ssh-keygen", "extra-argument"]
-        expected_message = "Command 'ssh-keygen' doesn't support extra arguments\nSee 'sarus help ssh-keygen'"
+        expected_message = "Bad number of arguments for command 'ssh-keygen'\nSee 'sarus help ssh-keygen'"
         self._check(command, expected_message)
 
     def test_command_version(self):
@@ -194,7 +194,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "version", "extra-argument"]
-        expected_message = "Command 'version' doesn't support extra arguments\nSee 'sarus help version'"
+        expected_message = "Bad number of arguments for command 'version'\nSee 'sarus help version'"
         self._check(command, expected_message)
 
     def _check(self, command, expected_message):
