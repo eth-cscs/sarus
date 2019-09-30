@@ -21,7 +21,7 @@ class TestErrorMessages(unittest.TestCase):
 
     def test_sarus(self):
         command = ["sarus", "--invalid-option"]
-        expected_message = "Error while parsing the command line: unrecognised option '--invalid-option'"
+        expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help'"
         self._check(command, expected_message)
 
         command = ["sarus", "invalid-command"]
@@ -58,10 +58,6 @@ class TestErrorMessages(unittest.TestCase):
     def test_command_load(self):
         command = ["sarus", "load", "--invalid-option", "archive.tar", "imageid"]
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help load'"
-        self._check(command, expected_message)
-
-        command = ["sarus", "load", "archive.tar"]
-        expected_message = "Bad number of arguments for command 'load'\nSee 'sarus help load'"
         self._check(command, expected_message)
 
         command = ["sarus", "load"]

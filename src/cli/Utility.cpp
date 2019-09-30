@@ -71,7 +71,7 @@ bool isValidCLIInputImageID(const std::string& imageID) {
 common::ImageID parseImageID(const common::CLIArguments& imageArgs) {
     if(imageArgs.argc() != 1) {
         auto message = boost::format(
-            "Invalid image ID %s\n"
+            "Invalid image ID '%s'\n"
             "The image ID is expected to be a single token without options") % imageArgs;
         printLog(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
