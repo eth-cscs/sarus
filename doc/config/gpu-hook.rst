@@ -1,9 +1,9 @@
-NVIDIA GPU hook
-===============
+NVIDIA Container Toolkit
+========================
 
 NVIDIA provides access to GPU devices and their driver stacks inside OCI
-containers through the NVIDIA Container Runtime hook, which acts as a driver for
-the `nvidia-container-cli <https://github.com/NVIDIA/libnvidia-container>`_
+containers through an OCI hook called NVIDIA Container Toolkit, which acts
+as a driver for the `nvidia-container-cli <https://github.com/NVIDIA/libnvidia-container>`_
 utility.
 
 Dependencies
@@ -15,52 +15,46 @@ installed and working in the host system.
 The hook depends on the library and utility provided by the libnvidia-container
 project to carry out the low-level actions of importing the GPU device and
 drivers inside the container. At the time of writing, the latest release of
-libnvidia-container is version 1.0.0 RC2:
+libnvidia-container is version 1.0.6. The easiest way to install libnvidia-container
+is to build from source on a Docker-enabled system and copy the binaries onto
+the system where Sarus is installed:
 
 .. code-block:: bash
+    
+    ## ON SYSTEM WITH DOCKER ##
 
-    # Retrieve the libnvidia-container tarball
-    $ wget https://github.com/NVIDIA/libnvidia-container/releases/download/v1.0.0-rc.2/libnvidia-container_1.0.0-rc.2_x86_64.tar.xz
+    # Clone the repository
+    $ git clone https://github.com/NVIDIA/libnvidia-container.git
+    $ cd libnvidia-container
+    $ git checkout v1.0.6
+
+    # Build with Docker
+    # It is possible to build using containers based on Ubuntu (16.04/18.04),
+    # Debian (9/10), CentOS 7, OpenSUSE Leap 15.1 or Amazon Linux
+    $ make ubuntu18.04
+
+    # Packages and a tarfile will be available in the dist/<distribution>/<arch>
+    # directory
+    $ ls dist/ubuntu18.04/amd64
+
+    # Copy tarfile to Sarus system
+    $ rsync -a dist/ubuntu18.04/amd64/libnvidia-container_1.0.6_amd64.tar.xz <user>@<target system with Sarus>
+
+
+    ## ON TARGET SYSTEM ##
 
     # Extract the archive and install the files
-    $ tar -xf libnvidia-container_1.0.0-rc.2_x86_64.tar.xz
-    $ cd libnvidia-container_1.0.0-rc.2/usr/local/
-    $ sudo mkdir /usr/local/libnvidia-container_1.0.0-rc.2
-    $ sudo cp -r * /usr/local/libnvidia-container_1.0.0-rc.2
+    $ tar -xf libnvidia-container_1.0.6_amd64.tar.xz
+    $ cd libnvidia-container_1.0.6/usr/local/
+    $ sudo mkdir /usr/local/libnvidia-container_1.0.6
+    $ sudo cp -r * /usr/local/libnvidia-container_1.0.6
 
 Hook installation
 -----------------
 
-The easiest way of installing the NVIDIA Container Runtime hook is to retrieve
-the pre-compiled binary for release v.1.4.0-1:
-
-.. code-block:: bash
-
-    # Download the hook binary
-    $ wget https://github.com/NVIDIA/nvidia-container-runtime/releases/download/v1.4.0-1/nvidia-container-runtime-hook.amd64
-
-    # Copy to an installation directory
-    $ sudo cp nvidia-container-runtime-hook.amd64 /opt/sarus/bin
-
-To ensure correct functionality, the hook also needs a TOML configuration file
-to be present on the system, and will look for it in the default path
-``/etc/nvidia-container-runtime/config.toml``, unless instructed otherwise.
-The configuration file is platform specific (for example, it tells the hook
-where to find the system's ``ldconfig``). NVIDIA provides basic flavors for
-Ubuntu, Debian, and CentOS:
-
-.. code-block:: bash
-
-    # Download and install hook config.toml (e.g. for CentOS)
-    $ wget https://raw.githubusercontent.com/NVIDIA/nvidia-container-runtime/master/hook/config.toml.centos
-    $ sudo mkdir /etc/nvidia-container-runtime/
-    $ sudo cp config.toml.centos /etc/nvidia-container-runtime/config.toml
-
-Hook installation from source
------------------------------
-
-In the event that you require to run a version for which NVIDIA does not
-provide a pre-built binary, it is necessary to build the hook from source.
+At the time of writing, the latest release of the NVIDIA Container Toolkit hook
+is version 3.1.4. NVIDIA does no longer provide pre-built binaries for this
+software, so it is necessary to build from source.
 
 To do so, an installation of the `Go programming language
 <https://golang.org/>`_ is needed. System packages are available for major Linux
@@ -71,18 +65,31 @@ For a regular installation, the default Go working directory is ``$HOME/go``.
 Should you prefer a different location, remember to set it as the ``$GOPATH`` in
 your environment.
 
-You can now proceed to build the desired hook release from source. For example,
-to get the bleeding edge:
+You can now proceed to build the Toolkit from source:
+
+.. code-block:: bash
+    
+    $ go get github.com/NVIDIA/nvidia-container-runtime
+    $ cd $GOPATH/src/github.com/NVIDIA/nvidia-container-runtime/
+    $ git checkout v3.1.4
+    $ cd $GOPATH
+    $ go build -ldflags "-s -w" -v github.com/NVIDIA/nvidia-container-runtime/toolkit/nvidia-container-toolkit
+
+    # Copy the hook binary to an installation directory
+    $ sudo cp $GOPATH/nvidia-container-toolkit /opt/sarus/bin/nvidia-container-toolkit-3.1.4
+
+To ensure correct functionality, the Toolkit also needs a TOML configuration file
+to be present on the system, and will look for it in the default path
+``/etc/nvidia-container-runtime/config.toml``, unless instructed otherwise.
+The configuration file is platform specific (for example, it tells the hook
+where to find the system's ``ldconfig``). NVIDIA provides basic flavors for
+Ubuntu, Debian, CentOS, OpenSUSE Leap and Amazon Linux:
 
 .. code-block:: bash
 
-    # Download and build the nvidia-container-runtime-hook
-    $ go get -ldflags "-s -w" -v github.com/NVIDIA/nvidia-container-runtime/hook/nvidia-container-runtime-hook
-
-    # Copy the hook binary to an installation directory
-    $ sudo cp $GOPATH/bin/nvidia-container-runtime-hook /opt/sarus/bin/
-
-Complete the setup by installing the ``config.toml`` file in your system.
+    # Install hook config.toml (e.g. for CentOS)
+    $ sudo mkdir /etc/nvidia-container-runtime/
+    $ sudo cp $GOPATH/src/github.com/NVIDIA/nvidia-container-runtime/config.toml.centos /etc/nvidia-container-runtime/config.toml
 
 Sarus configuration
 ---------------------
@@ -102,11 +109,11 @@ The following is an example ``OCIHooks`` object enabling the GPU hook:
     {
         "prestart": [
             {
-                "path": "/opt/sarus/bin/nvidia-container-runtime-hook.amd64",
-                "args": ["/opt/sarus/bin/nvidia-container-runtime-hook.amd64", "prestart"],
+                "path": "/opt/sarus/bin/nvidia-container-toolkit-3.1.4",
+                "args": ["/opt/sarus/bin/nvidia-container-toolkit-3.1.4", "prestart"],
                 "env": [
-                    "PATH=/usr/local/libnvidia-container_1.0.0-rc.2/bin",
-                    "LD_LIBRARY_PATH=/usr/local/libnvidia-container_1.0.0-rc.2/lib"
+                    "PATH=/usr/local/libnvidia-container_1.0.6/bin",
+                    "LD_LIBRARY_PATH=/usr/local/libnvidia-container_1.0.6/lib"
                 ]
             }
         ]
@@ -123,11 +130,11 @@ positional argument. For example:
     {
         "prestart": [
             {
-                "path": "/opt/sarus/bin/nvidia-container-runtime-hook",
-                "args": ["/opt/sarus/bin/nvidia-container-runtime-hook", "-config=/opt/sarus/etc/nvidia-hook-config.toml", "prestart"],
+                "path": "/opt/sarus/bin/nvidia-container-toolkit-3.1.4",
+                "args": ["/opt/sarus/bin/nvidia-container-toolkit-3.1.4", "-config=/opt/sarus/etc/nvidia-hook-config.toml", "prestart"],
                 "env": [
-                    "PATH=/usr/local/libnvidia-container_1.0.0-rc.2/bin",
-                    "LD_LIBRARY_PATH=/usr/local/libnvidia-container_1.0.0-rc.2/lib"
+                    "PATH=/usr/local/libnvidia-container_1.0.6/bin",
+                    "LD_LIBRARY_PATH=/usr/local/libnvidia-container_1.0.6/lib"
                 ]
             }
         ]
@@ -136,7 +143,7 @@ positional argument. For example:
 Sarus support at runtime
 ------------------------
 
-The actions performed by the NVIDIA Container Runtime hook are controlled via a
+The actions performed by the NVIDIA Container Toolkit hook are controlled via a
 set of specific `environment variables
 <https://github.com/NVIDIA/nvidia-container-runtime#environment-variables-oci-spec>`_.
 Most of these can (and should) come from the container images, or from the
