@@ -43,8 +43,8 @@ private:
 private:
     std::unique_ptr<runtime::Mount> parseBindMountRequest(const std::unordered_map<std::string, std::string>& requestMap);
     unsigned long convertBindMountFlags(const std::unordered_map<std::string, std::string>& requestMap);
-    void validateMountSource(const boost::filesystem::path& source);
-    void validateMountDestination( const boost::filesystem::path& destination);
+    boost::filesystem::path getValidatedMountSource(const std::unordered_map<std::string, std::string>& requestMap);
+    boost::filesystem::path getValidatedMountDestination(const std::unordered_map<std::string, std::string>& requestMap);
     std::string convertRequestMapToString(const std::unordered_map<std::string, std::string>&) const;
 
 private:
