@@ -90,8 +90,8 @@ private:
             boost::program_options::notify(values);
 
             conf->imageID = cli::utility::parseImageID(argsGroups[1]);
-            conf->directories.initialize(conf->useCentralizedRepository, *conf);
             conf->useCentralizedRepository = values.count("centralized-repository");
+            conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch (std::exception& e) {
             auto message = boost::format("%s\nSee 'sarus help rmi'") % e.what();
