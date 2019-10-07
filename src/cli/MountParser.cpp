@@ -260,7 +260,7 @@ boost::filesystem::path MountParser::getValidatedMountSource(const std::unordere
     }
     for (const auto& disallowed : validationSettings.sourceDisallowedExact) {
         if (source.string() == disallowed) {
-            auto message = boost::format("Invalid mount request '%s': '%s' is not allowed as mount destination")
+            auto message = boost::format("Invalid mount request '%s': '%s' is not allowed as mount source")
                 % convertRequestMapToString(requestMap)
                 % disallowed;
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
