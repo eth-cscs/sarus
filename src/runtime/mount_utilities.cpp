@@ -39,13 +39,6 @@ void validateMountSource(const boost::filesystem::path& source) {
 
 
 void validateMountDestination(const boost::filesystem::path& destination, const common::Config& config) {
-    /* Check that destination is valid */
-    if(destination == "") {
-        auto message = boost::format("Invalid mount request: empty mount destination");
-        utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-    }
-
     /* If the destination does not exist, check its parents */
     if (!boost::filesystem::exists(destination)) {
         /* Search the first existing parent folder and check that it is on the device
