@@ -19,20 +19,20 @@
 
 #include "test_utility/config.hpp"
 #include "test_utility/filesystem.hpp"
-#include "runtime/UserMount.hpp"
+#include "runtime/Mount.hpp"
 #include "common/Utility.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
 using namespace sarus;
 
 
-TEST_GROUP(UserMountsTestGroup) {
+TEST_GROUP(MountTestGroup) {
 };
 
 #ifdef NOTROOT
 IGNORE_TEST(UserMountsTestGroup, make_user_mount_test) {
 #else
-TEST(UserMountsTestGroup, make_user_mount_test) {
+TEST(MountTestGroup, mount_test) {
 #endif
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
@@ -59,7 +59,7 @@ TEST(UserMountsTestGroup, make_user_mount_test) {
     CHECK(WIFEXITED(ret) != 0 && WEXITSTATUS(ret) == 0);
 
     // mount non-existing destination directory
-    runtime::UserMount{sourceDir, destinationDir, mount_flags, config}.performMount();
+    runtime::Mount{sourceDir, destinationDir, mount_flags, config}.performMount();
     CHECK(test_utility::filesystem::are_directories_equal(sourceDir.string(), (rootfsDir / destinationDir).string(), 1));
 
     // cleanup
@@ -68,7 +68,7 @@ TEST(UserMountsTestGroup, make_user_mount_test) {
 
     // mount existing destination directory
     common::createFoldersIfNecessary(rootfsDir / destinationDir);
-    runtime::UserMount{sourceDir, destinationDir.c_str(), mount_flags, config}.performMount();
+    runtime::Mount{sourceDir, destinationDir.c_str(), mount_flags, config}.performMount();
     CHECK(test_utility::filesystem::are_directories_equal(sourceDir.string(), (rootfsDir / destinationDir).string(), 1));
 
     // cleanup
@@ -76,7 +76,7 @@ TEST(UserMountsTestGroup, make_user_mount_test) {
     boost::filesystem::remove_all(rootfsDir / destinationDir);
 
     // mount file
-    runtime::UserMount{sourceFile, destinationFile, mount_flags, config}.performMount();
+    runtime::Mount{sourceFile, destinationFile, mount_flags, config}.performMount();
     CHECK(test_utility::filesystem::isSameBindMountedFile(sourceFile, rootfsDir / destinationFile));
 
     // cleanup

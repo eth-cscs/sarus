@@ -12,9 +12,10 @@
  * @brief Source file for user-requested mounts.
  */
 
-#include "UserMount.hpp"
+#include "Mount.hpp"
 
 #include <sys/stat.h>
+#include <sys/mount.h>
 #include <grp.h>
 #include <errno.h>
 
@@ -25,17 +26,17 @@
 namespace sarus {
 namespace runtime {
 
-UserMount::UserMount(   const boost::filesystem::path& source,
-                        const boost::filesystem::path& destination,
-                        const size_t mountFlags,
-                        std::shared_ptr<const common::Config> config)
+Mount::Mount(   const boost::filesystem::path& source,
+                const boost::filesystem::path& destination,
+                const size_t mountFlags,
+                std::shared_ptr<const common::Config> config)
     : source{source}
     , destination{destination}
     , mountFlags{mountFlags}
     , config{std::move(config)}
 {}
 
-void UserMount::performMount() const {
+void Mount::performMount() const {
     common::logMessage(boost::format("Performing User Mount: source = %s; target = %s; mount flags = %d")
         % source.string() % destination.string() % mountFlags, common::LogLevel::DEBUG);
 

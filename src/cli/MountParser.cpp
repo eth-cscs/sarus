@@ -17,15 +17,14 @@
 
 #include "common/Error.hpp"
 #include "cli/Utility.hpp"
-#include "runtime/UserMount.hpp"
-#include "runtime/SiteMount.hpp"
+#include "runtime/Mount.hpp"
+
 
 namespace sarus {
 namespace cli {
 
 MountParser::MountParser(bool isUserMount, std::shared_ptr<const common::Config> conf)
-    : isUserMount{isUserMount}
-    , conf{std::move(conf)}
+    : conf{std::move(conf)}
 {
     if(isUserMount) {
         // Retrieve settings from Config struct
@@ -92,12 +91,7 @@ std::unique_ptr<runtime::Mount> MountParser::parseBindMountRequest(const std::un
     auto destination = getValidatedMountDestination(requestMap);
     auto flags = convertBindMountFlags(requestMap); // Parse the other sub-options into mount flags
 
-    if(isUserMount) {
-        return std::unique_ptr<runtime::Mount>{new runtime::UserMount{source, destination, flags, conf}};
-    }
-    else {
-        return std::unique_ptr<runtime::Mount>{new runtime::SiteMount{source, destination, flags, conf}};
-    }
+    return std::unique_ptr<runtime::Mount>{new runtime::Mount{source, destination, flags, conf}};
 }
 
 /*

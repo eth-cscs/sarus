@@ -48,7 +48,6 @@ private:
     std::string convertRequestMapToString(const std::unordered_map<std::string, std::string>&) const;
 
 private:
-    bool isUserMount;
     std::shared_ptr<const common::Config> conf;
     ValidationSettings validationSettings = {};
 };
