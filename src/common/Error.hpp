@@ -15,7 +15,7 @@
 #include <exception>
 #include <string>
 #include <vector>
-#include <string.h>
+#include <cstring>
 
 #include <boost/filesystem.hpp>
 
@@ -52,6 +52,13 @@ public:
         : logLevel{ logLevel }
         , errorTrace{ entry }
     {}
+
+    const char* what() const noexcept override {
+        // Return the 'what()' of the original exception that generated this error trace
+        // as if the original exception was propagated directly up to the current
+        // stack frame, i.e. without intermediate catch-rethrows.
+        return errorTrace.front().errorMessage.c_str();
+    }
 
     void appendErrorTraceEntry(const ErrorTraceEntry& entry) {
         errorTrace.push_back(entry);

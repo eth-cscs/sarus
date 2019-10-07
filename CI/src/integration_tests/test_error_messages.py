@@ -72,6 +72,16 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Bad number of arguments for command 'load'\nSee 'sarus help load'"
         self._check(command, expected_message)
 
+        command = ["sarus", "load", "archive.tar", "alpine", "--invalid-option"]
+        expected_message = ("Invalid image ID [\"alpine\", \"--invalid-option\"]\n"
+                           "The image ID is expected to be a single token without options\n"
+                           "See 'sarus help load'")
+        self._check(command, expected_message)
+
+        command = ["sarus", "load", "archive.tar", "///"]
+        expected_message = ("Invalid image ID '///'\nSee 'sarus help load'")
+        self._check(command, expected_message)
+
         command = ["sarus", "load", "--temp-dir=/invalid-dir", "archive.tar", "imageid"]
         expected_message = "Invalid temporary directory \"/invalid-dir\""
         self._check(command, expected_message)
@@ -91,11 +101,12 @@ class TestErrorMessages(unittest.TestCase):
 
         command = ["sarus", "pull", "alpine", "--invalid-option"]
         expected_message = ("Invalid image ID [\"alpine\", \"--invalid-option\"]\n"
-                           "The image ID is expected to be a single token without options")
+                           "The image ID is expected to be a single token without options\n"
+                           "See 'sarus help pull'")
         self._check(command, expected_message)
 
         command = ["sarus", "pull", "///"]
-        expected_message = ("Invalid image ID '///'")
+        expected_message = ("Invalid image ID '///'\nSee 'sarus help pull'")
         self._check(command, expected_message)
 
         command = ["sarus", "pull", "invalid-image-1kds710dkj"]
@@ -131,8 +142,14 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Bad number of arguments for command 'rmi'\nSee 'sarus help rmi'"
         self._check(command, expected_message)
 
+        command = ["sarus", "rmi", "alpine", "--invalid-option"]
+        expected_message = ("Invalid image ID [\"alpine\", \"--invalid-option\"]\n"
+                           "The image ID is expected to be a single token without options\n"
+                           "See 'sarus help rmi'")
+        self._check(command, expected_message)
+
         command = ["sarus", "rmi", "///"]
-        expected_message = "Invalid image ID '///'"
+        expected_message = "Invalid image ID '///'\nSee 'sarus help rmi'"
         self._check(command, expected_message)
 
         command = ["sarus", "rmi", "invalid-image-9as7302j"]
@@ -148,8 +165,14 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Bad number of arguments for command 'run'\nSee 'sarus help run'"
         self._check(command, expected_message)
 
+        command = ["sarus", "run", "alpine", "--invalid-option", "true"]
+        expected_message = ("Invalid image ID [\"alpine\", \"--invalid-option\"]\n"
+                           "The image ID is expected to be a single token without options\n"
+                           "See 'sarus help run'")
+        self._check(command, expected_message)
+
         command = ["sarus", "run", "///", "true"]
-        expected_message = "Invalid image ID '///'"
+        expected_message = "Invalid image ID '///'\nSee 'sarus help run'"
         self._check(command, expected_message)
 
         command = ["sarus", "run", "--mount=xyz", "alpine:latest", "true"]

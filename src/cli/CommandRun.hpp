@@ -129,7 +129,12 @@ private:
             boost::program_options::store(parsed, values);
             boost::program_options::notify(values);
 
+            conf->imageID = cli::utility::parseImageID(argsGroups[1]);
             conf->useCentralizedRepository = values.count("centralized-repository");
+            conf->directories.initialize(conf->useCentralizedRepository, *conf);
+            // the remaining arguments (after image) are all part of the command to be executed in the container
+            conf->commandRun.execArgs = std::accumulate(argsGroups.cbegin()+2, argsGroups.cend(), common::CLIArguments{});
+            
 
             if(values.count("tty")) {
                 conf->commandRun.allocatePseudoTTY = true;
@@ -154,11 +159,6 @@ private:
             cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
-
-        // the remaining arguments (after image) are all part of the command to be executed in the container
-        conf->commandRun.execArgs = std::accumulate(argsGroups.cbegin()+2, argsGroups.cend(), common::CLIArguments{});
-        conf->directories.initialize(conf->useCentralizedRepository, *conf);
-        conf->imageID = cli::utility::parseImageID(argsGroups[1]);
 
         makeSiteMountObjects();
         makeUserMountObjects();

@@ -71,10 +71,9 @@ bool isValidCLIInputImageID(const std::string& imageID) {
 common::ImageID parseImageID(const common::CLIArguments& imageArgs) {
     if(imageArgs.argc() != 1) {
         auto message = boost::format(
-            "Invalid image ID '%s'\n"
+            "Invalid image ID %s\n"
             "The image ID is expected to be a single token without options") % imageArgs;
-        printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+        SARUS_THROW_ERROR(message.str());
     }
 
     return parseImageID(imageArgs.argv()[0]);
@@ -94,8 +93,7 @@ common::ImageID parseImageID(const std::string &input) {
     if(!isValidCLIInputImageID(input)) {
         auto message = boost::format("Invalid image ID '%s'\n"
                                     "Image IDs are not allowed to contain the sequence '..'") % input;
-        printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+        SARUS_THROW_ERROR(message.str());
     }
 
     boost::regex withServer("(.*?)/(.*?)/(.*?)");
@@ -127,8 +125,7 @@ common::ImageID parseImageID(const std::string &input) {
     // if empty field exists, throw exception
     if(server == "" || repositoryNamespace == "" || image == "" || tag == "") {
         auto message = boost::format("Invalid image ID '%s'") % input;
-        printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+        SARUS_THROW_ERROR(message.str());
     }
 
     auto imageID = common::ImageID{ server, repositoryNamespace, image, tag };

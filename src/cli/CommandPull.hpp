@@ -98,16 +98,15 @@ private:
                 readUserCredentialsFromCLI(conf->authentication);
             }
 
+            conf->imageID = cli::utility::parseImageID(argsGroups[1]);
             conf->useCentralizedRepository = values.count("centralized-repository");
+            conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch (std::exception& e) {
             auto message = boost::format("%s\nSee 'sarus help pull'") % e.what();
             cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
-
-        conf->directories.initialize(conf->useCentralizedRepository, *conf);
-        conf->imageID = cli::utility::parseImageID(argsGroups[1]);
 
         cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
     }
