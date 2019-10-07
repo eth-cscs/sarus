@@ -75,23 +75,6 @@ std::unique_ptr<runtime::Mount> MountParser::parseMountRequest(const std::unorde
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
-    // Check that one and only one of the key variants for the destination is in use
-    auto destination_count = requestMap.count("destination");
-    auto dst_count = requestMap.count("dst");
-    auto target_count = requestMap.count("target");
-    if (destination_count == 0 && dst_count == 0 && target_count == 0) {
-        auto message = boost::format("Invalid mount request '%s': no destination specified. "
-                "Use one of 'destination', 'dst' or 'target'.") % convertRequestMapToString(requestMap);
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-    }
-    if (destination_count ? (dst_count || target_count) : (dst_count && target_count)) {
-        auto message = boost::format("Invalid mount request '%s': multiple formats used to specify mount destination. "
-                "Use only one of 'destination', 'dst' or 'target'.") % convertRequestMapToString(requestMap);
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-    }
-
     // Parse sub-options for different mount types separately
     if (requestMap.at("type") == std::string{"bind"}) {
         return parseBindMountRequest(requestMap);
