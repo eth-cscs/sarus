@@ -29,9 +29,9 @@ SquashfsImage::SquashfsImage(   const common::Config& config,
     auto pathTemp = common::PathRAII{common::makeUniquePathWithRandomSuffix(pathOfImage)};
     common::createFoldersIfNecessary(pathTemp.getPath().parent_path());
 
-    log(boost::format("> make squashfs image: %s") % pathOfImage, common::logType::GENERAL);
+    log(boost::format("> make squashfs image: %s") % pathOfImage, common::LogLevel::GENERAL);
     log(boost::format("creating squashfs image %s from expanded image %s") % pathOfImage % expandedImage,
-        common::logType::INFO);
+        common::LogLevel::INFO);
 
     auto start = std::chrono::system_clock::now();
 
@@ -44,16 +44,16 @@ SquashfsImage::SquashfsImage(   const common::Config& config,
 
     auto end = std::chrono::system_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / double(1000);
-    log(boost::format("Elapsed time mksquashfs: %s [s]") % elapsedTime, common::logType::INFO);
+    log(boost::format("Elapsed time mksquashfs: %s [s]") % elapsedTime, common::LogLevel::INFO);
 
-    log(boost::format("successfully created squashfs file"), common::logType::INFO);
+    log(boost::format("successfully created squashfs file"), common::LogLevel::INFO);
 }
 
 boost::filesystem::path SquashfsImage::getPathOfImage() const {
     return pathOfImage;
 }
 
-void SquashfsImage::log(const boost::format &message, common::logType level) const {
+void SquashfsImage::log(const boost::format &message, common::LogLevel level) const {
     common::Logger::getInstance().log(message, "SquashfsImage", level);
 }
 

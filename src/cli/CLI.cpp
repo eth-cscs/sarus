@@ -50,52 +50,51 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
                 .run(), values);
         boost::program_options::notify(values); // throw if options are invalid
     }
-    catch (const boost::program_options::error& e) {
-        auto message = boost::format("Error while parsing the command line: %s") % e.what();
-        SARUS_THROW_ERROR(message.str());
-    }
     catch (const std::exception& e) {
-        SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments");
+        auto message = boost::format("%s\nSee 'sarus help'") % e.what();
+        logger.log(message, "CLI", common::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
     // configure logger
     if(values.count("debug")) {
-        logger.setLevel(common::logType::DEBUG);
+        logger.setLevel(common::LogLevel::DEBUG);
     }
     else if(values.count("verbose")) {
-        logger.setLevel(common::logType::INFO);
+        logger.setLevel(common::LogLevel::INFO);
     }
     else {
-        logger.setLevel(common::logType::WARN);
-    }
-
-    // --help option
-    if(values.count("help")) {
-        return factory.makeCommandObject("help", argsGroups, std::move(conf));
-    }
-
-    // --version option
-    if(values.count("version")) {
-        return factory.makeCommandObject("version", argsGroups, std::move(conf));
-    }
-
-    // no command name => return help command
-    if(argsGroups.size() == 1) {
-        return factory.makeCommandObject("help");
-    }
-
-    auto commandName = std::string{argsGroups[1].argv()[0]};
-
-    // process help command of another command
-    bool isCommandHelpFollowedByAnArgument =
-        commandName == "help" && argsGroups.size() > 2;
-    if(isCommandHelpFollowedByAnArgument) {
-        return parseCommandHelpOfCommand(argsGroups);
+        logger.setLevel(common::LogLevel::WARN);
     }
 
     // drop first argument
     // (string "sarus" and the related general options that we have already parsed)
     argsGroups.pop_front();
+
+    // --help option
+    if(values.count("help")) {
+        argsGroups.clear(); // --help overrides other arguments and options
+        return factory.makeCommandObject("help", argsGroups, std::move(conf));
+    }
+
+    // --version option
+    if(values.count("version")) {
+        argsGroups.clear(); // --version overrides other arguments and options
+        return factory.makeCommandObject("version", argsGroups, std::move(conf));
+    }
+
+    // no command name => return help command
+    if(argsGroups.empty()) {
+        return factory.makeCommandObject("help");
+    }
+
+    auto commandName = std::string{argsGroups.front().argv()[0]};
+
+    // process help command of another command
+    bool isCommandHelpFollowedByAnArgument = commandName == "help" && argsGroups.size() > 1;
+    if(isCommandHelpFollowedByAnArgument) {
+        return parseCommandHelpOfCommand(argsGroups);
+    }
 
     return factory.makeCommandObject(commandName, argsGroups, std::move(conf));
 }
@@ -134,12 +133,19 @@ std::deque<common::CLIArguments> CLI::groupArgumentsAndCorrespondingOptions(cons
 }
 
 std::unique_ptr<cli::Command> CLI::parseCommandHelpOfCommand(const std::deque<common::CLIArguments>& argsGroups) const {
-    auto factory = cli::CommandObjectsFactory{};
-    auto commandName = std::string{ argsGroups[2].argv()[0] };
-    if(!factory.isValidCommandName(commandName)) {
-        auto message = boost::format("unknown help topic: %s") % commandName;
-        SARUS_THROW_ERROR(message.str());
+    if(argsGroups[0].argc() > 1) {
+        auto message = boost::format("Command 'help' doesn't support options");
+        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
+    if(argsGroups.size() > 2) {
+        auto message = boost::format("Bad number of arguments for command 'help'"
+                                     "\nSee 'sarus help help'");
+        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+    }
+    auto factory = cli::CommandObjectsFactory{};
+    auto commandName = std::string{ argsGroups[1].argv()[0] };
     return factory.makeCommandObjectHelpOfCommand(commandName);
 }
 

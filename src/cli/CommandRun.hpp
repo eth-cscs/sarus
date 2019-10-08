@@ -45,15 +45,13 @@ public:
     }
 
     void execute() override {
-        cli::utility::printLog("Executing run command", common::logType::INFO);
+        cli::utility::printLog("Executing run command", common::LogLevel::INFO);
 
         if(conf->commandRun.enableSSH && !checkSshKeysInLocalRepository()) {
-            common::Logger::getInstance().log(
-                "Failed to check the SSH keys. Hint: try to generate the SSH keys"
-                " with the \"sarus ssh-keygen\" command first",
-                "CLI",
-                common::logType::GENERAL);
-            return;
+            auto message = boost::format("Failed to check the SSH keys. Hint: try to"
+                                         " generate the SSH keys with 'sarus ssh-keygen'.");
+            common::Logger::getInstance().log(message, "CLI", common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         verifyThatImageIsAvailable();
@@ -61,7 +59,7 @@ public:
         auto setupBegin = std::chrono::high_resolution_clock::now();
         auto cliTime = std::chrono::duration<double>(setupBegin - conf->program_start);
         auto message = boost::format("Processed CLI arguments in %.6f seconds") % cliTime.count();
-        cli::utility::printLog(message, common::logType::INFO);
+        cli::utility::printLog(message, common::LogLevel::INFO);
 
         auto runtime = runtime::Runtime{conf};
         runtime.setupOCIBundle();
@@ -69,11 +67,11 @@ public:
         auto setupEnd = std::chrono::high_resolution_clock::now();
         auto setupTime = std::chrono::duration<double>(setupEnd - setupBegin);
         message = boost::format("successfully set up container in %.6f seconds") % setupTime.count();
-        cli::utility::printLog(message, common::logType::INFO);
+        cli::utility::printLog(message, common::LogLevel::INFO);
 
         runtime.executeContainer();
 
-        cli::utility::printLog("Successfully executed run command", common::logType::INFO);
+        cli::utility::printLog("Successfully executed run command", common::LogLevel::INFO);
     }
 
     bool requiresRootPrivileges() const override {
@@ -111,12 +109,14 @@ private:
     }
 
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
-        cli::utility::printLog("parsing CLI arguments of run command", common::logType::DEBUG);
+        cli::utility::printLog("parsing CLI arguments of run command", common::LogLevel::DEBUG);
 
-        // the run command arguments (run [options] <image> [commands to execute]) are composed
-        // by at least two groups of arguments (run + image)
+        // the run command expects at least two arguments (run + image)
         if(argsGroups.size() < 2) {
-            SARUS_THROW_ERROR("failed to parse CLI arguments of run command (too few arguments provided)");
+            auto message = boost::format("Bad number of arguments for command 'run'"
+                                        "\nSee 'sarus help run'");
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         try {
@@ -129,8 +129,12 @@ private:
             boost::program_options::store(parsed, values);
             boost::program_options::notify(values);
 
+            conf->imageID = cli::utility::parseImageID(argsGroups[1]);
             conf->useCentralizedRepository = values.count("centralized-repository");
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
+            // the remaining arguments (after image) are all part of the command to be executed in the container
+            conf->commandRun.execArgs = std::accumulate(argsGroups.cbegin()+2, argsGroups.cend(), common::CLIArguments{});
+            
 
             if(values.count("tty")) {
                 conf->commandRun.allocatePseudoTTY = true;
@@ -149,20 +153,17 @@ private:
             if(values.count("ssh")) {
                 conf->commandRun.enableSSH = true;
             }
-
-            conf->imageID = cli::utility::parseImageID(argsGroups[1]);
-
-            makeSiteMountObjects();
-            makeUserMountObjects();
-
-            // the remaining arguments (after image) are all part of the command to be executed in the container
-            conf->commandRun.execArgs = std::accumulate(argsGroups.cbegin()+2, argsGroups.cend(), common::CLIArguments{});
         }
         catch (std::exception& e) {
-            SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of run command");
+            auto message = boost::format("%s\nSee 'sarus help run'") % e.what();
+            cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
-        cli::utility::printLog("successfully parsed CLI arguments", common::logType::DEBUG);
+        makeSiteMountObjects();
+        makeUserMountObjects();
+
+        cli::utility::printLog("successfully parsed CLI arguments", common::LogLevel::DEBUG);
     }
 
     void makeSiteMountObjects() {
@@ -213,7 +214,7 @@ private:
 
     bool checkSshKeysInLocalRepository() const {
         cli::utility::printLog( "Checking that the SSH keys are in the local repository",
-                                common::logType::INFO);
+                                common::LogLevel::INFO);
         common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR="
             + common::getLocalRepositoryDirectory(*conf).string());
         auto command = boost::format("%s/bin/ssh_hook check-localrepository-has-sshkeys")
@@ -229,13 +230,13 @@ private:
 
     void verifyThatImageIsAvailable() const {
         cli::utility::printLog( boost::format("Verifying that image %s is available") % conf->getImageFile(),
-                                common::logType::INFO);
+                                common::LogLevel::INFO);
         if(!boost::filesystem::exists(conf->getImageFile())) {
             auto message = boost::format("Specified image %s is not available") % conf->imageID;
-            cli::utility::printLog(message.str(), common::logType::GENERAL, std::cerr);
+            cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
             exit(EXIT_FAILURE);
         }
-        cli::utility::printLog("Successfully verified that image is available", common::logType::INFO);
+        cli::utility::printLog("Successfully verified that image is available", common::LogLevel::INFO);
     }
 
 private:

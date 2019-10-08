@@ -40,7 +40,7 @@ void FileDescriptorHandler::prepareFileDescriptorsToPreserve() {
     if (fileDescriptorsToPreserve.empty()) {
         return;
     }
-    utility::logMessage(boost::format("Preparing file descriptors to preserve into the container"), common::logType::INFO);
+    utility::logMessage(boost::format("Preparing file descriptors to preserve into the container"), common::LogLevel::INFO);
 
     for(const auto& fd : getOpenFileDescriptors()) {
         // Skip stdio descriptors
@@ -51,7 +51,7 @@ void FileDescriptorHandler::prepareFileDescriptorsToPreserve() {
         // Close unwanted file descriptors
         auto it = fileDescriptorsToPreserve.find(fd);
         if(it == fileDescriptorsToPreserve.cend()) {
-            utility::logMessage(boost::format("Closing file descriptor %d") % fd, common::logType::DEBUG);
+            utility::logMessage(boost::format("Closing file descriptor %d") % fd, common::LogLevel::DEBUG);
             close(fd);
             continue;
         }
@@ -60,16 +60,16 @@ void FileDescriptorHandler::prepareFileDescriptorsToPreserve() {
         const auto& fdName = it->second;
         if(fd == extraFileDescriptors + 3) {
             utility::logMessage(boost::format("No need to duplicate %s file descriptor %d") % fdName % fd,
-                                common::logType::DEBUG);
+                                common::LogLevel::DEBUG);
         }
         else {
-            utility::logMessage(boost::format("Duplicating %s fd %d") % fdName % fd, common::logType::DEBUG);
+            utility::logMessage(boost::format("Duplicating %s fd %d") % fdName % fd, common::LogLevel::DEBUG);
             auto newFd = dup(fd);
             if (newFd == -1) {
                 auto message = boost::format("Could not duplicate %s file descriptor. Dup error: %s") % fdName % strerror(errno);
                 SARUS_THROW_ERROR(message.str());
             }
-            utility::logMessage(boost::format("New %s fd: %d") % fdName % newFd, common::logType::DEBUG);
+            utility::logMessage(boost::format("New %s fd: %d") % fdName % newFd, common::LogLevel::DEBUG);
             close(fd);
             fileDescriptorsToPreserve[newFd] = fdName;
             fileDescriptorsToPreserve.erase(it);

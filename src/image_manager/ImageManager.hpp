@@ -37,7 +37,7 @@ private:
     void processImage(const InputImage& image);
     void issueWarningIfIsCentralizedRepositoryAndIsNotRootUser() const;
     void issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled() const;
-    void printLog(const boost::format& message, common::logType logType) const;
+    void printLog(const boost::format& message, common::LogLevel LogLevel) const;
 
 private:
     std::shared_ptr<const common::Config> config;

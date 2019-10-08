@@ -10,6 +10,7 @@
 
 #include "CommandObjectsFactory.hpp"
 
+#include "cli/Utility.hpp"
 #include "cli/CommandHelp.hpp"
 #include "cli/CommandHelpOfCommand.hpp"
 #include "cli/CommandImages.hpp"
@@ -50,9 +51,10 @@ std::vector<std::string> CommandObjectsFactory::getCommandNames() const {
 
 std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(const std::string& commandName) const {
     if(!isValidCommandName(commandName)) {
-        auto message = boost::format("Failed to make command object for command name \"%s\" (invalid command name)")
+        auto message = boost::format("'%s' is not a Sarus command\nSee 'sarus help'")
             % commandName;
-        SARUS_THROW_ERROR(message.str());
+        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
     auto it = map.find(commandName);
     return it->second();
@@ -63,9 +65,10 @@ std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(
     const std::deque<common::CLIArguments>& commandArgsGroups,
     std::shared_ptr<common::Config> config) const {
     if(!isValidCommandName(commandName)) {
-        auto message = boost::format("Failed to make command object for command name \"%s\" (invalid command name)")
+        auto message = boost::format("'%s' is not a Sarus command\nSee 'sarus help'")
             % commandName;
-        SARUS_THROW_ERROR(message.str());
+        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
     auto it = mapWithArguments.find(commandName);
     return it->second(commandArgsGroups, std::move(config));

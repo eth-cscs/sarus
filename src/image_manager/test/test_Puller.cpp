@@ -30,7 +30,7 @@ TEST(PullerTestGroup, testGetManifest) {
     boost::filesystem::remove_all(config->directories.cache);
 
     // test manifest
-    web::json::value manifest = puller.getManifest();
+    web::json::value manifest = puller.retrieveImageManifest();
     CHECK( !manifest.has_field(U("errors")) );
     CHECK( manifest.at(U("name")) == web::json::value(config->imageID.repositoryNamespace + "/" + config->imageID.image) );
     CHECK( manifest.at(U("tag"))  == web::json::value(config->imageID.tag) );

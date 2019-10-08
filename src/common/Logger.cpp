@@ -35,23 +35,23 @@ namespace common {
     }
 
     Logger::Logger()
-        : level{ common::logType::WARN }
+        : level{ common::LogLevel::WARN }
     {}
 
-    void Logger::log(const std::string& message, const std::string& systemName, const common::logType& logType,
+    void Logger::log(const std::string& message, const std::string& systemName, const common::LogLevel& logLevel,
     		std::ostream& out_stream, std::ostream& err_stream) {
-        if(logType < level) {
+        if(logLevel < level) {
             return;
         }
 
-        auto fullLogMessage = makeSubmessageWithTimestamp(logType)
-            + makeSubmessageWithSarusInstanceID(logType)
-            + makeSubmessageWithSystemName(logType, systemName)
-            + makeSubmessageWithLogLevel(logType)
+        auto fullLogMessage = makeSubmessageWithTimestamp(logLevel)
+            + makeSubmessageWithSarusInstanceID(logLevel)
+            + makeSubmessageWithSystemName(logLevel, systemName)
+            + makeSubmessageWithLogLevel(logLevel)
             + message;
 
         // WARNING and ERROR messages go to stderr
-        if ( logType == common::logType::WARN || logType == common::logType::ERROR ) {
+        if ( logLevel == common::LogLevel::WARN || logLevel == common::LogLevel::ERROR ) {
             err_stream << fullLogMessage << std::endl;
         }
         // rest goes to stdout
@@ -60,13 +60,17 @@ namespace common {
         }
     }
 
-    void Logger::log(const boost::format& message, const std::string& systemName, const common::logType& logType,
+    void Logger::log(const boost::format& message, const std::string& systemName, const common::LogLevel& logLevel,
     		std::ostream& out_stream, std::ostream& err_stream) {
-        log(message.str(), systemName, logType, out_stream, err_stream);
+        log(message.str(), systemName, logLevel, out_stream, err_stream);
     }
 
     void Logger::logErrorTrace( const common::Error& error, const std::string& systemName, std::ostream& errStream) {
-        log("Error trace (most nested error last):", systemName, logType::ERROR, std::cout, errStream);
+        if(error.getLogLevel() < level) {
+            return;
+        }
+
+        log("Error trace (most nested error last):", systemName, LogLevel::ERROR, std::cout, errStream);
 
         const auto& trace = error.getErrorTrace();
         for(size_t i=0; i!=trace.size(); ++i) {
@@ -77,8 +81,8 @@ namespace common {
         }
     }
 
-    std::string Logger::makeSubmessageWithTimestamp(common::logType logType) const {
-        if(logType == common::logType::GENERAL) {
+    std::string Logger::makeSubmessageWithTimestamp(common::LogLevel logLevel) const {
+        if(logLevel == common::LogLevel::GENERAL) {
             return "";
         }
 
@@ -92,8 +96,8 @@ namespace common {
         return timestamp.str();
     }
 
-    std::string Logger::makeSubmessageWithSarusInstanceID(common::logType logType) const {
-        if(logType == common::logType::GENERAL) {
+    std::string Logger::makeSubmessageWithSarusInstanceID(common::LogLevel logLevel) const {
+        if(logLevel == common::LogLevel::GENERAL) {
             return "";
         }
 
@@ -101,21 +105,21 @@ namespace common {
         return id.str();
     }
 
-    std::string Logger::makeSubmessageWithSystemName(common::logType logType, const std::string& systemName) const {
-        if(logType == common::logType::GENERAL) {
+    std::string Logger::makeSubmessageWithSystemName(common::LogLevel logLevel, const std::string& systemName) const {
+        if(logLevel == common::LogLevel::GENERAL) {
             return "";
         }
 
         return "[" + systemName + "] ";
     }
 
-    std::string Logger::makeSubmessageWithLogLevel(common::logType logType) const {
-        switch(logType) {
-            case common::logType::DEBUG:   return "[DEBUG] ";
-            case common::logType::INFO :   return "[INFO] ";
-            case common::logType::WARN :   return "[WARN] ";
-            case common::logType::ERROR:   return "[ERROR] ";
-            case common::logType::GENERAL: return "";
+    std::string Logger::makeSubmessageWithLogLevel(common::LogLevel logLevel) const {
+        switch(logLevel) {
+            case common::LogLevel::DEBUG:   return "[DEBUG] ";
+            case common::LogLevel::INFO :   return "[INFO] ";
+            case common::LogLevel::WARN :   return "[WARN] ";
+            case common::LogLevel::ERROR:   return "[ERROR] ";
+            case common::LogLevel::GENERAL: return "";
         }
         SARUS_THROW_ERROR("logger failed to convert unknown log level to string");
     }

@@ -54,14 +54,13 @@ int main(int argc, char* argv[]) {
         command->execute();
     }
     catch(const common::Error& e) {
-        logger.log("Caught exception in main function", "main", common::logType::ERROR);
         logger.logErrorTrace(e, "main");
         return 1;
     }
     catch(const std::exception& e) {
         auto message = boost::format("Caught exception in main function. No error trace available."
                                      " Exception message: %s") % e.what();
-        logger.log(message.str(), "main", common::logType::ERROR);
+        logger.log(message.str(), "main", common::LogLevel::ERROR);
         return 1;
     }
 

@@ -37,6 +37,19 @@ void functionThatThrowsFromStdException() {
     SARUS_RETHROW_ERROR(ref, "second error message");
 }
 
+void functionThatThrowsWithLogLevelDebug() {
+    SARUS_THROW_ERROR("first error message", common::LogLevel::DEBUG);
+}
+
+void functionThatRethrowsWithLogLevelDebug() {
+    try {
+        functionThatThrows();
+    }
+    catch(common::Error& error) {
+        SARUS_RETHROW_ERROR(error, "second error message", common::LogLevel::DEBUG);
+    }
+}
+
 TEST(ErrorTestGroup, oneStackTraceEntry) {
     try {
         functionThatThrows();
@@ -46,6 +59,7 @@ TEST(ErrorTestGroup, oneStackTraceEntry) {
 
         CHECK_EQUAL(error.getErrorTrace().size(), 1);
         CHECK(error.getErrorTrace()[0] == expectedFirstEntry);
+        CHECK(error.getLogLevel() == common::LogLevel::ERROR);
     }
 }
 
@@ -59,7 +73,8 @@ TEST(ErrorTestGroup, twoStackTraceEntries) {
 
         CHECK_EQUAL(error.getErrorTrace().size(), 2);
         CHECK(error.getErrorTrace()[0] == expectedFirstEntry);
-        CHECK(error.getErrorTrace()[1] == expectedSecondEntry);        
+        CHECK(error.getErrorTrace()[1] == expectedSecondEntry);
+        CHECK(error.getLogLevel() == common::LogLevel::ERROR);
     }
 }
 
@@ -74,6 +89,35 @@ TEST(ErrorTestGroup, fromStdException) {
         CHECK_EQUAL(error.getErrorTrace().size(), 2);
         CHECK(error.getErrorTrace()[0] == expectedFirstEntry);
         CHECK(error.getErrorTrace()[1] == expectedSecondEntry);
+        CHECK(error.getLogLevel() == common::LogLevel::ERROR);
+    }
+}
+
+TEST(ErrorTestGroup, oneStackTraceEntry_throwWithLogLevelDebug) {
+    try {
+        functionThatThrowsWithLogLevelDebug();
+    }
+    catch(const common::Error& error) {
+        auto expectedFirstEntry = common::Error::ErrorTraceEntry{"first error message", "test_Error.cpp", 41, "functionThatThrowsWithLogLevelDebug"};
+
+        CHECK_EQUAL(error.getErrorTrace().size(), 1);
+        CHECK(error.getErrorTrace()[0] == expectedFirstEntry);
+        CHECK(error.getLogLevel() == common::LogLevel::DEBUG);
+    }
+}
+
+TEST(ErrorTestGroup, twoStackTraceEntries_rethrowWithLogLevelDebug) {
+    try {
+        functionThatRethrowsWithLogLevelDebug();
+    }
+    catch (const common::Error& error) {
+        auto expectedFirstEntry = common::Error::ErrorTraceEntry{"first error message", "test_Error.cpp", 22, "functionThatThrows"};
+        auto expectedSecondEntry = common::Error::ErrorTraceEntry{"second error message", "test_Error.cpp", 49, "functionThatRethrowsWithLogLevelDebug"};
+
+        CHECK_EQUAL(error.getErrorTrace().size(), 2);
+        CHECK(error.getErrorTrace()[0] == expectedFirstEntry);
+        CHECK(error.getErrorTrace()[1] == expectedSecondEntry);
+        CHECK(error.getLogLevel() == common::LogLevel::DEBUG);
     }
 }
 

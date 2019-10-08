@@ -30,7 +30,7 @@ public:
     boost::filesystem::path getPathOfImage() const;
 
 private:
-    void log(const boost::format &message, common::logType level) const;
+    void log(const boost::format &message, common::LogLevel level) const;
 
 private:
     boost::filesystem::path pathOfImage;

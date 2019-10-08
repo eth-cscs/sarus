@@ -20,6 +20,10 @@ namespace common {
 
 void PasswdDB::read(const boost::filesystem::path& file) {
     std::ifstream is{file.c_str()};
+    read(is);
+}
+
+void PasswdDB::read(std::istream& is) {
     std::string line;
     while(std::getline(is, line)) {
         entries.push_back(parseLine(line));
@@ -63,8 +67,8 @@ PasswdDB::Entry PasswdDB::parseLine(const std::string& line) const {
     auto entry = Entry{};
     entry.loginName = tokens[0];
     entry.encryptedPassword = tokens[1];
-    entry.uid = std::stoi(tokens[2]);
-    entry.gid = std::stoi(tokens[3]);
+    entry.uid = std::stoul(tokens[2]);
+    entry.gid = std::stoul(tokens[3]);
     entry.userNameOrCommentField = tokens[4];
     entry.userHomeDirectory = tokens[5];
     if(tokens.size() > 6) {

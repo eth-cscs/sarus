@@ -26,7 +26,7 @@ TEST_GROUP(LoggerTestGroup) {
 
 class LoggerChecker {
 public:
-    LoggerChecker& log(common::logType logLevel, const std::string& message) {
+    LoggerChecker& log(common::LogLevel logLevel, const std::string& message) {
         auto& logger = common::Logger::getInstance();
         logger.log(message, "subsystem", logLevel, stdoutStream, stderrStream);
         return *this;
@@ -80,13 +80,13 @@ TEST(LoggerTestGroup, logger) {
     const std::string errorMessage = "ERROR message";
 
     // DEBUG level
-    common::Logger::getInstance().setLevel(common::logType::DEBUG);
+    common::Logger::getInstance().setLevel(common::LogLevel::DEBUG);
     LoggerChecker{}
-        .log(common::logType::GENERAL, generalMessage)
-        .log(common::logType::DEBUG, debugMessage)
-        .log(common::logType::INFO, infoMessage)
-        .log(common::logType::WARN, warnMessage)
-        .log(common::logType::ERROR, errorMessage)
+        .log(common::LogLevel::GENERAL, generalMessage)
+        .log(common::LogLevel::DEBUG, debugMessage)
+        .log(common::LogLevel::INFO, infoMessage)
+        .log(common::LogLevel::WARN, warnMessage)
+        .log(common::LogLevel::ERROR, errorMessage)
         .expectGeneralMessageInStdout(generalMessage)
         .expectMessageInStdout("DEBUG", debugMessage)
         .expectMessageInStdout("INFO", infoMessage)
@@ -94,38 +94,38 @@ TEST(LoggerTestGroup, logger) {
         .expectMessageInStderr("ERROR", errorMessage);
 
     // INFO level
-    common::Logger::getInstance().setLevel(common::logType::INFO);
+    common::Logger::getInstance().setLevel(common::LogLevel::INFO);
     LoggerChecker{}
-        .log(common::logType::GENERAL, generalMessage)
-        .log(common::logType::DEBUG, debugMessage)
-        .log(common::logType::INFO, infoMessage)
-        .log(common::logType::WARN, warnMessage)
-        .log(common::logType::ERROR, errorMessage)
+        .log(common::LogLevel::GENERAL, generalMessage)
+        .log(common::LogLevel::DEBUG, debugMessage)
+        .log(common::LogLevel::INFO, infoMessage)
+        .log(common::LogLevel::WARN, warnMessage)
+        .log(common::LogLevel::ERROR, errorMessage)
         .expectGeneralMessageInStdout(generalMessage)
         .expectMessageInStdout("INFO", infoMessage)
         .expectMessageInStderr("WARN", warnMessage)
         .expectMessageInStderr("ERROR", errorMessage);
 
     // WARN level
-    common::Logger::getInstance().setLevel(common::logType::WARN);
+    common::Logger::getInstance().setLevel(common::LogLevel::WARN);
     LoggerChecker{}
-        .log(common::logType::GENERAL, generalMessage)
-        .log(common::logType::DEBUG, debugMessage)
-        .log(common::logType::INFO, infoMessage)
-        .log(common::logType::WARN, warnMessage)
-        .log(common::logType::ERROR, errorMessage)
+        .log(common::LogLevel::GENERAL, generalMessage)
+        .log(common::LogLevel::DEBUG, debugMessage)
+        .log(common::LogLevel::INFO, infoMessage)
+        .log(common::LogLevel::WARN, warnMessage)
+        .log(common::LogLevel::ERROR, errorMessage)
         .expectGeneralMessageInStdout(generalMessage)
         .expectMessageInStderr("WARN", warnMessage)
         .expectMessageInStderr("ERROR", errorMessage);
 
     // ERROR level
-    common::Logger::getInstance().setLevel(common::logType::ERROR);
+    common::Logger::getInstance().setLevel(common::LogLevel::ERROR);
     LoggerChecker{}
-        .log(common::logType::GENERAL, generalMessage)
-        .log(common::logType::DEBUG, debugMessage)
-        .log(common::logType::INFO, infoMessage)
-        .log(common::logType::WARN, warnMessage)
-        .log(common::logType::ERROR, errorMessage)
+        .log(common::LogLevel::GENERAL, generalMessage)
+        .log(common::LogLevel::DEBUG, debugMessage)
+        .log(common::LogLevel::INFO, infoMessage)
+        .log(common::LogLevel::WARN, warnMessage)
+        .log(common::LogLevel::ERROR, errorMessage)
         .expectGeneralMessageInStdout(generalMessage)
         .expectMessageInStderr("ERROR", errorMessage);
 }

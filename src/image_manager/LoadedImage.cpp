@@ -23,7 +23,7 @@ LoadedImage::LoadedImage(   std::shared_ptr<const common::Config> config,
 {}
 
 std::tuple<common::PathRAII, common::ImageMetadata, std::string> LoadedImage::expand() const {
-    log(boost::format("expanding loaded image from archive %s") % imageArchive, common::logType::INFO);
+    log(boost::format("expanding loaded image from archive %s") % imageArchive, common::LogLevel::INFO);
 
     auto initialWorkingDir = boost::filesystem::current_path();
     auto tempArchiveDir = common::PathRAII{makeTemporaryExpansionDirectory()};
@@ -41,7 +41,7 @@ std::tuple<common::PathRAII, common::ImageMetadata, std::string> LoadedImage::ex
     // read manifest.json to construct metadata
     boost::filesystem::path manifestFilePath( tempArchiveDir.getPath() / "manifest.json" );
     auto loadedManifest = common::readJSON(manifestFilePath);
-    log("manifest.json: " + common::serializeJSON(loadedManifest), common::logType::DEBUG);
+    log("manifest.json: " + common::serializeJSON(loadedManifest), common::LogLevel::DEBUG);
 
     // if archive contains more than 1 container manifest or empty, throw error
     if (loadedManifest.Size() != 1) {
@@ -65,9 +65,9 @@ std::tuple<common::PathRAII, common::ImageMetadata, std::string> LoadedImage::ex
     }
     auto metadata = common::ImageMetadata(imageConfig["config"]);
 
-    log("Config: " + common::serializeJSON(imageConfig), common::logType::DEBUG);
-    log("layers: %s" + common::serializeJSON(layers), common::logType::DEBUG);
-    log("Repotags: %s" + common::serializeJSON(RepoTags), common::logType::DEBUG);
+    log("Config: " + common::serializeJSON(imageConfig), common::LogLevel::DEBUG);
+    log("layers: %s" + common::serializeJSON(layers), common::LogLevel::DEBUG);
+    log("Repotags: %s" + common::serializeJSON(RepoTags), common::LogLevel::DEBUG);
 
     // create list of layer archive paths
     std::vector<boost::filesystem::path> layerArchives;
@@ -79,7 +79,7 @@ std::tuple<common::PathRAII, common::ImageMetadata, std::string> LoadedImage::ex
 
     expandLayers(layerArchives, expansionDir.getPath());
 
-    log(boost::format("successfully expanded loaded image from archive %s") % imageArchive, common::logType::INFO);
+    log(boost::format("successfully expanded loaded image from archive %s") % imageArchive, common::LogLevel::INFO);
 
     auto digest = configFile.stem().string();
     return std::tuple<common::PathRAII, common::ImageMetadata, std::string>{

@@ -42,13 +42,12 @@ private:
 
 private:
     std::unique_ptr<runtime::Mount> parseBindMountRequest(const std::unordered_map<std::string, std::string>& requestMap);
-    unsigned long convertBindMountFlags(const std::unordered_map<std::string, std::string>& flagsMap);
-    void validateMountSource(const std::string& source_str);
-    void validateMountDestination( const std::string& destination_str);
+    unsigned long convertBindMountFlags(const std::unordered_map<std::string, std::string>& requestMap);
+    boost::filesystem::path getValidatedMountSource(const std::unordered_map<std::string, std::string>& requestMap);
+    boost::filesystem::path getValidatedMountDestination(const std::unordered_map<std::string, std::string>& requestMap);
     std::string convertRequestMapToString(const std::unordered_map<std::string, std::string>&) const;
 
 private:
-    bool isUserMount;
     std::shared_ptr<const common::Config> conf;
     ValidationSettings validationSettings = {};
 };

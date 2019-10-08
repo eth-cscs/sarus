@@ -34,6 +34,7 @@ public:
 
 public:
     void read(const boost::filesystem::path&);
+    void read(std::istream&);
     void write(const boost::filesystem::path&) const;
     const std::vector<Entry>& getEntries() const;
     std::vector<Entry>& getEntries();

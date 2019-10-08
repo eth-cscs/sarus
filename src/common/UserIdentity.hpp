@@ -1,0 +1,30 @@
+/*
+ * Sarus
+ *
+ * Copyright (c) 2018-2019, ETH Zurich. All rights reserved.
+ *
+ * Please, refer to the LICENSE file in the root directory.
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ */
+
+#ifndef sarus_common_UserIdentity_hpp
+#define sarus_common_UserIdentity_hpp
+
+#include <vector>
+#include <sys/types.h>
+
+
+namespace sarus {
+namespace common {
+
+struct UserIdentity {
+    UserIdentity();
+    uid_t uid;
+    gid_t gid;
+    std::vector<gid_t> supplementaryGids;
+};
+
+}} // namespaces
+
+#endif

@@ -41,7 +41,7 @@ std::string removeWhitespaces(const std::string&);
 std::string replaceString(std::string &buf, const std::string& from, const std::string& to);
 std::string eraseFirstAndLastDoubleQuote(const std::string& buf);
 std::string executeCommand(const std::string& command);
-void forkExecWait(const common::CLIArguments& args, const boost::optional<boost::filesystem::path>& chrootJail = {});
+int forkExecWait(const common::CLIArguments& args, const boost::optional<boost::filesystem::path>& chrootJail = {});
 void SetStdinEcho(bool);
 std::string getHostname();
 std::string getUsername(const common::Config&);
@@ -105,8 +105,8 @@ rapidjson::Document readAndValidateJSON(const boost::filesystem::path& configFil
 void writeJSON(const rapidjson::Value& json, const boost::filesystem::path& filename);
 std::string serializeJSON(const rapidjson::Value& json);
 rapidjson::Document convertCppRestJsonToRapidJson(web::json::value&);
-void logMessage(const std::string&, logType);
-void logMessage(const boost::format&, logType);
+void logMessage(const std::string&, LogLevel, std::ostream& out = std::cout, std::ostream& err = std::cerr);
+void logMessage(const boost::format&, LogLevel, std::ostream& out = std::cout, std::ostream& err = std::cerr);
 
 } // namespace
 } // namespace
