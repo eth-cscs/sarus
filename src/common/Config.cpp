@@ -59,22 +59,6 @@ void Config::initializeJson(std::shared_ptr<const common::Config> config,
     securityChecks.checkThatBinariesInSarusJsonAreUntamperable(json);
 }
 
-Config::UserIdentity::UserIdentity() {
-    // store uid + gid
-    uid = getuid();
-    gid = getgid();
-
-    // store supplementary gids (if any)
-    auto numOfSupplementaryGids = getgroups(0, NULL);
-    if(numOfSupplementaryGids > 0) {
-        supplementaryGids = std::vector<gid_t>(numOfSupplementaryGids);
-        if (getgroups(supplementaryGids.size(), supplementaryGids.data()) == -1) {
-            auto message = boost::format("Failed to retrieve supplementary group list: %s") % strerror(errno);
-            SARUS_THROW_ERROR(message.str());
-        }
-    }
-}
-
 boost::filesystem::path Config::getImageFile() const {
     auto key = imageID.getUniqueKey();
     auto file = boost::filesystem::path(directories.images.string() + "/" + key + ".squashfs");
