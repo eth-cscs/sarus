@@ -31,9 +31,7 @@ namespace runtime {
 void validateMountSource(const boost::filesystem::path& source) {
     // check that directory exists, i.e. is visible to user
     if (!boost::filesystem::exists(source)) {
-        auto message = boost::format("Invalid mount request: mount source '%s' doesn't exist") % source.string();
-        utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+        SARUS_THROW_ERROR("mount source doesn't exist");
     }
 }
 
@@ -61,18 +59,12 @@ void validateMountDestination(const boost::filesystem::path& destination, const 
         }
 
         if(!isPathOnBindMountableDevice(*deepestExistingFolder, config)) {
-            auto message = boost::format("Invalid mount request: mount destination '%s' is not on an allowed device for mounts")
-                % destination;
-            utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            SARUS_THROW_ERROR("mount destination is not on a device allowed for mounts");
         }
     }
     /* If destination exists, check it is on an allowed device */
-    else if (!isPathOnBindMountableDevice(destination, config)) {
-        auto message = boost::format("Invalid mount request: mount destination '%s' is not on an allowed device for mounts")
-                % destination;
-        utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+    else if(!isPathOnBindMountableDevice(destination, config)) {
+        SARUS_THROW_ERROR("mount destination is not on a device allowed for mounts");
     }
 }
 

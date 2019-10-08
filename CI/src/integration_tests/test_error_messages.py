@@ -180,7 +180,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "run", "--mount=src=/invalid-s87dfs9,dst=/dst,type=bind", "alpine:latest", "true"]
-        expected_message = "Invalid mount request: mount source '/invalid-s87dfs9' doesn't exist"
+        expected_message = "Failed to bind mount /invalid-s87dfs9 on container\'s /dst: mount source doesn\'t exist"
         self._check(command, expected_message)
 
         sarus_ssh_dir = os.getenv("HOME") + "/.sarus/ssh"

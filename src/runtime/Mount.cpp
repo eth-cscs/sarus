@@ -20,6 +20,7 @@
 #include <errno.h>
 
 #include "common/Utility.hpp"
+#include "runtime/Utility.hpp"
 #include "runtime/mount_utilities.hpp"
 
 
@@ -37,7 +38,7 @@ Mount::Mount(   const boost::filesystem::path& source,
 {}
 
 void Mount::performMount() const {
-    common::logMessage(boost::format("Performing User Mount: source = %s; target = %s; mount flags = %d")
+    common::logMessage(boost::format("Performing bind mount: source = %s; target = %s; mount flags = %d")
         % source.string() % destination.string() % mountFlags, common::LogLevel::DEBUG);
 
     // backup user + group ids
@@ -72,7 +73,19 @@ void Mount::performMount() const {
         SARUS_THROW_ERROR("Failed to assume end-user uid");
     }
 
-    validateMountSource(source);
+    auto rootfsDir = boost::filesystem::path{ config->json["OCIBundleDir"].GetString() }
+        / config->json["rootfsFolder"].GetString();
+    auto destinationReal = common::realpathWithinRootfs(rootfsDir, destination);
+
+    try {
+        validateMountSource(source);
+        validateMountDestination(destinationReal, *config);
+    } catch(common::Error& e) {
+        auto message = boost::format("Failed to bind mount %s on container's %s: %s")
+            % source.string() % destination.string() % e.what();
+        utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
+        SARUS_RETHROW_ERROR(e, message.str(), common::LogLevel::INFO);
+    }
 
     auto realpathOfSource = std::shared_ptr<char>{realpath(source.string().c_str(), NULL), free};
     if (!realpathOfSource) {
@@ -93,12 +106,6 @@ void Mount::performMount() const {
         SARUS_THROW_ERROR("Failed to re-assume original user auxiliary gids");
     }
 
-    auto rootfsDir = boost::filesystem::path{ config->json["OCIBundleDir"].GetString() }
-        / config->json["rootfsFolder"].GetString();
-    auto destinationReal = common::realpathWithinRootfs(rootfsDir, destination);
-
-    validateMountDestination(destinationReal, *config);
-
     if(boost::filesystem::is_directory(realpathOfSource.get())) {
         common::createFoldersIfNecessary(destinationReal, config->userIdentity.uid, config->userIdentity.gid);
     }
@@ -113,6 +120,8 @@ void Mount::performMount() const {
         auto message = boost::format("Failed user requested bind mount from %s to %s") % source % destination;
         SARUS_THROW_ERROR(message.str());
     }
+
+    common::logMessage("Successfully performed bind mount", common::LogLevel::DEBUG);
 }
 
 } // namespace
