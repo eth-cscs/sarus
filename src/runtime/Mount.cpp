@@ -38,7 +38,7 @@ Mount::Mount(   const boost::filesystem::path& source,
 {}
 
 void Mount::performMount() const {
-    common::logMessage(boost::format("Performing bind mount: source = %s; target = %s; mount flags = %d")
+    runtime::utility::logMessage(boost::format("Performing bind mount: source = %s; target = %s; mount flags = %d")
         % source.string() % destination.string() % mountFlags, common::LogLevel::DEBUG);
 
     // switch to user identity to make sure that he has access to the mount source
@@ -55,7 +55,7 @@ void Mount::performMount() const {
     } catch(std::exception& e) {
         auto message = boost::format("Failed to bind mount %s on container's %s: %s")
             % source.string() % destination.string() % e.what();
-        utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
+        runtime::utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_RETHROW_ERROR(e, message.str(), common::LogLevel::INFO);
     }
 
@@ -82,12 +82,13 @@ void Mount::performMount() const {
         SARUS_THROW_ERROR(message.str());
     }
 
-    common::logMessage("Successfully performed bind mount", common::LogLevel::DEBUG);
+    runtime::utility::logMessage("Successfully performed bind mount", common::LogLevel::DEBUG);
 }
 
 void Mount::switchToUnprivilegedUser(const common::UserIdentity& identity) const {
-    common::logMessage( boost::format{"Switching to uprivileged user (uid=%d gid=%d)"} % identity.uid % identity.gid,
-                        common::LogLevel::DEBUG);
+    runtime::utility::logMessage(boost::format{"Switching to uprivileged user (uid=%d gid=%d)"}
+                                 % identity.uid % identity.gid,
+                                 common::LogLevel::DEBUG);
 
     if (setgroups(config->userIdentity.supplementaryGids.size(), config->userIdentity.supplementaryGids.data()) != 0) {
         SARUS_THROW_ERROR("Failed to assume end-user auxiliary gids");
@@ -99,12 +100,13 @@ void Mount::switchToUnprivilegedUser(const common::UserIdentity& identity) const
         SARUS_THROW_ERROR("Failed to assume end-user uid");
     }
 
-    common::logMessage("Successfully switched to uprivileged user", common::LogLevel::DEBUG);
+    runtime::utility::logMessage("Successfully switched to uprivileged user", common::LogLevel::DEBUG);
 }
 
 void Mount::switchToPrivilegedUser(const common::UserIdentity& identity) const {
-    common::logMessage( boost::format{"Switching to privileged user (uid=%d gid=%d)"} % identity.uid % identity.gid,
-                        common::LogLevel::DEBUG);
+    runtime::utility::logMessage(boost::format{"Switching to privileged user (uid=%d gid=%d)"}
+                                 % identity.uid % identity.gid,
+                                 common::LogLevel::DEBUG);
 
     if (seteuid(identity.uid) != 0) {
         SARUS_THROW_ERROR("Failed to re-assume original user effective uid");
@@ -116,7 +118,7 @@ void Mount::switchToPrivilegedUser(const common::UserIdentity& identity) const {
         SARUS_THROW_ERROR("Failed to re-assume original user auxiliary gids");
     }
 
-    common::logMessage("Successfully switched to privileged user", common::LogLevel::DEBUG);
+    runtime::utility::logMessage("Successfully switched to privileged user", common::LogLevel::DEBUG);
 }
 
 
