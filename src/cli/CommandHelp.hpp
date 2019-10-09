@@ -15,6 +15,7 @@
 #include <algorithm>
 
 #include "common/Config.hpp"
+#include "cli/Utility.hpp"
 #include "cli/Command.hpp"
 #include "cli/CLI.hpp"
 #include "cli/HelpMessage.hpp"
@@ -27,8 +28,13 @@ class CommandHelp : public Command {
 public:
     CommandHelp() = default;
 
-    CommandHelp(const std::deque<common::CLIArguments>&, std::shared_ptr<common::Config>)
-    {}
+    CommandHelp(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config>) {
+        if(!argsGroups.empty() && argsGroups[0].argc() > 1) {
+            auto message = boost::format("Command 'help' doesn't support options");
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+        }
+    }
 
     void execute() override {
         std::cout

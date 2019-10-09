@@ -51,13 +51,13 @@ void FileDescriptorHandler::passStdoutAndStderrToHooks() {
 }
 
 void FileDescriptorHandler::applyChangesToFdsAndEnvVariables() {
-    utility::logMessage("Applying changes to file descriptors and environment variables", common::logType::INFO);
+    utility::logMessage("Applying changes to file descriptors and environment variables", common::LogLevel::INFO);
 
     // close unwanted file descriptors
     for(auto fd : getOpenFileDescriptors()) {
         bool toBePreserved = fileDescriptorsToPreserve.find(fd) != fileDescriptorsToPreserve.cend();
         if(!toBePreserved) {
-            utility::logMessage(boost::format("Closing file descriptor %d") % fd, common::logType::DEBUG);
+            utility::logMessage(boost::format("Closing file descriptor %d") % fd, common::LogLevel::DEBUG);
             close(fd);
         }
     }
@@ -71,17 +71,17 @@ void FileDescriptorHandler::applyChangesToFdsAndEnvVariables() {
         bool isAtLowestAvailableValue = (fd <= 3 + extraFileDescriptors);
         if(isAtLowestAvailableValue && !fdInfo.forceDup) {
             utility::logMessage(boost::format("No need to duplicate %s file descriptor %d") % fdInfo.name % fd,
-                                common::logType::DEBUG);
+                                common::LogLevel::DEBUG);
             newFd = fd;
         }
         else {
-            utility::logMessage(boost::format("Duplicating %s fd %d") % fdInfo.name % fd, common::logType::DEBUG);
+            utility::logMessage(boost::format("Duplicating %s fd %d") % fdInfo.name % fd, common::LogLevel::DEBUG);
             newFd = dup(fd);
             if (newFd == -1) {
                 auto message = boost::format("Could not duplicate %s file descriptor. Dup error: %s") % fdInfo.name % strerror(errno);
                 SARUS_THROW_ERROR(message.str());
             }
-            utility::logMessage(boost::format("New %s fd: %d") % fdInfo.name % newFd, common::logType::DEBUG);
+            utility::logMessage(boost::format("New %s fd: %d") % fdInfo.name % newFd, common::LogLevel::DEBUG);
             if(!fdInfo.forceDup) {
                 close(fd);
             }
@@ -96,18 +96,18 @@ void FileDescriptorHandler::applyChangesToFdsAndEnvVariables() {
         }
 
         if(fdInfo.containerEnvVariable) {
-            utility::logMessage(boost::format("Setting container env variable %s=%d") % *fdInfo.containerEnvVariable % newFd, common::logType::DEBUG);
+            utility::logMessage(boost::format("Setting container env variable %s=%d") % *fdInfo.containerEnvVariable % newFd, common::LogLevel::DEBUG);
             config->commandRun.hostEnvironment[*fdInfo.containerEnvVariable] = std::to_string(newFd);
         }
 
         if(fdInfo.hookEnvVariable) {
-            utility::logMessage(boost::format("Setting hooks env variable %s=%d") % *fdInfo.hookEnvVariable % newFd, common::logType::DEBUG);
+            utility::logMessage(boost::format("Setting hooks env variable %s=%d") % *fdInfo.hookEnvVariable % newFd, common::LogLevel::DEBUG);
             config->commandRun.hooksEnvironment[*fdInfo.hookEnvVariable] = std::to_string(newFd);
         }
     }
 
-    utility::logMessage(boost::format("Total extra file descriptors: %d") % extraFileDescriptors, common::logType::DEBUG);
-    utility::logMessage("Successfully applied changes to file descriptors and environment variables", common::logType::INFO);
+    utility::logMessage(boost::format("Total extra file descriptors: %d") % extraFileDescriptors, common::LogLevel::DEBUG);
+    utility::logMessage("Successfully applied changes to file descriptors and environment variables", common::LogLevel::INFO);
 }
 
 std::vector<int> FileDescriptorHandler::getOpenFileDescriptors() const {

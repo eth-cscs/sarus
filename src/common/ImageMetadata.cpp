@@ -27,7 +27,7 @@ namespace common {
 
 ImageMetadata::ImageMetadata(const boost::filesystem::path& path) {
     auto message = boost::format("Creating image metadata from file %s") % path;
-    logMessage(message, logType::INFO);
+    logMessage(message, LogLevel::INFO);
 
     try {
         auto json = common::readJSON(path);
@@ -38,11 +38,11 @@ ImageMetadata::ImageMetadata(const boost::filesystem::path& path) {
         SARUS_RETHROW_ERROR(e, message.str());
     }
 
-    logMessage("Successfully created image metadata", logType::INFO);
+    logMessage("Successfully created image metadata", LogLevel::INFO);
 }
 
 ImageMetadata::ImageMetadata(const rapidjson::Value& metadata) {
-    logMessage("Creating image metadata from JSON object", logType::INFO);
+    logMessage("Creating image metadata from JSON object", LogLevel::INFO);
 
     try {
         parseJSON(metadata);
@@ -52,12 +52,12 @@ ImageMetadata::ImageMetadata(const rapidjson::Value& metadata) {
         SARUS_RETHROW_ERROR(e, message.str());
     }
 
-    logMessage("Successfully created image metadata from JSON object", logType::INFO);
+    logMessage("Successfully created image metadata from JSON object", LogLevel::INFO);
 }
 
 void ImageMetadata::write(const boost::filesystem::path& path) const {
     auto message = boost::format("Writing image metadata file %s") % path;
-    logMessage(message, logType::INFO);
+    logMessage(message, LogLevel::INFO);
 
     auto json = rapidjson::Document(rapidjson::kObjectType);
     auto& allocator = json.GetAllocator();
@@ -94,7 +94,7 @@ void ImageMetadata::write(const boost::filesystem::path& path) const {
 
     common::writeJSON(json, path);
 
-    logMessage("Successfully written image metadata file", logType::INFO);
+    logMessage("Successfully written image metadata file", LogLevel::INFO);
 }
 
 void ImageMetadata::parseJSON(const rapidjson::Value& json) {

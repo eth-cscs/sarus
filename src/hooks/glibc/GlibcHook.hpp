@@ -39,7 +39,7 @@ private:
         const boost::filesystem::path& hostLibc,
         const boost::filesystem::path& containerLibc) const;
     void replaceGlibcLibrariesInContainer() const;
-    void logMessage(const boost::format& message, sarus::common::logType,
+    void logMessage(const boost::format& message, sarus::common::LogLevel,
                     std::ostream& out=std::cout, std::ostream& err=std::cerr) const;
 
 private:

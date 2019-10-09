@@ -138,7 +138,7 @@ void ConfigsMerger::setHooksEnvironmentVariables(const common::Config::CommandRu
 }
 
 common::CLIArguments ConfigsMerger::getCommandToExecuteInContainer() const {
-    utility::logMessage("Building command to execute in container", common::logType::INFO);
+    utility::logMessage("Building command to execute in container", common::LogLevel::INFO);
 
     auto result = common::CLIArguments{};
     // first of all entrypoint (CLI entrypoint overrides metadata/image entrypoint)
@@ -163,7 +163,7 @@ common::CLIArguments ConfigsMerger::getCommandToExecuteInContainer() const {
 
     utility::logMessage(
         boost::format("Successfully built command to execute in container: %s") % result,
-        common::logType::INFO);
+        common::LogLevel::INFO);
 
     return result;
 }

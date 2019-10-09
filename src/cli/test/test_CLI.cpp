@@ -27,8 +27,6 @@
 #include "cli/CommandSshKeygen.hpp"
 #include "cli/CommandVersion.hpp"
 #include "runtime/Mount.hpp"
-#include "runtime/SiteMount.hpp"
-#include "runtime/UserMount.hpp"
 #include "test_utility/config.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
@@ -48,21 +46,16 @@ void checkCommandDynamicType(const cli::Command& command) {
     CHECK(dynamic_cast<const ExpectedDynamicType*>(&command) != nullptr);
 }
 
-template<class ExpectedDynamicType>
-void checkMountDynamicType(const runtime::Mount& command) {
-    CHECK(dynamic_cast<const ExpectedDynamicType*>(&command) != nullptr);
-}
-
 TEST(CLITestGroup, LogLevel) {
     auto& logger = common::Logger::getInstance();
     generateCommandFromCLIArguments({"sarus"});
-    CHECK_EQUAL(logger.getLevel(), common::logType::WARN);
+    CHECK(logger.getLevel() == common::LogLevel::WARN);
 
     generateCommandFromCLIArguments({"sarus", "--verbose"});
-    CHECK_EQUAL(logger.getLevel(), common::logType::INFO);
+    CHECK(logger.getLevel() == common::LogLevel::INFO);
 
     generateCommandFromCLIArguments({"sarus", "--debug"});
-    CHECK_EQUAL(logger.getLevel(), common::logType::DEBUG);
+    CHECK(logger.getLevel() == common::LogLevel::DEBUG);
 }
 
 TEST(CLITestGroup, CommandTypes) {
@@ -171,8 +164,6 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
         CHECK_EQUAL(conf->imageID.tag, std::string{"latest"});
         CHECK_EQUAL(conf->commandRun.useMPI, 1);
         CHECK_EQUAL(conf->commandRun.mounts.size(), 2); // 1 site mount + 1 user mount
-        checkMountDynamicType<runtime::SiteMount>(*conf->commandRun.mounts[0]); // site mounts first
-        checkMountDynamicType<runtime::UserMount>(*conf->commandRun.mounts[1]);
         CHECK(conf->commandRun.execArgs.argc() == 3);
         CHECK_EQUAL(conf->commandRun.execArgs.argv()[0], std::string{"bash"});
         CHECK_EQUAL(conf->commandRun.execArgs.argv()[1], std::string{"-c"});

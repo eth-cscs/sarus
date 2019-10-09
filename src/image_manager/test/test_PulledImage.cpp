@@ -26,7 +26,7 @@ TEST(PulledImageTestGroup, test) {
 
     // pull
     auto puller = image_manager::Puller{configRAII.config};
-    auto manifest = puller.getManifest();
+    auto manifest = puller.retrieveImageManifest();
     puller.pull();
 
     // expand

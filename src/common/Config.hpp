@@ -23,6 +23,7 @@
 
 #include "common/CLIArguments.hpp"
 #include "common/ImageID.hpp"
+#include "common/UserIdentity.hpp"
 #include "common/Logger.hpp"
 #include "runtime/Mount.hpp"
 
@@ -45,13 +46,6 @@ struct Config {
         boost::filesystem::path temp;
         std::string tempFromCLI;
         boost::filesystem::path images;
-    };
-
-    struct UserIdentity {
-        UserIdentity();
-        uid_t uid;
-        gid_t gid;
-        std::vector<gid_t> supplementaryGids;
     };
 
     struct Authentication {

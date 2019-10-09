@@ -31,18 +31,12 @@ namespace runtime {
 void validateMountSource(const boost::filesystem::path& source) {
     // check that directory exists, i.e. is visible to user
     if (!boost::filesystem::exists(source)) {
-        auto message = boost::format("Custom mount source location doesn't exist: %s") % source;
-        SARUS_THROW_ERROR(message.str());
+        SARUS_THROW_ERROR("mount source doesn't exist");
     }
 }
 
 
 void validateMountDestination(const boost::filesystem::path& destination, const common::Config& config) {
-    /* Check that destination is valid */
-    if(destination == "") {
-        SARUS_THROW_ERROR("Custom mount destination is invalid.");
-    }
-
     /* If the destination does not exist, check its parents */
     if (!boost::filesystem::exists(destination)) {
         /* Search the first existing parent folder and check that it is on the device
@@ -65,18 +59,12 @@ void validateMountDestination(const boost::filesystem::path& destination, const 
         }
 
         if(!isPathOnBindMountableDevice(*deepestExistingFolder, config)) {
-            auto message =
-                boost::format("Custom mount destination is not on an allowed device for custom mounts: %s")
-                % destination;
-            SARUS_THROW_ERROR(message.str());
+            SARUS_THROW_ERROR("mount destination is not on a device allowed for mounts");
         }
     }
     /* If destination exists, check it is on an allowed device */
-    else if (!isPathOnBindMountableDevice(destination, config)) {
-        auto message =
-            boost::format("Custom mount destination is not on an allowed device for custom mounts: %s")
-            % destination;
-        SARUS_THROW_ERROR(message.str());
+    else if(!isPathOnBindMountableDevice(destination, config)) {
+        SARUS_THROW_ERROR("mount destination is not on a device allowed for mounts");
     }
 }
 
@@ -86,7 +74,7 @@ bool isPathOnBindMountableDevice(const boost::filesystem::path& path, const comm
     auto rootfsDir = bundleDir / config.json["rootfsFolder"].GetString();
 
     auto pathDevice = getDevice(path);
-    utility::logMessage(boost::format("Target device: %d") % pathDevice, common::logType::DEBUG);
+    utility::logMessage(boost::format("Target device: %d") % pathDevice, common::LogLevel::DEBUG);
 
     auto allowedDevices = std::vector<dev_t>{};
     allowedDevices.reserve(4);
@@ -98,7 +86,7 @@ bool isPathOnBindMountableDevice(const boost::filesystem::path& path, const comm
     auto lowerLayer = bundleDir / "overlay/rootfs-lower";
     allowedDevices.push_back(getDevice(lowerLayer));
     for(const auto& dev : allowedDevices) {
-        utility::logMessage(boost::format("Allowed device: %d") % dev, common::logType::DEBUG);
+        utility::logMessage(boost::format("Allowed device: %d") % dev, common::LogLevel::DEBUG);
     }
 
     bool isPathOnAllowedDevice = std::find( allowedDevices.cbegin(),

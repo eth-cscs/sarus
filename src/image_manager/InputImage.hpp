@@ -48,8 +48,10 @@ protected:
                                 ::archive* in,
                                 ::archive* out,
                                 ::archive_entry *entry) const;
-    void log(const boost::format &message, common::logType level) const;
-    void log(const std::string& message, common::logType level) const;
+    void log(   const boost::format &message, common::LogLevel,
+                std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
+    void log(   const std::string& message, common::LogLevel,
+                std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
 
 protected:
     std::shared_ptr<const common::Config> config;

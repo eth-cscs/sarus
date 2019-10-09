@@ -53,19 +53,19 @@ namespace image_manager {
      * Pull the container image layer tarfile using configurations (config)
      */
     PulledImage Puller::pull() {
-        printLog(boost::format("Pulling image"), common::logType::INFO);
+        printLog(boost::format("Pulling image"), common::LogLevel::INFO);
 
         /** main function  */
         std::chrono::system_clock::time_point start, end;
         double elapsed;
 
         // output params
-        printLog( boost::format("# image            : %s") % config->imageID, common::logType::GENERAL);
-        printLog( boost::format("# cache directory  : %s") % config->directories.cache, common::logType::GENERAL);
-        printLog( boost::format("# temp directory   : %s") % config->directories.temp, common::logType::GENERAL);
-        printLog( boost::format("# images directory : %s") % config->directories.images, common::logType::GENERAL);
+        printLog( boost::format("# image            : %s") % config->imageID, common::LogLevel::GENERAL);
+        printLog( boost::format("# cache directory  : %s") % config->directories.cache, common::LogLevel::GENERAL);
+        printLog( boost::format("# temp directory   : %s") % config->directories.temp, common::LogLevel::GENERAL);
+        printLog( boost::format("# images directory : %s") % config->directories.images, common::LogLevel::GENERAL);
 
-        manifest = getManifest();
+        auto manifest = retrieveImageManifest();
 
         if (!manifest.has_field(U("fsLayers"))) {
             SARUS_THROW_ERROR("manifest does not have \"fsLayers\" field.");
@@ -79,8 +79,8 @@ namespace image_manager {
         end = std::chrono::system_clock::now();
         elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / double(1000);
 
-        printLog(boost::format("Elapsed time on pulling    : %s [sec]") % elapsed, common::logType::INFO);
-        printLog(boost::format("Successfully pulled image"), common::logType::INFO);
+        printLog(boost::format("Elapsed time on pulling    : %s [sec]") % elapsed, common::LogLevel::INFO);
+        printLog(boost::format("Successfully pulled image"), common::LogLevel::INFO);
 
         return PulledImage{config, manifest};
     }
@@ -92,8 +92,8 @@ namespace image_manager {
      */
     void Puller::saveImage(json::value fsLayers)
     {
-        printLog( boost::format("> save image layers ..."), common::logType::GENERAL);
-        printLog( boost::format("Create download threads."), common::logType::DEBUG);
+        printLog( boost::format("> save image layers ..."), common::LogLevel::GENERAL);
+        printLog( boost::format("Create download threads."), common::LogLevel::DEBUG);
     
         common::createFoldersIfNecessary(config->directories.cache);
     
@@ -123,7 +123,7 @@ namespace image_manager {
             SARUS_RETHROW_ERROR(e, "Failed to download image. An error occurred in one of the download threads.");
         }
 
-        printLog(boost::format("Successfully downloaded image."), common::logType::DEBUG);
+        printLog(boost::format("Successfully downloaded image."), common::LogLevel::DEBUG);
     }
 
     /**
@@ -133,24 +133,28 @@ namespace image_manager {
      */
     void Puller::saveLayer(const std::string &digest)
     {
-        printLog( boost::format("Download the layer: %s") % digest, common::logType::DEBUG);
+        printLog( boost::format("Download the layer: %s") % digest, common::LogLevel::DEBUG);
 
         auto layerFile = config->directories.cache / boost::filesystem::path(digest + ".tar");
         auto layerFileTemp = common::makeUniquePathWithRandomSuffix(layerFile);
 
         // check if layer is already in cache
         if(boost::filesystem::exists(layerFile)) {
-            printLog( boost::format("> %-15.15s: %s") % "found in cache" % digest, common::logType::GENERAL);
+            printLog( boost::format("> %-15.15s: %s") % "found in cache" % digest, common::LogLevel::GENERAL);
             return;
         }
     
-        web::http::client::http_client       client( getUri(config->imageID.server) );
+        web::http::client::http_client       client( getServerUri(config->imageID.server) );
         web::http::http_request              request(methods::GET);
         web::http::http_response             response;
 
-        for(int retry = 0; retry < RETRY_MAX; ++retry) {
+        // make a copy of the authorization token to avoid data races because
+        // multiple instances of this function could be running in parallel
+        std::string authorizationToken = this->authorizationToken;
+
+        for(int retry = 0; retry < MAX_DOWNLOAD_RETRIES; ++retry) {
             if ( retry > 0 ) {
-                printLog( boost::format("> %-15.15s: %s") % "retry" % digest, common::logType::GENERAL);
+                printLog( boost::format("> %-15.15s: %s") % "retry" % digest, common::LogLevel::GENERAL);
             }
             
             std::string path = (boost::format("v2/%s/%s/blobs/%s")
@@ -160,27 +164,27 @@ namespace image_manager {
             request.set_request_uri(path);
 
             request.headers().clear();
-            std::string header = (boost::format("Bearer %s") % token).str();
+            std::string header = (boost::format("Bearer %s") % authorizationToken).str();
             request.headers().add(header_names::authorization, U(header) );
 
             printLog( boost::format("httpclient: uri=%s, path=%s, header=%25.25s..., digest=%25.25s...")
-                        % getUri(config->imageID.server) % path % header % digest, common::logType::DEBUG);
+                        % getServerUri(config->imageID.server) % path % header % digest, common::LogLevel::DEBUG);
 
             response = client.request(request).get();
             printLog( boost::format("Received http_response status code (%s): %s, digest=%s")
-                % response.status_code() % response.reason_phrase() % digest, common::logType::DEBUG);
+                % response.status_code() % response.reason_phrase() % digest, common::LogLevel::DEBUG);
 
             if ( response.status_code() == status_codes::OK ) {
                 break;
             }
-            // when unauthorized response arrived, request new token
+            // when unauthorized response arrives, request new token
             else if (response.status_code() == 401) {
-                printLog( boost::format("> %-15.15s: %s") % "tokenExpired" % digest, common::logType::GENERAL);
+                printLog( boost::format("> %-15.15s: %s") % "tokenExpired" % digest, common::LogLevel::GENERAL);
 
                 try {
-                    token = requestAuthToken();
+                    authorizationToken = requestAuthorizationToken();
                 } catch (const std::exception &e) {
-                    printLog( boost::format("Failed to get authorized token."), common::logType::ERROR);
+                    printLog( boost::format("Failed to get authorized token."), common::LogLevel::ERROR);
                 }
                 continue;
             }
@@ -197,36 +201,37 @@ namespace image_manager {
                 std::string downloadUri = matches[1].str() + "://" + matches[2].str();
                 path = matches[3];
     
-                printLog( boost::format("> %-15.15s: %s") % "pulling" % digest, common::logType::GENERAL);
+                printLog( boost::format("> %-15.15s: %s") % "pulling" % digest, common::LogLevel::GENERAL);
 
                 try {
                     downloadStream(downloadUri, path, layerFileTemp);
                 }
                 catch(common::Error& e) {
-                    printLog( boost::format("> %-15.15s: %s") % "failed" % digest, common::logType::GENERAL);
+                    printLog( boost::format("> %-15.15s: %s") % "failed" % digest, common::LogLevel::GENERAL);
                     common::Logger::getInstance().logErrorTrace(e, sysname);
                     continue; // retry download
                 }
 
                 if(!checkSum(digest, layerFileTemp)) {
-                    printLog( boost::format("> %-15.15s: %s") % "bad checksum" % digest, common::logType::GENERAL);
+                    printLog( boost::format("> %-15.15s: %s") % "bad checksum" % digest, common::LogLevel::GENERAL);
                     boost::filesystem::remove(layerFileTemp);
                     continue; // retry download
                 }
                 // if checksum succeeded, finish download process
                 boost::filesystem::rename(layerFileTemp, layerFile); // atomically create/replace layer file
-                printLog( boost::format("> %-15.15s: %s") % "completed" % digest, common::logType::GENERAL);
-                printLog( boost::format("Success to download : %s") % digest, common::logType::DEBUG);
+                printLog( boost::format("> %-15.15s: %s") % "completed" % digest, common::LogLevel::GENERAL);
+                printLog( boost::format("Success to download : %s") % digest, common::LogLevel::DEBUG);
                 return;
             }
             // other http response means irregal status
             else {
                 printLog( boost::format("Unexpected http_response (%s): %s, digest=%s")
-                    % response.status_code() % response.reason_phrase() % digest, common::logType::ERROR);
+                    % response.status_code() % response.reason_phrase() % digest, common::LogLevel::ERROR);
                 continue;
             }
         }
-        auto message = boost::format("Failed to download image layer %s. Exceeded max number of retries (%s).") % digest % RETRY_MAX;
+        auto message = boost::format("Failed to download image layer %s. Exceeded max number of retries (%s).")
+            % digest % MAX_DOWNLOAD_RETRIES;
         SARUS_THROW_ERROR(message.str());
     }
     
@@ -239,7 +244,7 @@ namespace image_manager {
      */
     void Puller::downloadStream(const std::string &uri, const std::string &path, const boost::filesystem::path &filename)
     {
-        printLog( boost::format("Start downloadStream: uri=%s, path=%s, filename=%s") % uri % path % filename, common::logType::DEBUG);
+        printLog( boost::format("Start downloadStream: uri=%s, path=%s, filename=%s") % uri % path % filename, common::LogLevel::DEBUG);
         auto fileStream = std::make_shared<ostream>();
         
         // Open stream
@@ -273,75 +278,75 @@ namespace image_manager {
             SARUS_RETHROW_ERROR(e, "Download stream error");
         }
 
-        printLog( boost::format("Finished download Stream: uri=%s, path=%s, filename=%s") % uri % path % filename, common::logType::DEBUG);
-    }
- 
-    /**
-     * Get the image manifest (if already exists, return it)
-     */
-    web::json::value Puller::getManifest()
-    {
-        /** get image manifest */
-        printLog( boost::format("Get image manifest."), common::logType::DEBUG);
-
-        // if manifest exist, return
-        if ( !this->manifest.is_null())
-        {
-            printLog( boost::format("Success to get cached manifest."), common::logType::DEBUG);
-            return this->manifest;
-        }
-        // otherwise, get new token and request manifest
-        std::string newToken = requestAuthToken();
-        token = newToken;
-        this->manifest = getManifest( newToken );
-
-        // check manifest
-        if ( manifest.has_field(U("errors")) ) {
-            auto message = boost::format(   "Failed to get manifest. Possible reasons: bad image ID specified"
-                                            " or access to repository denied (try with --login)."
-                                            " Downloaded manifest has 'errors' field: %s") % manifest.serialize();
-            SARUS_THROW_ERROR(message.str());
-        }
-
-        printLog( boost::format("Success to get manifest."), common::logType::DEBUG);
-        return this->manifest;
+        printLog( boost::format("Finished download Stream: uri=%s, path=%s, filename=%s") % uri % path % filename, common::LogLevel::DEBUG);
     }
 
     /**
-     * Get the NEW image manifest
+     * Retrieve image manifest from server
      */
-    web::json::value Puller::getManifest(const std::string &token)
-    {
-        printLog(boost::format("Retrieving image manifest."), common::logType::INFO);
+    web::json::value Puller::retrieveImageManifest() {
+        printLog(boost::format("Retrieving image manifest from %s") % config->imageID.server,
+                 common::LogLevel::INFO);
 
-        // request new image manifest
-        web::http::client::http_client      client( getUri(config->imageID.server) );
+        // get authorization token
+        try {
+            authorizationToken = requestAuthorizationToken();
+        }
+        catch(common::Error& e) {
+            auto message = boost::format{"Failed authentication for image '%s'"
+                    "\nDid you perform a login with the proper credentials?"
+                    "\nSee 'sarus help pull' (--login option)"}
+                    % config->imageID;
+            printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_RETHROW_ERROR(e, message.str(), common::LogLevel::INFO);
+        }
+
+        web::http::client::http_client      client( getServerUri(config->imageID.server) );
         web::http::http_request             request(methods::GET);
         web::http::http_response            response;
         
-        request.set_request_uri( getManifestPath() );
-        std::string header = (boost::format("Bearer %s") % token).str();
+        request.set_request_uri( makeImageManifestUri() );
+        std::string header = (boost::format("Bearer %s") % authorizationToken).str();
         request.headers().add(header_names::authorization, U(header) );
 
-        printLog( boost::format("server      : %s") % getUri(config->imageID.server), common::logType::DEBUG);
-        printLog( boost::format("request_uri : %s") % getManifestPath(), common::logType::DEBUG);
-        printLog( boost::format("header      : %s") % U(header), common::logType::DEBUG);
+        printLog( boost::format("server      : %s") % getServerUri(config->imageID.server), common::LogLevel::DEBUG);
+        printLog( boost::format("request_uri : %s") % makeImageManifestUri(), common::LogLevel::DEBUG);
+        printLog( boost::format("header      : %s") % U(header), common::LogLevel::DEBUG);
         
         response = client.request(request).get();
 
         if(response.status_code() != status_codes::OK) {
-            auto message = boost::format("Received http_response status code(%s): %s")
+            auto message = boost::format{"Failed to pull image '%s'\nIs the image ID correct?"} % config->imageID;
+            printLog(message, common::LogLevel::GENERAL, std::cerr);
+
+            message = boost::format{"Failed to pull manifest. Received http_response status code(%s): %s"}
                 % response.status_code() % response.reason_phrase();
-            SARUS_THROW_ERROR(message.str());
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
         
-        this->manifest = response.extract_json(true).get();
-        printLog(   boost::format("Retrieved image manifest:\n%s") % this->manifest.serialize(),
-                    common::logType::DEBUG);
+        auto manifest = response.extract_json(true).get();
 
-        printLog(boost::format("Successfully retrieved image manifest."), common::logType::INFO);
+        // check manifest
+        if ( manifest.has_field(U("errors")) ) {
+            auto message = boost::format("Failed to retrieve manifest for image %s."
+                                         " Downloaded manifest has 'errors' field: %s")
+                % config->imageID % manifest.serialize();
+            SARUS_THROW_ERROR(message.str());
+        }
 
-        return this->manifest;
+        printLog(boost::format("Retrieved image manifest:\n%s") % manifest.serialize(),
+                 common::LogLevel::DEBUG);
+
+        printLog(boost::format("Successfully retrieved image manifest"), common::LogLevel::INFO);
+
+        return manifest;
+    }
+
+    std::string Puller::makeImageManifestUri() {
+        return (boost::format("v2/%s/%s/manifests/%s")
+                % config->imageID.repositoryNamespace
+                % config->imageID.image
+                % config->imageID.tag).str();
     }
 
     /**
@@ -350,13 +355,13 @@ namespace image_manager {
     bool Puller::checkSum(const std::string &digest, const boost::filesystem::path &filename)
     {
         /** check target filename sum and return result */
-        printLog( boost::format("checksum: %s") % filename, common::logType::DEBUG);
-        printLog( boost::format("checksum: digest=%s, filename=%s") % digest % filename, common::logType::DEBUG);
+        printLog( boost::format("checksum: %s") % filename, common::LogLevel::DEBUG);
+        printLog( boost::format("checksum: digest=%s, filename=%s") % digest % filename, common::LogLevel::DEBUG);
 
         boost::cmatch matches;
         boost::regex re("(.*?):(.*?)");
         if (!boost::regex_match(digest.c_str(), matches, re)) {
-            printLog( boost::format("Failed to parse filename: %s") % digest, common::logType::ERROR);
+            printLog( boost::format("Failed to parse filename: %s") % digest, common::LogLevel::ERROR);
             return false;
         }
         std::string hash_type = matches[1].str();
@@ -368,23 +373,12 @@ namespace image_manager {
         std::string checksum = result.substr(0, result.find(" "));
     
         if(checksum != value) {
-            printLog( boost::format("Failed to test the checksum of layer %s") % filename, common::logType::ERROR);
-            printLog( boost::format("expected checksum=%s, actually computed checksum=%s") % value % checksum, common::logType::DEBUG);
+            printLog( boost::format("Failed to test the checksum of layer %s") % filename, common::LogLevel::ERROR);
+            printLog( boost::format("expected checksum=%s, actually computed checksum=%s") % value % checksum, common::LogLevel::DEBUG);
             return false;
         }
-        printLog( boost::format("successfully verified checksum of layer %s") % filename, common::logType::DEBUG);
+        printLog( boost::format("successfully verified checksum of layer %s") % filename, common::LogLevel::DEBUG);
         return true;
-    }
-    
-    /**
-     * Get the URI path of pulling image manifest
-     */
-    std::string Puller::getManifestPath()
-    {
-        return (boost::format("v2/%s/%s/manifests/%s")
-                % config->imageID.repositoryNamespace
-                % config->imageID.image
-                % config->imageID.tag).str();
     }
 
     /**
@@ -396,22 +390,18 @@ namespace image_manager {
         int j = header.substr(i, header.size()).find('\"');
         return header.substr(i, j);
     }
-    
-    /** 
-     * Get the authorized token
-     * 
-     */
-    std::string Puller::requestAuthToken()
-    {
-        printLog( boost::format("Request new auth token."), common::logType::DEBUG);
+
+    std::string Puller::requestAuthorizationToken() {
+        printLog(boost::format("Getting new authorization token from %s") % config->imageID.server,
+                 common::LogLevel::DEBUG);
 
         // get unauthorized header
-        std::unique_ptr<web::http::client::http_client> client = setupHttpClientWithCredential(getUri(config->imageID.server));
+        std::unique_ptr<web::http::client::http_client> client = setupHttpClientWithCredential(getServerUri(config->imageID.server));
         web::http::http_request              request(methods::GET);
         pplx::task<web::http::http_response> responseTask;
         web::http::http_response             response;
 
-        request.set_request_uri( getManifestPath() );
+        request.set_request_uri( makeImageManifestUri() );
         responseTask = client->request(request);
         
         try {
@@ -434,16 +424,16 @@ namespace image_manager {
         auto service = getParam(auth_header, "service");
         auto scope   = getParam(auth_header, "scope");
 
-        printLog( boost::format("real   : %s") % realm, common::logType::DEBUG);
-        printLog( boost::format("service: %s") % service, common::logType::DEBUG);
-        printLog( boost::format("scope  : %s") % scope, common::logType::DEBUG);
+        printLog( boost::format("real   : %s") % realm, common::LogLevel::DEBUG);
+        printLog( boost::format("service: %s") % service, common::LogLevel::DEBUG);
+        printLog( boost::format("scope  : %s") % scope, common::LogLevel::DEBUG);
 
         // get authorized token
         std::unique_ptr<web::http::client::http_client> tokenClient = setupHttpClientWithCredential( realm );
-        web::http::http_request             tokenReq(methods::GET);
-        web::uri_builder                    tokenUriBuilder("");
-        web::http::http_response            tokenResp;
-        std::string                         token;
+        web::http::http_request tokenReq(methods::GET);
+        web::uri_builder tokenUriBuilder("");
+        web::http::http_response tokenResp;
+        std::string token;
     
         tokenUriBuilder.append_query(U("scope"), scope);
         tokenUriBuilder.append_query(U("service"), service);
@@ -465,17 +455,13 @@ namespace image_manager {
             SARUS_RETHROW_ERROR(e, "Failed to get Token: %s");
         }
 
-        printLog( boost::format("Token: %s") % token, common::logType::DEBUG);
-        printLog( boost::format("Success to get new token."), common::logType::DEBUG);
-    
+        printLog( boost::format("Got token: %s") % token, common::LogLevel::DEBUG);
+        printLog( boost::format("Successfully got new authorization token"), common::LogLevel::DEBUG);
+
         return token;
     }
 
-    /**
-     *  Setup the http client with credential
-     */
-    std::unique_ptr<web::http::client::http_client> Puller::setupHttpClientWithCredential(const std::string& server)
-    {   
+    std::unique_ptr<web::http::client::http_client> Puller::setupHttpClientWithCredential(const std::string& server) {
         // if repository is private, add credential configrations
         if(config->authentication.isAuthenticationNeeded) {
             web::http::client::http_client_config clientConfig;
@@ -486,20 +472,15 @@ namespace image_manager {
 
         return std::unique_ptr<web::http::client::http_client>( new web::http::client::http_client( server ));
     }
-    
-    /**
-     * Get the uri path of host
-     */
-    std::string Puller::getUri(const std::string &server) {
+
+    std::string Puller::getServerUri(const std::string &server) {
         return "https://" + server;
     }
 
-    /**
-     * Show and logging message with logType
-     */
-    void Puller::printLog(const boost::format &message, common::logType logType)
+    void Puller::printLog(  const boost::format &message, common::LogLevel LogLevel,
+                            std::ostream& outStream, std::ostream& errStream)
     {
-        common::Logger::getInstance().log(message.str(), sysname, logType);
+        common::Logger::getInstance().log(message.str(), sysname, LogLevel, outStream, errStream);
     }
     
 } // namespace

@@ -28,17 +28,17 @@ TEST(CLIUtilityTestGroup, isValidCLIInputImageID) {
     CHECK_TRUE(cli::utility::isValidCLIInputImageID("server/namespace/image:tag"));
     
     // invalid image ids
-    CHECK_TRUE(cli::utility::isValidCLIInputImageID("../image"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageID("../image"));
 
-    CHECK_TRUE(cli::utility::isValidCLIInputImageID("../image:tag"));
-    CHECK_TRUE(cli::utility::isValidCLIInputImageID("image/..:tag"));
-    CHECK_TRUE(cli::utility::isValidCLIInputImageID("image:../tag"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageID("../image:tag"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageID("image/..:tag"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageID("image:../tag"));
 
-    CHECK_TRUE(cli::utility::isValidCLIInputImageID("../namespace/image:tag"));
-    CHECK_TRUE(cli::utility::isValidCLIInputImageID("namespace/../image:tag"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageID("../namespace/image:tag"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageID("namespace/../image:tag"));
 
-    CHECK_TRUE(cli::utility::isValidCLIInputImageID("../server/namespace/image:tag"));
-    CHECK_TRUE(cli::utility::isValidCLIInputImageID("server/../image:tag"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageID("../server/namespace/image:tag"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageID("server/../image:tag"));
 }
 
 TEST(CLIUtilityTestGroup, parseImageID) {

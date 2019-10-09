@@ -96,7 +96,8 @@ public:
     void printHelpMessage() const override {
         auto printer = cli::HelpMessage()
             .setUsage("sarus images")
-            .setDescription(getBriefDescription());
+            .setDescription(getBriefDescription())
+            .setOptionsDescription(optionsDescription);
         std::cout << printer;
     }
 
@@ -110,11 +111,13 @@ private:
     }
 
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
-        cli::utility::printLog(boost::format("parsing CLI arguments of images command"), common::logType::DEBUG);
+        cli::utility::printLog(boost::format("parsing CLI arguments of images command"), common::LogLevel::DEBUG);
 
-        // the images command arguments are composed by exactly one group of arguments
+        // the images command doesn't support additional arguments
         if(argsGroups.size() > 1) {
-            SARUS_THROW_ERROR("failed to parse CLI arguments of images command (too many arguments provided)");
+            auto message = boost::format("Bad number of arguments for command 'images'\nSee 'sarus help images'");
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         try {
@@ -129,10 +132,12 @@ private:
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch(std::exception& e) {
-            SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of pull command");
+            auto message = boost::format("%s\nSee 'sarus help images'") % e.what();
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
-        cli::utility::printLog( boost::format("successfully parsed CLI arguments"), common::logType::DEBUG);
+        cli::utility::printLog( boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
     }
 
     boost::format makeFormat(   const std::vector<common::SarusImage>& images,

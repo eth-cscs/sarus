@@ -73,12 +73,14 @@ private:
     }
 
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
-        cli::utility::printLog( boost::format("parsing CLI arguments of load command"), common::logType::DEBUG);
+        cli::utility::printLog( boost::format("parsing CLI arguments of load command"), common::LogLevel::DEBUG);
 
-        // the load command arguments (load [options] <archive> <image>) are composed
-        // by exactly three groups of arguments (load + archive + image)
+        // the load command supports exactly three arguments
         if(argsGroups.size() != 3) {
-            SARUS_THROW_ERROR("failed to parse CLI arguments of load command (bad number of arguments provided)");
+            auto message = boost::format("Bad number of arguments for command 'load'"
+                                        "\nSee 'sarus help load'");
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         try {
@@ -97,10 +99,12 @@ private:
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch (std::exception& e) {
-            SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of load command");
+            auto message = boost::format("%s\nSee 'sarus help load'") % e.what();
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
-        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::logType::DEBUG);
+        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
     }
 
     void parsePathOfArchiveToBeLoaded(const common::CLIArguments& archiveArgs) {

@@ -32,10 +32,10 @@ common::ImageID parseImageID(const common::CLIArguments& imageArgs);
 
 common::ImageID parseImageID(const std::string& input);
 
-void printLog(  const std::string& message, common::logType logType,
+void printLog(  const std::string& message, common::LogLevel LogLevel,
                 std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr);
 
-void printLog(  const boost::format& message, common::logType logType,
+void printLog(  const boost::format& message, common::LogLevel LogLevel,
                 std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr);
 
 }

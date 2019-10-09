@@ -75,12 +75,14 @@ private:
     }
 
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
-        cli::utility::printLog(boost::format("parsing CLI arguments of pull command"), common::logType::DEBUG);
+        cli::utility::printLog(boost::format("parsing CLI arguments of pull command"), common::LogLevel::DEBUG);
 
-        // the pull command arguments (pull [options] <image>) are composed
-        // by exacly two groups of arguments (pull + image)
+        // the pull command expects exactly two arguments
         if(argsGroups.size() != 2) {
-            SARUS_THROW_ERROR("failed to parse CLI arguments of pull command (bad number of arguments)");
+            auto message = boost::format("Bad number of arguments for command 'pull'"
+                                        "\nSee 'sarus help pull'");
+            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         try {
@@ -101,17 +103,19 @@ private:
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch (std::exception& e) {
-            SARUS_RETHROW_ERROR(e, "failed to parse CLI arguments of pull command");
+            auto message = boost::format("%s\nSee 'sarus help pull'") % e.what();
+            cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
-        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::logType::DEBUG);
+        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
     }
 
     /**
      * Get the username/password from user input, and store into config.
      */
     static void readUserCredentialsFromCLI(common::Config::Authentication& authentication) {
-        cli::utility::printLog(boost::format("reading user credentials from CLI"), common::logType::DEBUG);
+        cli::utility::printLog(boost::format("reading user credentials from CLI"), common::LogLevel::DEBUG);
 
         std::cout << "username: ";
         std::getline(std::cin, authentication.username);
@@ -130,7 +134,7 @@ private:
             SARUS_THROW_ERROR("failed to read user's password from CLI (empty password is not valid)");
         }
 
-        cli::utility::printLog(boost::format("successfully read user credentials"), common::logType::DEBUG);
+        cli::utility::printLog(boost::format("successfully read user credentials"), common::LogLevel::DEBUG);
     }
 
 private:

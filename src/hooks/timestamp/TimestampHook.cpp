@@ -51,13 +51,13 @@ void TimestampHook::parseConfigJSONOfBundle() {
 
 void TimestampHook::timestamp() {
     auto& logger = sarus::common::Logger::getInstance();
-    logger.setLevel(sarus::common::logType::INFO);
+    logger.setLevel(sarus::common::LogLevel::INFO);
 
     sarus::common::createFileIfNecessary(logFilePath, uidOfUser, gidOfUser);
     std::ofstream logFile(logFilePath.string(), std::ios::out | std::ios::app);
 
     auto fullMessage = boost::format("Timestamp hook: %s") % message;
-    logger.log(fullMessage.str(), "hook", sarus::common::logType::INFO, logFile);
+    logger.log(fullMessage.str(), "hook", sarus::common::LogLevel::INFO, logFile);
 }
 
 void TimestampHook::parseEnvironmentVariables() {

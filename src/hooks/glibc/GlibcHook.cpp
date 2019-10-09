@@ -120,7 +120,7 @@ bool GlibcHook::containerGlibcHasToBeReplaced(  const boost::filesystem::path& h
                                      " Please consider upgrading the container image to a distribution with glibc >= %3%.%4%.")
             % std::get<0>(containerVersion) % std::get<1>(containerVersion)
             % std::get<0>(hostVersion) % std::get<1>(hostVersion);
-        logMessage(message, sarus::common::logType::GENERAL, std::cerr);
+        logMessage(message, sarus::common::LogLevel::GENERAL, std::cerr);
         return true;
     }
     else {
@@ -159,7 +159,7 @@ void GlibcHook::replaceGlibcLibrariesInContainer() const {
     }
 }
 
-void GlibcHook::logMessage( const boost::format& message, sarus::common::logType logLevel,
+void GlibcHook::logMessage( const boost::format& message, sarus::common::LogLevel logLevel,
                             std::ostream& out, std::ostream& err) const {
     auto systemName = "glibc-hook";
     sarus::common::Logger::getInstance().log(message, systemName, logLevel, out, err);

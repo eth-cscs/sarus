@@ -34,7 +34,7 @@ Lockfile::Lockfile(const boost::filesystem::path& file, unsigned int timeoutMs)
     , lockfile{convertToLockfile(file)}
 {
     auto message = boost::format("acquiring lock on file %s") % file;
-    logger->log(message.str(), loggerSubsystemName, common::logType::DEBUG);
+    logger->log(message.str(), loggerSubsystemName, common::LogLevel::DEBUG);
 
     unsigned int elapsedTimeMs = 0;
     while(!createLockfileAtomically()) {
@@ -47,33 +47,33 @@ Lockfile::Lockfile(const boost::filesystem::path& file, unsigned int timeoutMs)
         elapsedTimeMs += backoffTimeMs;
     }
 
-    logger->log("successfully acquired lock", loggerSubsystemName, common::logType::DEBUG);
+    logger->log("successfully acquired lock", loggerSubsystemName, common::LogLevel::DEBUG);
 }
 
 Lockfile::Lockfile(Lockfile&& rhs)
     : logger{rhs.logger}
     , lockfile{rhs.lockfile}
 {
-    logger->log("move constructing lock", loggerSubsystemName, common::logType::DEBUG);
+    logger->log("move constructing lock", loggerSubsystemName, common::LogLevel::DEBUG);
     rhs.lockfile.reset();
-    logger->log("successfully move constructed lock", loggerSubsystemName, common::logType::DEBUG);
+    logger->log("successfully move constructed lock", loggerSubsystemName, common::LogLevel::DEBUG);
 }
 
 Lockfile& Lockfile::operator=(Lockfile&& rhs) {
-    logger->log("move assigning lock", loggerSubsystemName, common::logType::DEBUG);
+    logger->log("move assigning lock", loggerSubsystemName, common::LogLevel::DEBUG);
     if(lockfile) {
         boost::filesystem::remove(*lockfile);
     }
     lockfile = rhs.lockfile;
     rhs.lockfile.reset();
-    logger->log("successfully move constructed lock", loggerSubsystemName, common::logType::DEBUG);
+    logger->log("successfully move constructed lock", loggerSubsystemName, common::LogLevel::DEBUG);
     return *this;
 }
 
 Lockfile::~Lockfile() {
     if(lockfile) {
         auto message = boost::format("removing lockfile %s") % *lockfile;
-        logger->log(message.str(), loggerSubsystemName, common::logType::DEBUG);
+        logger->log(message.str(), loggerSubsystemName, common::LogLevel::DEBUG);
         boost::filesystem::remove(*lockfile);
     }
 }
@@ -85,23 +85,23 @@ boost::filesystem::path Lockfile::convertToLockfile(const boost::filesystem::pat
     lockfile /= lockfileLeaf;
 
     auto message = boost::format("converted filename %s to lockfile %s") % file % lockfile;
-    logger->log(message.str(), loggerSubsystemName, common::logType::DEBUG);
+    logger->log(message.str(), loggerSubsystemName, common::LogLevel::DEBUG);
 
     return lockfile;
 }
 
 bool Lockfile::createLockfileAtomically() const {
     auto message = boost::format("creating lockfile %s") % *lockfile;
-    logger->log(message.str(), loggerSubsystemName, common::logType::DEBUG);
+    logger->log(message.str(), loggerSubsystemName, common::LogLevel::DEBUG);
 
     auto fd = open(lockfile->string().c_str(), O_CREAT | O_EXCL, O_RDONLY);
     if(fd == -1) {
         message = boost::format("failed to create lockfile %s") % *lockfile;
-        logger->log(message.str(), loggerSubsystemName, common::logType::DEBUG);
+        logger->log(message.str(), loggerSubsystemName, common::LogLevel::DEBUG);
         return false;
     }
 
-    logger->log("successfully created lockfile", loggerSubsystemName, common::logType::DEBUG);
+    logger->log("successfully created lockfile", loggerSubsystemName, common::LogLevel::DEBUG);
 
     if(close(fd) != 0) {
         message = boost::format("failed to close file descriptor of lockfile %s") % *lockfile;

@@ -168,8 +168,8 @@ std::string executeCommand(const std::string& command) {
     return commandOutput;
 }
 
-void forkExecWait(const common::CLIArguments& args, const boost::optional<boost::filesystem::path>& chrootJail) {
-    logMessage(boost::format("Executing %s") % args, common::logType::DEBUG);
+int forkExecWait(const common::CLIArguments& args, const boost::optional<boost::filesystem::path>& chrootJail) {
+    logMessage(boost::format("Executing %s") % args, common::LogLevel::DEBUG);
 
     // fork and execute
     auto pid = fork();
@@ -207,14 +207,12 @@ void forkExecWait(const common::CLIArguments& args, const boost::optional<boost:
                 % args;
             SARUS_THROW_ERROR(message.str());
         }
-        else if(WEXITSTATUS(status) != 0) {
-            auto message = boost::format("Subprocess %s exited with error status %s")
-                % args % WEXITSTATUS(status);
-            SARUS_THROW_ERROR(message.str());
-        }
-    }
 
-    logMessage(boost::format("Successfully executed %s") % args, common::logType::DEBUG);
+        logMessage( boost::format("%s exited with status %d") % args % WEXITSTATUS(status),
+                    common::LogLevel::DEBUG);
+
+        return WEXITSTATUS(status);
+    }
 }
 
 void SetStdinEcho(bool flag)
@@ -354,8 +352,15 @@ void createFoldersIfNecessary(const boost::filesystem::path& path, uid_t uid, gi
 
     for(const auto& element : path) {
         currentPath /= element;
-        if(!boost::filesystem::exists(currentPath)) {    
-            if(!boost::filesystem::create_directory(currentPath)) {
+        if(!boost::filesystem::exists(currentPath)) {
+            bool created = false;
+            try {
+                created = boost::filesystem::create_directory(currentPath);
+            } catch(const std::exception& e) {
+                auto message = boost::format("Failed to create directory %s") % currentPath;
+                SARUS_RETHROW_ERROR(e, message.str());
+            }
+            if(!created) {
                 // the creation might have failed because another process cuncurrently
                 // created the same directory. So check whether the directory was indeed
                 // created by another process.
@@ -526,7 +531,9 @@ std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(
 
         // check for empty key
         if(std::distance(keyBegin, keyEnd) == 0) {
-            SARUS_THROW_ERROR("error while parsing a malformed list of key-value pairs (found empty key)");
+            auto message = boost::format("Error: found empty key in '%s'. Expected a list of key-value pairs.") % kvList;
+            logMessage(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         auto key = std::string(keyBegin, keyEnd);
@@ -538,7 +545,10 @@ std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(
             auto valueEnd = std::find(valueBegin, kvList.cend(), pairSeparator);
 
             if(std::distance(valueBegin, valueEnd) == 0) {
-                SARUS_THROW_ERROR("error while parsing a malformed list of key-value pairs (found empty value)");
+                auto message = boost::format("Error: found empty value for key '%s' in '%s'. Expected a list of key-value pairs.")
+                    % key % kvList;
+                logMessage(message, common::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
             }
 
             value = std::string(valueBegin, valueEnd);
@@ -552,7 +562,10 @@ std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(
 
         // check for duplicated keys
         if(map.find(key) != map.cend()) {
-            SARUS_THROW_ERROR("error while parsing a malformed list of key-value pairs (found duplicated key)");
+            auto message = boost::format("Error: found duplicated key '%s' in '%s'. Expected a list of unique key-value pairs.")
+                % key % kvList;
+            logMessage(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
         map[key] = value;
@@ -561,7 +574,10 @@ std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(
         if(keyBegin != kvList.cend()) {
             ++keyBegin;
             if(keyBegin == kvList.cend()) {
-                SARUS_THROW_ERROR("error while parsing a malformed list of key-value pairs (list terminated with \",\")");
+                auto message = boost::format("Error: list of key-value pairs '%s' is malformed (list terminates with '%s')")
+                    % kvList % kvList.back();
+                logMessage(message, common::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
             }
         }
     }
@@ -789,13 +805,13 @@ rapidjson::Document convertCppRestJsonToRapidJson(web::json::value& cppRest) {
     }
 }
 
-void logMessage(const boost::format& message, logType level) {
-    logMessage(message.str(), level);
+void logMessage(const boost::format& message, LogLevel level, std::ostream& out, std::ostream& err) {
+    logMessage(message.str(), level, out, err);
 }
 
-void logMessage(const std::string& message, logType level) {
+void logMessage(const std::string& message, LogLevel level, std::ostream& out, std::ostream& err) {
     auto subsystemName = "CommonUtility";
-    common::Logger::getInstance().log(message, subsystemName, level);
+    common::Logger::getInstance().log(message, subsystemName, level, out, err);
 }
 
 } // namespace

@@ -18,7 +18,7 @@ namespace common {
 
 #define SKIP_SECURITY_CHECK_IF_NECESSARY(message) { \
     if(!config->json["securityChecks"].GetBool()) { \
-        logMessage(message, logType::INFO); \
+        logMessage(message, LogLevel::INFO); \
         return; \
     } \
 }
@@ -33,7 +33,7 @@ void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& 
                         " (runtime security checks disabled)") % path);
 
     auto message = boost::format("Checking that path %s is untamperable") % path;
-    logMessage(message, common::logType::INFO);
+    logMessage(message, common::LogLevel::INFO);
 
     if(path.has_parent_path()) {
         checkThatPathIsRootOwned(path.parent_path());
@@ -52,7 +52,7 @@ void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& 
         }
     }
 
-    logMessage("Successfully checked that path is untamperable", common::logType::INFO);
+    logMessage("Successfully checked that path is untamperable", common::LogLevel::INFO);
 }
 
 void SecurityChecks::checkThatBinariesInSarusJsonAreUntamperable(const rapidjson::Document& json) const {
@@ -97,11 +97,11 @@ void SecurityChecks::checkThatOCIHooksAreUntamperable() const {
     SKIP_SECURITY_CHECK_IF_NECESSARY(   "Skipping check that OCI hooks are untamperable"
                                         " (runtime security checks disabled)");
 
-    logMessage("Checking that OCI hooks are owned by root user", common::logType::INFO);
+    logMessage("Checking that OCI hooks are owned by root user", common::LogLevel::INFO);
 
     if(!config->json.HasMember("OCIHooks")) {
         logMessage( "Successfully checked that OCI hooks are owned by root user."
-                    " The configuration doesn't contain OCI hooks to check.", common::logType::INFO);
+                    " The configuration doesn't contain OCI hooks to check.", common::LogLevel::INFO);
         return; // no hooks to check
     }
 
@@ -109,17 +109,17 @@ void SecurityChecks::checkThatOCIHooksAreUntamperable() const {
     checkThatOCIHooksAreUntamperableByType("poststart");
     checkThatOCIHooksAreUntamperableByType("poststop");
 
-    logMessage("Successfully checked that OCI hooks are owned by root user", common::logType::INFO);
+    logMessage("Successfully checked that OCI hooks are owned by root user", common::LogLevel::INFO);
 }
 
 void SecurityChecks::checkThatOCIHooksAreUntamperableByType(const std::string& hookType) const {
-    logMessage(boost::format("Checking %s OCI hooks") % hookType, common::logType::DEBUG);
+    logMessage(boost::format("Checking %s OCI hooks") % hookType, common::LogLevel::DEBUG);
 
     const auto& json = config->json;
     if(!json["OCIHooks"].HasMember(hookType.c_str())) {
         logMessage(boost::format(   "Successfully checked %s OCI hooks."
                                     " The configuration doesn't contain %s OCI hooks to check.") % hookType % hookType,
-                common::logType::DEBUG);
+                common::LogLevel::DEBUG);
         return;
     }
 
@@ -127,7 +127,7 @@ void SecurityChecks::checkThatOCIHooksAreUntamperableByType(const std::string& h
         auto path = boost::filesystem::path{ hook["path"].GetString() };
 
         logMessage( boost::format("Checking OCI hook %s") % path,
-                    common::logType::DEBUG);
+                    common::LogLevel::DEBUG);
 
         try {
             checkThatPathIsUntamperable(path);
@@ -138,11 +138,11 @@ void SecurityChecks::checkThatOCIHooksAreUntamperableByType(const std::string& h
         }
 
         logMessage( boost::format("Successfully checked OCI hook %s") % path,
-                    common::logType::DEBUG);
+                    common::LogLevel::DEBUG);
     }
 
     logMessage( boost::format("Successfully checked %s OCI hooks") % hookType,
-                common::logType::DEBUG);
+                common::LogLevel::DEBUG);
 }
 
 }} // namespace
