@@ -28,5 +28,4 @@ class TestImageWithNonAsciiCharacters(unittest.TestCase):
         # the command's output might also contain escape sequences (e.g. color codes), let's ignore
         # the escape characters and let's just check that the output contains the expected string
         output_contains_expected_string = output[0].find("filé") != -1
-        output_contains_expected_string = output[0].find("ファイル") != -1
         self.assertTrue(output_contains_expected_string)
