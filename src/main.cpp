@@ -12,6 +12,7 @@
 #include <iostream>
 #include <memory>
 #include <chrono>
+#include <clocale>
 
 #include <unistd.h>
 #include <sys/prctl.h>
@@ -29,6 +30,8 @@ static void dropPrivileges(const common::Config& config);
 static void getPrivileges();
 
 int main(int argc, char* argv[]) {
+    std::setlocale(LC_CTYPE, "C.UTF-8"); // enable handling of non-ascii characters
+
     auto& logger = common::Logger::getInstance();
 
     try {
