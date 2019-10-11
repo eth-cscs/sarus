@@ -637,7 +637,8 @@ NVIDIA GPU support
 ------------------
 
 NVIDIA provides access to GPU devices and their driver stacks inside OCI
-containers through the NVIDIA container runtime hook.
+containers through the NVIDIA Container Toolkit (part of the `NVIDIA Container
+Runtime <https://github.com/NVIDIA/nvidia-container-runtime>` project).
 
 When Sarus is configured to use this hook, the GPU devices to be made
 available inside the container can be selected by setting the

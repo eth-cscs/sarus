@@ -53,7 +53,7 @@ Hook installation
 -----------------
 
 At the time of writing, the latest release of the NVIDIA Container Toolkit hook
-is version 3.1.4. NVIDIA does no longer provide pre-built binaries for this
+is version 3.1.4. NVIDIA no longer provides pre-built binaries for this
 software, so it is necessary to build from source.
 
 To do so, an installation of the `Go programming language
@@ -89,7 +89,7 @@ Ubuntu, Debian, CentOS, OpenSUSE Leap and Amazon Linux:
 
     # Install hook config.toml (e.g. for CentOS)
     $ sudo mkdir /etc/nvidia-container-runtime/
-    $ sudo cp $GOPATH/src/github.com/NVIDIA/nvidia-container-runtime/config.toml.centos /etc/nvidia-container-runtime/config.toml
+    $ sudo cp $GOPATH/src/github.com/NVIDIA/nvidia-container-runtime/toolkit/config.toml.centos /etc/nvidia-container-runtime/config.toml
 
 Sarus configuration
 ---------------------
