@@ -18,6 +18,7 @@
 
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
+#include "common/Lockfile.hpp"
 #include "common/PasswdDB.hpp"
 #include "common/SecurityChecks.hpp"
 #include "runtime/mount_utilities.hpp"
@@ -34,10 +35,16 @@ void SshHook::generateSshKeys() {
     auto config = parseConfigJSONOfSarus(uidOfUser, gidOfUser);
     localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*config);
     opensshDirInHost = sarus::common::getEnvironmentVariable("SARUS_OPENSSH_DIR");
-    boost::filesystem::remove_all(localRepositoryDir / "ssh"); // remove previously existing keys (if any)
-    sarus::common::createFoldersIfNecessary(localRepositoryDir / "ssh");
-    sshKeygen(localRepositoryDir / "ssh/ssh_host_rsa_key");
-    sshKeygen(localRepositoryDir / "ssh/id_rsa");
+
+    sarus::common::Lockfile lock{ localRepositoryDir / "ssh" }; // protect keys from concurrent writes
+    if(boost::filesystem::exists(localRepositoryDir / "ssh")) {
+        return; // keys already there, nothing to do
+    }
+    auto tempSshDir = sarus::common::makeUniquePathWithRandomSuffix(localRepositoryDir / "ssh");
+    sarus::common::createFoldersIfNecessary(tempSshDir);
+    sshKeygen(tempSshDir / "ssh_host_rsa_key");
+    sshKeygen(tempSshDir / "id_rsa");
+    boost::filesystem::rename(tempSshDir, localRepositoryDir / "ssh"); // atomic update of ssh directory
 }
 
 void SshHook::checkLocalRepositoryHasSshKeys() {
