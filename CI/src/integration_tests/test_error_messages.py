@@ -200,7 +200,7 @@ class TestErrorMessages(unittest.TestCase):
 
     def test_command_sshkeygen(self):
         command = ["sarus", "ssh-keygen", "--invalid-option"]
-        expected_message = "Command 'ssh-keygen' doesn't support options\nSee 'sarus help ssh-keygen'"
+        expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help ssh-keygen'"
         self._check(command, expected_message)
 
         command = ["sarus", "ssh-keygen", "extra-argument"]
