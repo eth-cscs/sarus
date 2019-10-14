@@ -66,16 +66,18 @@ Lockfile& Lockfile::operator=(Lockfile&& rhs) {
     }
     lockfile = rhs.lockfile;
     rhs.lockfile.reset();
-    logger->log("successfully move constructed lock", loggerSubsystemName, common::LogLevel::DEBUG);
+    logger->log("successfully move assigned lock", loggerSubsystemName, common::LogLevel::DEBUG);
     return *this;
 }
 
 Lockfile::~Lockfile() {
+    logger->log("destroying lockfile", loggerSubsystemName, common::LogLevel::DEBUG);
     if(lockfile) {
         auto message = boost::format("removing lockfile %s") % *lockfile;
         logger->log(message.str(), loggerSubsystemName, common::LogLevel::DEBUG);
         boost::filesystem::remove(*lockfile);
     }
+    logger->log("successfully destroyed lockfile", loggerSubsystemName, common::LogLevel::DEBUG);
 }
 
 boost::filesystem::path Lockfile::convertToLockfile(const boost::filesystem::path& file) const {

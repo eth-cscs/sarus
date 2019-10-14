@@ -16,8 +16,10 @@
 #include <unordered_set>
 #include <sys/types.h>
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 
 #include <common/Error.hpp>
+#include <common/Logger.hpp>
 #include <common/Config.hpp>
 
 
@@ -27,13 +29,14 @@ namespace ssh {
 
 class SshHook {
 public:
-    void generateSshKeys();
+    void generateSshKeys(bool overwriteSshKeysIfExist);
     void checkLocalRepositoryHasSshKeys();
     void startSshd();
 
 private:
     void parseConfigJSONOfBundle();
     std::shared_ptr<sarus::common::Config> parseConfigJSONOfSarus(uid_t uidOfUser, gid_t gidOfUser) const;
+    bool localRepositoryHasSshKeys() const;
     void sshKeygen(const boost::filesystem::path& outputFile) const;
     void checkThatOpenSshIsUntamperable() const;
     void copyKeysIntoBundle() const;
@@ -53,6 +56,10 @@ private:
     void bindMountSshBinary() const;
     void patchPasswdIfNecessary() const;
     void startSshdInContainer() const;
+    void logMessage(const boost::format& message, sarus::common::LogLevel level,
+                    std::ostream& out = std::cout, std::ostream& err = std::cerr) const;
+    void logMessage(const std::string& message, sarus::common::LogLevel level,
+                std::ostream& out = std::cout, std::ostream& err = std::cerr) const;
 
 private:
     bool isHookEnabled = false;

@@ -204,7 +204,7 @@ TEST(SSHHookTestGroup, testSshHook) {
 
     // generate + check SSH keys in local repository
     helper.setUserIds(); // keygen is executed with user privileges
-    SshHook{}.generateSshKeys();
+    SshHook{}.generateSshKeys(true);
     helper.setRootIds();
     helper.checkLocalRepositoryHasSshKeys();
     SshHook{}.checkLocalRepositoryHasSshKeys();
