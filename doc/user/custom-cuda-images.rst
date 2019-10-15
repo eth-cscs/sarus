@@ -2,7 +2,7 @@
 Creating custom Docker images with CUDA
 ***************************************
 
-The base images provided by NVIDIA under the ``nvidia/cuda`` Docker Hub repository
+The base images provided by NVIDIA in `Docker Hub <https://hub.docker.com/r/nvidia/cuda>`_
 only offer flavors based on Ubuntu and CentOS. If you want to build a CUDA-enabled
 image on a different distribution, we offer the following advice:
 

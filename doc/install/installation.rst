@@ -206,18 +206,19 @@ by the system, remember to load them manually:
     sudo modprobe ext4
     sudo modprobe loop
     sudo modprobe squashfs
-    sudo modprobe overlayfs
+    sudo modprobe overlay
 
 
 Sarus's passwd cache
 --------------------
 
-During the installation, the passwd information is copied and cached into
-*<sarus install dir>/etc/passwd*. The cache allows to bypass the host's passwd database,
-e.g. LDAP, which could be tricky to configure and access from the container.
-However, since the cache is created/updated only once at installation time, it can
-quickly get out-of-sync with the actual passwd information of the system. A
-possible solution/workaround is to periodically run a cron job to refresh the
+During the installation, the passwd and group information are copied and cached
+into *<sarus install prefix>/etc/passwd* and *<sarus install prefix>/etc/group*
+respectively. The cache allows to bypass the host's passwd/group database, e.g.
+LDAP, which could be tricky to configure and access from the container. However,
+since the cache is created/updated only once at installation time, it can
+quickly get out-of-sync with the actual passwd/group information of the system.
+A possible solution is to periodically run a cron job to refresh the
 cache. E.g. a cron job and a script like the ones below would do:
 
 .. code-block:: bash
@@ -231,4 +232,5 @@ cache. E.g. a cron job and a script like the ones below would do:
 
     #!/bin/bash
 
-    /usr/bin/getent passwd > <sarus install dir>/etc/passwd
+    /usr/bin/getent passwd > <sarus install prefix>/etc/passwd
+    /usr/bin/getent group  > <sarus install prefix>/etc/group
