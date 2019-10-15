@@ -36,18 +36,18 @@ void SshHook::generateSshKeys(bool overwriteSshKeysIfExist) {
     localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*config);
     opensshDirInHost = sarus::common::getEnvironmentVariable("SARUS_OPENSSH_DIR");
 
-    sarus::common::Lockfile lock{ localRepositoryDir / "ssh" }; // protect keys from concurrent writes
+    sarus::common::Lockfile lock{ getKeysDirInLocalRepository() }; // protect keys from concurrent writes
     if(localRepositoryHasSshKeys() && !overwriteSshKeysIfExist) {
         auto message = boost::format("SSH keys not generated because they already exist in %s."
                                      " Use the '--overwrite' option to overwrite the existing keys.")
-                        % (localRepositoryDir / "ssh").string();
+                        % getKeysDirInLocalRepository().string();
         logMessage(message, sarus::common::LogLevel::GENERAL);
         return;
     }
-    boost::filesystem::remove_all(localRepositoryDir / "ssh");
-    sarus::common::createFoldersIfNecessary(localRepositoryDir / "ssh");
-    sshKeygen(localRepositoryDir / "ssh" / "ssh_host_rsa_key");
-    sshKeygen(localRepositoryDir / "ssh" / "id_rsa");
+    boost::filesystem::remove_all(getKeysDirInLocalRepository());
+    sarus::common::createFoldersIfNecessary(getKeysDirInLocalRepository());
+    sshKeygen(getKeysDirInLocalRepository() / "ssh_host_rsa_key");
+    sshKeygen(getKeysDirInLocalRepository() / "id_rsa");
     logMessage("Successfully generated SSH keys", sarus::common::LogLevel::GENERAL);
 }
 
@@ -110,12 +110,15 @@ std::shared_ptr<sarus::common::Config> SshHook::parseConfigJSONOfSarus(uid_t uid
 bool SshHook::localRepositoryHasSshKeys() const {
     auto expectedKeyFiles = std::vector<std::string>{"ssh_host_rsa_key", "ssh_host_rsa_key.pub", "id_rsa", "id_rsa.pub"};
     for(const auto& file : expectedKeyFiles) {
-        auto path = localRepositoryDir / "ssh" / file;
-        if(!boost::filesystem::exists(path)) {
+        if(!boost::filesystem::exists(getKeysDirInLocalRepository() / file)) {
             return false;
         }
     }
     return true;
+}
+
+boost::filesystem::path SshHook::getKeysDirInLocalRepository() const {
+    return localRepositoryDir / "ssh";
 }
 
 void SshHook::sshKeygen(const boost::filesystem::path& outputFile) const {

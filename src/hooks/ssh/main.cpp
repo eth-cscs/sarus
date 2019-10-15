@@ -25,8 +25,15 @@ int main(int argc, char* argv[]) {
 
         if(argv[1] == std::string{"keygen"}) {
             bool overwriteSshKeysIfExist = false;
-            if(argc > 2 && argv[2] == std::string{"--overwrite"}) {
-                overwriteSshKeysIfExist = true;
+            if(argc > 2) {
+                if(argv[2] == std::string{"--overwrite"}) {
+                    overwriteSshKeysIfExist = true;
+                }
+                else {
+                    auto message = boost::format("Failed to execute SSH hook. Invalid"
+                                                 "option %s for the 'keygen' command.") % argv[2];
+                    SARUS_THROW_ERROR(message.str());
+                }
             }
             sarus::hooks::ssh::SshHook{}.generateSshKeys(overwriteSshKeysIfExist);
         }

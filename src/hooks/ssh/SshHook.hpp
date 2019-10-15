@@ -37,6 +37,7 @@ private:
     void parseConfigJSONOfBundle();
     std::shared_ptr<sarus::common::Config> parseConfigJSONOfSarus(uid_t uidOfUser, gid_t gidOfUser) const;
     bool localRepositoryHasSshKeys() const;
+    boost::filesystem::path getKeysDirInLocalRepository() const;
     void sshKeygen(const boost::filesystem::path& outputFile) const;
     void checkThatOpenSshIsUntamperable() const;
     void copyKeysIntoBundle() const;
