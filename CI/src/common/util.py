@@ -63,9 +63,12 @@ def remove_image_if_necessary(is_centralized_repository, image):
     subprocess.check_call(command)
 
 
-def generate_ssh_keys():
+def generate_ssh_keys(overwrite=False):
     command = ["sarus", "ssh-keygen"]
+    if overwrite:
+        command.append("--overwrite")
     subprocess.check_call(command)
+
 
 def run_image_and_get_prettyname(is_centralized_repository, image):
     if is_centralized_repository:

@@ -18,6 +18,7 @@
 
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
+#include "common/Lockfile.hpp"
 #include "common/PasswdDB.hpp"
 #include "common/SecurityChecks.hpp"
 #include "runtime/mount_utilities.hpp"
@@ -28,27 +29,32 @@ namespace sarus {
 namespace hooks {
 namespace ssh {
 
-void SshHook::generateSshKeys() {
+void SshHook::generateSshKeys(bool overwriteSshKeysIfExist) {
     uidOfUser = getuid(); // keygen command is executed with user identity
     gidOfUser = getgid();
     auto config = parseConfigJSONOfSarus(uidOfUser, gidOfUser);
     localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*config);
     opensshDirInHost = sarus::common::getEnvironmentVariable("SARUS_OPENSSH_DIR");
-    boost::filesystem::remove_all(localRepositoryDir / "ssh"); // remove previously existing keys (if any)
-    sarus::common::createFoldersIfNecessary(localRepositoryDir / "ssh");
-    sshKeygen(localRepositoryDir / "ssh/ssh_host_rsa_key");
-    sshKeygen(localRepositoryDir / "ssh/id_rsa");
+
+    sarus::common::Lockfile lock{ getKeysDirInLocalRepository() }; // protect keys from concurrent writes
+    if(localRepositoryHasSshKeys() && !overwriteSshKeysIfExist) {
+        auto message = boost::format("SSH keys not generated because they already exist in %s."
+                                     " Use the '--overwrite' option to overwrite the existing keys.")
+                        % getKeysDirInLocalRepository().string();
+        logMessage(message, sarus::common::LogLevel::GENERAL);
+        return;
+    }
+    boost::filesystem::remove_all(getKeysDirInLocalRepository());
+    sarus::common::createFoldersIfNecessary(getKeysDirInLocalRepository());
+    sshKeygen(getKeysDirInLocalRepository() / "ssh_host_rsa_key");
+    sshKeygen(getKeysDirInLocalRepository() / "id_rsa");
+    logMessage("Successfully generated SSH keys", sarus::common::LogLevel::GENERAL);
 }
 
 void SshHook::checkLocalRepositoryHasSshKeys() {
     localRepositoryDir = sarus::common::getEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR");
-    auto expectedKeyFiles = std::vector<std::string>{"ssh_host_rsa_key", "ssh_host_rsa_key.pub", "id_rsa", "id_rsa.pub"};
-    for(const auto& file : expectedKeyFiles) {
-        auto path = localRepositoryDir / "ssh" / file;
-        if(!boost::filesystem::exists(path)) {
-            auto message = boost::format("Local repository doesn't contain SSH key %s as expected") % path;
-            SARUS_THROW_ERROR(message.str());
-        }
+    if(!localRepositoryHasSshKeys()) {
+        exit(EXIT_FAILURE); // exit with non-zero to communicate missing keys to calling process (sarus)
     }
 }
 
@@ -99,6 +105,20 @@ std::shared_ptr<sarus::common::Config> SshHook::parseConfigJSONOfSarus(uid_t uid
     config->userIdentity.gid = gidOfUser;
     config->initializeJson(config, configFile, configSchemaFile);
     return config;
+}
+
+bool SshHook::localRepositoryHasSshKeys() const {
+    auto expectedKeyFiles = std::vector<std::string>{"ssh_host_rsa_key", "ssh_host_rsa_key.pub", "id_rsa", "id_rsa.pub"};
+    for(const auto& file : expectedKeyFiles) {
+        if(!boost::filesystem::exists(getKeysDirInLocalRepository() / file)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+boost::filesystem::path SshHook::getKeysDirInLocalRepository() const {
+    return localRepositoryDir / "ssh";
 }
 
 void SshHook::sshKeygen(const boost::filesystem::path& outputFile) const {
@@ -192,6 +212,17 @@ void SshHook::startSshdInContainer() const {
             % status;
         SARUS_THROW_ERROR(message.str());
     }
+}
+
+void SshHook::logMessage(const boost::format& message, sarus::common::LogLevel level,
+                         std::ostream& out, std::ostream& err) const {
+    logMessage(message.str(), level, out, err);
+}
+
+void SshHook::logMessage(const std::string& message, sarus::common::LogLevel level,
+                         std::ostream& out, std::ostream& err) const {
+    auto subsystemName = "ssh-hook";
+    sarus::common::Logger::getInstance().log(message, subsystemName, level, out, err);
 }
 
 }}} // namespace

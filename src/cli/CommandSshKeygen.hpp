@@ -25,11 +25,14 @@ namespace cli {
 
 class CommandSshKeygen : public Command {
 public:
-    CommandSshKeygen() = default;
+    CommandSshKeygen() {
+        initializeOptionsDescription();
+    }
 
     CommandSshKeygen(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config> config)
         : conf{std::move(config)}
     {
+        initializeOptionsDescription();
         parseCommandArguments(argsGroups);
         conf->useCentralizedRepository = false;
         conf->directories.initialize(conf->useCentralizedRepository, *conf);
@@ -39,10 +42,12 @@ public:
         common::setEnvironmentVariable(std::string{"SARUS_PREFIX_DIR="} + conf->json["prefixDir"].GetString());
         common::setEnvironmentVariable("SARUS_OPENSSH_DIR="
             + (conf->json["prefixDir"].GetString() + std::string{"/openssh"}));
-        auto command = boost::format("%s/bin/ssh_hook keygen")
-            % conf->json["prefixDir"].GetString();
-        common::executeCommand(command.str());
-        common::Logger::getInstance().log("Successfully generated SSH keys", "CLI", common::LogLevel::GENERAL);
+        auto sshHook = boost::filesystem::path{conf->json["prefixDir"].GetString()} / "bin/ssh_hook";
+        auto args = common::CLIArguments{sshHook.string(), "keygen"};
+        if(overwriteSshKeysIfExist) {
+            args.push_back("--overwrite");
+        }
+        common::forkExecWait(args);
     }
 
     bool requiresRootPrivileges() const override {
@@ -56,11 +61,17 @@ public:
     void printHelpMessage() const override {
         auto printer = cli::HelpMessage()
             .setUsage("sarus ssh-keygen")
-            .setDescription(getBriefDescription());
+            .setDescription(getBriefDescription())
+            .setOptionsDescription(optionsDescription);
         std::cout << printer;
     }
 
 private:
+    void initializeOptionsDescription() {
+        optionsDescription.add_options()
+            ("overwrite", "Overwrite the SSH keys if they already exist");
+    }
+
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
         cli::utility::printLog(boost::format("parsing CLI arguments of ssh-keygen command"), common::LogLevel::DEBUG);
 
@@ -72,9 +83,21 @@ private:
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
-        if(argsGroups[0].argc() > 1) {
-            auto message = boost::format("Command 'ssh-keygen' doesn't support options"
-                                         "\nSee 'sarus help ssh-keygen'");
+        try {
+            boost::program_options::variables_map values;
+            boost::program_options::store(
+                boost::program_options::command_line_parser(argsGroups[0].argc(), argsGroups[0].argv())
+                        .options(optionsDescription)
+                        .run(), values);
+            boost::program_options::notify(values);
+
+            if(values.count("overwrite")) {
+                overwriteSshKeysIfExist = true;
+            }
+
+        }
+        catch(std::exception& e) {
+            auto message = boost::format("%s\nSee 'sarus help ssh-keygen'") % e.what();
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
@@ -83,7 +106,9 @@ private:
     }
 
 private:
+    boost::program_options::options_description optionsDescription{"Options"};
     std::shared_ptr<common::Config> conf;
+    bool overwriteSshKeysIfExist = false;
 };
 
 }
