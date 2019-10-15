@@ -68,7 +68,7 @@ void FileDescriptorHandler::applyChangesToFdsAndEnvVariables() {
         int newFd;
 
         if(fdInfo.forceDup) {
-            newFd = duplicateFd(fd, fdInfo);
+            newFd = duplicateFdAndPreserveBoth(fd, fdInfo);
         }
         else {
             newFd = moveFdToLowestAvailableValue(fd, fdInfo);
@@ -110,7 +110,7 @@ std::vector<int> FileDescriptorHandler::getOpenFileDescriptors() const {
     return existingFds;
 }
 
-int FileDescriptorHandler::duplicateFd(int fd, const FileDescriptorHandler::FileDescriptorInfo& fdInfo) {
+int FileDescriptorHandler::duplicateFdAndPreserveBoth(int fd, const FileDescriptorHandler::FileDescriptorInfo& fdInfo) {
     auto newFd = dup(fd);
     if(newFd == -1) {
         auto message = boost::format("Could not duplicate %s file descriptor. Dup error: %s") % fdInfo.name % strerror(errno);
@@ -119,7 +119,7 @@ int FileDescriptorHandler::duplicateFd(int fd, const FileDescriptorHandler::File
     if(newFd < fd) {
         auto message = boost::format("Internal error: attempted to make a forced duplication of fd %d, but dup()"
                                      " created a lower fd %d. This means that forcing the duplication might"
-                                     " create gabs in the resulting sequence of open fds.") % fd % newFd;
+                                     " create gaps in the resulting sequence of open fds.") % fd % newFd;
         SARUS_THROW_ERROR(message.str());
     }
     if(fd > 2) {

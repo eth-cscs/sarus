@@ -38,7 +38,7 @@ private:
 
 private:
     std::vector<int> getOpenFileDescriptors() const;
-    int duplicateFd(int fd, const FileDescriptorInfo& info);
+    int duplicateFdAndPreserveBoth(int fd, const FileDescriptorInfo& info);
     int moveFdToLowestAvailableValue(int fd, const FileDescriptorInfo& info);
 
 private:
