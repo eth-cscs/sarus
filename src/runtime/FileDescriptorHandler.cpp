@@ -62,37 +62,16 @@ void FileDescriptorHandler::applyChangesToFdsAndEnvVariables() {
         }
     }
 
-    // process file descriptors to preserve
+    // process remaining (wanted) file descriptors
     for(auto fd : getOpenFileDescriptors()) {
         const auto& fdInfo = fileDescriptorsToPreserve[fd];
         int newFd;
 
-        // Ensure file descriptor to preserve is on the lowest available value
-        bool isAtLowestAvailableValue = (fd <= 3 + extraFileDescriptors);
-        if(isAtLowestAvailableValue && !fdInfo.forceDup) {
-            utility::logMessage(boost::format("No need to duplicate %s file descriptor %d") % fdInfo.name % fd,
-                                common::LogLevel::DEBUG);
-            newFd = fd;
+        if(fdInfo.forceDup) {
+            newFd = duplicateFd(fd, fdInfo);
         }
         else {
-            utility::logMessage(boost::format("Duplicating %s fd %d") % fdInfo.name % fd, common::LogLevel::DEBUG);
-            newFd = dup(fd);
-            if (newFd == -1) {
-                auto message = boost::format("Could not duplicate %s file descriptor. Dup error: %s") % fdInfo.name % strerror(errno);
-                SARUS_THROW_ERROR(message.str());
-            }
-            utility::logMessage(boost::format("New %s fd: %d") % fdInfo.name % newFd, common::LogLevel::DEBUG);
-            if(!fdInfo.forceDup) {
-                close(fd);
-            }
-        }
-
-        if(fd > 2 && fdInfo.forceDup) {
-            ++extraFileDescriptors;
-        }
-
-        if(newFd > 2) {
-            ++extraFileDescriptors;
+            newFd = moveFdToLowestAvailableValue(fd, fdInfo);
         }
 
         if(fdInfo.containerEnvVariable) {
@@ -129,6 +108,50 @@ std::vector<int> FileDescriptorHandler::getOpenFileDescriptors() const {
 
     std::sort(existingFds.begin(), existingFds.end());
     return existingFds;
+}
+
+int FileDescriptorHandler::duplicateFd(int fd, const FileDescriptorHandler::FileDescriptorInfo& fdInfo) {
+    auto newFd = dup(fd);
+    if(newFd == -1) {
+        auto message = boost::format("Could not duplicate %s file descriptor. Dup error: %s") % fdInfo.name % strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+    if(newFd < fd) {
+        auto message = boost::format("Internal error: attempted to make a forced duplication of fd %d, but dup()"
+                                     " created a lower fd %d. This means that forcing the duplication might"
+                                     " create gabs in the resulting sequence of open fds.") % fd % newFd;
+        SARUS_THROW_ERROR(message.str());
+    }
+    if(fd > 2) {
+        ++extraFileDescriptors;
+    }
+    if(newFd > 2) {
+        ++extraFileDescriptors;
+    }
+    return newFd;
+}
+
+int FileDescriptorHandler::moveFdToLowestAvailableValue(int fd, const FileDescriptorHandler::FileDescriptorInfo& fdInfo) {
+    int newFd;
+    bool isAtLowestAvailableValue = (fd <= 3 + extraFileDescriptors);
+    if(isAtLowestAvailableValue) {
+        utility::logMessage(boost::format("No need to move %s file descriptor %d (already at lowest available value)")
+                            % fdInfo.name % fd,
+                            common::LogLevel::DEBUG);
+        newFd = fd;
+    }
+    else {
+        newFd = dup(fd);
+        if (newFd == -1) {
+            auto message = boost::format("Could not duplicate %s file descriptor. Dup error: %s") % fdInfo.name % strerror(errno);
+            SARUS_THROW_ERROR(message.str());
+        }
+        close(fd);
+    }
+    if(newFd > 2) {
+        ++extraFileDescriptors;
+    }
+    return newFd;
 }
 
 } // namespace
