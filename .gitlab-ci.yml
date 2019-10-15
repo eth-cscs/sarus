@@ -27,6 +27,7 @@ standalone_archive_debug:
   artifacts:
     paths:
       - build-Debug/sarus.tar.gz
+      - README.md
 
 
 standalone_archive_release:
@@ -43,6 +44,7 @@ standalone_archive_release:
   artifacts:
     paths:
       - build-Release/sarus.tar.gz
+      - README.md
 
 
 spack_package:

@@ -15,3 +15,6 @@ _build/
 .settings
 .project
 .cproject
+
+# Sarus Generated files
+src/common/ConfigBuildTime.cpp

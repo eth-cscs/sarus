@@ -73,4 +73,7 @@ if [ -e /etc/opt/cray/release/cle-release ]; then
     fi
 fi
 
-echo "Successfully configured etc/sarus.json"
+echo "Successfully configured etc/sarus.json."
+echo "To execute sarus commands run first:"
+echo "export PATH=${prefix_dir}/bin:\${PATH}"
+echo "To persist that for future sessions, consider adding the previous line to your .bashrc or equivalent file"

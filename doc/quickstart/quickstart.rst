@@ -12,20 +12,22 @@ You can quickly install Sarus by following the simple steps below.
 
 .. code-block:: bash
    
+    mkdir /opt/sarus
+    cd /opt/sarus
     TODO: wget ...
 
 2. Extract Sarus in the installation directory.
 
 .. code-block:: bash
    
-   cd /opt/sarus
-   tar xf sarus.tar.gz
+    cd /opt/sarus
+    tar xf sarus.tar.gz
 
 3. Run the configuration script to finalize the installation of Sarus.
 
 .. code-block:: bash
 
-    cd /opt/sarus/1.0.0-rc8
+    cd /opt/sarus/1.0.0-rc8 # adapt folder name to actual version of Sarus
     sudo ./configure_installation.sh
 
 .. important::
@@ -41,6 +43,10 @@ You can quickly install Sarus by following the simple steps below.
 .. note::
     You can refer to the section :doc:`Custom installation </install/index>`
     if you want to build Sarus from source or from the Spack package manager.
+
+.. important::
+   As explained by the output of the previous script, you need to persistently add sarus to your
+   ``PATH``. I.e., something like adding "export PATH=/opt/sarus/bin:${PATH}" to your ``.bashrc``.
 
 Use Sarus
 =========
@@ -61,8 +67,6 @@ Now Sarus is ready to be used. Below is a list of the available commands:
 Below is an example of some basic usage of Sarus:
 
 .. code-block:: bash
-
-    $ export PATH=/opt/sarus/1.0.0-rc8/bin:$PATH
 
     $ sarus pull alpine
     # image            : index.docker.io/library/alpine/latest

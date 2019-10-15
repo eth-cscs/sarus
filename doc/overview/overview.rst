@@ -75,11 +75,11 @@ Once the filesystem layers of a container image are all present on the system,
 they are uncompressed and expanded in a :ref:`temporary directory
 <config-reference-tempDir>` created by Sarus for this purpose. The various
 layers are then squashed together, resulting in a *flattened* image using the
-``squashfs`` format. A metadata file is also generated from a subset of the OCI
-image configuration. Flattening the image improves the I/O performance of the
-container, as detailed `below <overview-instantiation-rootfs>`_. It also has the
-benefit of reducing the size of the images on disk, by merging the topmost layer
-with the underlying ones.
+`squashfs <https://en.wikipedia.org/wiki/SquashFS>`_ format. A metadata file is
+also generated from a subset of the OCI image configuration. Flattening the image
+improves the I/O performance of the container, as detailed
+`below <overview-instantiation-rootfs>`_. It also has the benefit of reducing the
+size of the images on disk, by merging the topmost layer with the underlying ones.
 
 When pulling images from the cloud is inconvenient or undesirable, the
 :program:`sarus load` command can be used to load a container image from a local
@@ -189,8 +189,9 @@ filesystem forms the *writable* upper layer. An overlay filesystem allows the
 contents of Sarus containers to be transparently modifiable by the users, while
 preserving the integrity of container images: modifications exist only in the
 overlay upper filesystem, while corresponding entries in the lower filesystem
-are hidden. Please refer to the official OverlayFS documentation for more
-details.
+are hidden. Please refer to the official
+`OverlayFS <https://www.kernel.org/doc/Documentation/filesystems/overlayfs.txt>`_
+documentation for more details.
 
 3. Selected system configuration files (e.g. ``/etc/hosts``, ``/etc/passwd``,
 ``/etc/group``) are copied into the rootfs of the container. These

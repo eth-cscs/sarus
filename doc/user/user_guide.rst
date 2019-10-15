@@ -432,7 +432,7 @@ Image entrypoint and default arguments
 --------------------------------------
 
 Sarus fully supports image entrypoints and default arguments as defined by the
-OCI Image Specification.
+`OCI Image Specification <https://github.com/opencontainers/image-spec>`_.
 
 The entrypoint of an image is a list of arguments that will be used as the
 command to execute when the container starts; it is meant to create an image
@@ -671,9 +671,10 @@ SSH connection within containers
 Sarus also comes with a hook which enables support for SSH connections within
 containers.
 
-When Sarus is configured to use this hook, first of all, it is necessary to
-run the command ``sarus ssh-keygen``. This command generates the SSH keys that
-will be used by the SSH daemons as well as the SSH clients in the containers.
+When Sarus is configured to use this hook, you must first run the command
+``sarus ssh-keygen`` to generate the SSH keys that will be used by the SSH
+daemons and the SSH clients in the containers. It is sufficient to generate
+the keys just once, as they are persistent between sessions.
 
 It is then possible to execute a container passing the ``--ssh`` option to
 :program:`sarus run`, e.g. ``sarus run --ssh <image> <command>``. Using the

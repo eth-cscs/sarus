@@ -112,7 +112,7 @@ package manager, we suggest to install from source:
 
     # install RapidJSON
     wget -O rapidjson.tar.gz https://github.com/Tencent/rapidjson/archive/663f076c7b44ce96526d1acfda3fa46971c8af31.tar.gz
-    tar xvzf rapidjson.tar.gz && cd rapidjson
+    tar xvzf rapidjson.tar.gz && cd rapidjson-663f076c7b44ce96526d1acfda3fa46971c8af31
     cp -r include/rapidjson /usr/local/include/rapidjson
 
 .. note::
@@ -138,7 +138,8 @@ project's GitHub page:
 .. code-block:: bash
 
     $ wget -O runc.amd64 https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64
-    $ chmod 755 runc.amd64      # set as executable file
+    $ chmod 755 runc.amd64           # make it executable
+    $ mv runc.amd64 /usr/local/bin/  # put it in your PATH
 
 Alternatively, you can follow the instructions to `build from source
 <https://github.com/opencontainers/runc#building>`_, which allows more
