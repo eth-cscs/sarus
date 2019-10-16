@@ -113,13 +113,15 @@ std::vector<int> FileDescriptorHandler::getOpenFileDescriptors() const {
 int FileDescriptorHandler::duplicateFdAndPreserveBoth(int fd, const FileDescriptorHandler::FileDescriptorInfo& fdInfo) {
     auto newFd = dup(fd);
     if(newFd == -1) {
-        auto message = boost::format("Could not duplicate %s file descriptor. Dup error: %s") % fdInfo.name % strerror(errno);
+        auto message = boost::format("Could not duplicate %s file descriptor. Error on dup(%d): %s")
+                       % fdInfo.name % fd % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
     if(newFd < fd) {
-        auto message = boost::format("Internal error: attempted to make a forced duplication of fd %d, but dup()"
-                                     " created a lower fd %d. This means that forcing the duplication might"
-                                     " create gaps in the resulting sequence of open fds.") % fd % newFd;
+        auto message = boost::format("Internal error: attempted to make a forced duplication of fd %1%, but dup() created"
+                                     " a lower fd %2% (<%1%). This means that the forced duplication might create gaps in the"
+                                     " resulting sequence of open fds and some OCI runtimes, e.g. runc, do not expect such gaps.")
+                        % fd % newFd;
         SARUS_THROW_ERROR(message.str());
     }
     if(fd > 2) {
@@ -128,6 +130,10 @@ int FileDescriptorHandler::duplicateFdAndPreserveBoth(int fd, const FileDescript
     if(newFd > 2) {
         ++extraFileDescriptors;
     }
+
+    auto message = boost::format("Duplicated %s file descriptor (%d => %d). Preserving both file descriptors.") % fdInfo.name % fd % newFd;
+    utility::logMessage(message.str(), common::LogLevel::DEBUG);
+
     return newFd;
 }
 
@@ -143,14 +149,20 @@ int FileDescriptorHandler::moveFdToLowestAvailableValue(int fd, const FileDescri
     else {
         newFd = dup(fd);
         if (newFd == -1) {
-            auto message = boost::format("Could not duplicate %s file descriptor. Dup error: %s") % fdInfo.name % strerror(errno);
+            auto message = boost::format("Could not move %s file descriptor. Error on dup(%s): %s")
+                           % fdInfo.name % fd % strerror(errno);
             SARUS_THROW_ERROR(message.str());
         }
         close(fd);
+
+        utility::logMessage(boost::format("Moved %1% file descriptor (%2% => %3%). Original fd %2% was closed.")
+                            % fdInfo.name % fd % newFd,
+                            common::LogLevel::DEBUG);
     }
     if(newFd > 2) {
         ++extraFileDescriptors;
     }
+
     return newFd;
 }
 
