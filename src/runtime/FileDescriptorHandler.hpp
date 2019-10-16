@@ -11,6 +11,8 @@
 #ifndef sarus_runtime_FileDescriptorHandler_hpp
 #define sarus_runtime_FileDescriptorHandler_hpp
 
+#include <boost/optional.hpp>
+
 #include "common/Config.hpp"
 #include "common/SecurityChecks.hpp"
 
@@ -21,16 +23,27 @@ namespace runtime {
 class FileDescriptorHandler {
 public:
     FileDescriptorHandler(std::shared_ptr<common::Config>);
-    void prepareFileDescriptorsToPreserve();
+    void preservePMIFdIfAny();
+    void passStdoutAndStderrToHooks();
+    void applyChangesToFdsAndEnvVariables();
     int getExtraFileDescriptors() const {return extraFileDescriptors;};
 
 private:
-    void detectFileDescriptorsToPreserve();
+    struct FileDescriptorInfo {
+        std::string name;
+        boost::optional<std::string> containerEnvVariable;
+        boost::optional<std::string> hookEnvVariable;
+        bool forceDup;
+    };
+
+private:
     std::vector<int> getOpenFileDescriptors() const;
+    int duplicateFdAndPreserveBoth(int fd, const FileDescriptorInfo& info);
+    int moveFdToLowestAvailableValue(int fd, const FileDescriptorInfo& info);
 
 private:
     std::shared_ptr<common::Config> config;
-    std::unordered_map<int, std::string> fileDescriptorsToPreserve;
+    std::unordered_map<int, FileDescriptorInfo> fileDescriptorsToPreserve;
     int extraFileDescriptors;
 };
 

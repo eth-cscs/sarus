@@ -13,6 +13,7 @@
 
 #include "common/Utility.hpp"
 
+namespace rj = rapidjson;
 
 namespace sarus {
 namespace runtime {
@@ -21,6 +22,34 @@ ConfigsMerger::ConfigsMerger(std::shared_ptr<const common::Config> config, const
     : config{std::move(config)}
     , metadata{metadata}
 {}
+
+rapidjson::Value ConfigsMerger::getHooks(rapidjson::MemoryPoolAllocator<>& allocator) const {
+    if(!config->json.HasMember("OCIHooks")) {
+        return rj::Value{ rj::kObjectType }; // no hooks
+    }
+
+    auto hooks = rj::Value{};
+    hooks.CopyFrom(config->json["OCIHooks"], allocator);
+
+    for(const auto& hookType : {"prestart", "poststart", "poststop"}) {
+        if(!hooks.HasMember(hookType)) {
+            continue;
+        }
+
+        for(auto& hook : hooks[hookType].GetArray()) {
+            if(!hook.HasMember("env")) {
+                hook.AddMember("env", rj::Value{rj::kArrayType}, allocator);
+            }
+            for(const auto& var : config->commandRun.hooksEnvironment) {
+                auto str = var.first +  "=" + var.second;
+                auto v = rj::Value{str.c_str(), allocator};
+                hook["env"].GetArray().PushBack(v, allocator);
+            }
+        }
+    }
+
+    return hooks;
+}
 
 boost::filesystem::path ConfigsMerger::getCwdInContainer() const {
     if(metadata.workdir) {

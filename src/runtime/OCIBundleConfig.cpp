@@ -64,7 +64,7 @@ void OCIBundleConfig::makeJsonDocument() const {
                         makeMemberLinux(),
                         *allocator);
     document->AddMember("hooks",
-                        makeMemberHooks(),
+                        configsMerger.getHooks(*allocator),
                         *allocator);
 }
 
@@ -247,16 +247,6 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
         linux.AddMember("readonlyPaths", paths, *allocator);
     }
     return linux;
-}
-
-rj::Value OCIBundleConfig::makeMemberHooks() const {
-    if(config->json.HasMember("OCIHooks")) {
-        return rj::Value{   config->json["OCIHooks"],
-                            *allocator};
-    }
-    else {
-        return rj::Value{rj::kObjectType};
-    }
 }
 
 }

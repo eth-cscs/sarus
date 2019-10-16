@@ -11,6 +11,7 @@
 #include "Utility.hpp"
 
 #include <iostream>
+#include <cstring>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <boost/format.hpp>
@@ -77,6 +78,27 @@ void enterNamespacesOfProcess(pid_t pid) {
         auto file = boost::format("/proc/%s/ns/pid") % pid;
         enterNamespace(file.str());
     }
+}
+
+static void replaceFdIfAvailable(int oldfd, const std::string& newfdEnvVariable) {
+    char* p;
+    if((p = getenv(newfdEnvVariable.c_str())) == nullptr) {
+        return;
+    }
+    auto newfd = std::stoi(p);
+    if(dup2(newfd, oldfd) == -1) {
+        auto message = boost::format("Failed to use %s with 'dup(%d, %d)': %s")
+            % newfdEnvVariable
+            % oldfd
+            % newfd
+            % std::strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+}
+
+void useSarusStdoutStderrIfAvailable() {
+    replaceFdIfAvailable(1, "SARUS_STDOUT_FD");
+    replaceFdIfAvailable(2, "SARUS_STDERR_FD");
 }
 
 }}}} // namespace

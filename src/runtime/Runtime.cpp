@@ -35,7 +35,7 @@ Runtime::Runtime(std::shared_ptr<common::Config> config)
     , bundleDir{ boost::filesystem::path{config->json["OCIBundleDir"].GetString()} }
     , rootfsDir{ bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()} }
     , bundleConfig{config}
-    , descriptorHandler{config}
+    , fdHandler{config}
     , securityChecks{config}
 {}
 
@@ -48,7 +48,9 @@ void Runtime::setupOCIBundle() {
     copyEtcFilesIntoRootfs();
     performCustomMounts();
     remountRootfsWithNoSuid();
-    descriptorHandler.prepareFileDescriptorsToPreserve();
+    fdHandler.preservePMIFdIfAny();
+    fdHandler.passStdoutAndStderrToHooks();
+    fdHandler.applyChangesToFdsAndEnvVariables();
     bundleConfig.generateConfigFile();
     securityChecks.checkThatPathIsUntamperable(bundleConfig.getConfigFile());
     securityChecks.checkThatOCIHooksAreUntamperable();
@@ -64,7 +66,7 @@ void Runtime::executeContainer() const {
 
     // execute runc
     auto runcPath = config->json["runcPath"].GetString();
-    auto extraFileDescriptors = std::to_string(descriptorHandler.getExtraFileDescriptors());
+    auto extraFileDescriptors = std::to_string(fdHandler.getExtraFileDescriptors());
     auto args = common::CLIArguments{runcPath, "run", "--no-pivot",
                                      "--preserve-fds", extraFileDescriptors,
                                      containerID};

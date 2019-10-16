@@ -100,5 +100,12 @@
 			"/proc/sysrq-trigger"
 		]
 	},
-	"hooks": {}
+	"hooks": {
+		"prestart" : [
+			{
+				"path": "/bin/hook",
+				"env": []
+			}
+		]
+	}
 }

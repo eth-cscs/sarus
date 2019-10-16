@@ -35,6 +35,7 @@ void GlibcHook::injectGlibcLibrariesIfNecessary() {
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     sarus::hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
+    hooks::common::utility::useSarusStdoutStderrIfAvailable();
     parseEnvironmentVariables();
     auto hostLibc = findLibc(hostLibraries);
     if(!hostLibc) {
@@ -49,7 +50,7 @@ void GlibcHook::injectGlibcLibrariesIfNecessary() {
     if(!containerLibc) {
         return; // nothing to do (could be a 32-bit container without a 64-bit libc)
     }
-    if(containerGlibcIsNewerOrSame(*hostLibc, *containerLibc)) {
+    if(!containerGlibcHasToBeReplaced(*hostLibc, *containerLibc)) {
         return; // nothing to do
     }
     verifyThatHostAndContainerGlibcAreABICompatible(*hostLibc, *containerLibc);
@@ -107,10 +108,24 @@ boost::optional<boost::filesystem::path> GlibcHook::findLibc(const std::vector<b
     }
 }
 
-bool GlibcHook::containerGlibcIsNewerOrSame(const boost::filesystem::path& hostLibc, const boost::filesystem::path& containerLibc) const {
+bool GlibcHook::containerGlibcHasToBeReplaced(  const boost::filesystem::path& hostLibc,
+                                                const boost::filesystem::path& containerLibc) const {
     auto hostSymlinkTarget = sarus::common::realpathWithinRootfs("/", hostLibc);
+    auto hostVersion = sarus::common::parseLibcVersion(hostSymlinkTarget);
     auto containerSymlinkTarget = sarus::common::realpathWithinRootfs(rootfsDir, containerLibc);
-    return sarus::common::parseLibcVersion(containerSymlinkTarget) >= sarus::common::parseLibcVersion(hostSymlinkTarget);
+    auto containerVersion = sarus::common::parseLibcVersion(containerSymlinkTarget);
+
+    if(containerVersion < hostVersion) {
+        auto message = boost::format("Detected glibc %1%.%2% (< %3%.%4%) in the container. Replacing it with glibc %3%.%4% from the host."
+                                     " Please consider upgrading the container image to a distribution with glibc >= %3%.%4%.")
+            % std::get<0>(containerVersion) % std::get<1>(containerVersion)
+            % std::get<0>(hostVersion) % std::get<1>(hostVersion);
+        logMessage(message, sarus::common::LogLevel::GENERAL, std::cerr);
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 void GlibcHook::verifyThatHostAndContainerGlibcAreABICompatible(
@@ -142,6 +157,12 @@ void GlibcHook::replaceGlibcLibrariesInContainer() const {
     if(!wasInjectionPerformed) {
         SARUS_THROW_ERROR("Internal error: failed to inject glibc libraries.");
     }
+}
+
+void GlibcHook::logMessage( const boost::format& message, sarus::common::LogLevel logLevel,
+                            std::ostream& out, std::ostream& err) const {
+    auto systemName = "glibc-hook";
+    sarus::common::Logger::getInstance().log(message, systemName, logLevel, out, err);
 }
 
 }}} // namespace

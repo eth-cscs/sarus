@@ -42,7 +42,7 @@ private:
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
     OCIBundleConfig bundleConfig;
-    FileDescriptorHandler descriptorHandler;
+    FileDescriptorHandler fdHandler;
     common::SecurityChecks securityChecks;
 };
 
