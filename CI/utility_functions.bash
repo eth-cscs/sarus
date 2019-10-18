@@ -65,7 +65,7 @@ build_sarus_archive() {
     make install
     rsync -arvL --chmod=go-w ${build_dir}/../standalone/ ${prefix_dir}/
     mkdir -p ${prefix_dir}/var/OCIBundleDir
-    (cd ${prefix_dir}/bin && wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64 && chmod +x runc.amd64)
+    (cd ${prefix_dir}/bin && wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc9/runc.amd64 && chmod +x runc.amd64)
     (cd ${prefix_dir}/.. && tar cz --owner=root --group=root --file=../${archive_name} *)
     # For CI to package tar with README
     cp  ${build_dir}/../standalone/README.md ${build_dir}/../README.md

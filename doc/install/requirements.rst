@@ -130,14 +130,14 @@ Sarus internally relies on an OCI-compliant runtime to spawn a container.
 
 Here we will provide some indications to install `runc
 <https://github.com/opencontainers/runc>`_, the reference implementation from
-the Open Container Initiative. The recommended version is **v1.0.0-rc8**.
+the Open Container Initiative. The recommended version is **v1.0.0-rc9**.
 
 The simplest solution is to download a pre-built binary release from the
 project's GitHub page:
 
 .. code-block:: bash
 
-    $ wget -O runc.amd64 https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64
+    $ wget -O runc.amd64 https://github.com/opencontainers/runc/releases/download/v1.0.0-rc9/runc.amd64
     $ chmod 755 runc.amd64           # make it executable
     $ mv runc.amd64 /usr/local/bin/  # put it in your PATH
 
