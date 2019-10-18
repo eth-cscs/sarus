@@ -190,9 +190,11 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "run", "alpine:latest", "invalid-command-2lk32ldk2"]
-        expected_message = ("container_linux.go:345: starting container process caused"
-                            " \"exec: \\\"invalid-command-2lk32ldk2\\\": executable file not found in $PATH\"")
-        self._check(command, expected_message)
+        actual_message = self._get_sarus_error_output(command)
+        self.assertTrue("container_linux.go" in actual_message)
+        self.assertTrue("starting container process caused" in actual_message)
+        self.assertTrue("invalid-command-2lk32ldk2" in actual_message)
+        self.assertTrue("executable file not found in $PATH\"" in actual_message)
 
         command = ["sarus", "run", "alpine:latest", "ls", "invalid-directory-2lk32ldk2"]
         expected_message = "ls: invalid-directory-2lk32ldk2: No such file or directory"
