@@ -8,8 +8,11 @@ Install Sarus
 
 You can quickly install Sarus by following the simple steps below.
 
+.. important::
+    Standalone installation will be available starting from version 1.0.0-rc8.
+    For now please refer to :doc:`Custom Installation </install/index>`.
+
 1. Download the latest standalone Sarus archive from the official [GitHub Releases](https://github.com/eth-cscs/sarus/releases).
-   **NOTE:** Standalone installation is only available starting from version 1.0.0-rc8.
 
 .. code-block:: bash
 
