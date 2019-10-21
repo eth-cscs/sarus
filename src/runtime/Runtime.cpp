@@ -64,12 +64,14 @@ void Runtime::executeContainer() const {
     // chdir to bundle
     common::changeDirectory(bundleDir);
 
-    // execute runc
+    // assemble runc args
     auto runcPath = config->json["runcPath"].GetString();
     auto extraFileDescriptors = std::to_string(fdHandler.getExtraFileDescriptors());
-    auto args = common::CLIArguments{runcPath, "run", "--no-pivot",
+    auto args = common::CLIArguments{runcPath, "run",
                                      "--preserve-fds", extraFileDescriptors,
                                      containerID};
+
+    // execute runc
     auto status = common::forkExecWait(args);
     if(status != 0) {
         auto message = boost::format("%s exited with code %d") % args % status;
@@ -185,7 +187,6 @@ void Runtime::copyEtcFilesIntoRootfs() const {
 
     utility::logMessage("Successfully copied /etc files into rootfs", common::LogLevel::INFO);
 }
-
 
 void Runtime::performCustomMounts() const {
     utility::logMessage("Performing custom mounts", common::LogLevel::INFO);
