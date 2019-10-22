@@ -15,20 +15,30 @@ import common.util as util
 
 class TestSshHook(unittest.TestCase):
 
-    image = "library/debian:stretch"
+    # Run tests in musl-only containers as well as glib-only containers, in order to make
+    # sure that the custom OpenSSH injected into the container is standalone (as expected)
+    # and doesn't have any dependency on musl or glibc. It happened in the past that the
+    # custom sshd depended on the NSS dynamic libraries of glibc.
+    image_with_musl = "library/alpine:3.8"
+    image_with_glibc = "library/debian:stretch"
 
     def test_ssh_hook(self):
-        util.pull_image_if_necessary(is_centralized_repository=False, image=self.image)
+        util.pull_image_if_necessary(is_centralized_repository=False, image=self.image_with_musl)
+        util.pull_image_if_necessary(is_centralized_repository=False, image=self.image_with_glibc)
 
         self._check_ssh_keys_generation()
 
         # check SSH from node0 to node1
-        hostname_node1 = self._get_hostname_of_node1()
-        hostname_node1_through_ssh = self._get_hostname_of_node1_though_ssh(hostname_node1)
+        hostname_node1 = self._get_hostname_of_node1(self.image_with_musl)
+        hostname_node1_through_ssh = self._get_hostname_of_node1_though_ssh(self.image_with_musl, hostname_node1)
+        self.assertEqual(hostname_node1, hostname_node1_through_ssh)
+        hostname_node1_through_ssh = self._get_hostname_of_node1_though_ssh(self.image_with_glibc, hostname_node1)
         self.assertEqual(hostname_node1, hostname_node1_through_ssh)
 
         # check SSH goes into container (not host)
-        prettyname = self._get_prettyname_of_node1_through_ssh(hostname_node1)
+        prettyname = self._get_prettyname_of_node1_through_ssh(self.image_with_musl, hostname_node1)
+        self.assertEqual(prettyname, "Alpine Linux v3.8")
+        prettyname = self._get_prettyname_of_node1_through_ssh(self.image_with_glibc, hostname_node1)
         self.assertEqual(prettyname, "Debian GNU/Linux 9 (stretch)")
 
     def _check_ssh_keys_generation(self):
@@ -52,22 +62,22 @@ class TestSshHook(unittest.TestCase):
         fingerprint_changed = subprocess.check_output(fingerprint_command)
         self.assertNotEqual(fingerprint, fingerprint_changed)
 
-    def _get_hostname_of_node1(self):
+    def _get_hostname_of_node1(self, image):
         command = [
-            "bash",
+            "sh",
             "-c",
             "[ $SLURM_NODEID -eq 1 ] && echo $(hostname); exit 0"
         ]
-        out = util.run_command_in_container_with_slurm(image=self.image,
+        out = util.run_command_in_container_with_slurm(image=image,
                                                        command=command,
                                                        options_of_srun_command=["-N2"],
                                                        options_of_run_command=["--ssh"])
         assert len(out) == 1 # expect one single line of output
         return out[0]
 
-    def _get_hostname_of_node1_though_ssh(self, hostname_node1):
+    def _get_hostname_of_node1_though_ssh(self, image, hostname_node1):
         command = [
-            "bash",
+            "sh",
             "-c",
             "if [ $SLURM_NODEID -eq 0 ]; then"
             "   echo $(ssh {} hostname);"
@@ -78,16 +88,16 @@ class TestSshHook(unittest.TestCase):
             "   done;"
             "fi".format(hostname_node1, hostname_node1)
         ]
-        out = util.run_command_in_container_with_slurm(image=self.image,
+        out = util.run_command_in_container_with_slurm(image=image,
                                                        command=command,
                                                        options_of_srun_command=["-N2"],
                                                        options_of_run_command=["--ssh"])
         assert len(out) == 1 # expect one single line of output
         return out[0]
 
-    def _get_prettyname_of_node1_through_ssh(self, hostname_node1):
+    def _get_prettyname_of_node1_through_ssh(self, image, hostname_node1):
         command = [
-            "bash",
+            "sh",
             "-c",
             "if [ $SLURM_NODEID -eq 0 ]; then"
             "   echo $(ssh {} cat /etc/os-release);"
@@ -98,7 +108,7 @@ class TestSshHook(unittest.TestCase):
             "   done;"
             "fi".format(hostname_node1, hostname_node1)
         ]
-        out = util.run_command_in_container_with_slurm(image=self.image,
+        out = util.run_command_in_container_with_slurm(image=image,
                                                          command=command,
                                                          options_of_srun_command=["-N2"],
                                                          options_of_run_command=["--ssh"])
