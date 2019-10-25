@@ -65,6 +65,7 @@ build_sarus_archive() {
     make install
     rsync -arvL --chmod=go-w ${build_dir}/../standalone/ ${prefix_dir}/
     mkdir -p ${prefix_dir}/var/OCIBundleDir
+    (cd ${prefix_dir}/bin && wget https://github.com/krallin/tini/releases/download/v0.18.0/tini-static-amd64 && chmod +x tini-static-amd64)
     (cd ${prefix_dir}/bin && wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc9/runc.amd64 && chmod +x runc.amd64)
     (cd ${prefix_dir}/.. && tar cz --owner=root --group=root --file=../${archive_name} *)
 

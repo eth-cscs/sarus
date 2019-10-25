@@ -19,8 +19,8 @@ class TestSshHook(unittest.TestCase):
     # sure that the custom OpenSSH injected into the container is standalone (as expected)
     # and doesn't have any dependency on musl or glibc. It happened in the past that the
     # custom sshd depended on the NSS dynamic libraries of glibc.
-    image_with_musl = "library/alpine:3.8"
-    image_with_glibc = "library/debian:stretch"
+    image_with_musl = "alpine:3.8"
+    image_with_glibc = "debian:stretch"
 
     def test_ssh_hook(self):
         util.pull_image_if_necessary(is_centralized_repository=False, image=self.image_with_musl)

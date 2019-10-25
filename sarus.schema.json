@@ -28,6 +28,9 @@
         "mksquashfsPath": {
             "$ref": "#/definitions/AbsolutePath"
         },
+        "initPath": {
+            "$ref": "#/definitions/AbsolutePath"
+        },
         "runcPath": {
             "$ref": "#/definitions/AbsolutePath"
         },
@@ -107,6 +110,7 @@
         "tempDir",
         "localRepositoryBaseDir",
         "mksquashfsPath",
+        "initPath",
         "runcPath",
         "ramFilesystemType"
     ],

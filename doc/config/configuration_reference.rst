@@ -92,6 +92,33 @@ Absolute path to trusted ``mksquashfs`` binary.
 This executable must satisfy the :ref:`security requirements
 <requirements-permissions-security>` for critical files and directories.
 
+.. _config-reference-initPath:
+
+initPath (string, REQUIRED)
+---------------------------------
+Absolute path to trusted init process static binary which will launch the
+user-specified applications within the container when the ``--init`` option
+to :program:`sarus run` is used.
+This executable must satisfy the :ref:`security requirements
+<requirements-permissions-security>` for critical files and directories.
+
+By default, within the container Sarus only executes the user-specified application,
+which is assigned PID 1. The PID 1 process has unique features in Linux: 
+most notably, the process will ignore signals by default and zombie processes 
+will not be reaped inside the container (see
+`[1] <https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/>`_ ,
+`[2] <https://hackernoon.com/the-curious-case-of-pid-namespaces-1ce86b6bc900>`_ for further reference).
+
+Running the container application through an init system provides a solution for
+signaling container applications or reaping processes of long-running containers.
+
+The standalone package of Sarus uses `tini <https://github.com/krallin/tini>`_ as its default init process.
+
+.. warning::
+   Some HPC applications may be subject to performance losses when run with an init process.
+   Our internal benchmarking tests with `tini <https://github.com/krallin/tini>`_ showed
+   overheads of up to 2%.
+
 .. _config-reference-runcPath:
 
 runcPath (string, REQUIRED)

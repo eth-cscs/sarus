@@ -56,7 +56,7 @@ class TestRamfs(TestRamFilesystem):
     _FILESYSTEM_TYPE = "ramfs"
 
     def test_ramfs(self):
-        self.assertEqual(util.run_image_and_get_prettyname(False, "library/alpine:3.8"),
+        self.assertEqual(util.run_image_and_get_prettyname(False, "alpine:3.8"),
             "Alpine Linux")
 
 class TestTmpfs(TestRamFilesystem):
@@ -66,5 +66,5 @@ class TestTmpfs(TestRamFilesystem):
     _FILESYSTEM_TYPE = "tmpfs"
 
     def test_tmpfs(self):
-        self.assertEqual(util.run_image_and_get_prettyname(False, "library/alpine:3.8"),
+        self.assertEqual(util.run_image_and_get_prettyname(False, "alpine:3.8"),
             "Alpine Linux")

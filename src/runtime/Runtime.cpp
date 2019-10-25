@@ -46,6 +46,7 @@ void Runtime::setupOCIBundle() {
     mountImageIntoRootfs();
     setupDevFilesystem();
     copyEtcFilesIntoRootfs();
+    mountInitProgramIntoRootfsIfNecessary();
     performCustomMounts();
     remountRootfsWithNoSuid();
     fdHandler.preservePMIFdIfAny();
@@ -186,6 +187,17 @@ void Runtime::copyEtcFilesIntoRootfs() const {
                         config->userIdentity.uid, config->userIdentity.gid);
 
     utility::logMessage("Successfully copied /etc files into rootfs", common::LogLevel::INFO);
+}
+
+void Runtime::mountInitProgramIntoRootfsIfNecessary() const {
+    if(config->commandRun.addInitProcess) {
+        utility::logMessage("Mounting init program into rootfs", common::LogLevel::INFO);
+        auto src = boost::filesystem::path{ config->json["initPath"].GetString() };
+        auto dst = rootfsDir / "dev/init";
+        common::createFileIfNecessary(dst);
+        bindMount(src, dst);
+        utility::logMessage("Successfully mounted init program into rootfs", common::LogLevel::INFO);
+    }
 }
 
 void Runtime::performCustomMounts() const {

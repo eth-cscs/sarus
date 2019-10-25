@@ -34,6 +34,7 @@ private:
     void mountImageIntoRootfs() const;
     void setupDevFilesystem() const;
     void copyEtcFilesIntoRootfs() const;
+    void mountInitProgramIntoRootfsIfNecessary() const;
     void performCustomMounts() const;
     void remountRootfsWithNoSuid() const;
 

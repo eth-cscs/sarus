@@ -192,6 +192,7 @@ The files checked for the security conditions are:
 
   - ``sarus.json`` in Sarus's configuration directory ``<CMAKE_INSTALL_PREFIX>/etc``.
   - The ``mksquashfs`` utility pointed by ``mksquashfsPath`` in ``sarus.json``.
+  - The init binary pointed by ``initPath`` in ``sarus.json``.
   - The OCI-compliant runtime pointed by ``runcPath`` in ``sarus.json``.
   - All the OCI hooks executables entered in ``sarus.json``.
 

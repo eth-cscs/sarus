@@ -60,6 +60,7 @@ void SecurityChecks::checkThatBinariesInSarusJsonAreUntamperable(const rapidjson
                                         " untamperable (runtime security checks disabled)");
 
     checkThatPathIsUntamperable(json["mksquashfsPath"].GetString());
+    checkThatPathIsUntamperable(json["initPath"].GetString());
     checkThatPathIsUntamperable(json["runcPath"].GetString());
 }
 

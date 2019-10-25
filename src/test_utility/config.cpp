@@ -69,6 +69,9 @@ static void populateJSON(rj::Document& document) {
     document.AddMember( "mksquashfsPath",
                         rj::Value{"/usr/bin/mksquashfs", allocator},
                         allocator);
+    document.AddMember( "initPath",
+                        rj::Value{"/usr/bin/init-program", allocator},
+                        allocator);
     document.AddMember( "runcPath",
                         rj::Value{"/usr/bin/runc.amd64", allocator},
                         allocator);

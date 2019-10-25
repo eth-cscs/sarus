@@ -97,15 +97,16 @@ private:
     void initializeOptionsDescription() {
         optionsDescription.add_options()
             ("centralized-repository", "Use centralized repository instead of the local one")
-            ("tty,t", "Allocate a pseudo-TTY in the container")
             ("entrypoint",
                 boost::program_options::value<std::string>(&entrypoint)->implicit_value(""),
                 "Overwrite the default ENTRYPOINT of the image")
+            ("init", "Run an init process inside the container that forwards signals and reaps processes")
             ("mount",
                 boost::program_options::value<std::vector<std::string>>(&conf->commandRun.userMounts),
                 "Mount custom directories into the container")
             ("mpi,m", "Enable MPI support")
-            ("ssh", "Enable SSH in the container");
+            ("ssh", "Enable SSH in the container")
+            ("tty,t", "Allocate a pseudo-TTY in the container");
     }
 
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
@@ -136,9 +137,6 @@ private:
             conf->commandRun.execArgs = std::accumulate(argsGroups.cbegin()+2, argsGroups.cend(), common::CLIArguments{});
             
 
-            if(values.count("tty")) {
-                conf->commandRun.allocatePseudoTTY = true;
-            }
             if(values.count("entrypoint")) {
                 if(entrypoint.empty()) {
                     conf->commandRun.entrypoint = common::CLIArguments{};
@@ -147,11 +145,17 @@ private:
                     conf->commandRun.entrypoint = common::CLIArguments{entrypoint};
                 }
             }
+            if(values.count("init")) {
+                conf->commandRun.addInitProcess = true;
+            }
             if(values.count("mpi")) {
                 conf->commandRun.useMPI = true;
             }
             if(values.count("ssh")) {
                 conf->commandRun.enableSSH = true;
+            }
+            if(values.count("tty")) {
+                conf->commandRun.allocatePseudoTTY = true;
             }
         }
         catch (std::exception& e) {

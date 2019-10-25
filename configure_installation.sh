@@ -53,16 +53,21 @@ exit_on_error "failed to create etc/sarus.json"
 sed -i etc/sarus.json -e "s|@CMAKE_INSTALL_PREFIX@|${prefix_dir}|g"
 exit_on_error "failed to set CMAKE_INSTALL_PREFIX in etc/sarus.json"
 
-# configure RUNC_PATH
-runc_path=${prefix_dir}/bin/runc.amd64
-sed -i etc/sarus.json -e "s|@RUNC_PATH@|${runc_path}|g"
-exit_on_error "failed to set RUNC_PATH in etc/sarus.json"
-
 # configure MKSQUASHFS_PATH
 mksquashfs_path=$(which mksquashfs)
 exit_on_error "failed to find mksquashfs binary. Is squashfs-tools installed?"
 sed -i etc/sarus.json -e "s|@MKSQUASHFS_PATH@|${mksquashfs_path}|g"
 exit_on_error "failed to set MKSQUASHFS_PATH in etc/sarus.json"
+
+# configure INIT_PATH
+init_path=${prefix_dir}/bin/tini-static-amd64
+sed -i etc/sarus.json -e "s|@INIT_PATH@|${init_path}|g"
+exit_on_error "failed to set INIT_PATH in etc/sarus.json"
+
+# configure RUNC_PATH
+runc_path=${prefix_dir}/bin/runc.amd64
+sed -i etc/sarus.json -e "s|@RUNC_PATH@|${runc_path}|g"
+exit_on_error "failed to set RUNC_PATH in etc/sarus.json"
 
 # issue warning about tmpfs filesystem on Cray CLE <7
 if [ -e /etc/opt/cray/release/cle-release ]; then

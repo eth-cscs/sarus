@@ -91,6 +91,12 @@ rj::Value OCIBundleConfig::makeMemberProcess() const {
 
     // args
     auto args = rj::Value{rj::kArrayType};
+    if(config->commandRun.addInitProcess) {
+        args.PushBack(  rj::Value{"/dev/init", *allocator},
+                        *allocator);
+        args.PushBack(  rj::Value{"--", *allocator},
+                        *allocator);
+    }
     for(auto* arg : configsMerger.getCommandToExecuteInContainer()) {
         auto value = rj::Value{arg, *allocator};
         args.PushBack(value, *allocator);

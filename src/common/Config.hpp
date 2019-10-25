@@ -62,6 +62,7 @@ struct Config {
         boost::optional<CLIArguments> entrypoint;
         CLIArguments execArgs;
         bool allocatePseudoTTY = false;
+        bool addInitProcess = false;
         bool useMPI = false;
         bool enableSSH = false;
     };

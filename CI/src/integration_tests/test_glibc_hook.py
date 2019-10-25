@@ -92,7 +92,7 @@ class TestGlibcHook(unittest.TestCase):
 
     def test_container_without_glibc(self):
         self.assertEqual(
-            util.run_image_and_get_prettyname(is_centralized_repository=False, image="library/alpine:3.8"),
+            util.run_image_and_get_prettyname(is_centralized_repository=False, image="alpine:3.8"),
             "Alpine Linux")
 
     def test_no_glibc_injection(self):

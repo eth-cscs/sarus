@@ -516,6 +516,36 @@ When creating images with Docker, the working directory is set using the
 `WORKDIR <https://docs.docker.com/engine/reference/builder/#workdir>`_
 instruction in the Dockerfile.
 
+
+Adding an init process to the container
+---------------------------------------
+
+By default, within the container Sarus only executes the user-specified application,
+which is assigned PID 1 in the container's PID namespace. The PID 1 process has unique
+features in Linux: most notably, the process will ignore signals by default and zombie
+processes will not be reaped inside the container (see
+`[1] <https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/>`_ ,
+`[2] <https://hackernoon.com/the-curious-case-of-pid-namespaces-1ce86b6bc900>`_ for further reference).
+
+If you need to handle signals or reap zombie processes (which can be useful when 
+executing several different processes in long-running containers), you can use the 
+``--init`` option to run an init process inside the container:
+
+.. code-block:: bash
+
+    $ srun -N 1 sarus run --init alpine:3.8 ps -o pid,comm
+    PID   COMMAND
+        1 init
+        8 ps
+
+Sarus uses `tini <https://github.com/krallin/tini>`_ as its default init process.
+
+.. warning::
+   Some HPC applications may be subject to performance losses when run with an init process.
+   Our internal benchmarking tests with `tini <https://github.com/krallin/tini>`_ showed
+   overheads of up to 2%.
+
+
 Verbosity levels and help messages
 ----------------------------------
 

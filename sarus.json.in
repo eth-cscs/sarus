@@ -7,6 +7,7 @@
     "localRepositoryBaseDir": "/home",
     "centralizedRepositoryDir": "/var/sarus/centralized_repository",
     "mksquashfsPath": "@MKSQUASHFS_PATH@",
+    "initPath": "@INIT_PATH@",
     "runcPath": "@RUNC_PATH@",
     "ramFilesystemType": "tmpfs",
     "siteMounts": [

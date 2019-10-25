@@ -28,6 +28,7 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
     config->commandRun.execArgs = common::CLIArguments{"/bin/bash"};
+    config->commandRun.addInitProcess = true;
     config->userIdentity.uid = 1000; // UID hardcoded in expected json file
     config->userIdentity.gid = 1000; // GID hardcoded in expected json file
     config->userIdentity.supplementaryGids = std::vector<gid_t>{2000, 3000, 4000, 1000}; // GIDs hardcoded in expected json file
