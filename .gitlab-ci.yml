@@ -12,7 +12,6 @@ check_version_numbers_and_doc_build:
     - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_build} /sarus-source/CI/check_version_from_cmake.sh
     - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_run} /sarus-source/CI/run_documentation_build_test.sh
 
-
 standalone_archive_debug:
   stage: test
   script:
@@ -25,8 +24,9 @@ standalone_archive_debug:
     - build_install_test_sarus ${build_type} ${docker_image_build} ${docker_image_run}
 
   artifacts:
+    name: "sarus-Debug-$CI_COMMIT_REF_NAME"
     paths:
-      - build-Debug/sarus.tar.gz
+      - sarus-Debug.tar.gz
       - README.md
 
 
@@ -42,8 +42,9 @@ standalone_archive_release:
     - build_install_test_sarus ${build_type} ${docker_image_build} ${docker_image_run}
 
   artifacts:
+    name: "sarus-Release-$CI_COMMIT_REF_NAME"
     paths:
-      - build-Release/sarus.tar.gz
+      - sarus-Release.tar.gz
       - README.md
 
 

@@ -14,7 +14,7 @@ change_uid_gid_of_docker_user() {
     local host_gid=$2
 
     echo "Changing UID/GID of Docker user"
-    sudo usermod -u $host_uid docker    
+    sudo usermod -u $host_uid docker
     sudo groupmod -g $host_gid docker
     sudo find / -path /proc -prune -o -user docker -exec chown -h $host_uid {} \;
     sudo find / -path /proc -prune -o -group docker -exec chgrp -h $host_gid {} \;
@@ -59,7 +59,7 @@ build_sarus_archive() {
     echo "Successfully built Sarus"
 
     # build archive
-    local archive_name="sarus.tar.gz"
+    local archive_name="sarus-${build_type}.tar.gz"
     echo "Building archive ${archive_name}"
     rm -rf ${prefix_dir}/*
     make install
@@ -67,8 +67,15 @@ build_sarus_archive() {
     mkdir -p ${prefix_dir}/var/OCIBundleDir
     (cd ${prefix_dir}/bin && wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc9/runc.amd64 && chmod +x runc.amd64)
     (cd ${prefix_dir}/.. && tar cz --owner=root --group=root --file=../${archive_name} *)
-    # For CI to package tar with README
+
+    # For CI to package/deploy both archive tar and README
     cp  ${build_dir}/../standalone/README.md ${build_dir}/../README.md
+    cp  ${build_dir}/${archive_name} ${build_dir}/../${archive_name}
+
+    # Prepare relase notes
+    echo "# Release Notes" > ${build_dir}/../release-notes.md
+    git log $(git describe --tags --abbrev=0)..HEAD --oneline | awk '{$1=""; print $0}' >> ${build_dir}/../release-notes.md
+
     echo "Successfully built archive"
 }
 
@@ -114,7 +121,7 @@ run_tests() {
     find ${build_dir} -name "*.gcda" -exec chown docker:docker {} \;
     fail_on_error "Failed to chown *.gcda files (necessary to update code coverage as non-root user)"
 
-    install_sarus_from_archive /opt/sarus ${build_dir}/sarus.tar.gz
+    install_sarus_from_archive /opt/sarus ${build_dir}/sarus-${build_type}.tar.gz
     fail_on_error "Failed to install Sarus from archive"
 
     sudo -u docker PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH PATH=/opt/sarus/default/bin:$PATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker nosetests -v /sarus-source/CI/src/integration_tests/test*.py
@@ -153,13 +160,17 @@ build_install_test_sarus() {
     # Run tests
     local sarus_cached_home_dir=~/cache/ids/sarus/home_dir
     local sarus_cached_centralized_repository_dir=~/cache/ids/sarus/centralized_repository_dir
+    mkdir -p ${sarus_cached_home_dir}
+    mkdir -p ${sarus_cached_centralized_repository_dir}
     docker run --tty --rm --user root --privileged \
         --mount=src=$(pwd),dst=/sarus-source,type=bind \
         --mount=src=${sarus_cached_home_dir},dst=/home/docker,type=bind \
         --mount=src=${sarus_cached_centralized_repository_dir},dst=/var/sarus/centralized_repository,type=bind \
         ${docker_image_run} \
         bash -c ". /sarus-source/CI/utility_functions.bash && run_tests ${host_uid} ${host_gid} ${build_type} ${build_dir}"
-    ./CI/run_integration_tests_for_virtual_cluster.sh ${build_dir} ${sarus_cached_home_dir}
+    fail_on_error "run_tests failed"
+    ./CI/run_integration_tests_for_virtual_cluster.sh ${build_dir}/sarus-${build_type}.tar.gz ${sarus_cached_home_dir}
+    fail_on_error "integration tests in virtual cluster failed"
 }
 
 generate_slurm_conf() {

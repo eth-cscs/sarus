@@ -6,7 +6,7 @@
 script_dir=$(cd $(dirname "$0") && pwd)
 cd $script_dir
 
-build_dir=$1; shift
+artifact_name=$1; shift
 cached_home_dir=$1; shift
 
 virtual_cluster_dir=
@@ -49,7 +49,7 @@ adapt_docker_compose_file() {
     sed -i $virtual_cluster_dir/docker-compose.yml -e "s/@host_uid@/$(id -u)/g"
     sed -i $virtual_cluster_dir/docker-compose.yml -e "s/@host_gid@/$(id -g)/g"
     sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@cached_home_dir@#${cached_home_dir}#g"
-    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@build_dir@#${build_dir}#g"
+    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@artifact_name@#${artifact_name}#g"
 }
 
 start_cluster() {

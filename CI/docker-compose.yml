@@ -19,7 +19,7 @@ services:
       && /etc/init.d/munge start
       && generate_slurm_conf /etc/slurm-llnl/slurm.conf controller server0 server1
       && slurmctld -L /var/log/slurm-llnl/slurmctld
-      && install_sarus_from_archive /opt/sarus @build_dir@/sarus.tar.gz
+      && install_sarus_from_archive /opt/sarus @artifact_name@
       && touch /var/sync/controller-start-finished
       && sleep infinity"
 

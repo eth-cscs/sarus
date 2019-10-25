@@ -1,0 +1,50 @@
+dist: bionic
+
+services:
+  - docker
+
+before_install:
+  - docker --version
+
+install:
+  - docker pull ethcscs/sarus-ci-build:1.0.0
+  - docker pull ethcscs/sarus-ci-run:1.0.0
+
+jobs:
+  include:
+    - stage: "Sarus Tests"
+      name: "Version and Docs"
+      script:
+      - "./CI/check_that_version_file_is_up_to_date.sh"
+      - docker run --tty --rm -v ${TRAVIS_BUILD_DIR}:/sarus-source ethcscs/sarus-ci-build:1.0.0
+        /sarus-source/CI/check_version_from_cmake.sh
+      - docker run --tty --rm -v ${TRAVIS_BUILD_DIR}:/sarus-source ethcscs/sarus-ci-run:1.0.0
+        /sarus-source/CI/run_documentation_build_test.sh
+    - name: "Standalone + Unit and Integration tests"
+      script:
+      - ". ./CI/utility_functions.bash"
+      - build_install_test_sarus Release ethcscs/sarus-ci-build:1.0.0 ethcscs/sarus-ci-run:1.0.0
+      deploy:
+        provider: releases
+        name: ${TRAVIS_BRANCH}
+        api_key:
+          secure: VF6y0xqaVfSMsL7brTAf0cmVUmiORyiDmmEHy6I3PCmPFua2LOMAVeAU6rQMmScvRitnSVd2B7N6n9fLjZjby9bTgc8XnP2FebTIkMrh4Sqp4R6G1OauqKw99q7st5KYIcYXgsAEB37ttnBM1Y14h4tfZVFUBU6b1BShYFNoiHt64JLuNcPEjkTsogHlRz+dUWtpFVCIS/VkegGp17RUv8971bYvQtFe/RwmfSP0jxNbWpC0vzunDQOvNta8TC2fIuE/rkj5sExPYUHyhDlumZKb3PLUd6g+EckF2J/DPvqmQ9weIbAm4JSYH13Uhc1fxyLuItLnjt1x/AbNtNKww0CRvtxJuoz36QPr1oJlJ/8UxwICxbLP6BQjBHBouWXkoWFCbodQXXSaS/tXpzbG7QDcmI0xThtcj8o/SVPBtMycK0RoZyJd3iLt/qIsUXHZdp/jMcf/tZcWG0o/2887GY8Z3obM60lXHqc53HHxoF/qJdJw9q9M430jPIVG9Xhyc6ZqftsJmQsICyaLkmm4f8SrC92LYzFY4Aa/V2dpNvL/8qQdm3xUkwzrqsqumTl+A4ns6eevhkXvOvDT8lCFl+X9Cf21uKDXEOYW48/Zt00U4lsRSyqostwo2hUrI0FAXO+FBNClRjsQ7HYw29omxXcA1FhqLPN+bAXNFDKoYjg=
+        file:
+          - sarus-Release.tar.gz
+          - README.md
+        release_notes_file: ./release-notes.md
+        overwrite: true
+        skip_cleanup: true
+        draft: true
+        edge: true
+        on:
+          repo: eth-cscs/sarus
+          branch: master
+    - name: "Test Spack"
+      script:
+      - docker_image=ethcscs/sarus-spack:1.0.0-ubuntu16.04
+      - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/run_spack_package_test.sh
+      if: branch = master
+
+notifications:
+  email: false
