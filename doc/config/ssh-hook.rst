@@ -18,7 +18,7 @@ automatically install the hook in the ``<CMAKE_INSTALL_PREFIX>/bin`` directory.
 
 A custom OpenSSH software will also be built and installed in the
 ``<CMAKE_INSTALL_PREFIX>/openssh`` directory. This directory must satisfy the
-:ref:`security requirements <requirements-permissions-security>` for critical
+:ref:`security requirements <post-installation-permissions-security>` for critical
 files and directories.
 
 Sarus configuration

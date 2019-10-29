@@ -7,3 +7,4 @@ Custom installation
 
    requirements
    installation
+   post-installation

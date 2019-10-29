@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script finalizes the configuration of a Sarus installation made from the Sarus standalone archive.
+# This script finalizes the configuration of a Sarus installation.
 # The script is responsible for:
 # - setting the proper permissions of the Sarus binary
 # - creating the cached passwd database
@@ -43,7 +43,7 @@ echo "Configuring etc/sarus.json"
 
 # create etc/sarus.json
 if [ -e etc/sarus.json ]; then
-    echo "Found existing configuration. Creating backup (/etc/sarus.json.bak)."
+    echo "Found existing configuration. Creating backup (etc/sarus.json.bak)."
     mv etc/sarus.json etc/sarus.json.bak
 fi
 cp etc/sarus.json.in etc/sarus.json
@@ -61,11 +61,19 @@ exit_on_error "failed to set MKSQUASHFS_PATH in etc/sarus.json"
 
 # configure INIT_PATH
 init_path=${prefix_dir}/bin/tini-static-amd64
+if [ ! -e ${init_path} ]; then
+    init_path=$(which tini)
+    exit_on_error "failed to find tini binary. Is tini installed and available in \${PATH}?"
+fi
 sed -i etc/sarus.json -e "s|@INIT_PATH@|${init_path}|g"
 exit_on_error "failed to set INIT_PATH in etc/sarus.json"
 
 # configure RUNC_PATH
 runc_path=${prefix_dir}/bin/runc.amd64
+if [ ! -e ${runc_path} ]; then
+    runc_path=$(which runc)
+    exit_on_error "failed to find runc binary. Is runc installed and available in \${PATH}?"
+fi
 sed -i etc/sarus.json -e "s|@RUNC_PATH@|${runc_path}|g"
 exit_on_error "failed to set RUNC_PATH in etc/sarus.json"
 
@@ -74,7 +82,7 @@ if [ -e /etc/opt/cray/release/cle-release ]; then
     cle_version=$(cat /etc/opt/cray/release/cle-release |head -n 1 |sed 's/RELEASE=\([0-9]\+\).*/\1/')
     if [ ${cle_version} -lt 7 ]; then
         echo "WARNING: on a Cray system with CLE <7 it is highly advised to set '\"ramFilesystemType\": \"tmpfs\"' in etc/sarus.json." \
-             "Old CLE versions have a bug that make the compute nodes crash when they attempt to unmount a tmpfs filesystem." >&2
+             "Old CLE versions have a bug that makes the compute nodes crash when they attempt to unmount a tmpfs filesystem." >&2
     fi
 fi
 

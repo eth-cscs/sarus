@@ -2,14 +2,6 @@
 Configuration file reference
 ****************************
 
-The runtime configuration parameters of Sarus are read from a file called
-*sarus.json*, which is expected to be a valid `JSON document
-<https://www.json.org/>`_ located in ``<installation path>/etc``.
-Given the :ref:`privileges <requirements-permissions-execution>` that Sarus
-requires in order to exercise its functions, the configuration file must satisfy
-specific :ref:`security requirements <requirements-permissions-security>`
-regarding its location and ownership.
-
 Configuration file entries
 ==========================
 
@@ -18,8 +10,11 @@ Configuration file entries
 securityChecks (bool, REQUIRED)
 -------------------------------
 Enable/disable runtime security checks to verify that security critical files
-are not tamperable by non-root users. Refer to the section about :ref:`security
-requirements <requirements-permissions-security>` for more details on these checks.
+are not tamperable by non-root users. Disabling this may be convenient when
+rapidly iterating over test and development installations. It is strongly
+recommended to keep these checks enabled for production deployments. Refer to
+the section about :ref:`security requirements
+<post-installation-permissions-security>` for more details about these checks.
 
 Recommended value: ``true``
 
@@ -31,7 +26,7 @@ Absolute path to where Sarus will generate an OCI bundle, from which a container
 will be created. An OCI bundle is composed by a *config.json* configuration file
 and a directory which will form the root filesystem of the container. The
 ``OCIBundleDir`` directory must satisfy the :ref:`security requirements
-<requirements-permissions-security>` for critical files and directories.
+<post-installation-permissions-security>` for critical files and directories.
 
 Recommended value: ``/var/sarus/OCIBundleDir``
 
@@ -59,7 +54,6 @@ Absolute path to the directory where Sarus will create a temporary folder
 to expand layers when pulling and loading images
 
 Recommended value: ``/tmp``
-
 
 .. _config-reference-localRepositoryBaseDir:
 
@@ -90,7 +84,7 @@ mksquashfsPath (string, REQUIRED)
 ---------------------------------
 Absolute path to trusted ``mksquashfs`` binary.
 This executable must satisfy the :ref:`security requirements
-<requirements-permissions-security>` for critical files and directories.
+<post-installation-permissions-security>` for critical files and directories.
 
 .. _config-reference-initPath:
 
@@ -100,11 +94,11 @@ Absolute path to trusted init process static binary which will launch the
 user-specified applications within the container when the ``--init`` option
 to :program:`sarus run` is used.
 This executable must satisfy the :ref:`security requirements
-<requirements-permissions-security>` for critical files and directories.
+<post-installation-permissions-security>` for critical files and directories.
 
 By default, within the container Sarus only executes the user-specified application,
-which is assigned PID 1. The PID 1 process has unique features in Linux: 
-most notably, the process will ignore signals by default and zombie processes 
+which is assigned PID 1. The PID 1 process has unique features in Linux:
+most notably, the process will ignore signals by default and zombie processes
 will not be reaped inside the container (see
 `[1] <https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/>`_ ,
 `[2] <https://hackernoon.com/the-curious-case-of-pid-namespaces-1ce86b6bc900>`_ for further reference).
@@ -126,7 +120,7 @@ runcPath (string, REQUIRED)
 Absolute path to trusted OCI-compliant runtime binary, which will be used by
 Sarus to spawn the actual low-level container process.
 This executable must satisfy the :ref:`security requirements
-<requirements-permissions-security>` for critical files and directories.
+<post-installation-permissions-security>` for critical files and directories.
 
 .. _config-reference-ramFilesystemType:
 
@@ -142,11 +136,11 @@ overlay and, if requested, bind) that will form the container's rootfs. The
 in-memory and temporary nature of this filesystem helps with performance
 and complete cleanup of all container resources once the Sarus process exits.
 
-When running on Cray Compute Nodes (CLE 5.2 and 6.0), ``tmpfs`` will not work
-and ``ramfs`` has to be used instead.
+.. warning::
+   When running on Cray Compute Nodes (CLE 5.2 and 6.0), ``tmpfs`` will not work
+   and ``ramfs`` has to be used instead.
 
 Recommended value: ``tmpfs``
-
 
 .. _config-reference-siteMounts:
 
@@ -195,7 +189,6 @@ paths within containers.
 
 It is OK to perform this under ``/var`` or ``/opt`` or a novel path that your
 site maintains (e.g. ``/scratch``).
-
 
 environment (object, OPTIONAL)
 ------------------------------

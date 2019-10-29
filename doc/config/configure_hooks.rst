@@ -19,7 +19,7 @@ effectively be called by the OCI-compliant runtime specified with the
 ``runcPath`` parameter.
 
 All the hooks entered in the configuration file must satisfy the :ref:`security
-requirements <requirements-permissions-security>` for critical files and
+requirements <post-installation-permissions-security>` for critical files and
 directories.
 
 

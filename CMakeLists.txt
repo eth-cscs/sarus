@@ -47,9 +47,6 @@ find_package(Boost REQUIRED COMPONENTS program_options system thread filesystem 
 include_directories(${Boost_INCLUDE_DIRS})
 
 find_program(GIT_PATH git)
-find_program(MKSQUASHFS_PATH mksquashfs)
-find_program(RUNC_PATH runc)
-find_program(RUNC_PATH runc.amd64)
 
 execute_process(COMMAND ${GIT_PATH} describe --tags --dirty
                 OUTPUT_VARIABLE LATEST_GIT_TAG
@@ -64,8 +61,7 @@ add_subdirectory(dep)
 add_subdirectory(etc)
 add_subdirectory(src)
 
-configure_file(sarus.json.in ${CMAKE_BINARY_DIR}/sarus.json)
-install(FILES ${CMAKE_BINARY_DIR}/sarus.json sarus.json.in sarus.schema.json DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)
+install(FILES sarus.json.in sarus.schema.json DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)
 install(FILES configure_installation.sh DESTINATION ${CMAKE_INSTALL_PREFIX} PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE

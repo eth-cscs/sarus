@@ -53,6 +53,11 @@ Python 2.7 is required if you are interested to also run the integration tests:
     $ pip install setuptools
     $ pip install nose gcovr pexpect
 
+.. note::
+    If you plan to install Sarus using the Spack package manager, you can skip
+    the rest of this page, since the remaining dependencies will be installed by
+    Spack itself.
+
 
 Additional dependencies
 -----------------------
@@ -65,11 +70,6 @@ Additional dependencies
 .. important::
     We recommend these versions as they are the ones routinely used for build
     integration and testing, thus guaranteed to work.
-
-.. note::
-    If you plan to install Sarus using the Spack package manager, you can skip
-    the rest of this section, since these dependencies will be installed by
-    Spack itself.
 
 As the specific software versions listed above may not be provided by the system
 package manager, we suggest to install from source:
@@ -138,69 +138,36 @@ project's GitHub page:
 .. code-block:: bash
 
     $ wget -O runc.amd64 https://github.com/opencontainers/runc/releases/download/v1.0.0-rc9/runc.amd64
-    $ chmod 755 runc.amd64           # make it executable
-    $ mv runc.amd64 /usr/local/bin/  # put it in your PATH
+    $ chmod 755 runc.amd64                           # make it executable
+    $ mv runc.amd64 /usr/local/bin/                  # put it in your PATH
+    $ sudo chown root:root /usr/local/bin/runc.amd64 # set root ownership for security
 
 Alternatively, you can follow the instructions to `build from source
-<https://github.com/opencontainers/runc#building>`_, which allows more
+<https://github.com/opencontainers/runc#building>`__, which allows more
 fine-grained control over runc's features, including security options.
 
 
-Permissions
-===========
+.. _requirements-init-process:
 
-During installation
--------------------
+Init process
+------------
 
-* Write permissions to:
-    - The Sarus installation directory. This will be passed through the
-      ``CMAKE_INSTALL_PREFIX`` option to CMake.
-    - The directory for Sarus's configuration files ``<CMAKE_INSTALL_PREFIX>/etc``.
+Sarus can start an init process within containers in order to reap zombie
+processes and allow container applications to receive signals.
 
-.. _requirements-permissions-execution:
+Here we will provide some indications to install `tini
+<https://github.com/krallin/tini>`_, a very lightweight init process which is
+also used by Docker. The recommended version is **v0.18.0**.
 
-During execution
-----------------
+The simplest solution is to download a pre-built binary release from the
+project's GitHub page:
 
-* Sarus must run as a root-owned SUID executable and be able to achieve full
-  root privileges to perform mounts and create namespaces.
+.. code-block:: bash
 
-* Write/read permissions to the Sarus's centralized repository.
-  The system administrator can configure the repository's location through the
-  ``centralizedRepositoryDir`` entry in ``sarus.json``.
+    $ wget -O tini https://github.com/krallin/tini/releases/download/v0.18.0/tini
+    $ chmod 755 tini                           # make it executable
+    $ sudo mv tini /usr/local/bin/             # add it to PATH
+    $ sudo chown root:root /usr/local/bin/tini # set root ownership for security
 
-* Write/read permissions to the users' local image repositories.
-  The system administrator can configure the repositories location through the
-  ``localRepositoryBaseDir`` entry in ``sarus.json``.
-
-.. _requirements-permissions-security:
-
-Security related
-----------------
-
-Because of the considerable power granted by the requirements above, as a
-security measure Sarus will check that critical files and directories opened
-during privileged execution meet the following restrictions:
-
-  - Their parent directory is owned by root.
-  - Their parent directory is writable only by the owner (no write permissions
-    to group users or other users).
-  - They are owned by root.
-  - They are writable only by the owner.
-
-The files checked for the security conditions are:
-
-  - ``sarus.json`` in Sarus's configuration directory ``<CMAKE_INSTALL_PREFIX>/etc``.
-  - The ``mksquashfs`` utility pointed by ``mksquashfsPath`` in ``sarus.json``.
-  - The init binary pointed by ``initPath`` in ``sarus.json``.
-  - The OCI-compliant runtime pointed by ``runcPath`` in ``sarus.json``.
-  - All the OCI hooks executables entered in ``sarus.json``.
-
-For directories, the conditions apply recursively for all their contents.
-The checked directories are:
-
-  - The directory where Sarus will create the OCI bundle.
-    This location can be configured through the ``OCIBundleDir`` entry in
-    ``sarus.json``.
-  - If the :doc:`SSH Hook </config/ssh-hook>` is enabled in ``sarus.json``,
-    the directory of the custom OpenSSH software.
+Alternatively, you can follow the instructions to `build from source
+<https://github.com/krallin/tini#building-tini>`__.
