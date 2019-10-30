@@ -47,7 +47,7 @@ jobs:
       if: branch = master
     - name: "Test install from source Ubuntu 18.04"
       script:
-      - docker_image=ubuntu18.04
+      - docker_image=ubuntu:18.04
       - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/installation/test_driver.sh ${docker_image}
       if: branch = master
     - name: "Test install from source Debian 10"

@@ -19,6 +19,10 @@ class TestErrorMessages(unittest.TestCase):
     when the user's input is invalid.
     """
 
+    @classmethod
+    def setUpClass(cls):
+        util.pull_image_if_necessary(is_centralized_repository=False, image="alpine")
+
     def test_sarus(self):
         command = ["sarus", "--invalid-option"]
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help'"
@@ -87,7 +91,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
     def test_command_pull(self):
-        command = ["sarus", "pull", "--invalid-option", "alpine:latest"]
+        command = ["sarus", "pull", "--invalid-option", "alpine"]
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help pull'"
         self._check(command, expected_message)
 
@@ -95,7 +99,7 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Bad number of arguments for command 'pull'\nSee 'sarus help pull'"
         self._check(command, expected_message)
 
-        command = ["sarus", "pull", "alpine:latest", "extra-argument"]
+        command = ["sarus", "pull", "alpine", "extra-argument"]
         expected_message = "Bad number of arguments for command 'pull'\nSee 'sarus help pull'"
         self._check(command, expected_message)
 
@@ -130,7 +134,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
     def test_command_rmi(self):
-        command = ["sarus", "rmi", "--invalid-option", "alpine:latest"]
+        command = ["sarus", "rmi", "--invalid-option", "alpine"]
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help rmi'"
         self._check(command, expected_message)
 
@@ -138,7 +142,7 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Bad number of arguments for command 'rmi'\nSee 'sarus help rmi'"
         self._check(command, expected_message)
 
-        command = ["sarus", "rmi", "alpine:latest", "extra-argument"]
+        command = ["sarus", "rmi", "alpine", "extra-argument"]
         expected_message = "Bad number of arguments for command 'rmi'\nSee 'sarus help rmi'"
         self._check(command, expected_message)
 
@@ -157,7 +161,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
     def test_command_run(self):
-        command = ["sarus", "run", "--invalid-option", "alpine:latest", "true"]
+        command = ["sarus", "run", "--invalid-option", "alpine", "true"]
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help run'"
         self._check(command, expected_message)
 
@@ -175,28 +179,28 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Invalid image ID '///'\nSee 'sarus help run'"
         self._check(command, expected_message)
 
-        command = ["sarus", "run", "--mount=xyz", "alpine:latest", "true"]
+        command = ["sarus", "run", "--mount=xyz", "alpine", "true"]
         expected_message = "Invalid mount request 'xyz': 'type' must be specified"
         self._check(command, expected_message)
 
-        command = ["sarus", "run", "--mount=src=/invalid-s87dfs9,dst=/dst,type=bind", "alpine:latest", "true"]
+        command = ["sarus", "run", "--mount=src=/invalid-s87dfs9,dst=/dst,type=bind", "alpine", "true"]
         expected_message = "Failed to bind mount /invalid-s87dfs9 on container\'s /dst: mount source doesn\'t exist"
         self._check(command, expected_message)
 
         sarus_ssh_dir = os.getenv("HOME") + "/.sarus/ssh"
         shutil.rmtree(sarus_ssh_dir, ignore_errors=True) # remove ssh keys
-        command = ["sarus", "run", "--ssh", "alpine:latest", "true"]
+        command = ["sarus", "run", "--ssh", "alpine", "true"]
         expected_message = "Failed to check the SSH keys. Hint: try to generate the SSH keys with 'sarus ssh-keygen'."
         self._check(command, expected_message)
 
-        command = ["sarus", "run", "alpine:latest", "invalid-command-2lk32ldk2"]
+        command = ["sarus", "run", "alpine", "invalid-command-2lk32ldk2"]
         actual_message = self._get_sarus_error_output(command)
         self.assertTrue("container_linux.go" in actual_message)
         self.assertTrue("starting container process caused" in actual_message)
         self.assertTrue("invalid-command-2lk32ldk2" in actual_message)
         self.assertTrue("executable file not found in $PATH\"" in actual_message)
 
-        command = ["sarus", "run", "alpine:latest", "ls", "invalid-directory-2lk32ldk2"]
+        command = ["sarus", "run", "alpine", "ls", "invalid-directory-2lk32ldk2"]
         expected_message = "ls: invalid-directory-2lk32ldk2: No such file or directory"
         self._check(command, expected_message)
 

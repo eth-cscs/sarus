@@ -159,8 +159,8 @@ build_install_test_sarus() {
         && sudo -u docker bash -c '. /sarus-source/CI/utility_functions.bash && build_sarus_archive ${build_type} ${build_dir}'"
 
     # Run tests
-    local sarus_cached_home_dir=~/cache/ids/sarus/home_dir
-    local sarus_cached_centralized_repository_dir=~/cache/ids/sarus/centralized_repository_dir
+    local sarus_cached_home_dir=~/cache/ids/sarus/home_dir_${build_type}
+    local sarus_cached_centralized_repository_dir=~/cache/ids/sarus/centralized_repository_dir_${build_type}
     mkdir -p ${sarus_cached_home_dir}
     mkdir -p ${sarus_cached_centralized_repository_dir}
     docker run --tty --rm --user root --privileged \
