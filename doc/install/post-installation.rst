@@ -62,7 +62,6 @@ by the system, remember to load them manually:
 
 .. code-block:: bash
 
-    sudo modprobe ext4
     sudo modprobe loop
     sudo modprobe squashfs
     sudo modprobe overlay

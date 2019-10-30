@@ -343,8 +343,8 @@ Environmental Transfer
 ----------------------
 
 All the environment variables defined in the host process environment
-will be transferred into the container, however, any environment variables
-defined in the container description, e.g., Docker ENV-defined variables,
+will be transferred into the container; however, any environment variables
+defined in the container image, e.g., Docker ENV-defined variables,
 will be sourced and override those.
 
 .. _user-custom-mounts:
@@ -527,8 +527,8 @@ processes will not be reaped inside the container (see
 `[1] <https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/>`_ ,
 `[2] <https://hackernoon.com/the-curious-case-of-pid-namespaces-1ce86b6bc900>`_ for further reference).
 
-If you need to handle signals or reap zombie processes (which can be useful when 
-executing several different processes in long-running containers), you can use the 
+If you need to handle signals or reap zombie processes (which can be useful when
+executing several different processes in long-running containers), you can use the
 ``--init`` option to run an init process inside the container:
 
 .. code-block:: bash
@@ -625,7 +625,7 @@ container application uses one of the following MPI implementations:
 
 - `MPICH v3.1.4 <http://www.mpich.org/static/downloads/3.1.4/mpich-3.1.4.tar.gz>`_ (Feburary 2015)
 - `MVAPICH2 2.2 <http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2.tar.gz>`_ (September 2016)
-- Intel MPI Library Library 2017 Update 1
+- Intel MPI Library 2017 Update 1
 
 The following is an example Dockerfile to create a Debian image with MPICH
 3.1.4::
@@ -668,7 +668,7 @@ NVIDIA GPU support
 
 NVIDIA provides access to GPU devices and their driver stacks inside OCI
 containers through the NVIDIA Container Toolkit (part of the `NVIDIA Container
-Runtime <https://github.com/NVIDIA/nvidia-container-runtime>` project).
+Runtime <https://github.com/NVIDIA/nvidia-container-runtime>`_ project).
 
 When Sarus is configured to use this hook, the GPU devices to be made
 available inside the container can be selected by setting the

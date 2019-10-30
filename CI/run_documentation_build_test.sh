@@ -26,13 +26,13 @@ check_static_snapshot() {
     mkdir /home/docker/sarus-static
     cp -r $sarus_src_dir/* /home/docker/sarus-static
     cd /home/docker/sarus-static/doc
-    make html
+    sphinx-build -b html -W . _build/html
     cleanup_and_exit_if_last_command_failed
     log "    Build successful, checking version string"
     version_from_html=$(cat _build/html/index.html | grep "<strong>release</strong>" | awk -F ": " '{print $2}')
     version_from_file=$(cat ../VERSION)
     log "    Version from HTML: ${version_from_html}"
-    log "    Version from file: ${version_from_file}" 
+    log "    Version from file: ${version_from_file}"
     [ "$version_from_file" == "$version_from_html" ]
     cleanup_and_exit_if_last_command_failed
     log "    Check successful"
@@ -42,13 +42,13 @@ check_git_repo() {
     log "Building documentation from git repository"
     cp -rT $sarus_src_dir /home/docker/sarus-git
     cd /home/docker/sarus-git/doc
-    make html
+    sphinx-build -b html -W . _build/html
     cleanup_and_exit_if_last_command_failed
     log "    Build successful, checking version string"
     version_from_html=$(cat _build/html/index.html | grep "<strong>release</strong>" | awk -F ": " '{print $2}')
     version_from_git=$(git describe --tags --dirty)
     log "    Version from HTML: ${version_from_html}"
-    log "    Version from git : ${version_from_git}" 
+    log "    Version from git : ${version_from_git}"
     [ "$version_from_git" == "$version_from_html" ]
     cleanup_and_exit_if_last_command_failed
     log "    Check successful"

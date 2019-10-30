@@ -45,6 +45,21 @@ jobs:
       - docker_image=ethcscs/sarus-spack:1.0.0-ubuntu16.04
       - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/run_spack_package_test.sh
       if: branch = master
+    - name: "Test install from source Ubuntu 18.04"
+      script:
+      - docker_image=ubuntu18.04
+      - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/installation/test_driver.sh ${docker_image}
+      if: branch = master
+    - name: "Test install from source Debian 10"
+      script:
+      - docker_image=debian:10
+      - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/installation/test_driver.sh ${docker_image}
+      if: branch = master
+    - name: "Test install from source CentOS 7"
+      script:
+      - docker_image=centos:7
+      - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/installation/test_driver.sh ${docker_image}
+      if: branch = master
 
 notifications:
   email: false

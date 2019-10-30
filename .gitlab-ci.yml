@@ -48,6 +48,30 @@ standalone_archive_release:
       - README.md
 
 
+from_source_ubuntu18.04:
+  stage: test
+  only:
+      - master
+  script:
+      - docker_image=ubuntu:18.04
+      - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/installation/test_driver.sh ${docker_image}
+
+from_source_debian10:
+  stage: test
+  only:
+      - master
+  script:
+      - docker_image=debian:10
+      - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/installation/test_driver.sh ${docker_image}
+
+from_source_centos7:
+  stage: test
+  only:
+      - master
+  script:
+      - docker_image=centos:7
+      - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/installation/test_driver.sh ${docker_image}
+
 spack_package:
   stage: test
   only:
