@@ -15,6 +15,8 @@
 #include <tuple>
 #include <algorithm>
 #include <boost/format.hpp>
+#include <sys/types.h> //FIXME: needed for umask (see below)
+#include <sys/stat.h> //FIXME: needed for umask (see below)
 
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
@@ -59,6 +61,22 @@ void SshHook::checkLocalRepositoryHasSshKeys() {
 }
 
 void SshHook::startSshd() {
+    // This 'umask' is a temporary fix for an issue that we encountered while executing a specific
+    // instance of the reframe tests. Such instance was being executed with umask 0002, instead of
+    // the usual 0022. That resulted in the SSH hook creating files/directories with different
+    // permissions that where not accepted by sshd (internal security checks of sshd failed).
+
+    // FIXME:
+    // This 'umask' was added during a feature-freeze phase. We decided to call 'umask' only here,
+    // in order to affect the smallest possible part of the system.
+    // This "isolated" umask should be replaced with either (or both):
+    // - global umask in the Sarus's main function (check that it is applied to hooks (through runc) too!)
+    // - explicit setting the permissions in sarus::common::createFileIfNecessary,
+    //   sarus::common::createFolderIfNecesasary, sarus::common::copyFile, sarus::common::copyFolder, etc.
+    //   Note: sarus::common::copyFile and sarus::common::copyFolder should probably preserve
+    //         the same permissions as the source.
+    umask(022);
+
     opensshDirInHost = sarus::common::getEnvironmentVariable("SARUS_OPENSSH_DIR");
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
