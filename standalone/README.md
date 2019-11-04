@@ -5,8 +5,6 @@ Copyright (c) 2018-2019, ETH Zurich. All rights reserved.
 Please, refer to the LICENSE files in the `licenses` directory.
 SPDX-License-Identifier: BSD-3-Clause
 
-**NOTE:** Standalone installation will be available starting from version 1.0.0-rc8.
-
 Basic instructions to get started with Sarus standalone follow below.
 
 Please refer to the Sarus documentation for more information on how to install,
@@ -21,7 +19,7 @@ configure and use Sarus (https://sarus.readthedocs.io).
 
 3. Run the configuration script to finalize the installation of Sarus.
 
-        cd /opt/sarus/1.0.0-rc8 # adapt folder name to actual version of Sarus
+        cd /opt/sarus/1.0.0  # adapt folder name to actual version of Sarus
         sudo ./configure_installation.sh
 
 4. Use Sarus, e.g.:
