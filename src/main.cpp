@@ -22,6 +22,8 @@
 #include "common/Utility.hpp"
 #include "cli/CLI.hpp"
 
+#include <sys/types.h>
+#include <sys/stat.h>
 
 using namespace sarus;
 
@@ -31,6 +33,12 @@ static void getPrivileges();
 
 int main(int argc, char* argv[]) {
     std::setlocale(LC_CTYPE, "C.UTF-8"); // enable handling of non-ascii characters
+
+    // TODO: we should also consider to explicitely set the permissions in sarus::common::createFileIfNecessary,
+    //       sarus::common::createFolderIfNecesasary, sarus::common::copyFile, sarus::common::copyFolder, etc.
+    //       Note: sarus::common::copyFile and sarus::common::copyFolder should probably preserve
+    //       the same permissions as the source.
+    umask(022);
 
     auto& logger = common::Logger::getInstance();
 

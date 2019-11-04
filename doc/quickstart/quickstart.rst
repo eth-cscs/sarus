@@ -61,7 +61,7 @@ You can quickly install Sarus by following the simple steps below.
       into the ``/etc/ssl`` directory. Depending on the Linux distribution,
       some certificates may be located in different directories. A possible
       solution to expose the certificates to Sarus is a symlink. For example,
-      on CentOS 7::
+      on CentOS 7 and Fedora 31::
 
           sudo ln -s /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem /etc/ssl/cert.pem
 
