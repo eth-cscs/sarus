@@ -14,9 +14,11 @@
 #include <cstdlib>
 #include <string>
 #include <tuple>
+#include <functional>
 #include <unordered_map>
 #include <sys/types.h>
 
+#include <boost/optional.hpp>
 #include <boost/format.hpp>
 #include <boost/filesystem.hpp>
 #include <cpprest/json.h>
@@ -41,7 +43,8 @@ std::string removeWhitespaces(const std::string&);
 std::string replaceString(std::string &buf, const std::string& from, const std::string& to);
 std::string eraseFirstAndLastDoubleQuote(const std::string& buf);
 std::string executeCommand(const std::string& command);
-int forkExecWait(const common::CLIArguments& args, const boost::optional<boost::filesystem::path>& chrootJail = {});
+int forkExecWait(const common::CLIArguments& args,
+                 const boost::optional<std::function<void()>>& preExecActions = {});
 void SetStdinEcho(bool);
 std::string getHostname();
 std::string getUsername(const common::Config&);

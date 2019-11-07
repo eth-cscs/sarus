@@ -34,7 +34,8 @@
 				"noexec",
 				"newinstance",
 				"ptmxmode=0666",
-				"mode=0620"
+				"mode=0620",
+				"gid=5"
 			]
 		},
 		{

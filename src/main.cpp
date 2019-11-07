@@ -93,13 +93,13 @@ static void saveAndClearEnvironmentVariables(common::Config& config) {
 static void dropPrivileges(const common::Config& config) {
     auto uid = config.userIdentity.uid;
     if(setresuid(uid, uid, uid) != 0) {
-        auto message = boost::format("Failed to setresuid(%1%, %1%, %1%): %s") % uid % strerror(errno);
+        auto message = boost::format("Failed to setresuid(%1%, %1%, %1%): %2%") % uid % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
 
     auto gid = config.userIdentity.gid;
     if(setresgid(gid, gid, gid) != 0) {
-        auto message = boost::format("Failed to setresgid(%1%, %1%, %1%): %s") % gid % strerror(errno);
+        auto message = boost::format("Failed to setresgid(%1%, %1%, %1%): %2%") % gid % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
 

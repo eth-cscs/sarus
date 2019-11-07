@@ -15,6 +15,7 @@
 #include "test_utility/config.hpp"
 #include "common/Utility.hpp"
 #include "common/Logger.hpp"
+#include "common/GroupDB.hpp"
 #include "runtime/OCIBundleConfig.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
@@ -22,6 +23,28 @@ using namespace sarus;
 
 TEST_GROUP(OCIBundleConfigTestGroup) {
 };
+
+void setGidOfTtyInEtcGroup(const std::shared_ptr<common::Config>& config, gid_t gid) {
+    auto prefixDir = boost::filesystem::path{config->json["prefixDir"].GetString()};
+    auto group = common::GroupDB{};
+    group.read(prefixDir / "etc/group");
+    auto& entries = group.getEntries();
+
+    auto isTtyGroup = [](const common::GroupDB::Entry& entry){
+        return entry.groupName == "tty";
+    };
+    auto it = std::find_if( entries.begin(), entries.end(), isTtyGroup);
+
+    if(it != entries.cend()) {
+        it->gid = gid;
+    }
+    else {
+        auto entry = common::GroupDB::Entry{"tty", "x", gid, std::vector<std::string>{}};
+        entries.push_back(std::move(entry));
+    }
+
+    group.write(prefixDir / "etc/group");
+}
 
 TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     // create test config
@@ -32,6 +55,7 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     config->userIdentity.uid = 1000; // UID hardcoded in expected json file
     config->userIdentity.gid = 1000; // GID hardcoded in expected json file
     config->userIdentity.supplementaryGids = std::vector<gid_t>{2000, 3000, 4000, 1000}; // GIDs hardcoded in expected json file
+    setGidOfTtyInEtcGroup(config, 5); // gid hardcoded in expected json file
     config->imageID = common::ImageID{"test", "test", "test", "test_image"};
 
     // create test bundle

@@ -168,7 +168,8 @@ std::string executeCommand(const std::string& command) {
     return commandOutput;
 }
 
-int forkExecWait(const common::CLIArguments& args, const boost::optional<boost::filesystem::path>& chrootJail) {
+int forkExecWait(const common::CLIArguments& args,
+                 const boost::optional<std::function<void()>>& preExecActions) {
     logMessage(boost::format("Executing %s") % args, common::LogLevel::DEBUG);
 
     // fork and execute
@@ -181,15 +182,11 @@ int forkExecWait(const common::CLIArguments& args, const boost::optional<boost::
 
     bool isChild = pid == 0;
     if(isChild) {
-        if(chrootJail) {
-            if(chroot(chrootJail->c_str()) != 0) {
-                auto message = boost::format("Failed to chroot to %s: %s")
-                    % *chrootJail % strerror(errno);
-                SARUS_THROW_ERROR(message.str());
-            }
+        if(preExecActions) {
+            (*preExecActions)();
         }
         execvp(args.argv()[0], args.argv());
-        auto message = boost::format("Failed to exevp subprocess %s: %s") % args % strerror(errno);
+        auto message = boost::format("Failed to execvp subprocess %s: %s") % args % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
     else {

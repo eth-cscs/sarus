@@ -14,6 +14,8 @@
 #include <cstdlib>
 #include <tuple>
 #include <algorithm>
+#include <grp.h>
+#include <sys/prctl.h>
 #include <boost/format.hpp>
 
 #include "common/Error.hpp"
@@ -72,7 +74,6 @@ void SshHook::startSshd() {
     sarus::common::copyFolder(opensshDirInHost, opensshDirInBundle);
     copyKeysIntoBundle();
     sarus::common::createFoldersIfNecessary(rootfsDir / "tmp/var/empty"); // sshd's chroot folder
-    addSshdUserIfNecessary();
     patchPasswdIfNecessary();
     startSshdInContainer();
     bindMountSshBinary();
@@ -132,60 +133,26 @@ void SshHook::copyKeysIntoBundle() const {
     // server keys
     boost::filesystem::remove(opensshDirInBundle / "etc/ssh_host_rsa_key");
     boost::filesystem::remove(opensshDirInBundle / "etc/ssh_host_rsa_key.pub");
-    boost::filesystem::copy_file(localRepositoryDir / "ssh/ssh_host_rsa_key", opensshDirInBundle / "etc/ssh_host_rsa_key");
-    boost::filesystem::copy_file(localRepositoryDir / "ssh/ssh_host_rsa_key.pub", opensshDirInBundle / "etc/ssh_host_rsa_key.pub");
+    sarus::common::copyFile(localRepositoryDir / "ssh/ssh_host_rsa_key",
+                            opensshDirInBundle / "etc/ssh_host_rsa_key",
+                            uidOfUser, gidOfUser);
+    sarus::common::copyFile(localRepositoryDir / "ssh/ssh_host_rsa_key.pub",
+                            opensshDirInBundle / "etc/ssh_host_rsa_key.pub",
+                            uidOfUser, gidOfUser);
 
     // user keys
     boost::filesystem::remove_all(opensshDirInBundle / "etc/userkeys");
-    sarus::common::createFoldersIfNecessary(opensshDirInBundle / "etc/userkeys");
-    boost::filesystem::copy_file(localRepositoryDir / "ssh/id_rsa", opensshDirInBundle / "etc/userkeys/id_rsa");
-    sarus::common::setOwner(opensshDirInBundle / "etc/userkeys/id_rsa", uidOfUser, gidOfUser);
-    boost::filesystem::copy_file(localRepositoryDir / "ssh/id_rsa.pub", opensshDirInBundle / "etc/userkeys/id_rsa.pub");
-    sarus::common::setOwner(opensshDirInBundle / "etc/userkeys/id_rsa.pub", uidOfUser, gidOfUser);
-    boost::filesystem::copy_file(localRepositoryDir / "ssh/id_rsa.pub", opensshDirInBundle / "etc/userkeys/authorized_keys");
-    sarus::common::setOwner(opensshDirInBundle / "etc/userkeys/authorized_keys", uidOfUser, gidOfUser);
-}
-
-void SshHook::addSshdUserIfNecessary() const {
-    auto passwd = sarus::common::PasswdDB{};
-    passwd.read(rootfsDir / "etc/passwd");
-
-    // check if user already exists
-    for(const auto& entry : passwd.getEntries()) {
-        if(entry.loginName == "sshd") {
-            return;
-        }
-    }
-
-    // create new entry in passwd DB
-    auto ids = getFreeUserIdsInContainer();
-    auto newEntry = sarus::common::PasswdDB::Entry{
-        "sshd",
-        "x",
-        std::get<0>(ids),
-        std::get<1>(ids),
-        "",
-        boost::filesystem::path{"/run/sshd"},
-        boost::filesystem::path{"/usr/sbin/nologin"}
-    };
-    passwd.getEntries().push_back(newEntry);
-
-    passwd.write(rootfsDir / "etc/passwd");
-}
-
-std::tuple<uid_t, gid_t> SshHook::getFreeUserIdsInContainer() const {
-    std::unordered_set<uid_t> uids;
-    std::unordered_set<gid_t> gids;
-
-    auto passwd = sarus::common::PasswdDB{};
-    passwd.read(rootfsDir / "passwd");
-
-    for(const auto& entry : passwd.getEntries()) {
-        uids.insert(entry.uid);
-        gids.insert(entry.gid);
-    }
-
-    return std::tuple<uid_t, gid_t>{findFreeId(uids), findFreeId(gids)};
+    sarus::common::createFoldersIfNecessary(opensshDirInBundle / "etc/userkeys",
+                                            uidOfUser, gidOfUser);
+    sarus::common::copyFile(localRepositoryDir / "ssh/id_rsa",
+                            opensshDirInBundle / "etc/userkeys/id_rsa",
+                            uidOfUser, gidOfUser);
+    sarus::common::copyFile(localRepositoryDir / "ssh/id_rsa.pub",
+                            opensshDirInBundle / "etc/userkeys/id_rsa.pub",
+                            uidOfUser, gidOfUser);
+    sarus::common::copyFile(localRepositoryDir / "ssh/id_rsa.pub",
+                            opensshDirInBundle / "etc/userkeys/authorized_keys",
+                            uidOfUser, gidOfUser);
 }
 
 void SshHook::bindMountSshBinary() const {
@@ -206,7 +173,54 @@ void SshHook::patchPasswdIfNecessary() const {
 }
 
 void SshHook::startSshdInContainer() const {
-    auto status = sarus::common::forkExecWait({"/opt/sarus/openssh/sbin/sshd"}, rootfsDir);
+    std::function<void()> preExecActions = [this]() {
+        if(chroot(rootfsDir.c_str()) != 0) {
+            auto message = boost::format("Failed to chroot to %s: %s")
+                % rootfsDir % strerror(errno);
+            SARUS_THROW_ERROR(message.str());
+        }
+
+        // drop capabilities
+        // from capability zero onwards until prctl() fails because we went beyond the last valid capability
+        for(int capIdx = 0; ; capIdx++) {
+            if (prctl(PR_CAPBSET_DROP, capIdx, 0, 0, 0) != 0) {
+                if(errno == EINVAL) {
+                    break; // reached end of valid capabilities
+                }
+                else {
+                    auto message = boost::format("Failed to prctl(PR_CAPBSET_DROP, %d, 0, 0, 0): %s")
+                        % capIdx % strerror(errno);
+                    SARUS_THROW_ERROR(message.str());
+                }
+            }
+        }
+
+        // drop supplementary groups (if any)
+        if(setgroups(0, NULL) != 0) {
+            auto message = boost::format("Failed to setgroups(0, NULL): %s") % strerror(errno);
+            SARUS_THROW_ERROR(message.str());
+        }
+
+        // change to user's gid
+        if(setresgid(gidOfUser, gidOfUser, gidOfUser) != 0) {
+            auto message = boost::format("Failed to setresgid(%1%, %1%, %1%): %2%") % gidOfUser % strerror(errno);
+            SARUS_THROW_ERROR(message.str());
+        }
+
+        // change to user's uid
+        if(setresuid(uidOfUser, uidOfUser, uidOfUser) != 0) {
+            auto message = boost::format("Failed to setresuid(%1%, %1%, %1%): %2%") % uidOfUser % strerror(errno);
+            SARUS_THROW_ERROR(message.str());
+        }
+
+        // set NoNewPrivs
+        if(prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0) {
+            auto message = boost::format("Failed to prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0): %s") % strerror(errno);
+            SARUS_THROW_ERROR(message.str());
+        }
+    };
+
+    auto status = sarus::common::forkExecWait({"/opt/sarus/openssh/sbin/sshd"}, preExecActions);
     if(status != 0) {
         auto message = boost::format("/opt/sarus/openssh/sbin/sshd exited with status %d")
             % status;

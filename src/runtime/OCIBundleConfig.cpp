@@ -14,8 +14,10 @@
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/writer.h>
 
-#include "common/ImageMetadata.hpp"
+#include "common/Logger.hpp"
 #include "common/Utility.hpp"
+#include "common/GroupDB.hpp"
+#include "common/ImageMetadata.hpp"
 #include "runtime/Utility.hpp"
 
 
@@ -154,6 +156,25 @@ rj::Value OCIBundleConfig::makeMemberMounts() const {
         options.PushBack(rj::Value{"newinstance"}, *allocator);
         options.PushBack(rj::Value{"ptmxmode=0666"}, *allocator);
         options.PushBack(rj::Value{"mode=0620"}, *allocator);
+        auto gid = findGidOfTtyGroup();
+        if(gid) {
+            // Mount /dev/pts with the gid=<gid of tty group> option (typically gid=5).
+            // This is a standard setting in a Linux environment and it is needed, otherwise
+            // the tty files created in /dev/pts will not be owned by the tty group by
+            // default and that could generate errors.
+            // E.g.:
+            // sshd creates a new tty when a session is started. If the new tty file is not
+            // owned by the tty group, sshd does a chown on the tty file. If sshd is being
+            // executed as non-root, it will not have the permissions to do the chown and
+            // will terminate with an error.
+            auto option = "gid=" + std::to_string(*gid);
+            options.PushBack(rj::Value{option.c_str(), *allocator}, *allocator);
+        }
+        else {
+            auto message = "Mounting /dev/pts without the gid=<gid of tty group> option, because no tty gid was found."
+                           " Some programs, e.g. sshd, might run into errors because of this.";
+            common::Logger::getInstance().log(message, "Runtime", common::LogLevel::WARN);
+        }
         element.AddMember("options", options, *allocator);
 
         mounts.PushBack(element, *allocator);
@@ -253,6 +274,20 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
         linux.AddMember("readonlyPaths", paths, *allocator);
     }
     return linux;
+}
+
+boost::optional<gid_t> OCIBundleConfig::findGidOfTtyGroup() const {
+    auto prefixDir = boost::filesystem::path{config->json["prefixDir"].GetString()};
+    auto group = common::GroupDB{};
+    group.read(prefixDir / "etc/group");
+
+    for(const auto& entry : group.getEntries()) {
+        if(entry.groupName == "tty") {
+            return entry.gid;
+        }
+    }
+
+    return {};
 }
 
 }

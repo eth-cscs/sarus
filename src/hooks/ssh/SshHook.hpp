@@ -41,19 +41,6 @@ private:
     void sshKeygen(const boost::filesystem::path& outputFile) const;
     void checkThatOpenSshIsUntamperable() const;
     void copyKeysIntoBundle() const;
-    void addSshdUserIfNecessary() const;
-    std::tuple<uid_t, gid_t> getFreeUserIdsInContainer() const;
-
-    template<class T>
-    T findFreeId(const std::unordered_set<T>& ids) const {
-        for(T id=0; id<std::numeric_limits<T>::max(); ++id) {
-            if(ids.find(id) == ids.cend()) {
-                return id;
-            }
-        }
-        SARUS_THROW_ERROR("Failed to find free ID");
-    }
-
     void bindMountSshBinary() const;
     void patchPasswdIfNecessary() const;
     void startSshdInContainer() const;

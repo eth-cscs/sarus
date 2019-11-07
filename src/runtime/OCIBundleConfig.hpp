@@ -12,6 +12,7 @@
 #define sarus_runtime_OCIBundleConfig_hpp
 
 #include <memory>
+#include <linux/types.h>
 #include <boost/filesystem.hpp>
 #include <rapidjson/document.h>
 
@@ -34,6 +35,8 @@ private:
     rapidjson::Value makeMemberRoot() const;
     rapidjson::Value makeMemberMounts() const;
     rapidjson::Value makeMemberLinux() const;
+
+    boost::optional<gid_t> findGidOfTtyGroup() const;
 
 private:
     std::shared_ptr<const common::Config> config;

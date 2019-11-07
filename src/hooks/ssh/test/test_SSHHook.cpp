@@ -118,9 +118,9 @@ public:
 
     void checkContainerHasServerKeys() const {
         CHECK(boost::filesystem::exists(opensshDirInContainer / "etc/ssh_host_rsa_key"));
-        CHECK(sarus::common::getOwner(opensshDirInContainer / "etc/ssh_host_rsa_key") == idsOfRoot)
+        CHECK(sarus::common::getOwner(opensshDirInContainer / "etc/ssh_host_rsa_key") == idsOfUser)
         CHECK(boost::filesystem::exists(opensshDirInContainer / "etc/ssh_host_rsa_key.pub"));
-        CHECK(sarus::common::getOwner(opensshDirInContainer / "etc/ssh_host_rsa_key.pub") == idsOfRoot);
+        CHECK(sarus::common::getOwner(opensshDirInContainer / "etc/ssh_host_rsa_key.pub") == idsOfUser);
     }
 
     void checkContainerHasClientKeys() const {
