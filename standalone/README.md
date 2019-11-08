@@ -19,7 +19,7 @@ configure and use Sarus (https://sarus.readthedocs.io).
 
 3. Run the configuration script to finalize the installation of Sarus.
 
-        cd /opt/sarus/1.0.0  # adapt folder name to actual version of Sarus
+        cd /opt/sarus/1.0.1  # adapt folder name to actual version of Sarus
         sudo ./configure_installation.sh
 
 4. Use Sarus, e.g.:

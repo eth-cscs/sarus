@@ -15,7 +15,7 @@ You can quickly install Sarus by following the simple steps below.
        mkdir /opt/sarus
        cd /opt/sarus
        # Adjust url to your prefered version
-       wget https://github.com/eth-cscs/sarus/archive/sarus-1.0.0.tar.gz
+       wget https://github.com/eth-cscs/sarus/archive/sarus-1.0.1.tar.gz
 
 2. Extract Sarus in the installation directory.
 
@@ -29,7 +29,7 @@ You can quickly install Sarus by following the simple steps below.
 
    .. code-block:: bash
 
-       cd /opt/sarus/1.0.0  # adapt folder name to actual version of Sarus
+       cd /opt/sarus/1.0.1  # adapt folder name to actual version of Sarus
        sudo ./configure_installation.sh
 
    .. important::
