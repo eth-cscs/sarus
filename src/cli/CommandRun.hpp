@@ -182,7 +182,7 @@ private:
         bool isUserMount = true;
         auto parser = cli::MountParser{isUserMount, conf};
         for (const auto& mountString : conf->commandRun.userMounts) {
-            auto map = common::convertListOfKeyValuePairsToMap(mountString);
+            auto map = common::parseMap(mountString);
             conf->commandRun.mounts.push_back(parser.parseMountRequest(map));
         }
     }

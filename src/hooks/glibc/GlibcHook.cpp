@@ -19,6 +19,7 @@
 
 #include <boost/format.hpp>
 #include <boost/regex.hpp>
+#include <boost/algorithm/string.hpp>
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 
@@ -78,7 +79,7 @@ void GlibcHook::parseEnvironmentVariables() {
     if((p = getenv("SARUS_GLIBC_LIBS")) == nullptr) {
         SARUS_THROW_ERROR("Environment doesn't contain variable SARUS_GLIBC_LIBS");
     }
-    hostLibraries = sarus::common::convertStringListToVector<boost::filesystem::path>(p, ':');
+    boost::split(hostLibraries, p, boost::is_any_of(":"));
 }
 
 bool GlibcHook::containerHasGlibc() const {

@@ -19,6 +19,7 @@
 
 #include <boost/format.hpp>
 #include <boost/regex.hpp>
+#include <boost/algorithm/string.hpp>
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 
@@ -64,14 +65,14 @@ void MpiHook::parseEnvironmentVariables() {
     if((p = getenv("SARUS_MPI_LIBS")) == nullptr) {
         SARUS_THROW_ERROR("Environment doesn't contain variable SARUS_MPI_LIBS");
     }
-    hostMpiLibs = sarus::common::convertStringListToVector<boost::filesystem::path>(p, ':');
+    boost::split(hostMpiLibs, p, boost::is_any_of(":"));
 
     if((p = getenv("SARUS_MPI_DEPENDENCY_LIBS")) != nullptr) {
-        hostMpiDependencyLibs = sarus::common::convertStringListToVector<boost::filesystem::path>(p, ':');
+        boost::split(hostMpiDependencyLibs, p, boost::is_any_of(":"));
     }
 
     if((p = getenv("SARUS_MPI_BIND_MOUNTS")) != nullptr) {
-        bindMounts = sarus::common::convertStringListToVector<boost::filesystem::path>(p, ':');
+        boost::split(bindMounts, p, boost::is_any_of(":"));
     }
 }
 

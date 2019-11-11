@@ -41,7 +41,6 @@ public:
 
 private:
     Entry parseLine(const std::string& line) const;
-    std::vector<std::string> splitLine(const std::string& line) const;
 
 private:
     std::vector<Entry> entries;

@@ -12,6 +12,7 @@
 
 #include <fstream>
 #include <boost/format.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "common/Error.hpp"
 
@@ -58,7 +59,8 @@ std::vector<PasswdDB::Entry>& PasswdDB::getEntries() {
 }
 
 PasswdDB::Entry PasswdDB::parseLine(const std::string& line) const {
-    auto tokens = splitLine(line);
+    auto tokens = std::vector<std::string>{};
+    boost::split(tokens, line, boost::is_any_of(":"));
     if(tokens.size() < 6 || tokens.size() > 7) {
         auto message = boost::format("Failed to parse line \"%s\": bad number of tokens") % line;
         SARUS_THROW_ERROR(message.str());
@@ -71,25 +73,11 @@ PasswdDB::Entry PasswdDB::parseLine(const std::string& line) const {
     entry.gid = std::stoul(tokens[3]);
     entry.userNameOrCommentField = tokens[4];
     entry.userHomeDirectory = tokens[5];
-    if(tokens.size() > 6) {
+    if(tokens.size() > 6 && !tokens[6].empty()) {
         entry.userCommandInterpreter = tokens[6];
     }
 
     return entry;
-}
-
-//TODO: replace this function with common::convertStringListToVector
-std::vector<std::string> PasswdDB::splitLine(const std::string& line) const {
-    auto tokens = std::vector<std::string>{};
-    
-    auto tokenBeg = line.cbegin();
-    while(tokenBeg != line.cend()) {
-        auto tokenEnd = std::find(tokenBeg, line.cend(), ':');
-        tokens.emplace_back(tokenBeg, tokenEnd);
-        tokenBeg = tokenEnd != line.cend() ? tokenEnd + 1 : tokenEnd;
-    }
-
-    return tokens;
 }
 
 }} // namespace

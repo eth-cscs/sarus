@@ -70,7 +70,7 @@ public:
 
         auto parser = cli::MountParser{!isSiteMount, configRAII.config};
 
-        auto map = common::convertListOfKeyValuePairsToMap(mountRequest);
+        auto map = common::parseMap(mountRequest);
 
         if(isParseErrorExpected) {
             CHECK_THROWS(sarus::common::Error, parser.parseMountRequest(map));

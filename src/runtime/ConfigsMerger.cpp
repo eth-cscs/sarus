@@ -9,9 +9,10 @@
  */
 
 #include "ConfigsMerger.hpp"
-#include "runtime/Utility.hpp"
 
-#include "common/Utility.hpp"
+#include <boost/algorithm/string.hpp>
+
+#include "runtime/Utility.hpp"
 
 namespace rj = rapidjson;
 
@@ -107,7 +108,8 @@ void ConfigsMerger::setNvidiaEnvironmentVariables(const std::unordered_map<std::
         // Given a device index on the host, the correct index inside the container can be obtained
         // using a sorted copy of the host CVD: the container index will be the position of the
         // corresponding host index in the sorted list.
-        auto hostCVD = common::convertStringListToVector<std::string>(gpuDevicesAvailable->second, ',');
+        auto hostCVD = std::vector<std::string>{};
+        boost::split(hostCVD, gpuDevicesAvailable->second, boost::is_any_of(","));
         auto hostCVDSorted = hostCVD;
         std::sort(hostCVDSorted.begin(), hostCVDSorted.end());
         std::string containerCVD;

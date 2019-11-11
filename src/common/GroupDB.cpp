@@ -12,9 +12,9 @@
 
 #include <fstream>
 #include <boost/format.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "common/Error.hpp"
-#include "common/Utility.hpp"
 
 namespace sarus {
 namespace common {
@@ -36,17 +36,9 @@ void GroupDB::write(const boost::filesystem::path& file) const {
     for(const auto& entry : entries) {
         os  << entry.groupName << ":"
             << entry.encryptedPassword << ":"
-            << entry.gid << ":";
-
-        if(!entry.users.empty()) {
-            os << entry.users.front();
-
-            for(auto user = entry.users.begin()+1; user != entry.users.end(); ++user) {
-                os << "," << *user;
-            }
-        }
-
-        os << "\n";
+            << entry.gid << ":"
+            << boost::join(entry.users, ",")
+            << "\n";
     }
 }
 
@@ -59,7 +51,8 @@ std::vector<GroupDB::Entry>& GroupDB::getEntries() {
 }
 
 GroupDB::Entry GroupDB::parseLine(const std::string& line) const {
-    auto tokens = splitLine(line);
+    auto tokens = std::vector<std::string>{};
+    boost::split(tokens, line, boost::is_any_of(":"));
     if(tokens.size() < 3 || tokens.size() > 4) {
         auto message = boost::format("Failed to parse line \"%s\": bad number of tokens") % line;
         SARUS_THROW_ERROR(message.str());
@@ -70,25 +63,11 @@ GroupDB::Entry GroupDB::parseLine(const std::string& line) const {
     entry.encryptedPassword = tokens[1];
     entry.gid = std::stoul(tokens[2]);
 
-    if(tokens.size() > 3) {
-        entry.users = common::convertStringListToVector<std::string>(tokens[3], ',');
+    if(tokens.size() > 3 && !tokens[3].empty()) {
+        boost::split(entry.users, tokens[3], boost::is_any_of(","));
     }
 
     return entry;
-}
-
-//TODO: replace this function with common::convertStringListToVector
-std::vector<std::string> GroupDB::splitLine(const std::string& line) const {
-    auto tokens = std::vector<std::string>{};
-
-    auto tokenBeg = line.cbegin();
-    while(tokenBeg != line.cend()) {
-        auto tokenEnd = std::find(tokenBeg, line.cend(), ':');
-        tokens.emplace_back(tokenBeg, tokenEnd);
-        tokenBeg = tokenEnd != line.cend() ? tokenEnd + 1 : tokenEnd;
-    }
-
-    return tokens;
 }
 
 }} // namespace

@@ -63,36 +63,10 @@ void copyFolder(const boost::filesystem::path& src, const boost::filesystem::pat
 void changeDirectory(const boost::filesystem::path& path);
 int countFilesInDirectory(const boost::filesystem::path& path);
 boost::filesystem::path realpathWithinRootfs(const boost::filesystem::path& rootfs, const boost::filesystem::path& path);
-std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(const std::string& kvList,
-        const char pairSeparator = ',', const char kvSeparator = '=');
+std::unordered_map<std::string, std::string> parseMap(const std::string& input,
+                                                      const std::string& pairSeparators = ",",
+                                                      const std::string& keyValueSeparators = "=");
 std::string makeColonSeparatedListOfPaths(const std::vector<boost::filesystem::path>& paths);
-
-/**
- * Converts a string representing a list of entries to a vector of strings.
- *
- * If no separator is passed as argument, the entries are assumed to be separated by semicolons.
- */
-template<class T>
-std::vector<T> convertStringListToVector(const std::string& input_string, const char separator = ';') {
-    auto vec = std::vector<T>{};
-    
-    auto is_not_separator = [separator](char c) {
-        return c != separator;
-    };
-    
-    auto entryBegin = std::find_if(input_string.cbegin(), input_string.cend(), is_not_separator);
-    while(entryBegin != input_string.cend()) {
-        auto entryEnd = std::find(entryBegin, input_string.cend(), separator);
-        auto entry = std::string(entryBegin, entryEnd);
-        vec.emplace_back(entry);
-
-        entryBegin = entryEnd;
-        entryBegin = std::find_if(entryBegin, input_string.cend(), is_not_separator);
-    }
-
-    return vec;
-}
-
 std::vector<boost::filesystem::path> getLibrariesFromDynamicLinker(
     const boost::filesystem::path& ldconfigPath,
     const boost::filesystem::path& rootDir);

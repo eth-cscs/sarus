@@ -30,14 +30,15 @@ TEST(GroupDBTestGroup, testRead) {
     std::ofstream of{file.c_str()};
     of  << "groupName0:x:0:" << std::endl
         << "groupName1:x:1:userName0" << std::endl
-        << "groupName2:x:2:userName0,userName1" << std::endl;
+        << "groupName2:x:2:userName0,userName1" << std::endl
+        << "groupName3:x:3" << std::endl;
 
     // read from file
     auto group = GroupDB{};
     group.read(file);
     const auto& entries = group.getEntries();
 
-    CHECK(entries.size() == 3);
+    CHECK(entries.size() == 4);
 
     CHECK(entries[0].groupName == "groupName0");
     CHECK(entries[0].encryptedPassword == "x");
@@ -53,6 +54,11 @@ TEST(GroupDBTestGroup, testRead) {
     CHECK(entries[2].encryptedPassword == "x");
     CHECK(entries[2].gid == 2);
     CHECK(entries[2].users == (std::vector<std::string>{"userName0", "userName1"}));
+
+    CHECK(entries[3].groupName == "groupName3");
+    CHECK(entries[3].encryptedPassword == "x");
+    CHECK(entries[3].gid == 3);
+    CHECK(entries[3].users == (std::vector<std::string>{}));
 
     boost::filesystem::remove_all(file);
 }

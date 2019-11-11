@@ -30,6 +30,8 @@ TEST(PasswdDBTestGroup, testRead) {
     of  << "loginName0:x:1000:1001:UserNameOrCommentField0:/home/dir0"
         << std::endl
         << "loginName1:encryptedPass1:4294967294:4294967294:UserNameOrCommentField1:/home/dir1:/optional/UserCommandInterpreter1"
+        << std::endl
+        << "loginName2:x:1000:1001:UserNameOrCommentField2:/home/dir2:"
         << std::endl;
 
     // read from file
@@ -37,7 +39,7 @@ TEST(PasswdDBTestGroup, testRead) {
     passwd.read(file);
     const auto& entries = passwd.getEntries();
 
-    CHECK(entries.size() == 2);
+    CHECK(entries.size() == 3);
 
     CHECK(entries[0].loginName == "loginName0");
     CHECK(entries[0].encryptedPassword == "x");
@@ -54,6 +56,14 @@ TEST(PasswdDBTestGroup, testRead) {
     CHECK(entries[1].userNameOrCommentField == "UserNameOrCommentField1");
     CHECK(entries[1].userHomeDirectory == "/home/dir1");
     CHECK(*entries[1].userCommandInterpreter == "/optional/UserCommandInterpreter1");
+
+    CHECK(entries[2].loginName == "loginName2");
+    CHECK(entries[2].encryptedPassword == "x");
+    CHECK(entries[2].uid == 1000);
+    CHECK(entries[2].gid == 1001);
+    CHECK(entries[2].userNameOrCommentField == "UserNameOrCommentField2");
+    CHECK(entries[2].userHomeDirectory == "/home/dir2");
+    CHECK(!entries[2].userCommandInterpreter);
 
     boost::filesystem::remove_all(file);
 }

@@ -143,23 +143,23 @@ TEST(UtilityTestGroup, countFilesInDirectory) {
     }
 }
 
-TEST(UtilityTestGroup, convertListOfKeyValuePairsToMap) {
+TEST(UtilityTestGroup, parseMap) {
     // empty list
     {
-        auto map = common::convertListOfKeyValuePairsToMap("");
+        auto map = common::parseMap("");
         CHECK(map.empty());
     }
     // one key-value pair
     {
         auto list = "key0=value0";
-        auto map = common::convertListOfKeyValuePairsToMap(list);
+        auto map = common::parseMap(list);
         CHECK_EQUAL(map.size(), 1);
         CHECK_EQUAL(map["key0"], std::string{"value0"});
     }
     // two key-value pairs
     {
         auto list = "key0=value0,key1=value1";
-        auto map = common::convertListOfKeyValuePairsToMap(list);
+        auto map = common::parseMap(list);
         CHECK_EQUAL(map.size(), 2);
         CHECK_EQUAL(map["key0"], std::string{"value0"});
         CHECK_EQUAL(map["key1"], std::string{"value1"});
@@ -167,92 +167,54 @@ TEST(UtilityTestGroup, convertListOfKeyValuePairsToMap) {
     // key only (no value associated)
     {
         auto list = "key_only";
-        auto map = common::convertListOfKeyValuePairsToMap(list);
+        auto map = common::parseMap(list);
         CHECK_EQUAL(map.size(), 1);
         CHECK(map["key_only"] == "");
     }
     {
         auto list = "key_only_at_begin,key=value";
-        auto map = common::convertListOfKeyValuePairsToMap(list);
+        auto map = common::parseMap(list);
         CHECK_EQUAL(map.size(), 2);
         CHECK(map["key_only_at_begin"] == "");
         CHECK(map["key"] == "value");
     }
     {
         auto list = "key=value,key_only_at_end";
-        auto map = common::convertListOfKeyValuePairsToMap(list);
+        auto map = common::parseMap(list);
         CHECK_EQUAL(map.size(), 2);
         CHECK(map["key"] == "value");
         CHECK(map["key_only_at_end"] == "");
     }
     {
         auto list = "key_only0,key_only1";
-        auto map = common::convertListOfKeyValuePairsToMap(list);
+        auto map = common::parseMap(list);
         CHECK_EQUAL(map.size(), 2);
         CHECK(map["key_only0"] == "");
         CHECK(map["key_only1"] == "");
     }
-    // missing value error
-    {
-        auto list = "key=";
-        CHECK_THROWS(common::Error, common::convertListOfKeyValuePairsToMap(list));
-    }
-    {
-        auto list = "key0,key1=,key2";
-        CHECK_THROWS(common::Error, common::convertListOfKeyValuePairsToMap(list));
-    }
     // missing key error
     {
         auto list = ",key=value";
-        CHECK_THROWS(common::Error, common::convertListOfKeyValuePairsToMap(list));
+        CHECK_THROWS(common::Error, common::parseMap(list));
     }
     {
         auto list = "key0=value0,,key1=value1";
-        CHECK_THROWS(common::Error, common::convertListOfKeyValuePairsToMap(list));
+        CHECK_THROWS(common::Error, common::parseMap(list));
     }
     {
         auto list = "key0=value0,";
-        CHECK_THROWS(common::Error, common::convertListOfKeyValuePairsToMap(list));
+        CHECK_THROWS(common::Error, common::parseMap(list));
     }
     // repeated key error
     {
         auto list = "key0=value0,key0=value1";
-        CHECK_THROWS(common::Error, common::convertListOfKeyValuePairsToMap(list));
+        CHECK_THROWS(common::Error, common::parseMap(list));
     }
-}
-
-TEST(UtilityTestGroup, convertStringListToVector) {
-    // no entries
-    auto vec = common::convertStringListToVector<std::string>("");
-    CHECK(vec.empty());
-
-    vec = common::convertStringListToVector<std::string>(";");
-    CHECK(vec.empty());
-
-    vec = common::convertStringListToVector<std::string>(";;");
-    CHECK(vec.empty());
-
-    // two entries
-    vec = common::convertStringListToVector<std::string>("one;two");
-    CHECK(vec == (std::vector<std::string>{"one", "two"}));
-
-    vec = common::convertStringListToVector<std::string>(";one;two;");
-    CHECK(vec == (std::vector<std::string>{"one", "two"}));
-
-    vec = common::convertStringListToVector<std::string>(";;one;;two;;");
-    CHECK(vec == (std::vector<std::string>{"one", "two"}));
-
-    // three entries
-    vec = common::convertStringListToVector<std::string>("one;two;three");
-    CHECK(vec == (std::vector<std::string>{"one", "two", "three"}));
-
-    // another separator (other than ';')
-    vec = common::convertStringListToVector<std::string>("one_two_three", '_');
-    CHECK(vec == (std::vector<std::string>{"one", "two", "three"}));
-
-    // another type (other than std::string)
-    auto vecPaths = common::convertStringListToVector<boost::filesystem::path>("/root");
-    CHECK(vecPaths == (std::vector<boost::filesystem::path>{"/root"}));
+    // too many values error
+    {
+        auto list = "key0=value0=value1";
+        CHECK_THROWS(common::Error, common::parseMap(list));
+    }
 }
 
 TEST(UtilityTestGroup, realpathWithinRootfs) {

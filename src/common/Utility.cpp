@@ -31,6 +31,7 @@
 #include <limits.h>
 
 #include <boost/regex.hpp>
+#include <boost/algorithm/string.hpp>
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/filereadstream.h>
@@ -511,72 +512,50 @@ boost::filesystem::path realpathWithinRootfs(const boost::filesystem::path& root
  * not feature a key-value separator), the map entry is created with the value as an
  * empty string.
  */
-std::unordered_map<std::string, std::string> convertListOfKeyValuePairsToMap(
-    const std::string& kvList,
-    const char pairSeparator,
-    const char kvSeparator) {
-
-    auto isSeparator = [pairSeparator, kvSeparator](char c) {
-        return c == pairSeparator || c == kvSeparator;
-    };
+std::unordered_map<std::string, std::string> parseMap(const std::string& input,
+                                                      const std::string& pairSeparators,
+                                                      const std::string& keyValueSeparators) {
+    // check for empty input
+    if(input.empty()) {
+        return {};
+    }
 
     auto map = std::unordered_map<std::string, std::string>{};
-    auto keyBegin = kvList.cbegin();
 
-    while(keyBegin != kvList.cend()) {
-        auto keyEnd = std::find_if(keyBegin, kvList.cend(), isSeparator);
+    auto pairs = std::vector<std::string>{};
+    boost::split(pairs, input, boost::is_any_of(pairSeparators));
+
+    for(const auto& pair : pairs) {
+        auto tokens = std::vector<std::string>{};
+        boost::split(tokens, pair, boost::is_any_of(keyValueSeparators));
+        const auto& key = tokens[0];
+        auto value = tokens.size() > 1 ? std::move(tokens[1]) : "";
+
+        // check for "too many" tokens
+        if(tokens.size() > 2) {
+            auto message = boost::format("Error: found invalid key-value pair '%s' in '%s' (too many values).")
+                % pair % input;
+            logMessage(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO)
+        }
 
         // check for empty key
-        if(std::distance(keyBegin, keyEnd) == 0) {
-            auto message = boost::format("Error: found empty key in '%s'. Expected a list of key-value pairs.") % kvList;
+        if(key.empty()) {
+            auto message = boost::format("Error: found empty key in '%s'. Expected a list of key-value pairs.")
+                % input;
             logMessage(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO)
         }
 
-        auto key = std::string(keyBegin, keyEnd);
-        auto value = std::string{""};
-
-        // key with associated value
-        if(keyEnd != kvList.cend() && *keyEnd == kvSeparator) {
-            auto valueBegin = keyEnd + 1;
-            auto valueEnd = std::find(valueBegin, kvList.cend(), pairSeparator);
-
-            if(std::distance(valueBegin, valueEnd) == 0) {
-                auto message = boost::format("Error: found empty value for key '%s' in '%s'. Expected a list of key-value pairs.")
-                    % key % kvList;
-                logMessage(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-            }
-
-            value = std::string(valueBegin, valueEnd);
-            keyBegin = valueEnd;
-        }
-        // key without value
-        else {
-            value = "";
-            keyBegin = keyEnd;
-        }
-
-        // check for duplicated keys
+        // check for duplicated key
         if(map.find(key) != map.cend()) {
             auto message = boost::format("Error: found duplicated key '%s' in '%s'. Expected a list of unique key-value pairs.")
-                % key % kvList;
+                % key % input;
             logMessage(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO)
         }
 
         map[key] = value;
-
-        // skip pair separator
-        if(keyBegin != kvList.cend()) {
-            ++keyBegin;
-            if(keyBegin == kvList.cend()) {
-                auto message = boost::format("Error: list of key-value pairs '%s' is malformed (list terminates with '%s')")
-                    % kvList % kvList.back();
-                logMessage(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-            }
-        }
     }
 
     return map;
