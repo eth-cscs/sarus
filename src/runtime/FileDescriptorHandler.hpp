@@ -14,8 +14,6 @@
 #include <boost/optional.hpp>
 
 #include "common/Config.hpp"
-#include "common/SecurityChecks.hpp"
-
 
 namespace sarus {
 namespace runtime {

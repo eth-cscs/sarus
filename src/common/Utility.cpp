@@ -239,7 +239,7 @@ std::string getHostname() {
 
 std::string getUsername(const common::Config& config) {
     // get username from the cached passwd file of Sarus
-    // Note: this is usually done through the getpwuid fuction. However, musl failes to retrieve
+    // Note: this is usually done through the getpwuid function. However, musl fails to retrieve
     // all the passwd entries from certain systems, e.g. LDAP at CSCS.
     auto passwdFile = boost::filesystem::path{ config.json["prefixDir"].GetString() } / "etc/passwd";
     auto passwd = common::PasswdDB{};
@@ -313,7 +313,7 @@ boost::filesystem::path getLocalRepositoryDirectory(const common::Config& config
 /**
  * Generates a random suffix and append it to the given path. If the generated random
  * path exists, tries again with another suffix until the operation succeedes.
- * 
+ *
  * Note: boost::filesystem::unique_path offers a similar functionality. However, it
  * fails (throws exception) when the locale configuration is invalid. More specifically,
  * we experienced the problem when LC_CTYPE was set to UTF-8 and the locale UTF-8 was not
@@ -326,7 +326,7 @@ boost::filesystem::path makeUniquePathWithRandomSuffix(const boost::filesystem::
         const size_t sizeOfRandomSuffix = 16;
         uniquePath = path.string() + "-" + generateRandomString(sizeOfRandomSuffix);
     } while(boost::filesystem::exists(uniquePath));
-    
+
     return uniquePath;
 }
 
@@ -334,7 +334,7 @@ std::string generateRandomString(size_t size) {
     auto dist = std::uniform_int_distribution<std::mt19937::result_type>(0, 'z'-'a');
     std::mt19937 generator;
     generator.seed(std::random_device()());
-    
+
     auto string = std::string(size, '.');
 
     for(size_t i=0; i<string.size(); ++i) {

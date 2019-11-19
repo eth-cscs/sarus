@@ -35,20 +35,22 @@ void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& 
     auto message = boost::format("Checking that path %s is untamperable") % path;
     logMessage(message, common::LogLevel::INFO);
 
-    if(path.has_parent_path()) {
-        checkThatPathIsRootOwned(path.parent_path());
-        checkThatPathIsNotGroupWritableOrWorldWritable(path.parent_path());
-    }
+    // check that parent paths are untamperable
+    auto rootPath = path.root_path();
+    auto parentPath = path;
+    do {
+        checkThatPathIsRootOwned(parentPath);
+        checkThatPathIsNotGroupWritableOrWorldWritable(parentPath);
+        parentPath = parentPath.parent_path();
+    } while(boost::filesystem::exists(parentPath) && parentPath != rootPath);
 
-    checkThatPathIsRootOwned(path);
-    checkThatPathIsNotGroupWritableOrWorldWritable(path);
-
-    // recursively check that subfolders/subfiles are untamperable (if directory)
+    // if directory, check that subpaths are untamperable
     if(boost::filesystem::is_directory(path)) {
-        for(boost::filesystem::directory_iterator entry{path};
-            entry != boost::filesystem::directory_iterator{};
-            ++entry) {
-            checkThatPathIsUntamperable(entry->path());
+        for(boost::filesystem::recursive_directory_iterator entry{path};
+              entry != boost::filesystem::recursive_directory_iterator{};
+              ++entry) {
+            checkThatPathIsRootOwned(entry->path());
+            checkThatPathIsNotGroupWritableOrWorldWritable(entry->path());
         }
     }
 
@@ -74,7 +76,7 @@ void SecurityChecks::checkThatPathIsRootOwned(const boost::filesystem::path& pat
         SARUS_RETHROW_ERROR(e, message.str());
     }
 
-    if(uid != 0 || gid != 0) {
+    if(uid != 0) {
         auto message = boost::format(   "Path %s must be owned by root in order to prevent"
                                         "other users from tampering its contents. Found uid=%d, gid=%d.")
             % path % uid % gid;
