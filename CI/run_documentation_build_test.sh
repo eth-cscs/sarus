@@ -21,37 +21,41 @@ cleanup_and_exit_if_last_command_failed() {
 
 sarus_src_dir=/sarus-source
 
+check_links() {
+    log "    Check html links in docs. No broken nor permanent redirects are welcome."
+    make html SPHINXOPTS="-W -b linkcheck"
+    cleanup_and_exit_if_last_command_failed
+}
+
+check_docs() {
+    local expected_version=$1
+    make html SPHINXOPTS="-W"
+    cleanup_and_exit_if_last_command_failed
+    log "    Build successful, checking version string"
+    version_from_html=$(cat _build/html/index.html | grep "<strong>release</strong>" | awk -F ": " '{print $2}')
+    log "    Version from HTML: ${version_from_html}"
+    log "    Expected Version: ${expected_version}"
+    [ "$expected_version" == "$version_from_html" ]
+    cleanup_and_exit_if_last_command_failed
+    log "    Check successful"
+}
+
 check_static_snapshot() {
     log "Building documentation from static snapshot"
     mkdir /home/docker/sarus-static
     cp -r $sarus_src_dir/* /home/docker/sarus-static
     cd /home/docker/sarus-static/doc
-    sphinx-build -b html -W . _build/html
-    cleanup_and_exit_if_last_command_failed
-    log "    Build successful, checking version string"
-    version_from_html=$(cat _build/html/index.html | grep "<strong>release</strong>" | awk -F ": " '{print $2}')
     version_from_file=$(cat ../VERSION)
-    log "    Version from HTML: ${version_from_html}"
-    log "    Version from file: ${version_from_file}"
-    [ "$version_from_file" == "$version_from_html" ]
-    cleanup_and_exit_if_last_command_failed
-    log "    Check successful"
+    check_links
+    check_docs ${version_from_file}
 }
 
 check_git_repo() {
     log "Building documentation from git repository"
     cp -rT $sarus_src_dir /home/docker/sarus-git
     cd /home/docker/sarus-git/doc
-    sphinx-build -b html -W . _build/html
-    cleanup_and_exit_if_last_command_failed
-    log "    Build successful, checking version string"
-    version_from_html=$(cat _build/html/index.html | grep "<strong>release</strong>" | awk -F ": " '{print $2}')
     version_from_git=$(git describe --tags --dirty)
-    log "    Version from HTML: ${version_from_html}"
-    log "    Version from git : ${version_from_git}"
-    [ "$version_from_git" == "$version_from_html" ]
-    cleanup_and_exit_if_last_command_failed
-    log "    Check successful"
+    check_docs ${version_from_git}
 }
 
 log "Checking documentation build process"

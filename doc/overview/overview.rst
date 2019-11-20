@@ -14,7 +14,7 @@ Keeping flexibility, extensibility and community efforts in high regard, Sarus
 relies on industry standards and open source software. Consider for instance the
 use of `runc <https://github.com/opencontainers/runc>`_, an OCI-compliant
 container runtime that is also `used internally by Docker
-<https://blog.docker.com/2015/06/runc/>`_. Moreover, Sarus leverages the `Open
+<https://www.docker.com/blog/runc/>`_. Moreover, Sarus leverages the `Open
 Containers Initiative (OCI) <https://www.opencontainers.org/>`_ specifications
 to extend the capabilities of ``runc`` and enable multiple high-performance
 features. In the same vein, Sarus depends on a widely-used set of libraries,
@@ -58,7 +58,7 @@ Importing container images
 One of the first actions a user will perform with a fresh Sarus installation
 is getting some container images on the system. This is usually
 accomplished by retrieving the images from a remote cloud registry (e.g. `Docker
-Hub <hub.docker.com>`_) using the :program:`sarus pull` command.
+Hub <https://hub.docker.com>`_) using the :program:`sarus pull` command.
 
 Sarus is able to communicate with registries using the Docker Registry HTTP API
 V2 protocol or the OCI Distribution Specification API protocol. After contacting
@@ -77,8 +77,8 @@ they are uncompressed and expanded in a :ref:`temporary directory
 layers are then squashed together, resulting in a *flattened* image using the
 `squashfs <https://en.wikipedia.org/wiki/SquashFS>`_ format. A metadata file is
 also generated from a subset of the OCI image configuration. Flattening the image
-improves the I/O performance of the container, as detailed
-`below <overview-instantiation-rootfs>`_. It also has the benefit of reducing the
+improves the I/O performance of the container, as detailed below in
+:ref:`overview-instantiation-rootfs`. It also has the benefit of reducing the
 size of the images on disk, by merging the topmost layer with the underlying ones.
 
 When pulling images from the cloud is inconvenient or undesirable, the
@@ -268,4 +268,4 @@ its workflow and exits.
 
 .. [unshare-manpage] http://man7.org/linux/man-pages/man2/unshare.2.html
 .. [mount-namespace-manpage] http://man7.org/linux/man-pages/man7/mount_namespaces.7.html
-.. [ShifterCUG2015] Jacobsen, D.M., Canon, R.S., “Contain This, Unleashing Docker for HPC”, Cray Users GroupConference 2015 (CUG’15), https://docs.nersc.gov/development/shifter/files/cug2015udi.pdf
+.. [ShifterCUG2015] Jacobsen, D.M., Canon, R.S., “Contain This, Unleashing Docker for HPC”, Cray Users GroupConference 2015 (CUG’15), https://www.nersc.gov/assets/Uploads/cug2015udi.pdf

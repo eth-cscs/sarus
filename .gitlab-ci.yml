@@ -4,6 +4,9 @@ stages:
 
 check_version_numbers_and_doc_build:
   stage: test
+  only:
+      - master
+      - develop
   script:
     - docker_image_build=ethcscs/sarus-ci-build:1.0.0
     - docker_image_run=ethcscs/sarus-ci-run:1.0.0

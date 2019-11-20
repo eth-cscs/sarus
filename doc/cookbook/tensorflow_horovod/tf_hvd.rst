@@ -11,7 +11,7 @@ machine-learning (ML) models, with a focus on deep neural networks. The
 development of TensorFlow was started internally at Google Inc., and the
 software was released as open source in November 2015.
 
-`Horovod <https://github.com/uber/horovod>`_ is a framework developed by Uber
+`Horovod <https://github.com/horovod/horovod>`_ is a framework developed by Uber
 Technologies Inc. to perform distributed training of deep neural networks on top
 of another ML framework, like TensorFlow, Keras, or PyTorch. Notably, it allows
 to replace TensorFlow's own parameter server architecture for distributed

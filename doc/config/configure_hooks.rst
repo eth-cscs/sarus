@@ -63,7 +63,7 @@ Hooks are programs which will be run before or after various events in the
 lifecycle of the container. The hooks will be called by the runtime in the
 listed order, and they will be executed in the runtime namespace (i.e. on the
 host, and *not* inside the container). The state of the container will be passed
-to hooks over stdin, as `detailed in the OCI Runtime Spec <https://github.com/opencontainers/runtime-spec/blob/f3be7d2032497e8b99c24f31eda583f30db0f91a/runtime.md#state>`_.
+to hooks over stdin, as detailed in the `OCI Runtime Spec <https://github.com/opencontainers/runtime-spec/blob/master/runtime.md#state>`_.
 
 **Prestart** hooks will be called after the container namespaces have been set up, but
 before the user-specified program command is executed. These hooks provide an

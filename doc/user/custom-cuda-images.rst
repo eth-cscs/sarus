@@ -13,7 +13,7 @@ Installing the CUDA Toolkit
   repository installers (to be used through the system package manager)
   are available for Fedora, OpenSUSE, RHEL and SLES (and also for Ubuntu and CentOS,
   if you don't want to use NVIDIA's images). For detailed installation instructions,
-  refer to the official CUDA Toolkit Documentation (http://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#package-manager-installation).
+  refer to the official CUDA Toolkit Documentation (https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#package-manager-installation).
 
   Please note that installing the default package options (e.g. ``cuda`` or ``cuda-tookit``)
   will add a significant amount of resources to your image (more than 1GB).
@@ -27,7 +27,7 @@ Installing the CUDA Toolkit
   the installation through the standalone runfile installer.
   One such case is Debian, which is also used as base for several official Docker
   Hub images (e.g. `Python <https://hub.docker.com/_/python/>`_).  For detailed installation instructions,
-  refer to the official CUDA Toolkit Documentation (http://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#runfile).
+  refer to the official CUDA Toolkit Documentation (https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#runfile).
   We advise to supply the ``--silent`` and ``--toolkit`` options to the installer,
   to avoid installing the CUDA drivers as well.
 

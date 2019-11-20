@@ -164,3 +164,8 @@ texinfo_documents = [
      author, 'Sarus', 'One line description of project.',
      'Miscellaneous'),
 ]
+
+# -- Options for LinkCheck ----------------------------------------------
+# http://www.sphinx-doc.org/en/master/usage/configuration.html?highlight=linkcheck#options-for-the-linkcheck-builder
+
+linkcheck_anchors = False
