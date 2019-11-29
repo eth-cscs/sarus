@@ -24,11 +24,9 @@ TEST_GROUP(JSONTestGroup) {
 };
 
 TEST(JSONTestGroup, validFile) {
-    auto config = std::make_shared<sarus::common::Config>();
-
     boost::filesystem::path jsonFile(testSourceDir / "json/valid.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    config->initializeJson(config, jsonFile, jsonSchemaFile);
+    auto config = sarus::common::Config::create(jsonFile, jsonSchemaFile);
 
     CHECK_EQUAL(config->json["securityChecks"].GetBool(), false);
     CHECK_EQUAL(config->json["OCIBundleDir"].GetString(), std::string("/var/sarus/OCIBundleDir"));
@@ -63,36 +61,27 @@ TEST(JSONTestGroup, validFile) {
 }
 
 TEST(JSONTestGroup, minimumRequirementsFile) {
-    auto config = std::make_shared<sarus::common::Config>();
-
     boost::filesystem::path jsonFile(testSourceDir / "json/min_required.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    config->initializeJson(config, jsonFile, jsonSchemaFile);
+    sarus::common::Config::create(jsonFile, jsonSchemaFile);
 }
 
 TEST(JSONTestGroup, missingRequired) {
-    auto config = std::make_shared<sarus::common::Config>();
-
     boost::filesystem::path jsonFile(testSourceDir / "json/missing_required.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    CHECK_THROWS(sarus::common::Error, config->initializeJson(config, jsonFile, jsonSchemaFile));
+    CHECK_THROWS(sarus::common::Error, sarus::common::Config::create(jsonFile, jsonSchemaFile));
 }
 
 TEST(JSONTestGroup, relativePaths) {
-    auto config = std::make_shared<sarus::common::Config>();
-
     boost::filesystem::path jsonFile(testSourceDir / "json/relative_paths.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    CHECK_THROWS(sarus::common::Error, config->initializeJson(config, jsonFile, jsonSchemaFile));
+    CHECK_THROWS(sarus::common::Error, sarus::common::Config::create(jsonFile, jsonSchemaFile));
 }
 
 TEST(JSONTestGroup, siteMountWithoutType) {
-    auto config = std::make_shared<sarus::common::Config>();
-
     boost::filesystem::path jsonFile(testSourceDir / "json/site_mount_without_type.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    CHECK_THROWS(sarus::common::Error, config->initializeJson(config, jsonFile, jsonSchemaFile));
+    CHECK_THROWS(sarus::common::Error, sarus::common::Config::create(jsonFile, jsonSchemaFile));
 }
-
 
 SARUS_UNITTEST_MAIN_FUNCTION();

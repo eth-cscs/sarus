@@ -13,7 +13,9 @@
 #include <sys/signal.h>
 #include <boost/regex.hpp>
 
+#include "common/Config.hpp"
 #include "common/Logger.hpp"
+#include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
 #include "runtime/mount_utilities.hpp"
 #include "hooks/ssh/SshHook.hpp"
@@ -92,7 +94,9 @@ public:
         boost::filesystem::remove_all(bundleDir);
 
         // host test environment
+        boost::filesystem::remove_all(localRepositoryDir);
         boost::filesystem::remove_all(opensshDirInHost);
+        boost::filesystem::remove_all(prefixDir);
     }
 
     void setUserIds() const {
@@ -200,18 +204,22 @@ TEST_GROUP(SSHHookTestGroup) {
 TEST(SSHHookTestGroup, testSshHook) {
     auto helper = Helper{};
 
+    helper.setRootIds();
     helper.setupTestEnvironment();
+
+    boost::filesystem::path sarusInstallationPrefixDir = sarus::common::getEnvironmentVariable("SARUS_PREFIX_DIR");
+    auto config = sarus::common::Config::create(sarusInstallationPrefixDir);
 
     // generate + check SSH keys in local repository
     helper.setUserIds(); // keygen is executed with user privileges
-    SshHook{}.generateSshKeys(true);
+    SshHook{config}.generateSshKeys(true);
     helper.setRootIds();
     helper.checkLocalRepositoryHasSshKeys();
-    SshHook{}.checkLocalRepositoryHasSshKeys();
+    SshHook{config}.checkLocalRepositoryHasSshKeys();
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshd();
+    SshHook{config}.startSshd();
     helper.checkContainerHasServerKeys();
     helper.checkContainerHasClientKeys();
     helper.checkContainerHasChrootFolderForSshd();

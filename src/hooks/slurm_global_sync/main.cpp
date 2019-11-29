@@ -16,6 +16,7 @@
 int main(int argc, char* argv[]) {
     try {
         auto hook = sarus::hooks::slurm_global_sync::Hook{};
+        hook.loadConfigs();
         hook.performSynchronization();
     } catch(const sarus::common::Error& e) {
         sarus::common::Logger::getInstance().logErrorTrace(e, "SLURM global sync hook");

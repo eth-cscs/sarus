@@ -15,6 +15,7 @@
 #include <iterator>
 #include <boost/format.hpp>
 
+#include "common/Config.hpp"
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
@@ -27,19 +28,19 @@ Hook::Hook() {
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
+}
+
+void Hook::loadConfigs() {
     if(!isHookEnabled) {
         return;
     }
 
     boost::filesystem::path sarusInstallationPrefixDir = sarus::common::getEnvironmentVariable("SARUS_PREFIX_DIR");
-    auto configFile =  sarusInstallationPrefixDir / "etc/sarus.json";
-    auto configSchemaFile = sarusInstallationPrefixDir / "etc/sarus.schema.json";
-    auto config = std::make_shared<sarus::common::Config>();
-    config->initializeJson(config, configFile, configSchemaFile);
+    auto config = sarus::common::Config::create(sarusInstallationPrefixDir);
     config->userIdentity.uid = uidOfUser;
     config->userIdentity.gid = gidOfUser;
-    localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*config);
 
+    localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*config);
     syncDir = localRepositoryDir / "slurm_global_sync" / ("slurm-jobid-" + slurmJobID);
     syncDirArrival = syncDir / "arrival";
     syncFileArrival = syncDirArrival / ("slurm-procid-" + slurmProcID);

@@ -20,7 +20,7 @@ stop_and_remove_cluster() {
     if [ -e $virtual_cluster_dir ]; then
         log "stopping virtual cluster"
         cd $virtual_cluster_dir
-        docker-compose down
+        docker-compose down -v
         log "successfully stopped virtual cluster"
         log "removing virtual cluster"
         cd ..

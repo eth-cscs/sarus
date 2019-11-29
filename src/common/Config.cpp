@@ -8,21 +8,19 @@
  *
  */
 
-#include "common/Config.hpp"
-
 #include <algorithm>
 #include <fstream>
 #include <sys/stat.h>
 
+#include "common/Config.hpp"
 #include "common/Utility.hpp"
-#include "common/SecurityChecks.hpp"
 
 
 namespace sarus {
 namespace common {
 
 void Config::Directories::initialize(bool useCentralizedRepository, const common::Config& config) {
-    if(useCentralizedRepository) {
+    if (useCentralizedRepository) {
         common::logMessage( boost::format("initializing CLI config's directories for centralized repository"),
                             common::LogLevel::DEBUG);
         repository = common::getCentralizedRepositoryDirectory(config);
@@ -46,19 +44,6 @@ void Config::Directories::initialize(bool useCentralizedRepository, const common
     }
 }
 
-void Config::initializeJson(std::shared_ptr<const common::Config> config,
-                            const boost::filesystem::path& configFilename,
-                            const boost::filesystem::path& schemaFilename) {
-    auto schema = common::readJSON(schemaFilename);
-    rapidjson::SchemaDocument schemaDoc(schema); // convert to SchemaDocument
-    json = common::readAndValidateJSON(configFilename, schemaDoc);
-
-    auto securityChecks = SecurityChecks{config};
-    securityChecks.checkThatPathIsUntamperable(schemaFilename);
-    securityChecks.checkThatPathIsUntamperable(configFilename);
-    securityChecks.checkThatBinariesInSarusJsonAreUntamperable(json);
-}
-
 boost::filesystem::path Config::getImageFile() const {
     auto key = imageID.getUniqueKey();
     auto file = boost::filesystem::path(directories.images.string() + "/" + key + ".squashfs");
@@ -71,5 +56,19 @@ boost::filesystem::path Config::getMetadataFileOfImage() const {
     return file;
 }
 
+std::shared_ptr<sarus::common::Config> Config::create(const boost::filesystem::path& sarusInstallationPrefixDir) {
+    boost::filesystem::path configFilename =  sarusInstallationPrefixDir / "etc/sarus.json";
+    boost::filesystem::path configSchemaFilename = sarusInstallationPrefixDir / "etc/sarus.schema.json";
+    return Config::create(configFilename, configSchemaFilename);
+}
+
+std::shared_ptr<sarus::common::Config> Config::create(const boost::filesystem::path& configFilename,
+                                                      const boost::filesystem::path& configSchemaFilename) {
+    auto config = std::make_shared<Config>();
+    auto schema = common::readJSON(configSchemaFilename);
+    rapidjson::SchemaDocument schemaDoc(schema);
+    config->json = common::readAndValidateJSON(configFilename, schemaDoc);
+    return config;
+}
 }
 }

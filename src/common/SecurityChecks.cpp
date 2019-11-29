@@ -9,29 +9,17 @@
  */
 
 #include "SecurityChecks.hpp"
-
 #include "common/Utility.hpp"
 
 
 namespace sarus {
 namespace common {
 
-#define SKIP_SECURITY_CHECK_IF_NECESSARY(message) { \
-    if(!config->json["securityChecks"].GetBool()) { \
-        logMessage(message, LogLevel::INFO); \
-        return; \
-    } \
-}
-
 SecurityChecks::SecurityChecks(std::shared_ptr<const common::Config> config)
     : config{std::move(config)}
 {}
 
 void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& path) const {
-    SKIP_SECURITY_CHECK_IF_NECESSARY(
-        boost::format(  "Skipping check that path %s is untamperable"
-                        " (runtime security checks disabled)") % path);
-
     auto message = boost::format("Checking that path %s is untamperable") % path;
     logMessage(message, common::LogLevel::INFO);
 
@@ -57,13 +45,10 @@ void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& 
     logMessage("Successfully checked that path is untamperable", common::LogLevel::INFO);
 }
 
-void SecurityChecks::checkThatBinariesInSarusJsonAreUntamperable(const rapidjson::Document& json) const {
-    SKIP_SECURITY_CHECK_IF_NECESSARY(   "Skipping check that binaries in sarus.json are"
-                                        " untamperable (runtime security checks disabled)");
-
-    checkThatPathIsUntamperable(json["mksquashfsPath"].GetString());
-    checkThatPathIsUntamperable(json["initPath"].GetString());
-    checkThatPathIsUntamperable(json["runcPath"].GetString());
+void SecurityChecks::checkThatBinariesInSarusJsonAreUntamperable() const {
+    checkThatPathIsUntamperable(config->json["mksquashfsPath"].GetString());
+    checkThatPathIsUntamperable(config->json["initPath"].GetString());
+    checkThatPathIsUntamperable(config->json["runcPath"].GetString());
 }
 
 void SecurityChecks::checkThatPathIsRootOwned(const boost::filesystem::path& path) const {
@@ -77,8 +62,8 @@ void SecurityChecks::checkThatPathIsRootOwned(const boost::filesystem::path& pat
     }
 
     if(uid != 0) {
-        auto message = boost::format(   "Path %s must be owned by root in order to prevent"
-                                        "other users from tampering its contents. Found uid=%d, gid=%d.")
+        auto message = boost::format("Path %s must be owned by root in order to prevent"
+                                     " other users from tampering its contents. Found uid=%d, gid=%d.")
             % path % uid % gid;
         SARUS_THROW_ERROR(message.str());
     }
@@ -89,22 +74,19 @@ void SecurityChecks::checkThatPathIsNotGroupWritableOrWorldWritable(const boost:
     auto isGroupWritable = status.permissions() & (1 << 4);
     auto isWorldWritable = status.permissions() & (1 << 1);
     if(isGroupWritable || isWorldWritable) {
-        auto message = boost::format(   "Path %s cannot be group- or world-writable in order"
-                                        " to prevent other users from tampering its contents.")
+        auto message = boost::format("Path %s cannot be group- or world-writable in order"
+                                     " to prevent other users from tampering its contents.")
             % path;
         SARUS_THROW_ERROR(message.str());
     }
 }
 
 void SecurityChecks::checkThatOCIHooksAreUntamperable() const {
-    SKIP_SECURITY_CHECK_IF_NECESSARY(   "Skipping check that OCI hooks are untamperable"
-                                        " (runtime security checks disabled)");
-
     logMessage("Checking that OCI hooks are owned by root user", common::LogLevel::INFO);
 
     if(!config->json.HasMember("OCIHooks")) {
-        logMessage( "Successfully checked that OCI hooks are owned by root user."
-                    " The configuration doesn't contain OCI hooks to check.", common::LogLevel::INFO);
+        logMessage("Successfully checked that OCI hooks are owned by root user."
+                   " The configuration doesn't contain OCI hooks to check.", common::LogLevel::INFO);
         return; // no hooks to check
     }
 
@@ -120,8 +102,8 @@ void SecurityChecks::checkThatOCIHooksAreUntamperableByType(const std::string& h
 
     const auto& json = config->json;
     if(!json["OCIHooks"].HasMember(hookType.c_str())) {
-        logMessage(boost::format(   "Successfully checked %s OCI hooks."
-                                    " The configuration doesn't contain %s OCI hooks to check.") % hookType % hookType,
+        logMessage(boost::format("Successfully checked %s OCI hooks."
+                                 " The configuration doesn't contain %s OCI hooks to check.") % hookType % hookType,
                 common::LogLevel::DEBUG);
         return;
     }
@@ -146,6 +128,26 @@ void SecurityChecks::checkThatOCIHooksAreUntamperableByType(const std::string& h
 
     logMessage( boost::format("Successfully checked %s OCI hooks") % hookType,
                 common::LogLevel::DEBUG);
+}
+
+void SecurityChecks::runSecurityChecks(const boost::filesystem::path& sarusInstallationPrefixDir) const {
+    // Sarus config file must always be untamperable
+    boost::filesystem::path configFilename =  sarusInstallationPrefixDir / "etc/sarus.json";
+    boost::filesystem::path configSchemaFilename = sarusInstallationPrefixDir / "etc/sarus.schema.json";
+    checkThatPathIsUntamperable(configFilename);
+    checkThatPathIsUntamperable(configSchemaFilename);
+
+    // The rest of the checks depend on user configuration
+    if(!config->json["securityChecks"].GetBool()) {
+        auto message =  "Skipping security checks (disabled in the sarus.json config file)";
+        logMessage(message, LogLevel::INFO);
+    }
+    else {
+        checkThatBinariesInSarusJsonAreUntamperable();
+        checkThatOCIHooksAreUntamperable();
+        checkThatPathIsUntamperable(boost::filesystem::path{config->json["prefixDir"].GetString() + std::string{"/openssh"}});
+        checkThatPathIsUntamperable(boost::filesystem::path{config->json["prefixDir"].GetString() + std::string{"/bin/ssh_hook"}});
+    }
 }
 
 }} // namespace

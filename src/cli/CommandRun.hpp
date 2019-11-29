@@ -135,7 +135,7 @@ private:
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
             // the remaining arguments (after image) are all part of the command to be executed in the container
             conf->commandRun.execArgs = std::accumulate(argsGroups.cbegin()+2, argsGroups.cend(), common::CLIArguments{});
-            
+
 
             if(values.count("entrypoint")) {
                 if(entrypoint.empty()) {
@@ -221,6 +221,8 @@ private:
                                 common::LogLevel::INFO);
         common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR="
             + common::getLocalRepositoryDirectory(*conf).string());
+        common::setEnvironmentVariable(std::string{"SARUS_PREFIX_DIR="}
+            + conf->json["prefixDir"].GetString());
         auto command = boost::format("%s/bin/ssh_hook check-localrepository-has-sshkeys")
             % conf->json["prefixDir"].GetString();
         try {

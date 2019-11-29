@@ -17,8 +17,10 @@
 #include <unistd.h>
 #include <sys/prctl.h>
 
+#include "common/Config.hpp"
 #include "common/Error.hpp"
 #include "common/Logger.hpp"
+#include "common/SecurityChecks.hpp"
 #include "common/Utility.hpp"
 #include "cli/CLI.hpp"
 
@@ -43,25 +45,25 @@ int main(int argc, char* argv[]) {
     auto& logger = common::Logger::getInstance();
 
     try {
-        auto conf = std::make_shared<common::Config>();
-        saveAndClearEnvironmentVariables(*conf);
-        conf->program_start = std::chrono::high_resolution_clock::now();
+        auto program_start = std::chrono::high_resolution_clock::now();
 
+        // Initialize Config object
         auto sarusInstallationPrefixDir = boost::filesystem::canonical("/proc/self/exe").parent_path().parent_path();
-        auto configFile =  sarusInstallationPrefixDir / "etc/sarus.json";
-        auto configSchemaFile = sarusInstallationPrefixDir / "etc/sarus.schema.json";
-        conf->initializeJson(conf, configFile, configSchemaFile);
+        auto config = sarus::common::Config::create(sarusInstallationPrefixDir);
+        config->program_start = program_start;
+        common::SecurityChecks{config}.runSecurityChecks(sarusInstallationPrefixDir);
+        saveAndClearEnvironmentVariables(*config);
 
+
+        // Process command
         auto args = common::CLIArguments(argc, argv);
-        auto command = cli::CLI{}.parseCommandLine(args, conf);
-
+        auto command = cli::CLI{}.parseCommandLine(args, config);
         if(!command->requiresRootPrivileges()) {
-            dropPrivileges(*conf);
+            dropPrivileges(*config);
         }
         else {
             getPrivileges();
         }
-
         command->execute();
     }
     catch(const common::Error& e) {

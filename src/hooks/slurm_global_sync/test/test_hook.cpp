@@ -43,9 +43,9 @@ TEST_GROUP(SlurmGlobalSyncTestGroup) {
     boost::filesystem::path syncDir = localRepositoryDir / "slurm_global_sync/slurm-jobid-256";
 };
 
-void createSarusJSON(   const sarus::common::Config& config,
-                        const boost::filesystem::path& configJsonSchema,
-                        const boost::filesystem::path& prefixDir) {
+void createSarusJSON(const sarus::common::Config& config,
+                     const boost::filesystem::path& configJsonSchema,
+                     const boost::filesystem::path& prefixDir) {
     sarus::common::createFoldersIfNecessary(prefixDir / "etc");
     sarus::common::writeJSON(config.json, prefixDir / "etc/sarus.json");
     sarus::common::copyFile(configJsonSchema, prefixDir / "etc/sarus.schema.json");
@@ -58,11 +58,11 @@ void createOCIBundleConfigJSON( const boost::filesystem::path& bundleDir,
     namespace rj = rapidjson;
     auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, idsOfUser);
     auto& allocator = doc.GetAllocator();
-    
+
     if(generateSlurmEnvironmentVariables) {
         doc["process"]["env"].PushBack(rj::Value{"SLURM_JOB_ID=256", allocator}, allocator);
         doc["process"]["env"].PushBack(rj::Value{"SLURM_PROCID=0", allocator}, allocator);
-        doc["process"]["env"].PushBack(rj::Value{"SLURM_NTASKS=2", allocator}, allocator); 
+        doc["process"]["env"].PushBack(rj::Value{"SLURM_NTASKS=2", allocator}, allocator);
     }
 
     try {
@@ -81,7 +81,10 @@ TEST(SlurmGlobalSyncTestGroup, test_hook_disabled) {
     test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
     auto hook = Hook{};
+    hook.loadConfigs();
     hook.performSynchronization(); // let's simply verify that no errors occur
+    boost::filesystem::remove_all(prefixDir);
+    boost::filesystem::remove_all(bundleDir);
 }
 
 TEST(SlurmGlobalSyncTestGroup, test_high_level_synchronization) {
@@ -96,8 +99,11 @@ TEST(SlurmGlobalSyncTestGroup, test_high_level_synchronization) {
 
     // perform synchronization
     auto hook = Hook{};
+    hook.loadConfigs();
     hook.performSynchronization();
     hook.cleanupSyncDir();
+    boost::filesystem::remove_all(prefixDir);
+    boost::filesystem::remove_all(bundleDir);
 }
 
 TEST(SlurmGlobalSyncTestGroup, test_internals) {
@@ -107,6 +113,7 @@ TEST(SlurmGlobalSyncTestGroup, test_internals) {
     test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
     auto hook = Hook{};
+    hook.loadConfigs();
 
     // signal arrival
     CHECK(!boost::filesystem::exists(syncDir / "arrival/slurm-procid-0"));
@@ -133,6 +140,8 @@ TEST(SlurmGlobalSyncTestGroup, test_internals) {
     // cleanup of sync dir
     hook.cleanupSyncDir();
     CHECK(!boost::filesystem::exists(syncDir));
+    boost::filesystem::remove_all(prefixDir);
+    boost::filesystem::remove_all(bundleDir);
 }
 
 }}}} // namespace

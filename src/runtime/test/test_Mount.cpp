@@ -83,6 +83,8 @@ TEST(MountTestGroup, mount_test) {
     CHECK(umount((rootfsDir / destinationFile).c_str()) == 0);
     boost::filesystem::remove_all(bundleDir);
     boost::filesystem::remove_all(sourceDir);
+    boost::filesystem::remove(sourceFile);
+    boost::filesystem::remove(destinationFile);
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();

@@ -29,13 +29,13 @@ namespace ssh {
 
 class SshHook {
 public:
+    SshHook(std::shared_ptr<sarus::common::Config> config);
     void generateSshKeys(bool overwriteSshKeysIfExist);
     void checkLocalRepositoryHasSshKeys();
     void startSshd();
 
 private:
     void parseConfigJSONOfBundle();
-    std::shared_ptr<sarus::common::Config> parseConfigJSONOfSarus(uid_t uidOfUser, gid_t gidOfUser) const;
     bool localRepositoryHasSshKeys() const;
     boost::filesystem::path getKeysDirInLocalRepository() const;
     void sshKeygen(const boost::filesystem::path& outputFile) const;
@@ -59,6 +59,7 @@ private:
     pid_t pidOfContainer;
     uid_t uidOfUser;
     gid_t gidOfUser;
+    std::shared_ptr<sarus::common::Config> config;
 };
 
 }}} // namespace

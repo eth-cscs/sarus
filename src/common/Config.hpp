@@ -31,63 +31,64 @@
 namespace sarus {
 namespace common {
 
-struct Config {
-    struct BuildTime {
-        BuildTime();
-        std::string version;
-        boost::filesystem::path localRepositoryFolder = ".sarus";
-        boost::filesystem::path openSshArchive;
-    };
+class Config {
+    public:
+        static std::shared_ptr<Config> create(const boost::filesystem::path& configFilename,
+                                              const boost::filesystem::path& configSchemaFilename);
+        static std::shared_ptr<Config> create(const boost::filesystem::path& sarusInstallationPrefixDir);
 
-    struct Directories {
-        void initialize(bool useCentralizedRepository, const common::Config& config);
-        boost::filesystem::path repository;
-        boost::filesystem::path cache;
-        boost::filesystem::path temp;
-        std::string tempFromCLI;
-        boost::filesystem::path images;
-    };
+        struct BuildTime {
+            BuildTime();
+            std::string version;
+            boost::filesystem::path localRepositoryFolder = ".sarus";
+            boost::filesystem::path openSshArchive;
+        };
 
-    struct Authentication {
-        bool isAuthenticationNeeded = false;
-        std::string username;
-        std::string password;
-    };
+        struct Directories {
+            void initialize(bool useCentralizedRepository, const common::Config& config);
+            boost::filesystem::path repository;
+            boost::filesystem::path cache;
+            boost::filesystem::path temp;
+            std::string tempFromCLI;
+            boost::filesystem::path images;
+        };
 
-    struct CommandRun {
-        std::unordered_map<std::string, std::string> hostEnvironment;
-        std::unordered_map<std::string, std::string> hooksEnvironment;
-        std::vector<std::string> userMounts;
-        std::vector<std::shared_ptr<runtime::Mount>> mounts;
-        boost::optional<CLIArguments> entrypoint;
-        CLIArguments execArgs;
-        bool allocatePseudoTTY = false;
-        bool addInitProcess = false;
-        bool useMPI = false;
-        bool enableSSH = false;
-    };
+        struct Authentication {
+            bool isAuthenticationNeeded = false;
+            std::string username;
+            std::string password;
+        };
 
-    void initializeJson(std::shared_ptr<const common::Config> config,
-                        const boost::filesystem::path& configFilename,
-                        const boost::filesystem::path& schemaFilename);
-    boost::filesystem::path getImageFile() const;
-    boost::filesystem::path getMetadataFileOfImage() const;
+        struct CommandRun {
+            std::unordered_map<std::string, std::string> hostEnvironment;
+            std::unordered_map<std::string, std::string> hooksEnvironment;
+            std::vector<std::string> userMounts;
+            std::vector<std::shared_ptr<runtime::Mount>> mounts;
+            boost::optional<CLIArguments> entrypoint;
+            CLIArguments execArgs;
+            bool allocatePseudoTTY = false;
+            bool addInitProcess = false;
+            bool useMPI = false;
+            bool enableSSH = false;
+        };
 
-    BuildTime buildTime;
-    common::ImageID imageID;
-    Directories directories;
-    rapidjson::Document json{ rapidjson::kObjectType };
-    UserIdentity userIdentity;
-    Authentication authentication;
-    CommandRun commandRun;
+        boost::filesystem::path getImageFile() const;
+        boost::filesystem::path getMetadataFileOfImage() const;
 
-    boost::filesystem::path archivePath; // for CommandLoad
+        BuildTime buildTime;
+        common::ImageID imageID;
+        Directories directories;
+        rapidjson::Document json{ rapidjson::kObjectType };
+        UserIdentity userIdentity;
+        Authentication authentication;
+        CommandRun commandRun;
 
-    bool useCentralizedRepository = false;
+        boost::filesystem::path archivePath; // for CommandLoad
 
-    std::chrono::high_resolution_clock::time_point program_start; // for time measurement
+        bool useCentralizedRepository = false;
+
+        std::chrono::high_resolution_clock::time_point program_start; // for time measurement
 };
-
 }
 }
 

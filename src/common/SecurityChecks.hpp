@@ -26,11 +26,12 @@ class SecurityChecks {
 public:
     SecurityChecks(std::shared_ptr<const common::Config>);
     void checkThatPathIsUntamperable(const boost::filesystem::path&) const;
-    void checkThatBinariesInSarusJsonAreUntamperable(const rapidjson::Document&) const;
+    void checkThatBinariesInSarusJsonAreUntamperable() const;
     void checkThatOCIHooksAreUntamperable() const;
+    void runSecurityChecks(const boost::filesystem::path& sarusInstallationPrefixDir) const;
 
 private:
-    void checkThatPathIsRootOwned(const boost::filesystem::path&) const;
+    void checkThatPathIsRootOwned(const boost::filesystem::path& path) const;
     void checkThatPathIsNotGroupWritableOrWorldWritable(const boost::filesystem::path& path) const;
     void checkThatOCIHooksAreUntamperableByType(const std::string& hookType) const;
 

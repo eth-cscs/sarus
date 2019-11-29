@@ -109,6 +109,7 @@ TEST(RuntimeTestGroup, setupOCIBundle) {
     CHECK_EQUAL(umount(rootfsDir.c_str()), 0);
     CHECK_EQUAL(umount(overlayfsLowerDir.c_str()), 0);
     CHECK_EQUAL(umount(bundleDir.c_str()), 0);
+    boost::filesystem::remove(metadataFile);
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();

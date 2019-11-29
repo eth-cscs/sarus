@@ -12,6 +12,7 @@ build/
 _build/
 *.gcov
 .idea
+.vscode
 .settings
 .project
 .cproject

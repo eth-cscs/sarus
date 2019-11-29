@@ -36,7 +36,6 @@ Runtime::Runtime(std::shared_ptr<common::Config> config)
     , rootfsDir{ bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()} }
     , bundleConfig{config}
     , fdHandler{config}
-    , securityChecks{config}
 {}
 
 void Runtime::setupOCIBundle() {
@@ -53,8 +52,7 @@ void Runtime::setupOCIBundle() {
     fdHandler.passStdoutAndStderrToHooks();
     fdHandler.applyChangesToFdsAndEnvVariables();
     bundleConfig.generateConfigFile();
-    securityChecks.checkThatPathIsUntamperable(bundleConfig.getConfigFile());
-    securityChecks.checkThatOCIHooksAreUntamperable();
+
     utility::logMessage("Successfully set up OCI Bundle", common::LogLevel::INFO);
 }
 

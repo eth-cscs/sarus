@@ -11,8 +11,11 @@
 #include <string>
 #include <boost/format.hpp>
 
+#include "common/Config.hpp"
 #include "common/Error.hpp"
 #include "common/Logger.hpp"
+#include "common/SecurityChecks.hpp"
+#include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
 #include "SshHook.hpp"
 
@@ -22,6 +25,11 @@ int main(int argc, char* argv[]) {
             SARUS_THROW_ERROR("Failed to execute SSH hook."
                               " Bad number of CLI arguments.");
         }
+
+        // Create Config
+        boost::filesystem::path sarusInstallationPrefixDir = sarus::common::getEnvironmentVariable("SARUS_PREFIX_DIR");
+        auto config = sarus::common::Config::create(sarusInstallationPrefixDir);
+        sarus::common::SecurityChecks{config}.runSecurityChecks(sarusInstallationPrefixDir);
 
         if(argv[1] == std::string{"keygen"}) {
             bool overwriteSshKeysIfExist = false;
@@ -35,13 +43,13 @@ int main(int argc, char* argv[]) {
                     SARUS_THROW_ERROR(message.str());
                 }
             }
-            sarus::hooks::ssh::SshHook{}.generateSshKeys(overwriteSshKeysIfExist);
+            sarus::hooks::ssh::SshHook{config}.generateSshKeys(overwriteSshKeysIfExist);
         }
         else if(argv[1] == std::string{"check-localrepository-has-sshkeys"}) {
-            sarus::hooks::ssh::SshHook{}.checkLocalRepositoryHasSshKeys();
+            sarus::hooks::ssh::SshHook{config}.checkLocalRepositoryHasSshKeys();
         }
         else if(argv[1] == std::string("start-sshd")) {
-            sarus::hooks::ssh::SshHook{}.startSshd();
+            sarus::hooks::ssh::SshHook{config}.startSshd();
         }
         else {
             auto message = boost::format("Failed to execute SSH hook. CLI argument %s is not supported.")

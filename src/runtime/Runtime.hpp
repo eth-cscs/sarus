@@ -14,7 +14,6 @@
 #include <memory>
 
 #include "common/Config.hpp"
-#include "common/SecurityChecks.hpp"
 #include "runtime/OCIBundleConfig.hpp"
 #include "runtime/FileDescriptorHandler.hpp"
 
@@ -44,7 +43,6 @@ private:
     boost::filesystem::path rootfsDir;
     OCIBundleConfig bundleConfig;
     FileDescriptorHandler fdHandler;
-    common::SecurityChecks securityChecks;
 };
 
 }

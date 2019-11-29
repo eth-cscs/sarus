@@ -23,6 +23,7 @@ namespace slurm_global_sync {
 class Hook {
 public:
     Hook();
+    void loadConfigs();
     void performSynchronization() const;
 
     // these methods are public for test purpose

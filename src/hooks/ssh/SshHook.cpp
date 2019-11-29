@@ -18,11 +18,11 @@
 #include <sys/prctl.h>
 #include <boost/format.hpp>
 
+#include "common/Config.hpp"
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
 #include "common/Lockfile.hpp"
 #include "common/PasswdDB.hpp"
-#include "common/SecurityChecks.hpp"
 #include "runtime/mount_utilities.hpp"
 #include "hooks/common/Utility.hpp"
 
@@ -31,10 +31,13 @@ namespace sarus {
 namespace hooks {
 namespace ssh {
 
+SshHook::SshHook(std::shared_ptr<sarus::common::Config> config): config(config) {}
+
 void SshHook::generateSshKeys(bool overwriteSshKeysIfExist) {
     uidOfUser = getuid(); // keygen command is executed with user identity
     gidOfUser = getgid();
-    auto config = parseConfigJSONOfSarus(uidOfUser, gidOfUser);
+    config->userIdentity.uid = uidOfUser;
+    config->userIdentity.gid = gidOfUser;
     localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*config);
     opensshDirInHost = sarus::common::getEnvironmentVariable("SARUS_OPENSSH_DIR");
 
@@ -68,8 +71,8 @@ void SshHook::startSshd() {
     if(!isHookEnabled) {
         return;
     }
-    auto config = parseConfigJSONOfSarus(uidOfUser, gidOfUser);
-    sarus::common::SecurityChecks{config}.checkThatPathIsUntamperable(opensshDirInHost);
+    config->userIdentity.uid = uidOfUser;
+    config->userIdentity.gid = gidOfUser;
     localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*config);
     sarus::common::copyFolder(opensshDirInHost, opensshDirInBundle);
     copyKeysIntoBundle();
@@ -95,17 +98,6 @@ void SshHook::parseConfigJSONOfBundle() {
     if(env["SARUS_SSH_HOOK"] == "1") {
         isHookEnabled = true;
     }
-}
-
-std::shared_ptr<sarus::common::Config> SshHook::parseConfigJSONOfSarus(uid_t uidOfUser, gid_t gidOfUser) const {
-    boost::filesystem::path sarusInstallationPrefixDir = sarus::common::getEnvironmentVariable("SARUS_PREFIX_DIR");
-    auto configFile =  sarusInstallationPrefixDir / "etc/sarus.json";
-    auto configSchemaFile = sarusInstallationPrefixDir / "etc/sarus.schema.json";
-    auto config = std::make_shared<sarus::common::Config>();
-    config->userIdentity.uid = uidOfUser;
-    config->userIdentity.gid = gidOfUser;
-    config->initializeJson(config, configFile, configSchemaFile);
-    return config;
 }
 
 bool SshHook::localRepositoryHasSshKeys() const {

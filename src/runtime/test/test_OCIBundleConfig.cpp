@@ -81,6 +81,10 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     auto expectedContent = common::removeWhitespaces(common::readFile(expectedConfigFile));
     auto actualContent = common::removeWhitespaces(common::readFile(actualConfigFile));
     CHECK_EQUAL(expectedContent, actualContent);
+
+    // cleanup
+    boost::filesystem::remove_all(bundleDir);
+    boost::filesystem::remove(metadataFile);
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();
