@@ -179,6 +179,11 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Invalid image ID '///'\nSee 'sarus help run'"
         self._check(command, expected_message)
 
+        command = ["sarus", "run", "--workdir=invalid", "alpine", "true"]
+        expected_message = ("The working directory 'invalid' is invalid, it needs to be an absolute path.\n"
+                            "See 'sarus help run'")
+        self._check(command, expected_message)
+
         command = ["sarus", "run", "--mount=xyz", "alpine", "true"]
         expected_message = "Invalid mount request 'xyz': 'type' must be specified"
         self._check(command, expected_message)

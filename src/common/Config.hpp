@@ -64,6 +64,7 @@ class Config {
             std::unordered_map<std::string, std::string> hooksEnvironment;
             std::vector<std::string> userMounts;
             std::vector<std::shared_ptr<runtime::Mount>> mounts;
+            boost::optional<boost::filesystem::path> workdir;
             boost::optional<CLIArguments> entrypoint;
             CLIArguments execArgs;
             bool allocatePseudoTTY = false;

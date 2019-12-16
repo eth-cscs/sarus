@@ -22,6 +22,26 @@ class TestCommandRun(unittest.TestCase):
     def test_command_run_with_centralized_repository(self):
         self._test_command_run(is_centralized_repository=True)
 
+    def test_workdir(self):
+        # default workdir
+        out = util.run_command_in_container(is_centralized_repository=False,
+                                    image="alpine:3.8",
+                                    command=["pwd"],
+                                    options_of_run_command=None)
+        self.assertEqual(out, ["/"])
+        # custom workdir
+        out = util.run_command_in_container(is_centralized_repository=False,
+                                    image="alpine:3.8",
+                                    command=["pwd"],
+                                    options_of_run_command=["--workdir=/etc"])
+        self.assertEqual(out, ["/etc"])
+        # custom non-exising workdir (sarus automatically creates it)
+        out = util.run_command_in_container(is_centralized_repository=False,
+                                    image="alpine:3.8",
+                                    command=["pwd"],
+                                    options_of_run_command=["--workdir=/non-exising-dir-2931"])
+        self.assertEqual(out, ["/non-exising-dir-2931"])
+
     def test_init_process(self):
         # without init process
         processes = self._run_ps_in_container(with_init_process=False)

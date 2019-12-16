@@ -114,7 +114,7 @@ rj::Value OCIBundleConfig::makeMemberProcess() const {
     }
     process.AddMember("env", env, *allocator);
     process.AddMember(  "cwd",
-                        rj::Value{configsMerger.getCwdInContainer().c_str(), *allocator},
+                        rj::Value{configsMerger.getWorkdirInContainer().c_str(), *allocator},
                         *allocator);
     process.AddMember("capabilities", rj::Value{rj::kObjectType}, *allocator);
     process.AddMember("noNewPrivileges", rj::Value{true}, *allocator);

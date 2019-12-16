@@ -34,7 +34,7 @@ class ConfigsMerger {
 public:
     ConfigsMerger(std::shared_ptr<const common::Config>, const common::ImageMetadata&);
     rapidjson::Value getHooks(rapidjson::MemoryPoolAllocator<>&) const;
-    boost::filesystem::path getCwdInContainer() const;
+    boost::filesystem::path getWorkdirInContainer() const;
     std::unordered_map<std::string, std::string> getEnvironmentInContainer() const;
     common::CLIArguments getCommandToExecuteInContainer() const;
 

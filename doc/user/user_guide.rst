@@ -504,10 +504,17 @@ is useful, for example, for inspecting and debugging containers:
 Working directory
 -----------------
 
-Sarus supports image working directories as defined by the OCI Image
-Specification.
+The working directory inside the container can be controlled using the
+``--workdir`` option of the :program:`sarus run` command:
 
-If an image specifies a working directory, the container process will start
+.. code-block:: bash
+
+    $ srun -N 1 --pty sarus run --workdir=/path/to/workdir -t debian bash
+
+If the path does not exist, it is created inside the container.
+
+If the ``--workdir`` option is not specified but the image defines
+a working directory, the container process will start
 there. Otherwise, the process will start in the container's root directory (``/``).
 Using image-defined working directories can be useful, for example, for
 simplifying the command line when launching containers.
@@ -515,7 +522,6 @@ simplifying the command line when launching containers.
 When creating images with Docker, the working directory is set using the
 `WORKDIR <https://docs.docker.com/engine/reference/builder/#workdir>`_
 instruction in the Dockerfile.
-
 
 Adding an init process to the container
 ---------------------------------------

@@ -106,7 +106,10 @@ private:
                 "Mount custom directories into the container")
             ("mpi,m", "Enable MPI support")
             ("ssh", "Enable SSH in the container")
-            ("tty,t", "Allocate a pseudo-TTY in the container");
+            ("tty,t", "Allocate a pseudo-TTY in the container")
+            ("workdir,w",
+                boost::program_options::value<std::string>(&workdir),
+                "Set working directory inside the container");
     }
 
     void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
@@ -156,6 +159,14 @@ private:
             }
             if(values.count("tty")) {
                 conf->commandRun.allocatePseudoTTY = true;
+            }
+            if(values.count("workdir")) {
+                conf->commandRun.workdir = workdir;
+                if(!conf->commandRun.workdir->is_absolute()) {
+                    auto message = boost::format("The working directory '%s' is invalid, it"
+                                                 " needs to be an absolute path.") % workdir;
+                    SARUS_THROW_ERROR(message.str());
+                }
             }
         }
         catch (std::exception& e) {
@@ -249,6 +260,7 @@ private:
     boost::program_options::options_description optionsDescription{"Options"};
     std::shared_ptr<common::Config> conf;
     std::string entrypoint;
+    std::string workdir;
 };
 
 }

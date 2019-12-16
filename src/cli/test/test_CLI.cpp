@@ -155,15 +155,17 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
     }
     {
         auto conf = generateConfig({"run",
+                                    "--workdir=/workdir",
                                     "--mpi",
                                     "--mount=type=bind,source=/source,destination=/destination",
                                     "ubuntu", "bash", "-c", "ls /dev |grep nvidia"});
+        CHECK_EQUAL(conf->commandRun.workdir->string(), "/workdir");
+        CHECK_EQUAL(conf->commandRun.useMPI, true);
+        CHECK_EQUAL(conf->commandRun.mounts.size(), 2); // 1 site mount + 1 user mount
         CHECK_EQUAL(conf->imageID.server, std::string{"index.docker.io"});
         CHECK_EQUAL(conf->imageID.repositoryNamespace, std::string{"library"});
         CHECK_EQUAL(conf->imageID.image, std::string{"ubuntu"});
         CHECK_EQUAL(conf->imageID.tag, std::string{"latest"});
-        CHECK_EQUAL(conf->commandRun.useMPI, 1);
-        CHECK_EQUAL(conf->commandRun.mounts.size(), 2); // 1 site mount + 1 user mount
         CHECK(conf->commandRun.execArgs.argc() == 3);
         CHECK_EQUAL(conf->commandRun.execArgs.argv()[0], std::string{"bash"});
         CHECK_EQUAL(conf->commandRun.execArgs.argv()[1], std::string{"-c"});

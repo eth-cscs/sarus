@@ -78,17 +78,21 @@ TEST(ConfigsMergerTestGroup, hooks) {
     }
 }
 
-TEST(ConfigsMergerTestGroup, cwd) {
+TEST(ConfigsMergerTestGroup, workdir) {
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
     auto metadata = common::ImageMetadata{};
 
-    // no cwd in metadata
-    CHECK((ConfigsMerger{config, metadata}.getCwdInContainer() == "/"));
+    // workdir by default
+    CHECK((ConfigsMerger{config, metadata}.getWorkdirInContainer() == "/"));
 
-    // cwd in metadata
+    // workdir from metadata
     metadata.workdir = "/workdir-from-metadata";
-    CHECK((ConfigsMerger{config, metadata}.getCwdInContainer() == "/workdir-from-metadata"));
+    CHECK((ConfigsMerger{config, metadata}.getWorkdirInContainer() == "/workdir-from-metadata"));
+
+    // workdir from CLI option
+    config->commandRun.workdir = "/workdir-from-cli";
+    CHECK((ConfigsMerger{config, metadata}.getWorkdirInContainer() == "/workdir-from-cli"));
 }
 
 TEST(ConfigsMergerTestGroup, environment) {

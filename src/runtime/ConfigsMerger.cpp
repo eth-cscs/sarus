@@ -52,8 +52,11 @@ rapidjson::Value ConfigsMerger::getHooks(rapidjson::MemoryPoolAllocator<>& alloc
     return hooks;
 }
 
-boost::filesystem::path ConfigsMerger::getCwdInContainer() const {
-    if(metadata.workdir) {
+boost::filesystem::path ConfigsMerger::getWorkdirInContainer() const {
+    if(config->commandRun.workdir) {
+        return *config->commandRun.workdir;
+    }
+    else if(metadata.workdir) {
         return *metadata.workdir;
     }
     else {
