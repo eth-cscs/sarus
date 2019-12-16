@@ -54,6 +54,7 @@ private:
     uid_t uidOfUser;
     gid_t gidOfUser;
     std::string slurmJobID;
+    std::string slurmStepID;
     std::string slurmNTasks;
     std::string slurmProcID;
 };

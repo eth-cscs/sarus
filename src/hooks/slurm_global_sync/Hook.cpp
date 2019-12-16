@@ -41,7 +41,7 @@ void Hook::loadConfigs() {
     config->userIdentity.gid = gidOfUser;
 
     localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*config);
-    syncDir = localRepositoryDir / "slurm_global_sync" / ("slurm-jobid-" + slurmJobID);
+    syncDir = localRepositoryDir / "slurm_global_sync" / ("slurm-jobid-" + slurmJobID + "-stepid-" + slurmStepID);
     syncDirArrival = syncDir / "arrival";
     syncFileArrival = syncDirArrival / ("slurm-procid-" + slurmProcID);
     syncDirDeparture = syncDir / "departure";
@@ -110,21 +110,27 @@ size_t Hook::countFilesInDirectory(const boost::filesystem::path& directory) con
 void Hook::parseConfigJSONOfBundle() {
     auto json = sarus::common::readJSON(bundleDir / "config.json");
 
-    // get uid + gid of user
-    uidOfUser = json["process"]["user"]["uid"].GetInt();
-    gidOfUser = json["process"]["user"]["gid"].GetInt();
-
     // get environment variables
     auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
+    if(env["SARUS_SLURM_GLOBAL_SYNC_HOOK"] != "1") {
+        isHookEnabled = false;
+        return;
+    }
     if(env.find("SLURM_JOB_ID") == env.cend()
+        || env.find("SLURM_STEPID") == env.cend()
         || env.find("SLURM_NTASKS") == env.cend()
         || env.find("SLURM_PROCID") == env.cend()) {
         isHookEnabled = false;
         return;
     }
     slurmJobID = env["SLURM_JOB_ID"];
+    slurmStepID = env["SLURM_STEPID"];
     slurmNTasks = env["SLURM_NTASKS"];
     slurmProcID = env["SLURM_PROCID"];
+
+    // get uid + gid of user
+    uidOfUser = json["process"]["user"]["uid"].GetInt();
+    gidOfUser = json["process"]["user"]["gid"].GetInt();
 }
 
 }}} // namesapce

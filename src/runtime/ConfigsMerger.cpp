@@ -136,6 +136,7 @@ void ConfigsMerger::setHooksEnvironmentVariables(const common::Config::CommandRu
     }
     if(commandRun.enableSSH) {
         containerEnvironment["SARUS_SSH_HOOK"] = "1";
+        containerEnvironment["SARUS_SLURM_GLOBAL_SYNC_HOOK"] = "1";
     }
 }
 

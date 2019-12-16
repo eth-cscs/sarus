@@ -191,24 +191,38 @@ TEST(ConfigsMergerTestGroup, nvidia_environment) {
     }
 }
 
-TEST(ConfigsMergerTestGroup, mpi_environment) {
-    auto configRAII = test_utility::config::makeConfig();
-    auto& config = configRAII.config;
+TEST(ConfigsMergerTestGroup, hooks_environment) {
     auto metadata = common::ImageMetadata{};
 
-    // No MPI option
+    // No hooks enabled
     {
+        auto configRAII = test_utility::config::makeConfig();
+        auto& config = configRAII.config;
         config->commandRun.hostEnvironment = {};
         metadata.env = {};
         auto expectedEnvironment = std::unordered_map<std::string, std::string>{};
         CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
     }
-    // Enable MPI hook
+    // MPI hook enabled
     {
+        auto configRAII = test_utility::config::makeConfig();
+        auto& config = configRAII.config;
         config->commandRun.useMPI = true;
         config->commandRun.hostEnvironment = {};
         metadata.env = {};
         auto expectedEnvironment = std::unordered_map<std::string, std::string>{{"SARUS_MPI_HOOK", "1"}};
+        CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
+    }
+    // SSH hook enabled
+    {
+        auto configRAII = test_utility::config::makeConfig();
+        auto& config = configRAII.config;
+        config->commandRun.enableSSH = true;
+        config->commandRun.hostEnvironment = {};
+        metadata.env = {};
+        auto expectedEnvironment = std::unordered_map<std::string, std::string>{
+            {"SARUS_SSH_HOOK", "1"},
+            {"SARUS_SLURM_GLOBAL_SYNC_HOOK", "1"}};
         CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
     }
 }

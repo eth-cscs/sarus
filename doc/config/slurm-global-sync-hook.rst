@@ -66,5 +66,8 @@ The following is an example ``OCIHooks`` object enabling the MPI hook:
 Sarus support at runtime
 ------------------------
 
-The Slurm global sync hook is self-sufficient and does not require any support
-from the Sarus container engine.
+The hook alters the container filesystem only if the environment variable
+``SARUS_SLURM_GLOBAL_SYNC_HOOK=1`` is present in the container. This environment
+variable is automatically set by Sarus if the ``--ssh`` command line option is passed
+to :program:`sarus run` to make sure that containers will not attempt to ssh into other
+containers that have yet to start.
