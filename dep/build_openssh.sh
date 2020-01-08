@@ -29,7 +29,7 @@ make -j && make install
 
 # openssh
 cd $root_dir
-wget https://cloudflare.cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-7.7p1.tar.gz
+wget https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-7.7p1.tar.gz
 tar xf openssh-7.7p1.tar.gz
 cd openssh-7.7p1
 ./configure --without-pam --with-ssl-dir=$deps_dir --with-zlib=$deps_dir --prefix=$prefix_dir_in_container --with-privsep-path=/tmp/var/empty --with-ldflags=-static
