@@ -8,6 +8,7 @@
  *
  */
 
+#include "common/PathRAII.hpp"
 #include "hooks/common/Utility.hpp"
 #include "hooks/slurm_global_sync/Hook.hpp"
 #include "test_utility/Misc.hpp"
@@ -30,9 +31,9 @@ test_utility::config::ConfigRAII makeConfig() {
 TEST_GROUP(SlurmGlobalSyncTestGroup) {
     test_utility::config::ConfigRAII configRAII = makeConfig();
     std::tuple<uid_t, gid_t> idsOfUser{ configRAII.config->userIdentity.uid, configRAII.config->userIdentity.gid };
-    boost::filesystem::path prefixDir = configRAII.config->json["prefixDir"].GetString();
-    boost::filesystem::path bundleDir = configRAII.config->json["OCIBundleDir"].GetString();
-    boost::filesystem::path rootfsDir = bundleDir / configRAII.config->json["rootfsFolder"].GetString();
+    sarus::common::PathRAII prefixDir = sarus::common::PathRAII{configRAII.config->json["prefixDir"].GetString()};
+    sarus::common::PathRAII bundleDir = sarus::common::PathRAII{configRAII.config->json["OCIBundleDir"].GetString()};
+    boost::filesystem::path rootfsDir = bundleDir.getPath() / configRAII.config->json["rootfsFolder"].GetString();
     boost::filesystem::path localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*configRAII.config);
     boost::filesystem::path configJsonSchema = boost::filesystem::path{__FILE__}
         .parent_path()
@@ -51,11 +52,11 @@ void createSarusJSON(const sarus::common::Config& config,
     sarus::common::copyFile(configJsonSchema, prefixDir / "etc/sarus.schema.json");
 }
 
-void createOCIBundleConfigJSON( const boost::filesystem::path& bundleDir,
-                                const boost::filesystem::path& rootfsDir,
-                                const std::tuple<uid_t, gid_t>& idsOfUser,
-                                bool setActivationEnvironmentVariable=true,
-                                bool generateSlurmEnvironmentVariables=true) {
+void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir,
+                               const boost::filesystem::path& rootfsDir,
+                               const std::tuple<uid_t, gid_t>& idsOfUser,
+                               bool setActivationEnvironmentVariable=true,
+                               bool generateSlurmEnvironmentVariables=true) {
     namespace rj = rapidjson;
     auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, idsOfUser);
     auto& allocator = doc.GetAllocator();
@@ -81,41 +82,41 @@ void createOCIBundleConfigJSON( const boost::filesystem::path& bundleDir,
 }
 
 TEST(SlurmGlobalSyncTestGroup, test_hook_disabled) {
-    createSarusJSON(*configRAII.config, configJsonSchema, prefixDir);
+    createSarusJSON(*configRAII.config, configJsonSchema, prefixDir.getPath());
     {
         bool setActivationEnvironmentVariable = false;
         bool generateSlurmEnvironmentVariables = false;
-        createOCIBundleConfigJSON(bundleDir, rootfsDir, idsOfUser, setActivationEnvironmentVariable,
+        createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser, setActivationEnvironmentVariable,
                                   generateSlurmEnvironmentVariables);
-        test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
+        test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
         auto hook = Hook{};
         hook.performSynchronization(); // just verify that no errors occur
     }
     {
         bool setActivationEnvironmentVariable = true;
         bool generateSlurmEnvironmentVariables = false;
-        createOCIBundleConfigJSON(bundleDir, rootfsDir, idsOfUser, setActivationEnvironmentVariable,
+        createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser, setActivationEnvironmentVariable,
                                   generateSlurmEnvironmentVariables);
-        test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
+        test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
         auto hook = Hook{};
         hook.performSynchronization(); // just verify that no errors occur
     }
     {
         bool setActivationEnvironmentVariable = false;
         bool generateSlurmEnvironmentVariables = true;
-        createOCIBundleConfigJSON(bundleDir, rootfsDir, idsOfUser, setActivationEnvironmentVariable,
+        createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser, setActivationEnvironmentVariable,
                                   generateSlurmEnvironmentVariables);
-        test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
+        test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
         auto hook = Hook{};
         hook.performSynchronization(); // just verify that no errors occur
     }
 }
 
 TEST(SlurmGlobalSyncTestGroup, test_high_level_synchronization) {
-    createSarusJSON(*configRAII.config, configJsonSchema, prefixDir);
-    createOCIBundleConfigJSON(bundleDir, rootfsDir, idsOfUser);
-    sarus::common::setEnvironmentVariable("SARUS_PREFIX_DIR=" + prefixDir.string());
-    test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
+    createSarusJSON(*configRAII.config, configJsonSchema, prefixDir.getPath());
+    createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser);
+    sarus::common::setEnvironmentVariable("SARUS_PREFIX_DIR=" + prefixDir.getPath().string());
+    test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
 
     // simulate arrival + departure of other process
     sarus::common::createFileIfNecessary(syncDir / "arrival/slurm-procid-1");
@@ -126,15 +127,13 @@ TEST(SlurmGlobalSyncTestGroup, test_high_level_synchronization) {
     hook.loadConfigs();
     hook.performSynchronization();
     hook.cleanupSyncDir();
-    boost::filesystem::remove_all(prefixDir);
-    boost::filesystem::remove_all(bundleDir);
 }
 
 TEST(SlurmGlobalSyncTestGroup, test_internals) {
-    createSarusJSON(*configRAII.config, configJsonSchema, prefixDir);
-    createOCIBundleConfigJSON(bundleDir, rootfsDir, idsOfUser);
-    sarus::common::setEnvironmentVariable("SARUS_PREFIX_DIR=" + prefixDir.string());
-    test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
+    createSarusJSON(*configRAII.config, configJsonSchema, prefixDir.getPath());
+    createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser);
+    sarus::common::setEnvironmentVariable("SARUS_PREFIX_DIR=" + prefixDir.getPath().string());
+    test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
 
     auto hook = Hook{};
     hook.loadConfigs();
@@ -164,8 +163,6 @@ TEST(SlurmGlobalSyncTestGroup, test_internals) {
     // cleanup of sync dir
     hook.cleanupSyncDir();
     CHECK(!boost::filesystem::exists(syncDir));
-    boost::filesystem::remove_all(prefixDir);
-    boost::filesystem::remove_all(bundleDir);
 }
 
 }}}} // namespace

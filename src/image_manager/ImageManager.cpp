@@ -18,6 +18,7 @@
 #include <boost/format.hpp>
 
 #include "common/Error.hpp"
+#include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 #include "image_manager/LoadedImage.hpp"
 #include "image_manager/SquashfsImage.hpp"
@@ -58,7 +59,7 @@ namespace image_manager {
 
         auto loadedImage = LoadedImage{config, archive};
         processImage(loadedImage);
-        
+
         printLog(boost::format("Successfully loaded image archive"), common::LogLevel::INFO);
     }
 

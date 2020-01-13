@@ -12,6 +12,7 @@
 
 #include <boost/regex.hpp>
 
+#include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
 #include "hooks/timestamp/TimestampHook.hpp"
@@ -30,7 +31,8 @@ TEST_GROUP(TimestampTestGroup) {
     std::tuple<uid_t, gid_t> idsOfUser = test_utility::misc::getNonRootUserIds();
     test_utility::config::ConfigRAII configRAII = test_utility::config::makeConfig();
     boost::filesystem::path bundleDir = configRAII.config->json["OCIBundleDir"].GetString();
-    boost::filesystem::path logFile = boost::filesystem::absolute("./timestamp_test.log");
+    sarus::common::PathRAII logFileRAII = sarus::common::PathRAII{boost::filesystem::absolute("./timestamp_test.log")};
+    boost::filesystem::path logFile = logFileRAII.getPath();
 };
 
 void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir, const std::string logVar, const std::tuple<uid_t, gid_t>& idsOfUser) {
@@ -91,9 +93,6 @@ TEST(TimestampTestGroup, test_existing_file) {
         boost::cmatch matches;
         CHECK(boost::regex_match(logFileContent.c_str(), matches, regex));
     }
-
-    // cleanup
-    boost::filesystem::remove_all(logFile);
 }
 
 TEST(TimestampTestGroup, test_non_existing_file) {
@@ -122,9 +121,6 @@ TEST(TimestampTestGroup, test_non_existing_file) {
         boost::cmatch matches;
         CHECK(boost::regex_match(logFileContent.c_str(), matches, regex));
     }
-
-    // cleanup
-    boost::filesystem::remove_all(logFile);
 }
 
 }}}} // namespace

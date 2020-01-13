@@ -13,6 +13,7 @@
 #include <fstream>
 
 #include "test_utility/config.hpp"
+#include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 #include "common/Logger.hpp"
 #include "common/GroupDB.hpp"
@@ -59,15 +60,15 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     config->imageID = common::ImageID{"test", "test", "test", "test_image"};
 
     // create test bundle
-    auto bundleDir = boost::filesystem::path{config->json["OCIBundleDir"].GetString()};
-    auto actualConfigFile = bundleDir / "config.json";
+    auto bundleDir = common::PathRAII{boost::filesystem::path{config->json["OCIBundleDir"].GetString()}};
+    auto actualConfigFile = bundleDir.getPath() / "config.json";
     auto expectedConfigFile = boost::filesystem::path{__FILE__}.parent_path() / "expected_config.json";
-    common::createFoldersIfNecessary(bundleDir);
+    common::createFoldersIfNecessary(bundleDir.getPath());
 
     // create dummy metadata file in image repo
-    auto metadataFile = boost::filesystem::path(config->directories.images / (config->imageID.getUniqueKey() + ".meta"));
-    common::createFileIfNecessary(metadataFile);
-    std::ofstream metadataStream(metadataFile.c_str());
+    auto metadataFile = common::PathRAII{boost::filesystem::path(config->directories.images / (config->imageID.getUniqueKey() + ".meta"))};
+    common::createFileIfNecessary(metadataFile.getPath());
+    std::ofstream metadataStream(metadataFile.getPath().c_str());
     metadataStream << "{}";
     metadataStream.close();
 
@@ -81,10 +82,6 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     auto expectedContent = common::removeWhitespaces(common::readFile(expectedConfigFile));
     auto actualContent = common::removeWhitespaces(common::readFile(actualConfigFile));
     CHECK_EQUAL(expectedContent, actualContent);
-
-    // cleanup
-    boost::filesystem::remove_all(bundleDir);
-    boost::filesystem::remove(metadataFile);
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();

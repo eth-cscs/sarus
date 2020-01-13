@@ -12,4 +12,3 @@ install(TARGETS mpi_hook DESTINATION ${CMAKE_INSTALL_PREFIX}/bin PERMISSIONS
     WORLD_READ WORLD_EXECUTE)
 
 add_subdirectory(test)
-

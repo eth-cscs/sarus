@@ -18,6 +18,7 @@
 
 #include "test_utility/config.hpp"
 #include "test_utility/filesystem.hpp"
+#include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 #include "runtime/mount_utilities.hpp"
 #include "test_utility/unittest_main_function.hpp"
@@ -29,10 +30,10 @@ TEST_GROUP(MountUtilitiesTestGroup) {
 };
 
 TEST(MountUtilitiesTestGroup, validate_mount_source_test) {
-
     std::string mount_point("./MUMountPoint");
     std::string source_dir_1("./mount_utilities_source_1");
-    std::string source_dir_2("./mount_utilities_source_2");
+    common::PathRAII source_dir_2RAII("./mount_utilities_source_2");
+    std::string source_dir_2 = source_dir_2RAII.getPath().string();
 
     // Test invalid input arguments
     CHECK_THROWS(common::Error, runtime::validateMountSource(""));
@@ -53,7 +54,8 @@ TEST(MountUtilitiesTestGroup, validate_mount_source_test) {
 TEST(MountUtilitiesTestGroup, validate_mount_destination_test) {
     auto configRAII = test_utility::config::makeConfig();
     auto& config = *configRAII.config;
-    auto bundleDir = boost::filesystem::path{config.json["OCIBundleDir"].GetString()};
+    auto bundleDirRAII = common::PathRAII{boost::filesystem::path{config.json["OCIBundleDir"].GetString()}};
+    const auto& bundleDir = bundleDirRAII.getPath();
     auto rootfsDir = bundleDir / boost::filesystem::path{config.json["rootfsFolder"].GetString()};
     common::createFoldersIfNecessary(bundleDir / "overlay/rootfs-lower");
 
@@ -78,7 +80,8 @@ TEST(MountUtilitiesTestGroup, validate_mount_destination_test) {
 }
 
 TEST(MountUtilitiesTestGroup, bindMount) {
-    auto tempDir = common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-runtime-bindmount");
+    auto tempDirRAII = common::PathRAII{common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-runtime-bindmount")};
+    const auto& tempDir = tempDirRAII.getPath();
     auto fromDir = tempDir / "from";
     auto toDir = tempDir / "to";
 
@@ -101,11 +104,11 @@ TEST(MountUtilitiesTestGroup, bindMount) {
 
     // cleanup
     CHECK(umount(toDir.c_str()) == 0);
-    boost::filesystem::remove_all(toDir);
 }
 
 TEST(MountUtilitiesTestGroup, loopMountSquashfs) {
-    auto mountPoint = common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-runtime-loopMountSquashfs");
+    auto mountPointRAII = common::PathRAII{common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-runtime-loopMountSquashfs")};
+    const auto& mountPoint = mountPointRAII.getPath();
     common::createFoldersIfNecessary(mountPoint);
 
     auto imageSquashfs = boost::filesystem::path{__FILE__}.parent_path() / "test_image.squashfs";
@@ -113,7 +116,6 @@ TEST(MountUtilitiesTestGroup, loopMountSquashfs) {
     CHECK(boost::filesystem::exists(mountPoint / "file_in_squashfs_image"));
 
     CHECK(umount(mountPoint.string().c_str()) == 0);
-    boost::filesystem::remove_all(mountPoint);
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();

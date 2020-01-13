@@ -16,6 +16,7 @@
 #include <boost/format.hpp>
 #include <boost/regex.hpp>
 
+#include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
@@ -136,10 +137,9 @@ TEST(UtilityTestGroup, countFilesInDirectory) {
     }
     // non-directory argument
     {
-        auto testFile = "/tmp/file-count-test.txt";
-        common::createFileIfNecessary(testFile);
-        CHECK_THROWS(common::Error, common::countFilesInDirectory(testFile));
-        boost::filesystem::remove(testFile);
+        auto testFile = common::PathRAII{"/tmp/file-count-test.txt"};
+        common::createFileIfNecessary(testFile.getPath());
+        CHECK_THROWS(common::Error, common::countFilesInDirectory(testFile.getPath()));
     }
 }
 
@@ -218,7 +218,8 @@ TEST(UtilityTestGroup, parseMap) {
 }
 
 TEST(UtilityTestGroup, realpathWithinRootfs) {
-    auto rootfs = common::makeUniquePathWithRandomSuffix("/tmp/sarus-rootfs");
+    auto path = common::PathRAII{common::makeUniquePathWithRandomSuffix("/tmp/sarus-rootfs")};
+    const auto& rootfs = path.getPath();
 
     common::createFoldersIfNecessary(rootfs / "dir0/dir1");
     common::createFoldersIfNecessary(rootfs / "dirX");
@@ -237,7 +238,7 @@ TEST(UtilityTestGroup, realpathWithinRootfs) {
     // relative symlink that spills (out of rootfs)
     CHECK_EQUAL(symlink("../../../../dir0/dir1", (rootfs / "dir0/dir1/link_relative_that_spills").string().c_str()), 0);
     CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_relative_that_spills") == (rootfs / "dir0/dir1"));
-    
+
     // relative symlink recursive
     CHECK_EQUAL(symlink("../../dir0/dir1/link_relative/dir2/dir3", (rootfs / "dir0/dir1/link_relative_recursive").string().c_str()), 0);
     CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_relative_recursive") == (rootfs / "dir0/dir1/dir2/dir3"));
@@ -265,8 +266,6 @@ TEST(UtilityTestGroup, realpathWithinRootfs) {
     // absolute symlink sharing no part of the path with the target
     CHECK_EQUAL(symlink("/dir0/dir1", (rootfs / "dirX/link_absolute_with_no_common_path").string().c_str()), 0);
     CHECK(common::realpathWithinRootfs(rootfs, "/dirX/link_absolute_with_no_common_path") == (rootfs / "dir0/dir1"));
-
-    boost::filesystem::remove_all(rootfs);
 }
 
 TEST(UtilityTestGroup, getLibrarySoname) {

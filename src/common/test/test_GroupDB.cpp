@@ -12,6 +12,7 @@
 #include <streambuf>
 #include <boost/filesystem.hpp>
 
+#include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 #include "common/GroupDB.hpp"
 #include "test_utility/unittest_main_function.hpp"
@@ -26,7 +27,8 @@ TEST_GROUP(GroupDBTestGroup) {
 
 TEST(GroupDBTestGroup, testRead) {
     // create file
-    auto file = common::makeUniquePathWithRandomSuffix("./test-etc-group-file");
+    auto path = common::PathRAII{common::makeUniquePathWithRandomSuffix("./test-etc-group-file")};
+    const auto& file = path.getPath();
     std::ofstream of{file.c_str()};
     of  << "groupName0:x:0:" << std::endl
         << "groupName1:x:1:userName0" << std::endl
@@ -59,12 +61,11 @@ TEST(GroupDBTestGroup, testRead) {
     CHECK(entries[3].encryptedPassword == "x");
     CHECK(entries[3].gid == 3);
     CHECK(entries[3].users == (std::vector<std::string>{}));
-
-    boost::filesystem::remove_all(file);
 }
 
 TEST(GroupDBTestGroup, testWrite) {
-    auto file = common::makeUniquePathWithRandomSuffix("./test-etc-group-file");
+    auto path = common::PathRAII{common::makeUniquePathWithRandomSuffix("./test-etc-group-file")};
+    const auto& file = path.getPath();
 
     // create entry
     auto entry0 = GroupDB::Entry{
@@ -98,8 +99,6 @@ TEST(GroupDBTestGroup, testWrite) {
                                     "groupName1:y:1:userName0\n"
                                     "groupName2:z:2:userName0,userName1\n"};
     CHECK_EQUAL(data, expectedData);
-
-    boost::filesystem::remove_all(file);
 }
 
 }}} // namespace

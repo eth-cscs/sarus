@@ -10,6 +10,7 @@
 
 #include "LoadedImage.hpp"
 
+#include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 
 

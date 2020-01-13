@@ -9,6 +9,7 @@
  */
 
 #include "PulledImage.hpp"
+#include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 
 namespace sarus {
@@ -94,7 +95,7 @@ void PulledImage::initializeListOfLayersAndMetadata(web::json::value &manifest) 
             child = layers.at( ownId );
             layer[U("child")] = child.at(U("id"));
             orderdLayers.push_back(layer);
-        } 
+        }
         else
         {
             // add latest layer, break loop;

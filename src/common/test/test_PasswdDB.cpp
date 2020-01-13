@@ -13,6 +13,7 @@
 #include <boost/filesystem.hpp>
 
 #include "common/PasswdDB.hpp"
+#include "common/PathRAII.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
 
@@ -25,7 +26,8 @@ TEST_GROUP(PasswdDBTestGroup) {
 
 TEST(PasswdDBTestGroup, testRead) {
     // create file
-    auto file = boost::filesystem::path{"/tmp/test-passwd-file"};
+    auto path = common::PathRAII{boost::filesystem::path{"/tmp/test-passwd-file"}};
+    const auto& file = path.getPath();
     std::ofstream of{file.c_str()};
     of  << "loginName0:x:1000:1001:UserNameOrCommentField0:/home/dir0"
         << std::endl
@@ -64,12 +66,11 @@ TEST(PasswdDBTestGroup, testRead) {
     CHECK(entries[2].userNameOrCommentField == "UserNameOrCommentField2");
     CHECK(entries[2].userHomeDirectory == "/home/dir2");
     CHECK(!entries[2].userCommandInterpreter);
-
-    boost::filesystem::remove_all(file);
 }
 
 TEST(PasswdDBTestGroup, testWrite) {
-    auto file = boost::filesystem::path{"/tmp/test-passwd-file"};
+    auto path = common::PathRAII{boost::filesystem::path{"/tmp/test-passwd-file"}};
+    const auto& file = path.getPath();
 
     // create entry
     auto entry0 = PasswdDB::Entry{
@@ -102,8 +103,6 @@ TEST(PasswdDBTestGroup, testWrite) {
     auto expectedData = std::string{"loginName0:x:1000:1001:UserNameOrCommentField0:/home/dir0:/optional/UserCommandInterpreter0\n"
                                     "loginName1:y:2000:2001:UserNameOrCommentField1:/home/dir1:\n"};
     CHECK_EQUAL(data, expectedData);
-
-    boost::filesystem::remove_all(file);
 }
 
 }}} // namespace

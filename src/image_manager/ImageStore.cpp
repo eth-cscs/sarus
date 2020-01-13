@@ -19,6 +19,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
+#include "common/PathRAII.hpp"
 #include "common/Error.hpp"
 #include "common/Logger.hpp"
 #include "common/Utility.hpp"
@@ -82,7 +83,7 @@ namespace image_manager {
         auto uniqueKey = imageID.getUniqueKey();
 
         printLog(boost::format("looking up unique key %s in metadata file") % uniqueKey, common::LogLevel::DEBUG);
-        
+
         // look for image's metadata
         for(const auto& image : metadata["images"].GetArray()) {
             if(image["uniqueKey"].GetString() == uniqueKey) {
@@ -146,7 +147,7 @@ namespace image_manager {
         }
 
         printLog(boost::format("Successfully created list of images."), common::LogLevel::DEBUG);
-        
+
         return images;
     }
 
@@ -233,6 +234,6 @@ namespace image_manager {
                                 std::ostream& out, std::ostream& err) const {
         common::Logger::getInstance().log( message.str(), sysname, LogLevel, out, err);
     }
-    
+
 } // namespace
 } // namespace
