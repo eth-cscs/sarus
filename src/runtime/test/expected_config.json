@@ -74,6 +74,11 @@
 		}
 	],
 	"linux": {
+		"resources": {
+			"cpu": {
+				"cpus": "3-17"
+			}
+		},
 		"namespaces": [
 			{
 				"type": "pid"

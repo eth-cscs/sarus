@@ -74,6 +74,7 @@ std::string getLibrarySoname(const boost::filesystem::path& path, const boost::f
 bool isLibc(const boost::filesystem::path&);
 std::tuple<unsigned int, unsigned int> parseLibcVersion(const boost::filesystem::path&);
 bool is64bitLibrary(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath);
+std::string parseCpusAllowedList(const std::string& procStatus);
 
 std::string readFile(const boost::filesystem::path& path);
 rapidjson::Document readJSON(const boost::filesystem::path& filename);

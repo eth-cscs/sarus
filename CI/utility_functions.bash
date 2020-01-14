@@ -68,11 +68,11 @@ build_sarus_archive() {
     (cd ${prefix_dir}/bin && wget https://github.com/krallin/tini/releases/download/v0.18.0/tini-static-amd64 && chmod +x tini-static-amd64)
     (cd ${prefix_dir}/bin && wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc9/runc.amd64 && chmod +x runc.amd64)
     (cd ${prefix_dir}/.. && tar cz --owner=root --group=root --file=../${archive_name} *)
+    cp  ${build_dir}/../standalone/README.md ${build_dir}/../README.md
+    cp  ${build_dir}/${archive_name} ${build_dir}/../${archive_name}
 
     if [ "${TRAVIS}" ]; then
-        # In Travis CI, prepare Github Release Notes, archive tar and README.
-        cp  ${build_dir}/../standalone/README.md ${build_dir}/../README.md
-        cp  ${build_dir}/${archive_name} ${build_dir}/../${archive_name}
+        # In Travis CI, prepare Github Release Notes.
         echo "# Release Notes" > ${build_dir}/../release-notes.md
         git log $(git describe --tags --abbrev=0)..HEAD --oneline | awk '{$1=""; print $0}' >> ${build_dir}/../release-notes.md
     fi

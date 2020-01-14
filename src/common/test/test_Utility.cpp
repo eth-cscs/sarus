@@ -349,4 +349,14 @@ TEST(UtilityTestGroup, convertCppRestJsonToRapidJson) {
     CHECK_EQUAL(rapidJson["object"]["subobject"]["string"].GetString(), std::string{"text"});
 }
 
+TEST(UtilityTestGroup, parseCpusAllowedList) {
+    CHECK_EQUAL(common::parseCpusAllowedList("Cpus_allowed_list:\t0-2"), std::string{"0-2"});
+    CHECK_EQUAL(common::parseCpusAllowedList("Cpus_allowed_list:0-2"), std::string{"0-2"});
+    CHECK_EQUAL(common::parseCpusAllowedList("Cpus_allowed_list: 0-2"), std::string{"0-2"});
+    CHECK_EQUAL(common::parseCpusAllowedList("   Cpus_allowed_list: 0-2   "), std::string{"0-2"});
+    CHECK_EQUAL(common::parseCpusAllowedList("...\nCpus_allowed_list: 0-2\n..."), std::string{"0-2"});
+    CHECK_THROWS(common::Error, common::parseCpusAllowedList(""));
+    CHECK_THROWS(common::Error, common::parseCpusAllowedList("Cpus_allowed_list:"));
+}
+
 SARUS_UNITTEST_MAIN_FUNCTION();

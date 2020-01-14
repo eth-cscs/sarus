@@ -234,6 +234,16 @@ rj::Value OCIBundleConfig::makeMemberMounts() const {
 
 rj::Value OCIBundleConfig::makeMemberLinux() const {
     auto linux = rj::Value{rj::kObjectType};
+    // resources
+    {
+        auto resources = rj::Value{rj::kObjectType};
+        auto cpu = rj::Value{rj::kObjectType};
+        auto cpusAllowedList = rj::Value{config->commandRun.cpusAllowedList.c_str(), *allocator};
+
+        cpu.AddMember("cpus", cpusAllowedList, *allocator);
+        resources.AddMember("cpu", cpu, *allocator);
+        linux.AddMember("resources", resources, *allocator);
+    }
     // namespaces
     {
         auto namespaces = rj::Value{rj::kArrayType};

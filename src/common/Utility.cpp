@@ -657,6 +657,28 @@ bool is64bitLibrary(const boost::filesystem::path& path, const boost::filesystem
     return false;
 }
 
+std::string parseCpusAllowedList(const std::string& procStatus) {
+    logMessage("Parsing Cpus_allowed_list in contents of /proc/<pid>/status", LogLevel::DEBUG);
+
+    auto lines = std::vector<std::string>{};
+    boost::split(lines, procStatus, boost::is_any_of("\n"));
+
+    boost::regex re("^\\s*Cpus_allowed_list:\\s*(\\S+)\\s*$");
+    boost::cmatch matches;
+
+    for(const auto& line : lines) {
+        if (boost::regex_match(line.c_str(), matches, re)) {
+            auto list = std::move(matches[1]);
+            auto message = boost::format("Successfully parsed CpusAllosedList=%s"
+                                        " in contents of /proc/<pid>/status") % list;
+            logMessage(message.str(), LogLevel::DEBUG);
+            return list;
+        }
+    }
+
+    SARUS_THROW_ERROR("Failed to parse Cpus_allowed_list in contents of /proc/<pid>/status");
+}
+
 std::string readFile(const boost::filesystem::path& path) {
     std::ifstream ifs(path.string());
     auto s = std::string(   std::istreambuf_iterator<char>(ifs),

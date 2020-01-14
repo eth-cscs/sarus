@@ -62,6 +62,7 @@ class Config {
         struct CommandRun {
             std::unordered_map<std::string, std::string> hostEnvironment;
             std::unordered_map<std::string, std::string> hooksEnvironment;
+            std::string cpusAllowedList;
             std::vector<std::string> userMounts;
             std::vector<std::shared_ptr<runtime::Mount>> mounts;
             boost::optional<boost::filesystem::path> workdir;

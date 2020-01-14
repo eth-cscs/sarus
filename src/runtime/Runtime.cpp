@@ -36,10 +36,14 @@ Runtime::Runtime(std::shared_ptr<common::Config> config)
     , rootfsDir{ bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()} }
     , bundleConfig{config}
     , fdHandler{config}
-{}
+{
+    auto status = common::readFile("/proc/self/status");
+    config->commandRun.cpusAllowedList = common::parseCpusAllowedList(status);
+}
 
 void Runtime::setupOCIBundle() {
     utility::logMessage("Setting up OCI Bundle", common::LogLevel::INFO);
+
     setupMountIsolation();
     setupRamFilesystem();
     mountImageIntoRootfs();

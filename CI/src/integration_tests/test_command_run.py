@@ -23,6 +23,8 @@ class TestCommandRun(unittest.TestCase):
         self._test_command_run(is_centralized_repository=True)
 
     def test_workdir(self):
+        util.pull_image_if_necessary(is_centralized_repository=True, image="alpine:3.8")
+
         # default workdir
         out = util.run_command_in_container(is_centralized_repository=False,
                                     image="alpine:3.8",
