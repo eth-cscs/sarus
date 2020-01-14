@@ -33,9 +33,10 @@ namespace common {
 
 class Config {
     public:
-        static std::shared_ptr<Config> create(const boost::filesystem::path& configFilename,
-                                              const boost::filesystem::path& configSchemaFilename);
-        static std::shared_ptr<Config> create(const boost::filesystem::path& sarusInstallationPrefixDir);
+        Config() = default;
+        Config(const boost::filesystem::path& configFilename,
+               const boost::filesystem::path& configSchemaFilename);
+        Config(const boost::filesystem::path& sarusInstallationPrefixDir);
 
         struct BuildTime {
             BuildTime();

@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
 
         // Initialize Config object
         auto sarusInstallationPrefixDir = boost::filesystem::canonical("/proc/self/exe").parent_path().parent_path();
-        auto config = sarus::common::Config::create(sarusInstallationPrefixDir);
+        auto config = std::make_shared<sarus::common::Config>(sarusInstallationPrefixDir);
         config->program_start = program_start;
         common::SecurityChecks{config}.runSecurityChecks(sarusInstallationPrefixDir);
         saveAndClearEnvironmentVariables(*config);

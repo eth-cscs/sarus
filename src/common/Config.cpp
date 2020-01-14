@@ -19,6 +19,17 @@
 namespace sarus {
 namespace common {
 
+Config::Config(const boost::filesystem::path& sarusInstallationPrefixDir)
+    : Config{sarusInstallationPrefixDir / "etc/sarus.json", sarusInstallationPrefixDir / "etc/sarus.schema.json"}
+{}
+
+Config::Config(const boost::filesystem::path& configFilename,
+               const boost::filesystem::path& configSchemaFilename) {
+    auto schema = common::readJSON(configSchemaFilename);
+    rapidjson::SchemaDocument schemaDoc(schema);
+    json = common::readAndValidateJSON(configFilename, schemaDoc);
+}
+
 void Config::Directories::initialize(bool useCentralizedRepository, const common::Config& config) {
     if (useCentralizedRepository) {
         common::logMessage( boost::format("initializing CLI config's directories for centralized repository"),
@@ -56,19 +67,4 @@ boost::filesystem::path Config::getMetadataFileOfImage() const {
     return file;
 }
 
-std::shared_ptr<sarus::common::Config> Config::create(const boost::filesystem::path& sarusInstallationPrefixDir) {
-    boost::filesystem::path configFilename =  sarusInstallationPrefixDir / "etc/sarus.json";
-    boost::filesystem::path configSchemaFilename = sarusInstallationPrefixDir / "etc/sarus.schema.json";
-    return Config::create(configFilename, configSchemaFilename);
-}
-
-std::shared_ptr<sarus::common::Config> Config::create(const boost::filesystem::path& configFilename,
-                                                      const boost::filesystem::path& configSchemaFilename) {
-    auto config = std::make_shared<Config>();
-    auto schema = common::readJSON(configSchemaFilename);
-    rapidjson::SchemaDocument schemaDoc(schema);
-    config->json = common::readAndValidateJSON(configFilename, schemaDoc);
-    return config;
-}
-}
-}
+}} // namespaces

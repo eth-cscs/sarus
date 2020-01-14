@@ -10,6 +10,7 @@
 
 #include "Hook.hpp"
 
+#include <memory>
 #include <chrono>
 #include <thread>
 #include <iterator>
@@ -36,7 +37,7 @@ void Hook::loadConfigs() {
     }
 
     boost::filesystem::path sarusInstallationPrefixDir = sarus::common::getEnvironmentVariable("SARUS_PREFIX_DIR");
-    auto config = sarus::common::Config::create(sarusInstallationPrefixDir);
+    auto config = std::make_shared<sarus::common::Config>(sarusInstallationPrefixDir);
     config->userIdentity.uid = uidOfUser;
     config->userIdentity.gid = gidOfUser;
 

@@ -134,8 +134,23 @@ void SecurityChecks::runSecurityChecks(const boost::filesystem::path& sarusInsta
     // Sarus config file must always be untamperable
     boost::filesystem::path configFilename =  sarusInstallationPrefixDir / "etc/sarus.json";
     boost::filesystem::path configSchemaFilename = sarusInstallationPrefixDir / "etc/sarus.schema.json";
-    checkThatPathIsUntamperable(configFilename);
-    checkThatPathIsUntamperable(configSchemaFilename);
+
+    // "Weakly" check that sarus.json and sarus.schema.json are untamperable:
+    // check that the two files are root-owned and only root-writable, but ignore the ownership
+    // and permissions of the ancestor directories.
+    //
+    // IMPORTANT!!!
+    // sarus.json and sarus.schema.json must be processed in this order:
+    // 1. Read the contents of sarus.json and sarus.schema.json (before calling this function).
+    // 2. Check that sarus.json and sarus.schema.json are root-owned and only root-writable.
+    //
+    // Inverting the order of those two operations would result in a security hazard, because
+    // an attacker could replace the contents of sarus.json and sarus.schema.json in the time
+    // between the security check and the read operation.
+    checkThatPathIsRootOwned(configFilename);
+    checkThatPathIsNotGroupWritableOrWorldWritable(configFilename);
+    checkThatPathIsRootOwned(configSchemaFilename);
+    checkThatPathIsNotGroupWritableOrWorldWritable(configSchemaFilename);
 
     // The rest of the checks depend on user configuration
     if(!config->json["securityChecks"].GetBool()) {

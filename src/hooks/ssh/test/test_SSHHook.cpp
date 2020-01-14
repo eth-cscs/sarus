@@ -8,6 +8,8 @@
  *
  */
 
+#include <memory>
+
 #include <sys/types.h>
 #include <sys/mount.h>
 #include <sys/signal.h>
@@ -203,7 +205,7 @@ TEST(SSHHookTestGroup, testSshHook) {
     helper.setupTestEnvironment();
 
     boost::filesystem::path sarusInstallationPrefixDir = sarus::common::getEnvironmentVariable("SARUS_PREFIX_DIR");
-    auto config = sarus::common::Config::create(sarusInstallationPrefixDir);
+    auto config = std::make_shared<sarus::common::Config>(sarusInstallationPrefixDir);
 
     // generate + check SSH keys in local repository
     helper.setUserIds(); // keygen is executed with user privileges

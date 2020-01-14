@@ -9,6 +9,7 @@
  */
 
 #include <string>
+#include <memory>
 #include <boost/format.hpp>
 
 #include "common/Config.hpp"
@@ -28,7 +29,7 @@ int main(int argc, char* argv[]) {
 
         // Create Config
         boost::filesystem::path sarusInstallationPrefixDir = sarus::common::getEnvironmentVariable("SARUS_PREFIX_DIR");
-        auto config = sarus::common::Config::create(sarusInstallationPrefixDir);
+        auto config = std::make_shared<sarus::common::Config>(sarusInstallationPrefixDir);
         sarus::common::SecurityChecks{config}.runSecurityChecks(sarusInstallationPrefixDir);
 
         if(argv[1] == std::string{"keygen"}) {

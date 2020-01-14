@@ -8,6 +8,7 @@
  *
  */
 
+#include <memory>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/regex.hpp>
@@ -26,7 +27,7 @@ TEST_GROUP(JSONTestGroup) {
 TEST(JSONTestGroup, validFile) {
     boost::filesystem::path jsonFile(testSourceDir / "json/valid.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    auto config = sarus::common::Config::create(jsonFile, jsonSchemaFile);
+    auto config = std::make_shared<sarus::common::Config>(jsonFile, jsonSchemaFile);
 
     CHECK_EQUAL(config->json["securityChecks"].GetBool(), false);
     CHECK_EQUAL(config->json["OCIBundleDir"].GetString(), std::string("/var/sarus/OCIBundleDir"));
@@ -63,25 +64,25 @@ TEST(JSONTestGroup, validFile) {
 TEST(JSONTestGroup, minimumRequirementsFile) {
     boost::filesystem::path jsonFile(testSourceDir / "json/min_required.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    sarus::common::Config::create(jsonFile, jsonSchemaFile);
+    sarus::common::Config{jsonFile, jsonSchemaFile};
 }
 
 TEST(JSONTestGroup, missingRequired) {
     boost::filesystem::path jsonFile(testSourceDir / "json/missing_required.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    CHECK_THROWS(sarus::common::Error, sarus::common::Config::create(jsonFile, jsonSchemaFile));
+    CHECK_THROWS(sarus::common::Error, sarus::common::Config(jsonFile, jsonSchemaFile));
 }
 
 TEST(JSONTestGroup, relativePaths) {
     boost::filesystem::path jsonFile(testSourceDir / "json/relative_paths.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    CHECK_THROWS(sarus::common::Error, sarus::common::Config::create(jsonFile, jsonSchemaFile));
+    CHECK_THROWS(sarus::common::Error, sarus::common::Config(jsonFile, jsonSchemaFile));
 }
 
 TEST(JSONTestGroup, siteMountWithoutType) {
     boost::filesystem::path jsonFile(testSourceDir / "json/site_mount_without_type.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "sarus.schema.json");
-    CHECK_THROWS(sarus::common::Error, sarus::common::Config::create(jsonFile, jsonSchemaFile));
+    CHECK_THROWS(sarus::common::Error, sarus::common::Config(jsonFile, jsonSchemaFile));
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();
