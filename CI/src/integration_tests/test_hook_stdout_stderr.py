@@ -62,15 +62,15 @@ class TestHookStdoutStderr(unittest.TestCase):
         self.assertEqual("hook's stderr", stderr)
 
     def _get_sarus_stdout(self):
-        stdout = subprocess.check_output(["sarus", "run", "alpine:latest", "true"])
+        stdout = subprocess.check_output(["sarus", "run", "alpine:latest", "true"]).decode()
         return stdout.rstrip() # remove trailing whitespaces
 
     def _get_sarus_stderr(self):
         with open(os.devnull, 'wb') as devnull:
-            proc = subprocess.Popen(["sarus", "run", "alpine:latest", "true"],
-                                    stdout=devnull,
-                                    stderr=subprocess.PIPE)
-            stderr = proc.communicate()[1]
+            proc = subprocess.run(["sarus", "run", "alpine:latest", "true"],
+                                  stdout=devnull,
+                                  stderr=subprocess.PIPE)
         if proc.returncode != 0:
-            raise Exception("An error occurred while executing Sarus")
-        return stderr.rstrip() # remove trailing whitespaces
+            self.fail("An error occurred while executing Sarus")
+
+        return proc.stderr.rstrip().decode()

@@ -19,7 +19,7 @@ class TestCommandHelp(unittest.TestCase):
         self._test_command_help(command=["sarus", "help"])
 
     def _test_command_help(self, command):
-        out = subprocess.check_output(command)
+        out = subprocess.check_output(command).decode()
         lines = util.command_output_without_trailing_new_lines(out)
         self.assertGreater(len(lines), 1)
         self.assertEqual(lines[0], "Usage: sarus COMMAND")

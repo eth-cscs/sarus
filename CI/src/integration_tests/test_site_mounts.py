@@ -46,10 +46,9 @@ class TestSiteMounts(unittest.TestCase):
 
     @classmethod
     def _create_source_directories(cls):
-        for k,v in cls.TEST_FILES.iteritems():
+        for k, v in cls.TEST_FILES.items():
             source_dir = os.getcwd() + k
-            if not os.path.exists(source_dir + "subdir"):
-                os.makedirs(source_dir + "subdir")
+            os.makedirs(os.path.join(source_dir, "subdir"), exist_ok=True)
             for fname in v:
                 open(source_dir+fname, 'w').close()
 
@@ -92,8 +91,8 @@ class TestSiteMounts(unittest.TestCase):
 
     def test_sitefs_mounts(self):
         expected_files = []
-        for dir,files in self.__class__.TEST_FILES.iteritems():
-            expected_files = expected_files + [dir+fname for fname in files]
+        for d ,files in self.TEST_FILES.items():
+            expected_files.extend([d+f for f in files])
         self.assertTrue(self._files_exist_in_container(expected_files, []))
 
     def _files_exist_in_container(self, file_paths, sarus_options):
@@ -101,9 +100,9 @@ class TestSiteMounts(unittest.TestCase):
         check_script = self.__class__.CHECK_TEMPLATE.format(files=" ".join(file_names))
         command = ["bash", "-c"] + [check_script]
         out = util.run_command_in_container(is_centralized_repository=False,
-                                                   image=self.__class__.container_image,
-                                                   command=command,
-                                                   options_of_run_command=sarus_options)
+                                            image=self.__class__.container_image,
+                                            command=command,
+                                            options_of_run_command=sarus_options)
         return out == ["PASS"]
 
 

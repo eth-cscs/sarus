@@ -31,7 +31,7 @@ class TestEnvironmentVariables(unittest.TestCase):
         output = util.run_command_in_container( is_centralized_repository=False,
                                                 image=self._IMAGE_NAME,
                                                 command=command,
-                                                environment=host_environment)
+                                                env=host_environment)
 
         self.assertEqual(output[0], "image_env_variable_value")
         self.assertEqual(output[1], "image_env_var_value")

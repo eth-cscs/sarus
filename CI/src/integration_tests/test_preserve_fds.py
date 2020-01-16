@@ -37,9 +37,11 @@ class TestPreserveFDS(unittest.TestCase):
                                       image=self._IMAGE_NAME,
                                       command=command,
                                       options_of_run_command=sarus_options,
-                                      environment=host_environment)
+                                      env=host_environment,
+                                      pass_fds=(test_fd,))
 
-        test_file.seek(0)
-        self.assertEqual(test_file.readline()[:-1], "fd-preservation-test")
-
-        test_file.close()
+        try:
+            test_file.seek(0)
+            self.assertEqual(test_file.readline()[:-1], "fd-preservation-test")
+        finally:
+            test_file.close()

@@ -29,10 +29,10 @@ class TestUmask(unittest.TestCase):
         os.umask(cls._umask_backup)
 
     def test_umask(self):
-        umask_backup = os.umask(0000)
+        umask_backup = os.umask(0o000)
         self._run_sarus()
 
-        os.umask(0777)
+        os.umask(0o777)
         self._run_sarus()
 
         os.umask(umask_backup)

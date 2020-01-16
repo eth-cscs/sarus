@@ -62,6 +62,6 @@ class TestCommandImages(unittest.TestCase):
             command = ["sarus", "images", "--centralized-repository"]
         else:
             command = ["sarus", "images"]
-        out = subprocess.check_output(command)
+        out = subprocess.check_output(command).decode()
         lines = util.command_output_without_trailing_new_lines(out)
         return [line.split() for line in lines]

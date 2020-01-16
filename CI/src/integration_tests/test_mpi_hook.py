@@ -80,7 +80,7 @@ class TestMPIHook(unittest.TestCase):
 
         hooks = dict()
         hooks["prestart"] = [mpi_hook]
-        
+
         # Modify config file
         with open(cls._SARUS_CONFIG_FILE, 'r') as f:
             data = f.read().replace('\n', '')
@@ -139,9 +139,9 @@ class TestMPIHook(unittest.TestCase):
         if self._mpi_command_line_option:
             options.append("--mpi")
         return util.run_command_in_container(is_centralized_repository=False,
-                                                    image=self._container_image,
-                                                    command=command,
-                                                    options_of_run_command=options)
+                                             image=self._container_image,
+                                             command=command,
+                                             options_of_run_command=options)
 
     def _assert_sarus_raises_mpi_error_containing_text(self, text):
         if text in self._get_sarus_error_output():
@@ -155,13 +155,13 @@ class TestMPIHook(unittest.TestCase):
             subprocess.check_output(command, stderr=subprocess.STDOUT)
             raise Exception("Sarus didn't generate any error, but at least one was expected.")
         except subprocess.CalledProcessError as ex:
-            return ex.output
+            return ex.output.decode()
 
     def _get_command_output_in_container(self, command):
         options = []
         if self._mpi_command_line_option:
             options.append("--mpi")
         return util.run_command_in_container(is_centralized_repository=False,
-                                                    image=self._container_image,
-                                                    command=command,
-                                                    options_of_run_command=options)
+                                             image=self._container_image,
+                                             command=command,
+                                             options_of_run_command=options)

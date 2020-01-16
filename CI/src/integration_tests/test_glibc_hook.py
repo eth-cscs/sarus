@@ -42,7 +42,7 @@ class TestGlibcHook(unittest.TestCase):
         "/lib/x86_64-linux-gnu/libthread_db.so.1",
         "/lib/x86_64-linux-gnu/libutil.so.1"
     ]
-    _HOST_GLIBC_LIBS_HASHES = [subprocess.check_output(["md5sum", lib]).split()[0] for lib in _HOST_GLIBC_LIBS]
+    _HOST_GLIBC_LIBS_HASHES = [subprocess.check_output(["md5sum", lib]).decode().split()[0] for lib in _HOST_GLIBC_LIBS]
 
     @classmethod
     def setUpClass(cls):
@@ -74,7 +74,7 @@ class TestGlibcHook(unittest.TestCase):
 
         hooks = dict()
         hooks["prestart"] = [glibc_hook]
-        
+
         # Modify config file
         with open(cls._SARUS_CONFIG_FILE, 'r') as f:
             data = f.read().replace('\n', '')

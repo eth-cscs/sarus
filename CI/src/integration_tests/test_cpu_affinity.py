@@ -24,7 +24,7 @@ class TestCpuAffinity(unittest.TestCase):
         util.pull_image_if_necessary(is_centralized_repository=False, image=image)
 
         command = ["cat", "/proc/self/status"]
-        out = util.command_output_without_trailing_new_lines(subprocess.check_output(command))
+        out = util.command_output_without_trailing_new_lines(subprocess.check_output(command).decode())
         host_cpus_allowed_list = self._parse_cpus_allowed_list(out)
         only_one_cpu_available = len(host_cpus_allowed_list) == 1
 
@@ -37,7 +37,7 @@ class TestCpuAffinity(unittest.TestCase):
 
         command = ["taskset", "--cpu-list", cpu,
                    "sarus", "run", image, "cat", "/proc/self/status"]
-        out = util.command_output_without_trailing_new_lines(subprocess.check_output(command))
+        out = util.command_output_without_trailing_new_lines(subprocess.check_output(command).decode())
         container_cpus_allowed_list = self._parse_cpus_allowed_list(out)
 
         self.assertEqual(container_cpus_allowed_list, cpu)

@@ -42,10 +42,10 @@ class TestUserMounts(unittest.TestCase):
 
     @classmethod
     def _create_source_directory(cls):
-        cls.source_dir = os.getcwd() + "/sarus-test/mount_source/"
-        os.makedirs(cls.source_dir+"subdir")
+        cls.source_dir = os.path.join(os.getcwd(), "sarus-test", "mount_source")
+        os.makedirs(os.path.join(cls.source_dir, "subdir"), exist_ok=True)
         for fname in cls.TEST_FILES:
-            open(cls.source_dir+fname, 'w').close()
+            open(os.path.join(cls.source_dir, fname), 'w').close()
 
     @classmethod
     def _remove_source_directory(cls):
@@ -72,9 +72,9 @@ class TestUserMounts(unittest.TestCase):
         check_script = self.__class__.CHECK_TEMPLATE.format(files=" ".join(['"{}"'.format(fpath) for fpath in file_paths]))
         command = ["bash", "-c"] + [check_script]
         out = util.run_command_in_container(is_centralized_repository=False,
-                                                   image=self.__class__.container_image,
-                                                   command=command,
-                                                   options_of_run_command=sarus_options)
+                                            image=self.__class__.container_image,
+                                            command=command,
+                                            options_of_run_command=sarus_options)
         return out == ["PASS"]
 
 

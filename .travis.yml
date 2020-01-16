@@ -8,7 +8,7 @@ before_install:
 
 install:
   - docker pull ethcscs/sarus-ci-build:1.0.0
-  - docker pull ethcscs/sarus-ci-run:1.0.0
+  - docker pull ethcscs/sarus-ci-run:1.0.2
 
 jobs:
   include:
@@ -18,12 +18,12 @@ jobs:
       - "./CI/check_that_version_file_is_up_to_date.sh"
       - docker run --tty --rm -v ${TRAVIS_BUILD_DIR}:/sarus-source ethcscs/sarus-ci-build:1.0.0
         /sarus-source/CI/check_version_from_cmake.sh
-      - docker run --tty --rm -v ${TRAVIS_BUILD_DIR}:/sarus-source ethcscs/sarus-ci-run:1.0.0
+      - docker run --tty --rm -v ${TRAVIS_BUILD_DIR}:/sarus-source ethcscs/sarus-ci-run:1.0.2
         /sarus-source/CI/run_documentation_build_test.sh
     - name: "Standalone + Unit and Integration tests"
       script:
       - ". ./CI/utility_functions.bash"
-      - build_install_test_sarus Release ethcscs/sarus-ci-build:1.0.0 ethcscs/sarus-ci-run:1.0.0
+      - build_install_test_sarus Release ethcscs/sarus-ci-build:1.0.0 ethcscs/sarus-ci-run:1.0.2
       deploy:
         provider: releases
         name: ${TRAVIS_BRANCH}

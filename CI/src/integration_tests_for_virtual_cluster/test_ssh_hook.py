@@ -50,16 +50,16 @@ class TestSshHook(unittest.TestCase):
             shutil.rmtree(ssh_dir)
         util.generate_ssh_keys()
         self.assertTrue(os.path.exists(ssh_dir))
-        fingerprint = subprocess.check_output(fingerprint_command)
+        fingerprint = subprocess.check_output(fingerprint_command).decode()
 
         # check keys generation (no overwrite)
         util.generate_ssh_keys()
-        fingerprint_unchanged = subprocess.check_output(fingerprint_command)
+        fingerprint_unchanged = subprocess.check_output(fingerprint_command).decode()
         self.assertEqual(fingerprint, fingerprint_unchanged)
 
         # check keys generation (overwrite)
         util.generate_ssh_keys(overwrite=True)
-        fingerprint_changed = subprocess.check_output(fingerprint_command)
+        fingerprint_changed = subprocess.check_output(fingerprint_command).decode()
         self.assertNotEqual(fingerprint, fingerprint_changed)
 
     def _get_hostname_of_node1(self, image):

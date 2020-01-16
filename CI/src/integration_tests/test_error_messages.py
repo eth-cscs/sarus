@@ -233,15 +233,12 @@ class TestErrorMessages(unittest.TestCase):
 
     def _get_sarus_error_output(self, command):
         with open(os.devnull, 'wb') as devnull:
-            proc = subprocess.Popen(command,
-                                    stdout=devnull,
-                                    stderr=subprocess.PIPE)
-            stderr = proc.communicate()[1]
+            proc = subprocess.run(command, stdout=devnull, stderr=subprocess.PIPE)
             if proc.returncode == 0:
-                raise Exception("Sarus didn't generate any error, but at least one was expected.")
-            else:
-                stderr_without_trailing_whitespaces = stderr.rstrip()
-                return stderr_without_trailing_whitespaces
+                self.fail("Sarus didn't generate any error, but at least one was expected.")
+
+            stderr_without_trailing_whitespaces = proc.stderr.rstrip()
+            return stderr_without_trailing_whitespaces.decode()
 
 
 if __name__ == "__main__":

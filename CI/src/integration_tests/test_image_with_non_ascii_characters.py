@@ -22,9 +22,9 @@ class TestImageWithNonAsciiCharacters(unittest.TestCase):
 
     def test_image_with_non_ascii_characters(self):
         util.pull_image_if_necessary(is_centralized_repository=False, image=self._IMAGE_NAME)
-        output = util.run_command_in_container(  is_centralized_repository=False,
-                                                        image=self._IMAGE_NAME,
-                                                        command=["ls", "/földèr"])
+        output = util.run_command_in_container(is_centralized_repository=False,
+                                               image=self._IMAGE_NAME,
+                                               command=["ls", "/földèr".encode('utf-8')])
         # the command's output might also contain escape sequences (e.g. color codes), let's ignore
         # the escape characters and let's just check that the output contains the expected string
         self.assertTrue(output[0].find("filé") != -1)
