@@ -43,7 +43,7 @@ class TestSshHook(unittest.TestCase):
 
     def _check_ssh_keys_generation(self):
         ssh_dir = os.environ['HOME'] + "/.sarus/ssh"
-        fingerprint_command = ["bash", "-c", "find " + ssh_dir + " -type f -exec sum {} \; |sum"]
+        fingerprint_command = ["bash", "-c", "find " + ssh_dir + r" -type f -exec sum {} \; | sum"]
 
         # check keys generation
         if os.path.exists(ssh_dir):

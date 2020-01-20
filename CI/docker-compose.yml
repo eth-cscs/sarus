@@ -2,7 +2,7 @@ version: '2'
 
 services:
   controller:
-    image: ethcscs/sarus-ci:1.0.0
+    image: ethcscs/sarus-ci-run:1.0.2-a
     hostname: controller
     volumes:
       - etc-munge-volume:/etc/munge
@@ -24,7 +24,7 @@ services:
       && sleep infinity"
 
   server0:
-    image: ethcscs/sarus-ci:1.0.0
+    image: ethcscs/sarus-ci-run:1.0.2-a
     privileged: true
     hostname: server0
     volumes:
@@ -52,7 +52,7 @@ services:
   # to be accessible directly through different hostnames, whereas Docker compose would put a
   # load balancer in front of the servers and they would look like a single machine with one hostname.
   server1:
-    image: ethcscs/sarus-ci:1.0.0
+    image: ethcscs/sarus-ci-run:1.0.2-a
     privileged: true
     hostname: server1
     volumes:
