@@ -83,4 +83,5 @@ We can run the tests from the parent directory of the related Python scripts:
 .. code-block:: bash
 
    $ cd  <sarus project root dir>/CI/src
-   $ PYTHONPATH=$(pwd):$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/ nosetests -v integration_tests/test*.py
+   $ PYTHONPATH=$(pwd):$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/ pytest -v -m 'not asroot' integration_tests/
+   $ sudo PYTHONPATH=$(pwd):$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/ pytest -v -m asroot integration_tests/

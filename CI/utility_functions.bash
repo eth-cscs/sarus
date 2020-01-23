@@ -125,8 +125,11 @@ run_tests() {
     install_sarus_from_archive /opt/sarus ${build_dir}/sarus-${build_type}.tar.gz
     fail_on_error "Failed to install Sarus from archive"
 
-    sudo -u docker PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH PATH=/opt/sarus/default/bin:$PATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker nosetests -v /sarus-source/CI/src/integration_tests/test*.py
+    sudo -u docker PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH PATH=/opt/sarus/default/bin:$PATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker pytest -v -m 'not asroot' /sarus-source/CI/src/integration_tests/
     fail_on_error "Python integration tests failed"
+
+    sudo PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH PATH=/opt/sarus/default/bin:$PATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker pytest -v -m asroot /sarus-source/CI/src/integration_tests/
+    fail_on_error "Python integration tests as root failed"
 
     if [ ${build_type} = "Debug" ]; then
         sudo -u docker mkdir ${build_dir}/gcov
