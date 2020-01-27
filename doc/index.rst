@@ -9,7 +9,7 @@ environments. Its development has been driven by the specific requirements of
 HPC systems, while leveraging open standards and technologies to encourage
 vendor and community involvement.
 
-Key features:
+**Key features**:
 
 * Spawning of isolated software environments (*containers*), built by users to
   fit the deployment of a specific application
@@ -26,6 +26,14 @@ Key features:
     - Can import and convert images adopting the OCI Image Format
     - Sets up a container bundle complying to the OCI Runtime Specification
     - Uses an OCI-compliant runtime to spawn the container process
+
+
+Publications
+============
+
+* Benedicic, L., Cruz, F.A., Madonna, A. and Mariotti, K., 2019, June. Sarus: Highly Scalable Docker Containers for HPC Systems. In *International Conference on High Performance Computing* (pp. 46-60). Springer, Cham.
+
+  https://doi.org/10.1007/978-3-030-34356-9_5
 
 
 .. toctree::

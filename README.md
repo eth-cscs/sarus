@@ -49,8 +49,15 @@ make html
 If you think you've identified a security issue in the project, please *DO NOT*
 report the issue publicly via the Github issue tracker. Instead, send an
 email with as many details as possible to the following addresses:
-`alberto.madonna@cscs.ch`
-`kean.mariotti@cscs.ch`
+`alberto.madonna@cscs.ch`,
+`kean.mariotti@cscs.ch`.
 These are the business addresses of the core Sarus maintainers.
 
 To report bugs and request new features, you can use GitHub [issues](https://github.com/eth-cscs/sarus/issues).
+
+
+## Publications
+
+* Benedicic, L., Cruz, F.A., Madonna, A. and Mariotti, K., 2019, June. Sarus: Highly Scalable Docker Containers for HPC Systems. In *International Conference on High Performance Computing* (pp. 46-60). Springer, Cham.
+
+  https://doi.org/10.1007/978-3-030-34356-9_5
