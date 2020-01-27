@@ -246,6 +246,31 @@ as displayed by the :program:`sarus images` command in the first two columns:
     $ srun -N1 sarus run nvcr.io/nvidia/k8s/cuda-sample:nbody cat /usr/local/cuda/version.txt
     CUDA Version 9.0.176
 
+.. note::
+
+    Sarus has been designed to be compatible with Docker Hub, including its
+    specific authentication scheme. To work with registries which adopt different
+    authentication procedures under the hood (like the Google Container Registry),
+    it is advised to complement Sarus with software provided by the container
+    community like Skopeo (https://github.com/containers/skopeo).
+    Skopeo is a highly versatile tool to work with container registries.
+
+    As an example, to download a GCR image requiring authentication credentials
+    into a tar file using the ``skopeo copy`` command
+    (https://github.com/containers/skopeo/blob/master/docs/skopeo-copy.1.md):
+
+        $ skopeo copy --src-creds=<user>:<password>
+        docker://gcr.io/<image>:<tag> docker-archive:<path>.tar
+
+    Skopeo should be able to authenticate either with username/password or with
+    access token (in this case enter  ``oauth2accesstoken`` as the username and
+    the token as the password in the ``--src-creds`` option). More details are
+    available in the `Skopeo documentation <https://github.com/containers/skopeo/tree/master/docs>`_.
+
+    Once Skopeo has downloaded the image as a tar file, the image can be
+    loaded into Sarus with the :ref:`sarus load <user-load-archive>` command.
+
+.. _user-load-archive:
 
 Loading images from tar archives
 --------------------------------
