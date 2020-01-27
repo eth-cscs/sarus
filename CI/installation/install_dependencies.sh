@@ -69,7 +69,7 @@ rm -rf rapidjson.tar.gz rapidjson-663f076c7b44ce96526d1acfda3fa46971c8af31  #cle
 # Pre-built dependencies --------------
 
 # Install runc
-wget -O runc https://github.com/opencontainers/runc/releases/download/v1.0.0-rc9/runc.amd64
+wget -O runc https://github.com/opencontainers/runc/releases/download/v1.0.0-rc10/runc.amd64
 chmod 755 runc                           # make it executable
 sudo mv runc /usr/local/bin/             # add it to PATH
 sudo chown root:root /usr/local/bin/runc # set root ownership for security
