@@ -47,7 +47,7 @@ void Mount::performMount() const {
 
     auto rootfsDir = boost::filesystem::path{ config->json["OCIBundleDir"].GetString() }
         / config->json["rootfsFolder"].GetString();
-    auto destinationReal = common::realpathWithinRootfs(rootfsDir, destination);
+    auto destinationReal = rootfsDir / common::realpathWithinRootfs(rootfsDir, destination);
 
     try {
         validateMountSource(source);

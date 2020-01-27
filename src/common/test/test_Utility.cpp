@@ -18,6 +18,7 @@
 
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
+#include "common/PathRAII.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
 using namespace sarus;
@@ -85,16 +86,24 @@ TEST(UtilityTestGroup, createFileIfNecessary) {
 }
 
 TEST(UtilityTestGroup, copyFile) {
-    common::createFileIfNecessary("/tmp/src");
+    auto testDirRAII = common::PathRAII{ "./sarus-test-copyFile" };
+    const auto& testDir = testDirRAII.getPath();
+    common::createFileIfNecessary(testDir / "src");
 
-    common::copyFile("/tmp/src", "/tmp/dst");
-    CHECK((common::getOwner("/tmp/dst") == std::tuple<uid_t, gid_t>{0, 0}));
-    boost::filesystem::remove_all("/tmp/dst");
+    // implicit owner
+    common::copyFile(testDir / "src", testDir / "dst");
+    CHECK((common::getOwner(testDir / "dst") == std::tuple<uid_t, gid_t>{0, 0}));
 
-    common::copyFile("/tmp/src", "/tmp/dst", 1000, 1000);
-    CHECK((common::getOwner("/tmp/dst") == std::tuple<uid_t, gid_t>{1000, 1000}));
-    boost::filesystem::remove_all("/tmp/src");
-    boost::filesystem::remove_all("/tmp/dst");
+    // explicit owner + overwrite existing file
+    common::copyFile(testDir / "src", testDir / "dst", 1000, 1000);
+    CHECK((common::getOwner(testDir / "dst") == std::tuple<uid_t, gid_t>{1000, 1000}));
+
+    // explicit owner + non-existing directory
+    common::copyFile(testDir / "src", testDir / "non-existing-folder/dst", 1000, 1000);
+    CHECK((common::getOwner(testDir / "non-existing-folder") == std::tuple<uid_t, gid_t>{1000, 1000}));
+    CHECK((common::getOwner(testDir / "non-existing-folder/dst") == std::tuple<uid_t, gid_t>{1000, 1000}));
+
+    boost::filesystem::remove_all(testDir);
 }
 
 TEST(UtilityTestGroup, copyFolder) {
@@ -226,57 +235,145 @@ TEST(UtilityTestGroup, realpathWithinRootfs) {
     common::createFileIfNecessary(rootfs / "dir0/dir1/file");
 
     // folder
-    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1") == (rootfs / "dir0/dir1"));
+    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1") == "/dir0/dir1");
 
     // file
-    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/file") == (rootfs / "dir0/dir1/file"));
+    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/file") == "/dir0/dir1/file");
 
     // relative symlink
     CHECK_EQUAL(symlink("../../dir0/dir1", (rootfs / "dir0/dir1/link_relative").string().c_str()), 0);
-    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_relative") == (rootfs / "dir0/dir1"));
+    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_relative") == "/dir0/dir1");
 
     // relative symlink that spills (out of rootfs)
     CHECK_EQUAL(symlink("../../../../dir0/dir1", (rootfs / "dir0/dir1/link_relative_that_spills").string().c_str()), 0);
-    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_relative_that_spills") == (rootfs / "dir0/dir1"));
+    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_relative_that_spills") == "/dir0/dir1");
 
     // relative symlink recursive
     CHECK_EQUAL(symlink("../../dir0/dir1/link_relative/dir2/dir3", (rootfs / "dir0/dir1/link_relative_recursive").string().c_str()), 0);
-    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_relative_recursive") == (rootfs / "dir0/dir1/dir2/dir3"));
+    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_relative_recursive") == "/dir0/dir1/dir2/dir3");
 
     // relative symlink recursive that spills (out of rootfs)
     CHECK_EQUAL(symlink("../../../dir0/dir1/link_relative_that_spills/dir2/dir3", (rootfs / "dir0/dir1/link_relative_recursive_that_spills").string().c_str()), 0);
-    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_relative_recursive_that_spills") == (rootfs / "dir0/dir1/dir2/dir3"));
+    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_relative_recursive_that_spills") == "/dir0/dir1/dir2/dir3");
 
     // absolute symlink
     CHECK_EQUAL(symlink("/dir0/dir1", (rootfs / "dir0/dir1/link_absolute").string().c_str()), 0);
-    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_absolute") == (rootfs / "dir0/dir1"));
+    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_absolute") == "/dir0/dir1");
 
     // absolute symlink that spills (out of rootfs)
     CHECK_EQUAL(symlink("/dir0/dir1/../../../../dir0/dir1", (rootfs / "dir0/dir1/link_absolute_that_spills").string().c_str()), 0);
-    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_absolute_that_spills") == (rootfs / "dir0/dir1"));
+    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_absolute_that_spills") == "/dir0/dir1");
 
     // absolute symlink recursive
     CHECK_EQUAL(symlink("/dir0/dir1/link_absolute/dir2/dir3", (rootfs / "dir0/dir1/link_absolute_recursive").string().c_str()), 0);
-    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_absolute_recursive") == (rootfs / "dir0/dir1/dir2/dir3"));
+    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_absolute_recursive") == "/dir0/dir1/dir2/dir3");
 
     // absolute symlink recursive that spills (out of rootfs)
     CHECK_EQUAL(symlink("/dir0/dir1/link_absolute_that_spills/dir2/dir3", (rootfs / "dir0/dir1/link_absolute_recursive_that_spills").string().c_str()), 0);
-    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_absolute_recursive_that_spills") == (rootfs / "dir0/dir1/dir2/dir3"));
+    CHECK(common::realpathWithinRootfs(rootfs, "/dir0/dir1/link_absolute_recursive_that_spills") == "/dir0/dir1/dir2/dir3");
 
     // absolute symlink sharing no part of the path with the target
     CHECK_EQUAL(symlink("/dir0/dir1", (rootfs / "dirX/link_absolute_with_no_common_path").string().c_str()), 0);
-    CHECK(common::realpathWithinRootfs(rootfs, "/dirX/link_absolute_with_no_common_path") == (rootfs / "dir0/dir1"));
+    CHECK(common::realpathWithinRootfs(rootfs, "/dirX/link_absolute_with_no_common_path") == "/dir0/dir1");
 }
 
-TEST(UtilityTestGroup, getLibrarySoname) {
+TEST(UtilityTestGroup, getSharedLibLinkerName) {
+    CHECK(common::getSharedLibLinkerName("file.so") == "file.so");
+    CHECK(common::getSharedLibLinkerName("file.so.1") == "file.so");
+    CHECK(common::getSharedLibLinkerName("file.so.1.0") == "file.so");
+    CHECK(common::getSharedLibLinkerName("file.so.1.0.0") == "file.so");
+
+    CHECK_THROWS(common::Error, common::getSharedLibLinkerName("not-a-shared-lib"));
+    CHECK_THROWS(common::Error, common::getSharedLibLinkerName("not-a-shared-lib.soa"));
+}
+
+TEST(UtilityTestGroup, isSharedLib) {
+    CHECK(common::isSharedLib("/dir/libc.so") == true);
+    CHECK(common::isSharedLib("libc.so") == true);
+    CHECK(common::isSharedLib("libc.so.1") == true);
+    CHECK(common::isSharedLib("libc.so.1.2") == true);
+
+    CHECK(common::isSharedLib("libc") == false);
+    CHECK(common::isSharedLib("libc.s") == false);
+    CHECK(common::isSharedLib("ld.so.conf") == false);
+    CHECK(common::isSharedLib("ld.so.cache") == false);
+}
+
+TEST(UtilityTestGroup, parseSharedLibAbi) {
+    CHECK_THROWS(common::Error, common::parseSharedLibAbi("invalid"));
+    CHECK(common::parseSharedLibAbi("libc.so") == (std::vector<std::string>{}));
+    CHECK(common::parseSharedLibAbi("libc.so.1") == (std::vector<std::string>{"1"}));
+    CHECK(common::parseSharedLibAbi("libc.so.1.2") == (std::vector<std::string>{"1", "2"}));
+    CHECK(common::parseSharedLibAbi("libc.so.1.2.3") == (std::vector<std::string>{"1", "2", "3"}));
+    CHECK(common::parseSharedLibAbi("libc.so.1.2.3rc1") == (std::vector<std::string>{"1", "2", "3rc1"}));
+}
+
+TEST(UtilityTestGroup, resolveSharedLibAbi) {
+    auto testDirRaii = common::PathRAII{
+        common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-utility-resolveSharedLibAbi")
+    };
+    const auto& testDir = testDirRaii.getPath();
+
+    // invalid library filename
+    common::createFileIfNecessary(testDir / "invalid");
+    CHECK_THROWS(common::Error, common::resolveSharedLibAbi(testDir / "invalid"));
+
+    // libtest.so
+    common::createFileIfNecessary(testDir / "libtest.so");
+    CHECK(common::resolveSharedLibAbi(testDir / "libtest.so") == std::vector<std::string>{});
+
+    // libtest.so.1
+    common::createFileIfNecessary(testDir / "libtest.so.1");
+    CHECK(common::resolveSharedLibAbi(testDir / "libtest.so.1") == std::vector<std::string>{"1"});
+
+    // libtest_symlink.so.1 -> libtest_symlink.so.1.2
+    common::createFileIfNecessary(testDir / "libtest_symlink.so.1.2");
+    boost::filesystem::create_symlink(testDir / "libtest_symlink.so.1.2", testDir / "libtest_symlink.so.1");
+    CHECK(common::resolveSharedLibAbi(testDir / "libtest_symlink.so.1") == (std::vector<std::string>{"1", "2"}));
+
+    // libtest_symlink.so.1.2.3 -> libtest_symlink.so.1.2
+    boost::filesystem::create_symlink(testDir / "libtest_symlink.so.1.2", testDir / "libtest_symlink.so.1.2.3");
+    CHECK(common::resolveSharedLibAbi(testDir / "libtest_symlink.so.1.2.3") == (std::vector<std::string>{"1", "2", "3"}));
+
+    // libtest_symlink.so -> libtest_symlink.so.1.2.3 -> libtest_symlink.so.1.2
+    boost::filesystem::create_symlink(testDir / "libtest_symlink.so.1.2.3", testDir / "libtest_symlink.so");
+    CHECK(common::resolveSharedLibAbi(testDir / "libtest_symlink.so") == (std::vector<std::string>{"1", "2", "3"}));
+
+    // subdir/libtest_symlink.so -> ../libtest_symlink.so.1.2.3 -> libtest_symlink.so.1.2
+    common::createFoldersIfNecessary(testDir / "subdir");
+    boost::filesystem::create_symlink("../libtest_symlink.so.1.2.3", testDir / "subdir/libtest_symlink.so");
+    CHECK(common::resolveSharedLibAbi(testDir / "subdir/libtest_symlink.so") == (std::vector<std::string>{"1", "2", "3"}));
+
+    // /libtest_symlink_within_rootdir.so -> /subdir/libtest_symlink_within_rootdir.so.1 -> ../libtest_symlink_within_rootdir.so.1.2
+    boost::filesystem::create_symlink("/subdir/libtest_symlink_within_rootdir.so.1", testDir / "libtest_symlink_within_rootdir.so");
+    boost::filesystem::create_symlink("../libtest_symlink_within_rootdir.so.1.2", testDir / "/subdir/libtest_symlink_within_rootdir.so.1");
+    common::createFileIfNecessary(testDir / "libtest_symlink_within_rootdir.so.1.2");
+    CHECK(common::resolveSharedLibAbi("/libtest_symlink_within_rootdir.so", testDir) == (std::vector<std::string>{"1", "2"}));
+}
+
+TEST(UtilityTestGroup, areAbiVersionsCompatible) {
+    // compatible
+    CHECK(common::areAbiVersionsCompatible({}, {}));
+    CHECK(common::areAbiVersionsCompatible({"1", "0"}, {"1", "0"}));
+    CHECK(common::areAbiVersionsCompatible({"1", "1"}, {"1", "0"}));
+    CHECK(common::areAbiVersionsCompatible({"1", "0", "0"}, {"1", "0", "1"}));
+
+    // uncompatible
+    CHECK(!common::areAbiVersionsCompatible({"1"}, {}));
+    CHECK(!common::areAbiVersionsCompatible({}, {"1"}));
+    CHECK(!common::areAbiVersionsCompatible({"1"}, {"2"}));
+    CHECK(!common::areAbiVersionsCompatible({"1", "0"}, {"1", "1"}));
+}
+
+TEST(UtilityTestGroup, getSharedLibSoname) {
     auto dummyLibsDir = boost::filesystem::path{__FILE__}
         .parent_path()
         .parent_path()
         .parent_path()
         .parent_path() / "CI/dummy_libs";
-    CHECK_EQUAL(common::getLibrarySoname(dummyLibsDir / "libc.so.6-host", "readelf"), std::string("libc.so.6"));
-    CHECK_EQUAL(common::getLibrarySoname(dummyLibsDir / "ld-linux-x86-64.so.2-host", "readelf"), std::string("ld-linux-x86-64.so.2"));
-    CHECK_THROWS(common::Error, common::getLibrarySoname(dummyLibsDir / "lib_dummy_0.so", "readelf"));
+    CHECK_EQUAL(common::getSharedLibSoname(dummyLibsDir / "libc.so.6-host", "readelf"), std::string("libc.so.6"));
+    CHECK_EQUAL(common::getSharedLibSoname(dummyLibsDir / "ld-linux-x86-64.so.2-host", "readelf"), std::string("ld-linux-x86-64.so.2"));
+    CHECK_THROWS(common::Error, common::getSharedLibSoname(dummyLibsDir / "lib_dummy_0.so", "readelf"));
 }
 
 TEST(UtilityTestGroup, isLibc) {
@@ -302,15 +399,15 @@ TEST(UtilityTestGroup, parseLibcVersion) {
     CHECK((std::tuple<unsigned int, unsigned int>{100, 100} == common::parseLibcVersion("libc-100.100.so")));
 }
 
-TEST(UtilityTestGroup, is64BitLibrary) {
+TEST(UtilityTestGroup, is64bitSharedLib) {
     auto dummyLibsDir = boost::filesystem::path{__FILE__}
         .parent_path()
         .parent_path()
         .parent_path()
         .parent_path() / "CI/dummy_libs";
-    CHECK(common::is64bitLibrary(dummyLibsDir / "libc.so.6-host", "readelf"));
-    CHECK(common::is64bitLibrary(dummyLibsDir / "ld-linux-x86-64.so.2-host", "readelf"));
-    CHECK(!common::is64bitLibrary(dummyLibsDir / "libc.so.6-32bit-container", "readelf"));
+    CHECK(common::is64bitSharedLib(dummyLibsDir / "libc.so.6-host", "readelf"));
+    CHECK(common::is64bitSharedLib(dummyLibsDir / "ld-linux-x86-64.so.2-host", "readelf"));
+    CHECK(!common::is64bitSharedLib(dummyLibsDir / "libc.so.6-32bit-container", "readelf"));
 }
 
 TEST(UtilityTestGroup, serializeJSON) {

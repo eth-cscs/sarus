@@ -13,6 +13,7 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <cstring>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -31,8 +32,7 @@ namespace sarus {
 namespace hooks {
 namespace mpi {
 
-
-void MpiHook::activateMpiSupport() {
+MpiHook::MpiHook() {
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     sarus::hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
@@ -40,11 +40,29 @@ void MpiHook::activateMpiSupport() {
         return;
     }
     parseEnvironmentVariables();
-    containerLibraries = sarus::common::getLibrariesFromDynamicLinker("ldconfig", rootfsDir);
-    replaceMpiLibrariesInContainer();
-    mountDependencyLibrariesIntoContainer();
+    containerLibraries = sarus::common::getSharedLibsFromDynamicLinker(ldconfig, rootfsDir);
+    hostToContainerMpiLibs = mapHostToContainerLibraries(hostMpiLibs, containerLibraries);
+    hostToContainerDependencyLibs = mapHostToContainerLibraries(hostDependencyLibs, containerLibraries);
+}
+
+void MpiHook::activateMpiSupport() {
+    if(!isHookEnabled) {
+        return;
+    }
+    if(hostToContainerMpiLibs.empty()) {
+        SARUS_THROW_ERROR("Failed to activate MPI support. No MPI libraries"
+                          " found in the container. The container should be"
+                          " configured to access the MPI libraries through"
+                          " the dynamic linker. Hint: run 'ldconfig' when building"
+                          " the container image to configure the dynamic linker.");
+    }
+    checkHostMpiLibrariesHaveAbiVersion();
+    checkContainerMpiLibrariesHaveAbiVersion();
+    checkHostContainerAbiCompatibility(hostToContainerMpiLibs);
+    injectHostLibraries(hostMpiLibs, hostToContainerMpiLibs);
+    injectHostLibraries(hostDependencyLibs, hostToContainerDependencyLibs);
     performBindMounts();
-    sarus::common::executeCommand("ldconfig -r" + rootfsDir.string()); // update container's dynamic linker
+    sarus::common::executeCommand(ldconfig.string() + " -r " + rootfsDir.string()); // update container's dynamic linker
 }
 
 void MpiHook::parseConfigJSONOfBundle() {
@@ -62,64 +80,137 @@ void MpiHook::parseConfigJSONOfBundle() {
 
 void MpiHook::parseEnvironmentVariables() {
     char* p;
-    if((p = getenv("SARUS_MPI_LIBS")) == nullptr) {
+
+    if((p = getenv("SARUS_MPI_LDCONFIG_PATH")) == nullptr) {
+        SARUS_THROW_ERROR("Environment doesn't contain variable SARUS_MPI_LDCONFIG_PATH");
+    }
+    ldconfig = p;
+
+    if((p = getenv("SARUS_MPI_LIBS")) == nullptr && std::strcmp(p, "") != 0) {
         SARUS_THROW_ERROR("Environment doesn't contain variable SARUS_MPI_LIBS");
     }
-    boost::split(hostMpiLibs, p, boost::is_any_of(":"));
+    boost::split(hostMpiLibs, p, boost::is_any_of(":"), boost::token_compress_on);
 
-    if((p = getenv("SARUS_MPI_DEPENDENCY_LIBS")) != nullptr) {
-        boost::split(hostMpiDependencyLibs, p, boost::is_any_of(":"));
+    if((p = getenv("SARUS_MPI_DEPENDENCY_LIBS")) != nullptr && std::strcmp(p, "") != 0) {
+        boost::split(hostDependencyLibs, p, boost::is_any_of(":"), boost::token_compress_on);
     }
 
-    if((p = getenv("SARUS_MPI_BIND_MOUNTS")) != nullptr) {
-        boost::split(bindMounts, p, boost::is_any_of(":"));
+    if((p = getenv("SARUS_MPI_BIND_MOUNTS")) != nullptr && std::strcmp(p, "") != 0) {
+        boost::split(bindMounts, p, boost::is_any_of(":"), boost::token_compress_on);
     }
 }
 
-void MpiHook::replaceMpiLibrariesInContainer() const {
-    if(hostMpiLibs.empty()) {
-        SARUS_THROW_ERROR("Failed to activate MPI support. No host MPI"
-                            " libraries specified. Please contact the system"
-                            " administrator to properly configure the MPI hook");
-    }
+MpiHook::HostToContainerLibsMap MpiHook::mapHostToContainerLibraries(const std::vector<boost::filesystem::path>& hostLibs,
+                                                                     const std::vector<boost::filesystem::path>& containerLibs) const {
+    auto map = HostToContainerLibsMap{};
 
-    bool containerHasMpiLibrary = false;
-
-    for(const auto& hostMpiLib : hostMpiLibs) {
-        auto name = getLibraryFilenameWithoutExtension(hostMpiLib);
-        auto hasStrippedNameOfHostMpiLib = [this, &name](const boost::filesystem::path& lib) {
-            return getLibraryFilenameWithoutExtension(lib) == name;
-        };
-        auto it = std::find_if(containerLibraries.cbegin(), containerLibraries.cend(), hasStrippedNameOfHostMpiLib);
-        if(it != containerLibraries.cend()) {
-            containerHasMpiLibrary = true;
-            const auto& containerMpiLib = *it;
-            if(!areLibrariesABICompatible(hostMpiLib, containerMpiLib)) {
-                auto message = boost::format(   "Failed to activate MPI support. Host's library %s is not ABI"
-                                                " compatible with container's library %s") % hostMpiLib % containerMpiLib;
-                SARUS_THROW_ERROR(message.str());
-            }
-            sarus::runtime::bindMount(hostMpiLib, sarus::common::realpathWithinRootfs(rootfsDir, containerMpiLib));
-            if (!isLibraryInDefaultLinkerDirectory(containerMpiLib)) {
-                createSymlinksInDefaultLinkerDirectory(containerMpiLib);
+    for(const auto& hostLib : hostLibs) {
+        for(const auto& containerLib : containerLibs) {
+            if(sarus::common::getSharedLibLinkerName(hostLib) == sarus::common::getSharedLibLinkerName(containerLib)) {
+                map[hostLib].push_back(containerLib);
             }
         }
     }
 
-    if(!containerHasMpiLibrary) {
-        SARUS_THROW_ERROR("Failed to activate MPI support. No MPI libraries"
-                            " found in the container. The container should be"
-                            " configured to access the MPI libraries through"
-                            " the dynamic linker. Hint: run 'ldconfig' when building"
-                            " the container image to configure the dynamic linker.");
+    return map;
+}
+
+void MpiHook::checkHostMpiLibrariesHaveAbiVersion() const {
+    for(const auto lib : hostMpiLibs) {
+        auto version = sarus::common::resolveSharedLibAbi(lib);
+        if(version.empty()) {
+            auto message = boost::format(
+                "The host's MPI libraries (configured through the env variable SARUS_MPI_LIBS)"
+                " must have at least the MAJOR ABI number, e.g. libmpi.so.<MAJOR>."
+                " Only then can the compatibility between host and container MPI libraries be checked."
+                " Found host's MPI library '%s'."
+                " Please contact your system administrator to solve this issue."
+            ) % lib.string();
+            SARUS_THROW_ERROR(message.str());
+        }
     }
 }
 
-void MpiHook::mountDependencyLibrariesIntoContainer() const {
-    for(const auto& hostLib : hostMpiDependencyLibs) {
-        auto containerLib = rootfsDir / "usr/lib" / hostLib.filename();
-        sarus::common::createFileIfNecessary(containerLib);
-        sarus::runtime::bindMount(hostLib, containerLib);
+void MpiHook::checkContainerMpiLibrariesHaveAbiVersion() const {
+    for(const auto entry : hostToContainerMpiLibs) {
+        bool found = false;
+        for(const auto& lib : entry.second) {
+            auto version = sarus::common::resolveSharedLibAbi(lib);
+            if(!version.empty()) {
+                found = true;
+                break;
+            }
+        }
+
+        if(!found) {
+            auto message = boost::format(
+                "The container's MPI libraries (configured through ldconfig)"
+                " must have at least the MAJOR ABI number, e.g. libmpi.so.<MAJOR>."
+                " Only then can the compatibility between host and container MPI"
+                " libraries be checked. Failed to find a proper '%s' in the container."
+                " Please adapt your container to meet the ABI compatibility check criteria."
+            ) % sarus::common::getSharedLibLinkerName(entry.first);
+            SARUS_THROW_ERROR(message.str());
+        }
+    }
+}
+
+void MpiHook::checkHostContainerAbiCompatibility(const HostToContainerLibsMap& hostToContainerLibs) const {
+    for(const auto& entry : hostToContainerLibs) {
+        for(const auto& containerLib : entry.second) {
+            const auto& hostLib = entry.first;
+            auto containerAbi = sarus::common::resolveSharedLibAbi(containerLib, rootfsDir);
+            auto hostAbi = sarus::common::resolveSharedLibAbi(hostLib);
+
+            if(!sarus::common::areAbiVersionsCompatible(hostAbi, containerAbi))  {
+                auto message = boost::format(
+                    "Failed to activate MPI support. Host's MPI library %s (ABI '%s') is not ABI"
+                    " compatible with container's MPI library %s (ABI '%s').")
+                    % hostLib % boost::algorithm::join(hostAbi, ".")
+                    % containerLib % boost::algorithm::join(containerAbi, ".");
+                SARUS_THROW_ERROR(message.str());
+            }
+        }
+    }
+}
+
+void MpiHook::injectHostLibraries(const std::vector<boost::filesystem::path>& hostLibs,
+                                  const HostToContainerLibsMap& hostToContainerLibs) const {
+    for(const auto& lib : hostLibs) {
+        injectHostLibrary(lib, hostToContainerLibs);
+    }
+}
+
+void MpiHook::injectHostLibrary(const boost::filesystem::path& hostLib,
+                                const HostToContainerLibsMap& hostToContainerLibs) const {
+    auto it = hostToContainerLibs.find(hostLib);
+
+    // no corresponding libs in container => bind mount into /lib
+    if(it == hostToContainerDependencyLibs.cend()) {
+        sarus::common::createFileIfNecessary(rootfsDir / "lib" / hostLib.filename());
+        auto hostLibReal = sarus::common::realpathWithinRootfs(rootfsDir, "/lib" / hostLib.filename());
+        sarus::runtime::bindMount(hostLib, rootfsDir / hostLibReal);
+        createSymlinksInDynamicLinkerDefaultSearchDirs("/lib" / hostLib.filename(), hostLib.filename());
+        return;
+    }
+
+    // for each corresponding lib in container
+    for(const auto& containerLib : it->second) {
+        auto hostAbi = sarus::common::resolveSharedLibAbi(hostLib);
+        auto containerAbi = sarus::common::resolveSharedLibAbi(containerLib, rootfsDir);
+        // abi-compatible => bind mount on top of it (override)
+        if(sarus::common::areAbiVersionsCompatible(hostAbi, containerAbi)) {
+            auto containerLibReal = sarus::common::realpathWithinRootfs(rootfsDir, containerLib);
+            sarus::runtime::bindMount(hostLib, rootfsDir / containerLibReal);
+            createSymlinksInDynamicLinkerDefaultSearchDirs(containerLibReal, hostLib.filename());
+        }
+        // not abi-compatible => bind mount into /lib
+        else {
+            sarus::common::createFileIfNecessary(rootfsDir / "lib" / hostLib.filename());
+            auto hostLibReal = sarus::common::realpathWithinRootfs(rootfsDir, "/lib" / hostLib.filename());
+            sarus::runtime::bindMount(hostLib, rootfsDir / hostLibReal);
+            createSymlinksInDynamicLinkerDefaultSearchDirs("/lib" / hostLib.filename(), hostLib.filename());
+        }
     }
 }
 
@@ -135,131 +226,46 @@ void MpiHook::performBindMounts() const {
     }
 }
 
-bool MpiHook::areLibrariesABICompatible(const boost::filesystem::path& hostLib, const boost::filesystem::path& containerLib) const {
-    int hostMajor, hostMinor, containerMajor, containerMinor;
-    std::tie(hostMajor, hostMinor, std::ignore) = getVersionNumbersOfLibrary(hostLib);
-    std::tie(containerMajor, containerMinor, std::ignore) = getVersionNumbersOfLibrary(containerLib);
+void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesystem::path& target,
+                                                             const boost::filesystem::path& linkFilename) const {
+    // Generate symlinks to the library in the container's /lib and /lib64, to make sure that:
+    //
+    // 1. ldconfig will find the library in the container, because the symlink will be in
+    //    one of ldconfig's default search directories.
+    //
+    // 2. ld.so will find the library regardless of the library's SONAME (ELF header entry),
+    //    because the symlink will be in one of ld.so's default search paths.
+    //
+    //    This is important, because on some systems a library's SONAME (ELF header entry) might
+    //    not correspond to the library's filename. E.g. on Cray CLE 7, the SONAME of
+    //    /opt/cray/pe/mpt/7.7.9/gni/mpich-gnu-abi/7.1/lib/libmpi.so.12 is libmpich_gnu_71.so.3.
+    //    A conseguence is that the container's ldconfig will create an entry in /etc/ld.so.cache
+    //    for libmpich_gnu_71.so.3, and not for libmpi.so.12. This could prevent the container's
+    //    ld.so from dynamically linking MPI applications to libmpi.so.12, if libmpi.so.12 is not
+    //    in one of the ld.so's default search paths.
+    //
+    // Some ldconfig/ld.so versions/builds only search in the default directories /lib or /lib64.
+    // So, let's create symlinks to the library in both /lib and /lib64 to make sure that they
+    // will be found.
 
-    if(hostMajor != containerMajor) {
-        return false;
-    }
-    if(hostMinor < containerMinor) {
-        return false;
-    }
-
-    return true;
-}
-
-bool MpiHook::isLibraryInDefaultLinkerDirectory(const boost::filesystem::path& lib) const {
-    return lib.parent_path() == "/lib"
-            || lib.parent_path() == "/lib64"
-            || lib.parent_path() == "/usr/lib"
-            || lib.parent_path() == "/usr/lib64";
-}
-
-void MpiHook::createSymlinksInDefaultLinkerDirectory(const boost::filesystem::path& lib) const {
-    int versionMajor, versionMinor, versionPatch;
-    std::tie(versionMajor, versionMinor, versionPatch) = getVersionNumbersOfLibrary(lib);
-
-    // Some ldconfig implementations only check in the default directories /lib64 or /lib,
-    // ignoring the other architecture option.
-    // We create symlinks to MPI libraries in both locations to ensure they are found.
-    // According to the file-hierarchy(7) man page, modern Linux distributions could implement
-    // /lib and /lib64 as symlinks.
-    // In order to be flexible with regard to container filesystems, we use the following strategy:
-    //     - If /usr/lib64 does not exist, create it
-    //     - If /lib64 does not exist, create it as symlink to /usr/lib64
-    //       (if it exists, it is either a proper directory or a symlink)
-    //     - Repeat the steps above for /usr/lib and /lib
-    //     - List /lib64 and /lib as MPI symlink paths
-
-    // lib64 path
-    auto usrLib64Path = boost::filesystem::path(rootfsDir / "/usr/lib64");
-    auto lib64Path = boost::filesystem::path(rootfsDir / "/lib64");
-    if (!boost::filesystem::exists(usrLib64Path)) {
-        sarus::common::createFoldersIfNecessary(usrLib64Path);
-    }
-    if (!boost::filesystem::exists(lib64Path)) {
-        boost::filesystem::create_symlink(usrLib64Path, lib64Path);
+    auto libName = sarus::common::getSharedLibLinkerName(linkFilename);
+    auto linkNames = std::vector<std::string> { libName.string() };
+    for(const auto& versionNumber : sarus::common::parseSharedLibAbi(linkFilename)) {
+        linkNames.push_back(linkNames.back() + "." + versionNumber);
     }
 
-    // lib path
-    auto usrLibPath = boost::filesystem::path(rootfsDir / "/usr/lib");
-    auto libPath = boost::filesystem::path(rootfsDir / "/lib");
-    if (!boost::filesystem::exists(usrLibPath)) {
-        sarus::common::createFoldersIfNecessary(usrLibPath);
-    }
-    if (!boost::filesystem::exists(libPath)) {
-        boost::filesystem::create_symlink(usrLibPath, libPath);
-    }
-
-    std::vector<boost::filesystem::path> symlinkDirectories{lib64Path, libPath};
-
-    auto libName = getLibraryFilenameWithoutExtension(lib) + ".so";
-    auto symlinks = std::vector<boost::format> {
-        boost::format(libName),
-        boost::format("%s.%d") % libName % versionMajor,
-        boost::format("%s.%d.%d") % libName % versionMajor % versionMinor,
-        boost::format("%s.%d.%d.%d") % libName % versionMajor % versionMinor % versionPatch
-    };
-
-    for (const auto& dir: symlinkDirectories) {
-        for (const auto& link : symlinks) {
-            boost::filesystem::create_symlink(lib, dir / link.str());
+    auto linkerDefaultSearchDirs = std::vector<boost::filesystem::path> {"/lib", "/lib64"};
+    for (const auto& dir: linkerDefaultSearchDirs) {
+        for (const auto& linkName : linkNames) {
+            if(dir / linkName == target) {
+                continue;
+            }
+            auto link = rootfsDir / dir / linkName;
+            sarus::common::createFoldersIfNecessary(link.parent_path());
+            boost::filesystem::remove(link); // remove if already exists
+            boost::filesystem::create_symlink(target, link);
         }
     }
-}
-
-std::tuple<int, int, int> MpiHook::getVersionNumbersOfLibrary(const boost::filesystem::path& lib) const {
-    auto name = lib.filename().string();
-
-    boost::regex regex("lib.*\\.so(\\.[0-9]+)*");
-    boost::cmatch matches;
-    if(!boost::regex_match(name.c_str(), matches, regex)) {
-        auto message = boost::format(   "Failed to get version numbers of library %s."
-                                        " Library name is invalid, because the regex"
-                                        " \"%s\" doesn't match.") % lib % regex;
-        SARUS_THROW_ERROR(message.str());
-    }
-
-    int major = 0;
-    int minor = 0;
-    int patch = 0;
-    auto pos = name.rfind(".so");
-
-    // no numbers to parse
-    if(name.cbegin() + pos + 3 == name.cend()) {
-        return std::tuple<int, int, int>{major, minor, patch};
-    }
-
-    // parse major number
-    auto majorBeg = name.cbegin() + pos + 4;
-    auto majorEnd = std::find(majorBeg, name.cend(), '.');
-    major = std::stoi(std::string(majorBeg, majorEnd));
-    if(majorEnd == name.cend()) {
-        return std::tuple<int, int, int>{major, minor, patch};
-    }
-
-    // parse minor number
-    auto minorBeg = majorEnd + 1;
-    auto minorEnd = std::find(minorBeg, name.cend(), '.');
-    minor = std::stoi(std::string(minorBeg, minorEnd));
-    if(minorEnd == name.cend()) {
-        return std::tuple<int, int, int>{major, minor, patch};
-    }
-
-    // parse patch number
-    auto patchBeg = minorEnd + 1;
-    auto patchEnd = std::find(patchBeg, name.cend(), '.');
-    patch = std::stoi(std::string(patchBeg, patchEnd));
-
-    return std::tuple<int, int, int>{major, minor, patch};
-}
-
-std::string MpiHook::getLibraryFilenameWithoutExtension(const boost::filesystem::path& path) const {
-    auto name = path.filename().string();
-    auto pos = name.rfind(".so");
-    return name.substr(0, pos);
 }
 
 }}} // namespace

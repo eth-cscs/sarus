@@ -37,41 +37,36 @@ namespace test {
 
 class Checker {
 public:
+    ~Checker() {
+        cleanup();
+    }
+
     Checker& setEnvironmentVariablesInConfigJSON(const std::vector<std::string>& variables) {
         environmentVariables = variables;
         return *this;
     }
 
-    Checker& setHostMpiLibraries(const std::vector<std::string>& libs) {
+    Checker& setHostMpiLibraries(const std::vector<boost::filesystem::path>& libs) {
         for(const auto& lib : libs) {
             hostMpiLibs.push_back(bundleDir / lib);
         }
         return *this;
     }
 
-    Checker& setHostMpiDependencyLibraries(const std::vector<std::string>& libs) {
+    Checker& setHostMpiDependencyLibraries(const std::vector<boost::filesystem::path>& libs) {
         for(const auto& lib : libs) {
-            hostMpiDependencyLibs.push_back(bundleDir / lib);
-            containerMpiDependencyLibs.push_back(rootfsDir / "usr/lib" / lib);
+            hostDependencyLibs.push_back(bundleDir / lib);
         }
         return *this;
     }
 
-    Checker& setContainerMpiLibraries(const std::vector<std::string>& libs) {
-        for(const auto& lib : libs) {
-            containerMpiLibs.push_back(rootfsDir / "usr/lib" / lib);
-        }
+    Checker& setPreHookContainerLibraries(const std::vector<boost::filesystem::path>& libs) {
+        preHookContainerLibs = libs;
         return *this;
     }
 
-    Checker& setNonDefaultContainerMpiLibraries(const std::vector<std::string>& libs) {
-        sarus::common::createFileIfNecessary(rootfsDir / "etc/ld.so.conf");
-        std::ofstream linkerSearchConf((rootfsDir / "etc/ld.so.conf").c_str());
-        for(const auto& lib : libs) {
-            containerMpiLibs.push_back(rootfsDir / lib);
-            linkerSearchConf << boost::filesystem::absolute(lib).parent_path().string() << std::endl;
-        }
-        expectSymlinks = true;
+    Checker& expectPostHookContainerLibraries(const std::vector<boost::filesystem::path>& libs) {
+        expectedPostHookContainerLibs = libs;
         return *this;
     }
 
@@ -80,18 +75,15 @@ public:
         return *this;
     }
 
-    Checker& setupDefaultLinkerDir(const boost::filesystem::path& dir) {
-        sarus::common::createFoldersIfNecessary(rootfsDir / dir);
-        return *this;
-    }
-
     void checkSuccessfull() const {
         setupTestEnvironment();
         MpiHook{}.activateMpiSupport();
-        checkLibrariesAreInRootfs();
-        checkConfigurationOfDynamicLinkerInContainer();
+        if(expectedPostHookContainerLibs) {
+            checkOnlyExpectedLibrariesAreInRootfs();
+            checkExpectedLibrariesAreInLdSoCache();
+            checkExpectedLibrariesAreTheHostLibrary();
+        }
         checkBindMounts();
-        checkSymlinks();
         cleanup();
     }
 
@@ -111,10 +103,11 @@ private:
         sarus::common::createFoldersIfNecessary(rootfsDir / "etc");
         createOCIBundleConfigJSON();
         createLibraries();
-        sarus::common::executeCommand("ldconfig -r" + rootfsDir.string()); // run ldconfig in rootfs
+        setupDynamicLinkerInContainer();
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
+        sarus::common::setEnvironmentVariable("SARUS_MPI_LDCONFIG_PATH=ldconfig");
         sarus::common::setEnvironmentVariable("SARUS_MPI_LIBS=" + sarus::common::makeColonSeparatedListOfPaths(hostMpiLibs));
-        sarus::common::setEnvironmentVariable("SARUS_MPI_DEPENDENCY_LIBS=" + sarus::common::makeColonSeparatedListOfPaths(hostMpiDependencyLibs));
+        sarus::common::setEnvironmentVariable("SARUS_MPI_DEPENDENCY_LIBS=" + sarus::common::makeColonSeparatedListOfPaths(hostDependencyLibs));
         sarus::common::setEnvironmentVariable("SARUS_MPI_BIND_MOUNTS=" + sarus::common::makeColonSeparatedListOfPaths(bindMounts));
     }
 
@@ -135,43 +128,73 @@ private:
     }
 
     void createLibraries() const {
-        for(const auto& lib : hostMpiDependencyLibs) {
-            sarus::common::createFoldersIfNecessary(lib.parent_path());
-            boost::filesystem::copy_file(dummyHostLib, lib);
+        for(const auto& lib : hostDependencyLibs) {
+            sarus::common::copyFile(dummyHostLib, lib);
         }
         for(const auto& lib : hostMpiLibs) {
-            sarus::common::createFoldersIfNecessary(lib.parent_path());
-            boost::filesystem::copy_file(dummyHostLib, lib);
+            sarus::common::copyFile(dummyHostLib, lib);
         }
-        for(const auto& lib : containerMpiLibs) {
-            sarus::common::createFoldersIfNecessary(lib.parent_path());
-            boost::filesystem::copy_file(dummyContainerLib, lib);
+        for(const auto& lib : preHookContainerLibs) {
+            sarus::common::copyFile(dummyContainerLib, rootfsDir / lib);
         }
     }
 
-    void checkLibrariesAreInRootfs() const {
-        for(const auto& lib : containerMpiLibs) {
-            CHECK(test_utility::filesystem::areFilesEqual(dummyHostLib, lib));
+    void setupDynamicLinkerInContainer() const {
+        // write lib directories in /etc/ld.so.conf
+        sarus::common::createFileIfNecessary(rootfsDir / "etc/ld.so.conf");
+        std::ofstream of{(rootfsDir / "etc/ld.so.conf").c_str()};
+        auto writtenSoFar = std::unordered_set<std::string>{};
+
+        for(const auto& lib : preHookContainerLibs) {
+            auto dir = lib.parent_path().string();
+            if(writtenSoFar.find(dir) == writtenSoFar.cend()) {
+                writtenSoFar.insert(dir);
+                of << dir << "\n";
+            }
         }
-        for(const auto& lib : containerMpiDependencyLibs) {
-            CHECK(test_utility::filesystem::areFilesEqual(dummyHostLib, lib));
+        of.close(); // write to disk
+
+        // create /etc/ld.so.cache
+        sarus::common::executeCommand("ldconfig -r " + rootfsDir.string());
+    }
+
+    void checkOnlyExpectedLibrariesAreInRootfs() const {
+        auto expected = *expectedPostHookContainerLibs;
+        for(auto& lib : expected) {
+            lib = rootfsDir / lib;
+        }
+        std::sort(expected.begin(), expected.end());
+
+        auto begin = boost::filesystem::recursive_directory_iterator{rootfsDir};
+        auto end = boost::filesystem::recursive_directory_iterator{};
+        auto actual = std::vector<boost::filesystem::path>{};
+        std::copy_if(begin, end, std::back_inserter(actual), sarus::common::isSharedLib);
+        std::sort(actual.begin(), actual.end());
+
+        CHECK(actual == expected);
+    }
+
+    void checkExpectedLibrariesAreTheHostLibrary() const {
+        for(const auto& lib : *expectedPostHookContainerLibs) {
+            auto libReal = rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, lib);
+            CHECK(test_utility::filesystem::areFilesEqual(dummyHostLib, libReal));
         }
     }
 
-    void checkConfigurationOfDynamicLinkerInContainer() const {
-        auto containerLibs = sarus::common::getLibrariesFromDynamicLinker("ldconfig", rootfsDir);
+    void checkExpectedLibrariesAreInLdSoCache() const {
+        auto expecteds = std::unordered_set<std::string>{};
+        for(const auto& lib : *expectedPostHookContainerLibs) {
+            expecteds.insert(lib.filename().string());
+        }
 
-        auto expectedLibsInContainer = containerMpiLibs;
-        expectedLibsInContainer.insert( expectedLibsInContainer.end(),
-                                        containerMpiDependencyLibs.cbegin(),
-                                        containerMpiDependencyLibs.cend());
+        auto actuals = std::unordered_set<std::string>{};
+        for(const auto& lib : sarus::common::getSharedLibsFromDynamicLinker("ldconfig", rootfsDir)) {
+            actuals.insert(lib.filename().string());
+        }
 
-        for(const auto& expectedLib : expectedLibsInContainer) {
-            auto hasFilenameOfExpectedLib = [&expectedLib](const boost::filesystem::path& lib) {
-                return lib.filename() == expectedLib.filename();
-            };
-            auto it = std::find_if(containerLibs.cbegin(), containerLibs.cend(), hasFilenameOfExpectedLib);
-            CHECK(it != containerLibs.cend());
+        for(const auto& expected : expecteds) {
+            bool found = actuals.find(expected) != actuals.cend();
+            CHECK(found);
         }
     }
 
@@ -181,37 +204,11 @@ private:
         }
     }
 
-    void checkSymlinks() const {
-        if (!expectSymlinks) return;
-
-        for(const auto& lib : containerMpiLibs) {
-            auto libPath = boost::filesystem::absolute(boost::filesystem::relative(lib,rootfsDir));
-            for (const auto& linkerDir : defaultLinkerDirs) {
-                // Link with major, minor, patch numbers
-                auto libName = lib.filename().string();
-                CHECK(boost::filesystem::read_symlink(rootfsDir / linkerDir / libName) == libPath);
-                // Link with major, minor numbers
-                libName = libName.substr(0, libName.rfind("."));
-                CHECK(boost::filesystem::read_symlink(rootfsDir / linkerDir / libName) == libPath);
-                // Link with major number
-                libName = libName.substr(0, libName.rfind("."));
-                CHECK(boost::filesystem::read_symlink(rootfsDir / linkerDir / libName) == libPath);
-                // Link without numbers
-                libName = libName.substr(0, libName.rfind("."));
-                CHECK(boost::filesystem::read_symlink(rootfsDir / linkerDir / libName) == libPath);
-            }
-        }
-    }
-
     void cleanup() const {
-        for(const auto& lib : containerMpiLibs) {
-            CHECK(umount(lib.c_str()) == 0);
-        }
-        for(const auto& lib : containerMpiDependencyLibs) {
-            CHECK(umount(lib.c_str()) == 0);
-        }
-        for(const auto& mount : bindMounts) {
-            CHECK(umount((rootfsDir / mount).c_str()) == 0);
+        auto begin = boost::filesystem::recursive_directory_iterator{rootfsDir};
+        auto end = boost::filesystem::recursive_directory_iterator{};
+        for(auto it = begin; it!=end; ++it) {
+            umount(it->path().c_str()); // attempt to unmount every file/folder in rootfs
         }
     }
 
@@ -234,13 +231,10 @@ private:
 
     std::vector<std::string> environmentVariables;
     std::vector<boost::filesystem::path> hostMpiLibs;
-    std::vector<boost::filesystem::path> hostMpiDependencyLibs;
-    std::vector<boost::filesystem::path> containerMpiLibs;
-    std::vector<boost::filesystem::path> containerMpiDependencyLibs;
+    std::vector<boost::filesystem::path> hostDependencyLibs;
+    std::vector<boost::filesystem::path> preHookContainerLibs;
+    boost::optional<std::vector<boost::filesystem::path>> expectedPostHookContainerLibs;
     std::vector<boost::filesystem::path> bindMounts;
-    std::vector<boost::filesystem::path> defaultLinkerDirs{"lib64", "lib"};
-
-    bool expectSymlinks = false;
 };
 
 }}}} // namespace

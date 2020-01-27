@@ -67,13 +67,20 @@ std::unordered_map<std::string, std::string> parseMap(const std::string& input,
                                                       const std::string& pairSeparators = ",",
                                                       const std::string& keyValueSeparators = "=");
 std::string makeColonSeparatedListOfPaths(const std::vector<boost::filesystem::path>& paths);
-std::vector<boost::filesystem::path> getLibrariesFromDynamicLinker(
+boost::filesystem::path getSharedLibLinkerName(const boost::filesystem::path& path);
+std::vector<boost::filesystem::path> getSharedLibsFromDynamicLinker(
     const boost::filesystem::path& ldconfigPath,
     const boost::filesystem::path& rootDir);
-std::string getLibrarySoname(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath);
+bool isSharedLib(const boost::filesystem::path& file);
+std::vector<std::string> parseSharedLibAbi(const boost::filesystem::path& lib);
+std::vector<std::string> resolveSharedLibAbi(const boost::filesystem::path& lib,
+                                           const boost::filesystem::path& rootDir = "/");
+bool areAbiVersionsCompatible(const std::vector<std::string>& hostVersion,
+                              const std::vector<std::string>& containerVersion);
+std::string getSharedLibSoname(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath);
 bool isLibc(const boost::filesystem::path&);
 std::tuple<unsigned int, unsigned int> parseLibcVersion(const boost::filesystem::path&);
-bool is64bitLibrary(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath);
+bool is64bitSharedLib(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath);
 std::string parseCpusAllowedList(const std::string& procStatus);
 
 std::string readFile(const boost::filesystem::path& path);

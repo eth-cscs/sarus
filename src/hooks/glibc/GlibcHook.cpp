@@ -91,9 +91,9 @@ bool GlibcHook::containerHasGlibc() const {
 
 std::vector<boost::filesystem::path> GlibcHook::get64bitContainerLibraries() const {
     auto isNot64bit = [this](const boost::filesystem::path& lib) {
-        return !sarus::common::is64bitLibrary(sarus::common::realpathWithinRootfs(rootfsDir, lib), readelfPath);
+        return !sarus::common::is64bitSharedLib(rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, lib), readelfPath);
     };
-    auto libs = sarus::common::getLibrariesFromDynamicLinker(ldconfigPath, rootfsDir);
+    auto libs = sarus::common::getSharedLibsFromDynamicLinker(ldconfigPath, rootfsDir);
     auto newEnd = std::remove_if(libs.begin(), libs.end(), isNot64bit);
     libs.erase(newEnd, libs.cend());
     return libs;
@@ -132,8 +132,8 @@ bool GlibcHook::containerGlibcHasToBeReplaced(  const boost::filesystem::path& h
 void GlibcHook::verifyThatHostAndContainerGlibcAreABICompatible(
     const boost::filesystem::path& hostLibc,
     const boost::filesystem::path& containerLibc) const {
-    auto hostSoname = sarus::common::getLibrarySoname(hostLibc, readelfPath);
-    auto containerSoname = sarus::common::getLibrarySoname(rootfsDir / containerLibc, readelfPath);
+    auto hostSoname = sarus::common::getSharedLibSoname(hostLibc, readelfPath);
+    auto containerSoname = sarus::common::getSharedLibSoname(rootfsDir / containerLibc, readelfPath);
     if(hostSoname != containerSoname) {
         auto message = boost::format(
             "Failed to inject glibc libraries. Host's glibc is not ABI compatible with container's glibc."
@@ -146,11 +146,11 @@ void GlibcHook::replaceGlibcLibrariesInContainer() const {
     bool wasInjectionPerformed = false;
 
     for(const auto& hostLib : hostLibraries) {
-        auto soname = sarus::common::getLibrarySoname(hostLib, readelfPath);
+        auto soname = sarus::common::getSharedLibSoname(hostLib, readelfPath);
         for(const auto& containerLib : containerLibraries) {
             if(containerLib.filename().string() == soname) {
                 wasInjectionPerformed = true;
-                sarus::runtime::bindMount(hostLib, sarus::common::realpathWithinRootfs(rootfsDir, containerLib));
+                sarus::runtime::bindMount(hostLib, rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, containerLib));
             }
         }
     }

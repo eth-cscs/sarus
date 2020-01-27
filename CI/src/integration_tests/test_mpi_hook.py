@@ -73,6 +73,7 @@ class TestMPIHook(unittest.TestCase):
         mpi_hook = dict()
         mpi_hook["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/mpi_hook"
         mpi_hook["env"] = list()
+        mpi_hook["env"].append("SARUS_MPI_LDCONFIG_PATH=ldconfig")
         libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_LIBS]
         mpi_hook["env"].append("SARUS_MPI_LIBS=" + ":".join(libs))
         libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_DEPENDENCY_LIBS]
@@ -117,7 +118,7 @@ class TestMPIHook(unittest.TestCase):
         self._mpi_command_line_option = True
         self._container_image = "ethcscs/dockerfiles:sarus_mpi_support_test-mpich_incompatible"
         self._assert_sarus_raises_mpi_error_containing_text(
-            text = "not ABI compatible with container's library")
+            text = "not ABI compatible with container's MPI library")
 
     def test_container_without_mpi_libraries(self):
         self._mpi_command_line_option = True

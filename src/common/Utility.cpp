@@ -387,6 +387,7 @@ void createFileIfNecessary(const boost::filesystem::path& path, uid_t uid, gid_t
 }
 
 void copyFile(const boost::filesystem::path& src, const boost::filesystem::path& dst, uid_t uid, gid_t gid) {
+    createFoldersIfNecessary(dst.parent_path(), uid, gid);
     boost::filesystem::remove(dst); // remove dst if already exists
     boost::filesystem::copy_file(src, dst);
     setOwner(dst, uid, gid);
@@ -459,9 +460,29 @@ static boost::filesystem::path getSymlinkTarget(const boost::filesystem::path& p
     return buffer;
 }
 
+/*
+    Appends path1 to path0 resolving symlinks within rootfs. E.g.:
+
+    rootfs = /rootfs
+    path0 = /etc
+    path1 = sarus/sarus.json
+
+    and in rootfs we have:
+
+    /rootfs/etc/sarus -> /etc/sarus-1.0
+    /rootfs/etc/sarus-1.0/sarus.json -> sarus-1.0.json
+
+    then:
+
+    result = /etc/sarus-1.0/sarus-1.0.json
+
+    At the end of the function execution, the optional output parameter 'traversedSymlinks'
+    contains the various symlinks that were traversed during the path resolution process.
+*/
 static boost::filesystem::path appendPathsWithinRootfs( const boost::filesystem::path& rootfs,
                                                         const boost::filesystem::path& path0,
-                                                        const boost::filesystem::path& path1) {
+                                                        const boost::filesystem::path& path1,
+                                                        std::vector<boost::filesystem::path>* traversedSymlinks = nullptr) {
     auto current = path0;
 
     for(const auto& element : path1) {
@@ -472,18 +493,20 @@ static boost::filesystem::path appendPathsWithinRootfs( const boost::filesystem:
             continue;
         }
         else if(element == "..") {
-            if(current > rootfs) {
+            if(current > "/") {
                 current = current.remove_trailing_separator().parent_path();
             }
         }
-        else if(isSymlink(current / element)) {
-            auto target = getSymlinkTarget(current / element);
-            bool isAbsoluteSymlink = target.string()[0] == '/';
-            if(isAbsoluteSymlink) {
-                current = realpathWithinRootfs(rootfs, target);
+        else if(isSymlink(rootfs / current / element)) {
+            if(traversedSymlinks) {
+                traversedSymlinks->push_back(current / element);
+            }
+            auto target = getSymlinkTarget(rootfs / current / element);
+            if(target.is_absolute()) {
+                current = appendPathsWithinRootfs(rootfs, "/", target, traversedSymlinks);
             }
             else {
-                current = appendPathsWithinRootfs(rootfs, current, target);
+                current = appendPathsWithinRootfs(rootfs, current, target, traversedSymlinks);
             }
         }
         else {
@@ -495,12 +518,12 @@ static boost::filesystem::path appendPathsWithinRootfs( const boost::filesystem:
 }
 
 boost::filesystem::path realpathWithinRootfs(const boost::filesystem::path& rootfs, const boost::filesystem::path& path) {
-    if(path.string().substr(0, 1) != "/") {
+    if(!path.is_absolute()) {
         auto message = boost::format("Failed to determine realpath within rootfs. %s is not an absolute path.") % path;
         SARUS_THROW_ERROR(message.str());
     }
 
-    return appendPathsWithinRootfs(rootfs, rootfs, path);
+    return appendPathsWithinRootfs(rootfs, "/", path);
 }
 
 /**
@@ -576,7 +599,21 @@ std::string makeColonSeparatedListOfPaths(const std::vector<boost::filesystem::p
     return s;
 }
 
-std::vector<boost::filesystem::path> getLibrariesFromDynamicLinker(
+boost::filesystem::path getSharedLibLinkerName(const boost::filesystem::path& path) {
+    auto extension = std::string{".so"};
+    auto filename = path.filename().string();
+    auto dot = std::find_end(filename.cbegin(), filename.cend(), extension.cbegin(), extension.cend());
+
+    if(dot == filename.cend() || (dot+3 != filename.cend() && *(dot+3) != '.')) {
+        auto message = boost::format{"Failed to parse linker name from invalid library path '%s'"} % path;
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    filename.erase(dot+3, filename.cend());
+    return filename;
+}
+
+std::vector<boost::filesystem::path> getSharedLibsFromDynamicLinker(
     const boost::filesystem::path& ldconfigPath,
     const boost::filesystem::path& rootDir) {
 
@@ -595,6 +632,120 @@ std::vector<boost::filesystem::path> getLibrariesFromDynamicLinker(
     return libraries;
 }
 
+bool isSharedLib(const boost::filesystem::path& file) {
+    auto filename = file.filename().string();
+
+    // check that extension doesn't end with '.conf', e.g. /etc/ld.so.conf
+    if(boost::ends_with(filename, ".conf")) {
+        return false;
+    }
+
+    // check that extension doesn't end with '.cache', e.g. /etc/ld.so.cache
+    if(boost::ends_with(filename, ".cache")) {
+        return false;
+    }
+
+    // check that extension contains '.so'
+    auto extension = std::string{".so"};
+    auto pos = std::find_end(filename.cbegin(), filename.cend(), extension.cbegin(), extension.cend());
+    if(pos == filename.cend()) {
+        return false;
+    }
+    return pos+3 == filename.cend() || *(pos+3) == '.';
+}
+
+std::vector<std::string> parseSharedLibAbi(const boost::filesystem::path& lib) {
+    if(!isSharedLib(lib)) {
+        auto message = boost::format{"Cannot parse ABI version of '%s': not a shared library"} % lib;
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    auto name = lib.filename().string();
+    auto extension = std::string{".so"};
+
+    auto pos = std::find_end(name.cbegin(), name.cend(), extension.cbegin(), extension.cend());
+
+    if(pos == name.cend()) {
+        auto message = boost::format("Failed to get version numbers of library %s."
+                                     " Expected a library with file extension '%s'.") % lib % extension;
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    if(pos+3 == name.cend()) {
+        return {};
+    }
+
+    auto tokens = std::vector<std::string>{};
+    auto versionString = std::string(pos+4, name.cend());
+    boost::split(tokens, versionString, boost::is_any_of("."));
+
+    return tokens;
+}
+
+std::vector<std::string> resolveSharedLibAbi(const boost::filesystem::path& lib,
+                                             const boost::filesystem::path& rootDir) {
+    if(!isSharedLib(lib)) {
+        auto message = boost::format{"Cannot resolve ABI version of '%s': not a shared library"} % lib;
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    auto longestAbiSoFar = std::vector<std::string>{};
+
+    auto traversedSymlinks = std::vector<boost::filesystem::path>{};
+    auto libReal = appendPathsWithinRootfs(rootDir, "/", lib, &traversedSymlinks);
+    auto pathsToProcess = std::move(traversedSymlinks);
+    pathsToProcess.push_back(std::move(libReal));
+
+    for(const auto& path : pathsToProcess) {
+        if(!isSharedLib(path)) {
+            // some traversed symlinks may not be library filenames,
+            // e.g. with /lib -> /lib64
+            continue;
+        }
+        if(getSharedLibLinkerName(path) != getSharedLibLinkerName(lib)) {
+            // E.g. on Cray we could have:
+            // mpich-gnu-abi/7.1/lib/libmpi.so.12 -> ../../../mpich-gnu/7.1/lib/libmpich_gnu_71.so.3.0.1
+            // Let's ignore the symlink's target in this case
+            continue;
+        }
+
+        auto abi = parseSharedLibAbi(path);
+
+        const auto& shorter = abi.size() < longestAbiSoFar.size() ? abi : longestAbiSoFar;
+        const auto& longer = abi.size() > longestAbiSoFar.size() ? abi : longestAbiSoFar;
+
+        if(!std::equal(shorter.cbegin(), shorter.cend(), longer.cbegin())) {
+            auto message = boost::format("Failed to resolve ABI version of\n%s -> %s\nThe symlink filename"
+                                        " and the target library have incompatible ABI versions.")
+                                        % lib % path;
+            SARUS_THROW_ERROR(message.str());
+        }
+
+        longestAbiSoFar = std::move(longer);
+    }
+
+    return longestAbiSoFar;
+}
+
+bool areAbiVersionsCompatible(const std::vector<std::string>& hostVersion,
+                              const std::vector<std::string>& containerVersion) {
+    // check MAJOR version numbers
+    auto hostMajor = hostVersion.size() > 0 ? std::stoi(hostVersion[0]) : 0;
+    auto containerMajor = containerVersion.size() > 0 ? std::stoi(containerVersion[0]) : 0;
+    if(hostMajor != containerMajor) {
+        return false;
+    }
+
+    // check MINOR version numbers
+    auto hostMinor = hostVersion.size() > 1 ? std::stoi(hostVersion[1]) : 0;
+    auto containerMinor = containerVersion.size() > 1 ? std::stoi(containerVersion[1]) : 0;
+    if(hostMinor < containerMinor) {
+        return false;
+    }
+
+    return true;
+}
+
 bool isLibc(const boost::filesystem::path& lib) {
     boost::cmatch matches;
     boost::regex re("^(.*/)*libc(-\\d+\\.\\d+)?\\.so(.\\d+)?$");
@@ -606,7 +757,7 @@ bool isLibc(const boost::filesystem::path& lib) {
     }
 }
 
-std::string getLibrarySoname(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath) {
+std::string getSharedLibSoname(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath) {
     auto command = boost::format("%s -d %d") % readelfPath % path;
     auto output = sarus::common::executeCommand(command.str());
 
@@ -639,7 +790,7 @@ std::tuple<unsigned int, unsigned int> parseLibcVersion(const boost::filesystem:
     }
 }
 
-bool is64bitLibrary(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath) {
+bool is64bitSharedLib(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath) {
     boost::cmatch matches;
     boost::regex re("^ *Machine: +Advanced Micro Devices X86-64 *$");
 

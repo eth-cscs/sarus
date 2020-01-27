@@ -166,7 +166,6 @@ void Runtime::setupDevFilesystem() const {
 void Runtime::copyEtcFilesIntoRootfs() const {
     utility::logMessage("Copying /etc files into rootfs", common::LogLevel::INFO);
     auto prefixDir = boost::filesystem::path{config->json["prefixDir"].GetString()};
-    common::createFoldersIfNecessary(rootfsDir / "etc", config->userIdentity.uid, config->userIdentity.gid);
 
     common::copyFile(   "/etc/hosts",
                         rootfsDir / "etc/hosts",

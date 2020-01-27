@@ -12,9 +12,10 @@
 #define sarus_hooks_mpi_MpiSupport_hpp
 
 #include <vector>
+#include <unordered_map>
 #include <boost/filesystem.hpp>
-
 #include <sys/types.h>
+#include "common/PathHash.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -22,29 +23,45 @@ namespace mpi {
 
 class MpiHook {
 public:
+    using HostToContainerLibsMap = std::unordered_map<boost::filesystem::path,
+                                                      std::vector<boost::filesystem::path>,
+                                                      sarus::common::PathHash>;
+
+public:
+    MpiHook();
     void activateMpiSupport();
 
 private:
     void parseConfigJSONOfBundle();
     void parseEnvironmentVariables();
-    void replaceMpiLibrariesInContainer() const;
-    void mountDependencyLibrariesIntoContainer() const;
+    HostToContainerLibsMap mapHostToContainerLibraries(const std::vector<boost::filesystem::path>& hostLibs,
+                                                       const std::vector<boost::filesystem::path>& containerLibs) const;
+    void checkHostMpiLibrariesHaveAbiVersion() const;
+    void checkContainerMpiLibrariesHaveAbiVersion() const;
+    void checkHostContainerAbiCompatibility(const HostToContainerLibsMap& hostToContainerLibs) const;
+    void injectHostLibraries(const std::vector<boost::filesystem::path>& hostLibs,
+                             const HostToContainerLibsMap& hostToContainerLibs) const;
+    void injectHostLibrary(const boost::filesystem::path& hostLib,
+                           const HostToContainerLibsMap& hostToContainerLibs) const;
     void performBindMounts() const;
-    bool areLibrariesABICompatible(const boost::filesystem::path& hostLib, const boost::filesystem::path& containerLib) const;
-    bool isLibraryInDefaultLinkerDirectory(const boost::filesystem::path& lib) const;
-    void createSymlinksInDefaultLinkerDirectory(const boost::filesystem::path& lib) const;
-    std::tuple<int, int, int> getVersionNumbersOfLibrary(const boost::filesystem::path& lib) const;
-    std::string getLibraryFilenameWithoutExtension(const boost::filesystem::path& path) const;
+    bool injectHostLibrary(
+        const boost::filesystem::path& hostLib,
+        const std::function<bool(const boost::filesystem::path&, const boost::filesystem::path&)>& abiCompatibilityCheck) const;
+    void createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesystem::path& target,
+                                                        const boost::filesystem::path& linkFilename) const;
 
 private:
     bool isHookEnabled{ false };
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
     pid_t pidOfContainer;
+    boost::filesystem::path ldconfig;
     std::vector<boost::filesystem::path> hostMpiLibs;
-    std::vector<boost::filesystem::path> hostMpiDependencyLibs;
+    std::vector<boost::filesystem::path> hostDependencyLibs;
     std::vector<boost::filesystem::path> bindMounts;
     std::vector<boost::filesystem::path> containerLibraries;
+    HostToContainerLibsMap hostToContainerMpiLibs;
+    HostToContainerLibsMap hostToContainerDependencyLibs;
 };
 
 }}} // namespace

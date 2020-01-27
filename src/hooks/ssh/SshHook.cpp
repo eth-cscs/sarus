@@ -123,8 +123,6 @@ void SshHook::sshKeygen(const boost::filesystem::path& outputFile) const {
 
 void SshHook::copyKeysIntoBundle() const {
     // server keys
-    boost::filesystem::remove(opensshDirInBundle / "etc/ssh_host_rsa_key");
-    boost::filesystem::remove(opensshDirInBundle / "etc/ssh_host_rsa_key.pub");
     sarus::common::copyFile(localRepositoryDir / "ssh/ssh_host_rsa_key",
                             opensshDirInBundle / "etc/ssh_host_rsa_key",
                             uidOfUser, gidOfUser);
@@ -134,8 +132,6 @@ void SshHook::copyKeysIntoBundle() const {
 
     // user keys
     boost::filesystem::remove_all(opensshDirInBundle / "etc/userkeys");
-    sarus::common::createFoldersIfNecessary(opensshDirInBundle / "etc/userkeys",
-                                            uidOfUser, gidOfUser);
     sarus::common::copyFile(localRepositoryDir / "ssh/id_rsa",
                             opensshDirInBundle / "etc/userkeys/id_rsa",
                             uidOfUser, gidOfUser);
