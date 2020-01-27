@@ -45,7 +45,7 @@ class Sarus(CMakePackage):
     depends_on('squashfs', type=('build', 'run'))
     depends_on('boost@1.65.0')
     depends_on('cpprestsdk@2.10.0')
-    depends_on('libarchive@3.3.1')
+    depends_on('libarchive@3.4.1')
     depends_on('rapidjson@663f076', type='build')
 
     depends_on('python@2.7.15', type='run', when='@develop')

@@ -27,5 +27,5 @@ ENV FORCE_UNSAFE_CONFIGURE=1
 RUN spack install --verbose cmake
 RUN spack install --verbose squashfs
 RUN spack install --verbose boost@1.65.0
-RUN spack install --verbose --no-checksum libarchive@3.3.1
+RUN spack install --verbose --no-checksum libarchive@3.4.1
 RUN spack install --verbose python@2.7.15

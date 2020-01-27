@@ -56,7 +56,7 @@ Python 2.7 is required if you are interested to also run the integration tests:
 Additional dependencies
 -----------------------
 
-* `libarchive <https://github.com/libarchive/libarchive>`_ 3.3.1
+* `libarchive <https://github.com/libarchive/libarchive>`_ 3.4.1
 * `Boost libraries <https://www.boost.org/>`_ >= 1.60.x (recommended 1.65.x)
 * `C++ REST SDK <https://github.com/Microsoft/cpprestsdk>`_ v2.10.0
 * `RapidJSON <http://rapidjson.org/index.html>`_ commit 663f076

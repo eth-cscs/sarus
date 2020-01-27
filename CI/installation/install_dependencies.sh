@@ -15,10 +15,10 @@ mkdir -p ${sarus_deps_workdir}
 cd ${sarus_deps_workdir}
 
 # Install libarchive
-mkdir -p libarchive/3.3.1 && cd libarchive/3.3.1
-wget https://github.com/libarchive/libarchive/archive/v3.3.1.tar.gz
-tar xvzf v3.3.1.tar.gz
-mv libarchive-3.3.1 src
+mkdir -p libarchive/3.4.1 && cd libarchive/3.4.1
+wget https://github.com/libarchive/libarchive/releases/download/v3.4.1/libarchive-3.4.1.tar.gz
+tar xvf libarchive-3.4.1.tar.gz
+mv libarchive-3.4.1 src
 mkdir src/build-cmake && cd src/build-cmake
 cmake ..
 make -j$(nproc)

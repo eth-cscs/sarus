@@ -47,7 +47,7 @@ build_sarus_archive() {
     mkdir -p ${build_dir} && cd ${build_dir}
     local prefix_dir=${build_dir}/install/$(git describe --tags --dirty)-${build_type}
     cmake   -DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file} \
-            -DCMAKE_PREFIX_PATH="/opt/boost/1_65_0;/opt/cpprestsdk/v2.10.0;/opt/libarchive/3.3.1;/opt/rapidjson/rapidjson-master" \
+            -DCMAKE_PREFIX_PATH="/opt/boost/1_65_0;/opt/cpprestsdk/v2.10.0;/opt/libarchive/3.4.1;/opt/rapidjson/rapidjson-master" \
             -Dcpprestsdk_INCLUDE_DIR=/opt/cpprestsdk/v2.10.0/include \
             -DCMAKE_BUILD_TYPE=${build_type} \
             -DBUILD_STATIC=TRUE \

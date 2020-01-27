@@ -8,7 +8,7 @@ check_version_numbers_and_doc_build:
       - master
       - develop
   script:
-    - docker_image_build=ethcscs/sarus-ci-build:1.0.0
+    - docker_image_build=ethcscs/sarus-ci-build:1.0.2
     - docker_image_run=ethcscs/sarus-ci-run:1.0.2-a
 
     - ./CI/check_that_version_file_is_up_to_date.sh
@@ -19,7 +19,7 @@ standalone_archive_debug:
   stage: test
   script:
     - . ./CI/utility_functions.bash
-    - docker_image_build=ethcscs/sarus-ci-build:1.0.0
+    - docker_image_build=ethcscs/sarus-ci-build:1.0.2
     - docker_image_run=ethcscs/sarus-ci-run:1.0.2-a
 
     # Build, install, test
@@ -37,7 +37,7 @@ standalone_archive_release:
   stage: test
   script:
     - . ./CI/utility_functions.bash
-    - docker_image_build=ethcscs/sarus-ci-build:1.0.0
+    - docker_image_build=ethcscs/sarus-ci-build:1.0.2
     - docker_image_run=ethcscs/sarus-ci-run:1.0.2-a
 
     # Build, install, test

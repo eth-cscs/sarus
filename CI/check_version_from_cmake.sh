@@ -26,7 +26,7 @@ check_static_snapshot() {
     mkdir -p /home/docker/sarus-static/build
     cp -r $sarus_src_dir/* /home/docker/sarus-static
     cd /home/docker/sarus-static/build
-    cmake   -DCMAKE_PREFIX_PATH="/opt/boost/1_65_0;/opt/cpprestsdk/v2.10.0;/opt/libarchive/3.3.1;/opt/rapidjson/rapidjson-master" \
+    cmake   -DCMAKE_PREFIX_PATH="/opt/boost/1_65_0;/opt/cpprestsdk/v2.10.0;/opt/libarchive/3.4.1;/opt/rapidjson/rapidjson-master" \
             -Dcpprestsdk_INCLUDE_DIR=/opt/cpprestsdk/v2.10.0/include \
             -DBUILD_STATIC=TRUE \
             .. \
@@ -47,7 +47,7 @@ check_git_repo() {
     cp -rT $sarus_src_dir /home/docker/sarus-git
     mkdir /home/docker/sarus-git/build
     cd /home/docker/sarus-git/build
-    cmake   -DCMAKE_PREFIX_PATH="/opt/boost/1_65_0;/opt/cpprestsdk/v2.10.0;/opt/libarchive/3.3.1;/opt/rapidjson/rapidjson-master" \
+    cmake   -DCMAKE_PREFIX_PATH="/opt/boost/1_65_0;/opt/cpprestsdk/v2.10.0;/opt/libarchive/3.4.1;/opt/rapidjson/rapidjson-master" \
             -Dcpprestsdk_INCLUDE_DIR=/opt/cpprestsdk/v2.10.0/include \
             -DBUILD_STATIC=TRUE \
             .. \
