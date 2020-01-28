@@ -26,7 +26,7 @@ TEST(LoadedImageTestGroup, test) {
 
     // expand
     auto archive = boost::filesystem::path{__FILE__}.parent_path() / "saved_image.tar";
-    auto loadedImage = LoadedImage(configRAII.config, archive);
+    auto loadedImage = LoadedImage{configRAII.config, archive};
     common::PathRAII expandedImage;
     common::ImageMetadata metadata;
     std::tie(expandedImage, metadata, std::ignore) = loadedImage.expand();
@@ -47,8 +47,23 @@ TEST(LoadedImageTestGroup, test) {
 TEST(LoadedImageTestGroup, image_with_nonexecutable_directory) {
     auto configRAII = test_utility::config::makeConfig();
     auto archive = boost::filesystem::path{__FILE__}.parent_path() / "saved_image_with_non-executable_dir.tar";
-    auto loadedImage = LoadedImage(configRAII.config, archive);
+    auto loadedImage = LoadedImage{configRAII.config, archive};
     loadedImage.expand();
+}
+
+TEST(LoadedImageTestGroup, image_with_malicious_files) {
+    auto configRAII = test_utility::config::makeConfig();
+    auto archive = boost::filesystem::path{__FILE__}.parent_path() / "saved_image_malicious.tar";
+    auto loadedImage = LoadedImage{configRAII.config, archive};
+    loadedImage.expand();
+
+    // Check:
+    // the image was manually forged in order to create "malicious" files in /tmp,
+    // i.e. files meant to escape the expansion root directory. These checks make
+    // sure that those files are correctly "blocked" and don't exist in /tmp.
+    CHECK(!boost::filesystem::exists("/tmp/malicious-file-through-abs-path"));
+    CHECK(!boost::filesystem::exists("/tmp/malicious-file-through-dotdots"));
+    CHECK(!boost::filesystem::exists("/tmp/malicious-file-through-symlink"));
 }
 
 }}} // namespace

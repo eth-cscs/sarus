@@ -113,8 +113,11 @@ void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::pat
     int flags = ARCHIVE_EXTRACT_TIME
                 | ARCHIVE_EXTRACT_PERM
                 | ARCHIVE_EXTRACT_ACL
-                | ARCHIVE_EXTRACT_FFLAGS;
-    
+                | ARCHIVE_EXTRACT_FFLAGS
+                | ARCHIVE_EXTRACT_SECURE_NOABSOLUTEPATHS
+                | ARCHIVE_EXTRACT_SECURE_NODOTDOT
+                | ARCHIVE_EXTRACT_SECURE_SYMLINKS;
+
     ::archive* arc = archive_read_new();
     archive_read_support_format_all(arc);
     archive_read_support_filter_all(arc);
