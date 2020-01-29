@@ -1,6 +1,6 @@
 # Sarus
 
-Copyright (c) 2018-2019, ETH Zurich. All rights reserved.
+Copyright (c) 2018-2020, ETH Zurich. All rights reserved.
 
 Please, refer to the LICENSE files in the `licenses` directory.
 SPDX-License-Identifier: BSD-3-Clause
