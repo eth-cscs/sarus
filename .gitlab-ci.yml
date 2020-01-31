@@ -8,8 +8,8 @@ check_version_numbers_and_doc_build:
       - master
       - develop
   script:
-    - docker_image_build=ethcscs/sarus-ci-build:1.0.2
-    - docker_image_run=ethcscs/sarus-ci-run:1.0.2-a
+    - docker_image_build=ethcscs/sarus-ci-build:1.1.0
+    - docker_image_run=ethcscs/sarus-ci-run:1.1.0
 
     - ./CI/check_that_version_file_is_up_to_date.sh
     - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_build} /sarus-source/CI/check_version_from_cmake.sh
@@ -19,8 +19,8 @@ standalone_archive_debug:
   stage: test
   script:
     - . ./CI/utility_functions.bash
-    - docker_image_build=ethcscs/sarus-ci-build:1.0.2
-    - docker_image_run=ethcscs/sarus-ci-run:1.0.2-a
+    - docker_image_build=ethcscs/sarus-ci-build:1.1.0
+    - docker_image_run=ethcscs/sarus-ci-run:1.1.0
 
     # Build, install, test
     - build_type=Debug
@@ -37,8 +37,8 @@ standalone_archive_release:
   stage: test
   script:
     - . ./CI/utility_functions.bash
-    - docker_image_build=ethcscs/sarus-ci-build:1.0.2
-    - docker_image_run=ethcscs/sarus-ci-run:1.0.2-a
+    - docker_image_build=ethcscs/sarus-ci-build:1.1.0
+    - docker_image_run=ethcscs/sarus-ci-run:1.1.0
 
     # Build, install, test
     - build_type=Release
@@ -80,5 +80,5 @@ spack_package:
   only:
       - master
   script:
-      - docker_image=ethcscs/sarus-spack:1.0.0-ubuntu16.04
+      - docker_image=ethcscs/sarus-spack:1.1.0-ubuntu16.04
       - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/run_spack_package_test.sh

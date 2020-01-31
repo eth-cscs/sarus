@@ -168,6 +168,7 @@ add the following field:
 
 * ``flags`` (object, OPTIONAL): Object defining the flags for the bind mount.
   Can have the following fields:
+
   - *readonly (string, empty value expected)*: Mount will be performed as
     read-only.
 
