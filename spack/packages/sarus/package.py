@@ -33,7 +33,10 @@ class Sarus(CMakePackage):
     url      = "https://github.com/eth-cscs/sarus/archive/1.0.0-rc6.tar.gz"
     git      = "https://github.com/eth-cscs/sarus.git"
 
-    version('develop', branch='master')
+    version('develop', branch='develop')
+    version('master',  branch='master')
+    version('1.0.1',     'abb8c314a196207204826f7b60e50646')
+    version('1.0.0',     'd913b1d0ef3729f9f41ac5bd06dd5615')
     version('1.0.0-rc7', '26f02cd90bbe57404c259f188eb3cb73')
     version('1.0.0-rc6', '5c803adf10e1f10d34e83c411b07cbb8')
     version('1.0.0-rc5', 'd894a96fa350af8947f06e7e8c73d59f')
