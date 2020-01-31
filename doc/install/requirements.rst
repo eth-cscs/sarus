@@ -45,7 +45,7 @@ Python 2.7 is required if you are interested to also run the integration tests:
 
     # All platforms, after installing Python + pip
     $ pip install setuptools
-    $ pip install nose gcovr pexpect
+    $ pip install pytest gcovr pexpect
 
 .. note::
     If you plan to install Sarus using the Spack package manager, you can skip

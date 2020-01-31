@@ -111,6 +111,10 @@ unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::s
     flagsMap.erase("target");
 
     for (auto const& opt : flagsMap) {
+        // Default to "recursive private" mount
+        flags |= MS_REC;
+        flags |= MS_PRIVATE;
+
         if (opt.first == std::string{"readonly"}) {
             if (validationSettings.allowedFlags.at("readonly") == false) {
                 auto message = boost::format("Invalid mount request '%s': option 'readonly' is not allowed")
@@ -121,6 +125,13 @@ unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::s
             flags |= MS_RDONLY;
         }
         else if (opt.first == std::string{"bind-propagation"}) {
+            utility::printLog(boost::format("WARNING: bind-propagation will be removed from mount options in a future Sarus release. "
+                                            "In the future, all bind-mounts will be performed as rprivate."),
+                                            common::LogLevel::WARN, std::cerr);
+            // Allow option to override default propagation
+            flags ^= MS_REC;
+            flags ^= MS_PRIVATE;
+
             if (opt.second == std::string{"recursive"}) {
                 if (validationSettings.allowedFlags.at("recursive") == false) {
                     auto message = boost::format("Invalid mount request '%s': option 'bind-propagation=recursive' is not allowed")
@@ -169,7 +180,7 @@ unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::s
                 flags |= MS_REC;
             }
             else {
-                auto message = boost::format("Invalid mount request '%s': '%s' is not a valid bind propagation value")
+                auto message = boost::format("Invalid mount request '%s': '%s' is not a valid bind-propagation value")
                     % convertRequestMapToString(requestMap) % opt.second;
                 utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
                 SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
@@ -205,7 +216,7 @@ boost::filesystem::path MountParser::getValidatedMountSource(const std::unordere
         source = requestMap.at("src");
     }
     else {
-        auto message = boost::format("Invalid mount request '%s': no source specified. User either 'source' or 'src'.")
+        auto message = boost::format("Invalid mount request '%s': no source specified. Use either 'source' or 'src'.")
             % convertRequestMapToString(requestMap);
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
@@ -270,7 +281,7 @@ boost::filesystem::path MountParser::getValidatedMountDestination(const std::uno
         destination = requestMap.at("target");
     }
     else {
-        auto message = boost::format("Invalid mount request '%s': no destination specified. User either 'destination', 'dst' or 'target'.")
+        auto message = boost::format("Invalid mount request '%s': no destination specified. Use either 'destination', 'dst' or 'target'.")
             % convertRequestMapToString(requestMap);
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);

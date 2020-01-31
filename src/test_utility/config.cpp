@@ -90,7 +90,7 @@ static void populateJSON(rj::Document& document) {
                             allocator);
     rj::Value flagsValue(rj::kObjectType);
     flagsValue.AddMember(   "bind-propagation",
-                            rj::Value{"slave", allocator},
+                            rj::Value{"rprivate", allocator},
                             allocator);
     mountValue.AddMember(   "flags",
                             flagsValue,

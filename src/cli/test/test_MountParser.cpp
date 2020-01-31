@@ -26,7 +26,10 @@ TEST(MountParserTestGroup, mount_type) {
     // bind
     Checker{"type=bind,source=/src,destination=/dest"};
     // invalid mount type
-    Checker{"type=invalid,souce=/src,destination=/dest"}.expectParseError();
+    Checker{"type=invalid,source=/src,destination=/dest"}.expectParseError();
+    // invalid mount keys
+    Checker{"type=invalid,spicysouce=/src,destination=/dest"}.expectParseError();
+    Checker{"type=invalid,source=/src,nation=/dest"}.expectParseError();
 }
 
 TEST(MountParserTestGroup, source_and_destination_of_bind_mount) {
@@ -51,14 +54,17 @@ TEST(MountParserTestGroup, source_and_destination_of_bind_mount) {
     Checker{"type=bind,source=src,destination=/dest"}.expectParseError();
     Checker{"type=bind,source=/src,destination=dest"}.expectParseError();
 
+    // missing type
+    Checker{"source=src, destination=/dest"}.expectParseError();
+
     // missing path
-    Checker{"type=bind,source=src"}.expectParseError();
+    Checker{"type=bind,source=/src"}.expectParseError();
     Checker{"type=bind,destination=/dest"}.expectParseError();
 
     // disallowed prefixes of destination
     Checker{"type=bind,source=/src,destination=/etc"}.expectParseError();
     Checker{"type=bind,source=/src,destination=/var"}.expectParseError();
-    Checker{"type=bind,source=/src,destination=/opt/sarus"}.expectParseError();
+    Checker{"type=bind,source=/src,destination=/opt"}.expectParseError();
 
     // disallowed destinations
     Checker{"type=bind,source=/src,destination=/opt/sarus"}.expectParseError();
@@ -66,9 +72,10 @@ TEST(MountParserTestGroup, source_and_destination_of_bind_mount) {
 
 TEST(MountParserTestGroup, user_flags_of_bind_mount) {
     Checker{"type=bind,source=/src,destination=/dest,readonly"}
-        .expectFlags({MS_RDONLY});
-    Checker{"type=bind,source=/src,destination=/dest,bind-propagation=recursive"}
-        .expectFlags({MS_REC});
+        .expectFlags({MS_REC | MS_RDONLY | MS_PRIVATE});
+
+    // checks for deprecated "bind-propagation" flag
+    Checker{"type=bind,source=/src,destination=/dest,bind-propagation=recursive"}.expectFlags({MS_REC});
     Checker{"type=bind,source=/src,destination=/dest,bind-propagation=private"}.expectParseError();
     Checker{"type=bind,source=/src,destination=/dest,bind-propagation=rprivate"}.expectParseError();
     Checker{"type=bind,source=/src,destination=/dest,bind-propagation=slave"}.expectParseError();
@@ -77,7 +84,9 @@ TEST(MountParserTestGroup, user_flags_of_bind_mount) {
 
 TEST(MountParserTestGroup, site_flags_of_bind_mount) {
     Checker{"type=bind,source=/src,destination=/dest,readonly"}
-        .parseAsSiteMount().expectFlags(MS_RDONLY);
+        .parseAsSiteMount().expectFlags(MS_REC | MS_RDONLY | MS_PRIVATE);
+
+    // checks for deprecated "bind-propagation" flag
     Checker{"type=bind,source=/src,destination=/dest,bind-propagation=recursive"}
         .parseAsSiteMount().expectFlags(MS_REC);
     Checker{"type=bind,source=/src,destination=/dest,bind-propagation=private"}

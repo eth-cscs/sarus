@@ -387,9 +387,9 @@ the :program:`sarus run` command:
 
     $ srun -N 1 --pty sarus run --mount=type=bind,source=/path/to/my/data,destination=/data -t debian bash
 
-The previous command would cause ``/data`` within the container to be bound to
-``/scratch/path/to/my/data``.
-The option can be specified multiple times, one for each mount to be performed.
+The previous command would cause ``/path/to/my/data`` on the host to be mounted
+as ``/data`` within the container. This mount option can be specified multiple
+times, one for each mount to be performed.
 ``--mount`` accepts a comma-separated list of ``<key>=<value>`` pairs as its
 argument, much alike the Docker option with the same name (for reference, see
 the `official Docker documentation on bind mounts
@@ -401,7 +401,9 @@ Mandatory flags
 ^^^^^^^^^^^^^^^
 
 * ``type``: represents the type of the mount. Currently, only ``bind``
-  (for bind-mounts) is supported
+  (for bind-mounts) is supported.
+* ``source`` (required): Absolute path accessible from the user *on the host*
+  that will be mounted in the container. Can alternatively be specified as ``src``.
 * ``destination``: Absolute path to where the filesystem will be made available
   inside the container. If the directory does not exist, it will be created.
   It is possible to overwrite other bind mounts already present in the
@@ -411,16 +413,11 @@ Mandatory flags
 
 Bind mounts
 ^^^^^^^^^^^
-Regular bind mounts can specify the following flags:
+In addition to the mandatory flags, regular bind mounts can optionally
+add the following flag:
 
-* ``source`` (required): Absolute path accessible from the user *on the host*
-  that will be mounted in the container. Can alternatively be specified as ``src``.
 * ``readonly`` (optional): Causes the filesystem to be mounted as read-only.
   This flag takes no value.
-* ``bind-propagation`` (optional): Specifies the type of bind propagation to
-  use for the mount. Can be one of ``recursive``, ``slave``, ``private``,
-  ``rslave``, ``rprivate`` (the last two values stand for "recursive
-  private" and "recursive slave" respectively).
 
 The following example demonstrates the use of a custom read-only bind mount.
 

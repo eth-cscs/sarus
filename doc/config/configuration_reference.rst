@@ -155,26 +155,25 @@ Each object in the list must define the following fields:
 
 * ``type`` (string): The type of the mount. Currently, only ``bind``
   (for bind-mounts) is supported.
+* ``source`` (string): Absolute path to the host file/directory that
+  will be mounted into the container.
 * ``destination`` (string): Absolute path to where the filesystem will be made
   available inside the container.
   If the directory does not exist, it will be created.
 
 Bind mounts
 ^^^^^^^^^^^
-Bind mount objects can specify the following fields:
+In addition to ``type``, ``source`` and ``destination``, bind mounts can optionally
+add the following field:
 
-* ``source`` (string, REQUIRED): Absolute path to the host file/directory that
-  will be mounted into the container.
 * ``flags`` (object, OPTIONAL): Object defining the flags for the bind mount.
   Can have the following fields:
-
   - *readonly (string, empty value expected)*: Mount will be performed as
     read-only.
-  - *bind-propagation (string)*: Specifies the type of bind propagation to
-    use for the mount. Can be one of ``recursive``, ``slave``, ``private``,
-    ``rslave``, ``rprivate`` (the last two values stand for "recursive
-    private" and "recursive slave" respectively).
 
+By default, bind mounts will always be of ``recursive private`` flavor. Refer to the
+`Linux docs <https://www.kernel.org/doc/Documentation/filesystems/sharedsubtree.txt>`_
+for more details.
 
 General remarks
 ^^^^^^^^^^^^^^^

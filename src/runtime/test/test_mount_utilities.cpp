@@ -97,13 +97,58 @@ TEST(MountUtilitiesTestGroup, bindMount) {
     // check that mounted directory is writable
     common::createFileIfNecessary(toDir / "file-successfull-write-attempt");
 
-    // check that mounted directory is read-only
+    // cleanup
     CHECK(umount(toDir.c_str()) == 0);
+}
+
+TEST(MountUtilitiesTestGroup, bindMountReadOnly) {
+    auto tempDirRAII = common::PathRAII{common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-runtime-bindmount")};
+    const auto& tempDir = tempDirRAII.getPath();
+    auto fromDir = tempDir / "from";
+    auto toDir = tempDir / "to";
+
+    common::createFoldersIfNecessary(fromDir);
+    common::createFoldersIfNecessary(toDir);
+    common::createFileIfNecessary(fromDir / "file");
+
     runtime::bindMount(fromDir, toDir, MS_RDONLY);
+
+    // check that "file" is in the mounted directory
+    CHECK(boost::filesystem::exists(toDir / "file"));
+
+    // check that mounted directory is read-only
     CHECK_THROWS(common::Error, common::createFileIfNecessary(toDir / "file-failed-write-attempt"));
 
     // cleanup
     CHECK(umount(toDir.c_str()) == 0);
+}
+
+TEST(MountUtilitiesTestGroup, bindMountRecursive) {
+    auto tempDirRAII = common::PathRAII{common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-runtime-bindmount")};
+    const auto& tempDir = tempDirRAII.getPath();
+
+    auto a = tempDir / "a";
+    auto b = tempDir / "b";
+    auto c = tempDir / "c";
+    common::createFoldersIfNecessary(a);
+    common::createFoldersIfNecessary(b);
+    common::createFoldersIfNecessary(c);
+
+    common::createFileIfNecessary(c / "d.txt");
+
+    // check that "d.txt" is in the mounted directory
+    CHECK(!boost::filesystem::exists(b / "d.txt"));
+    runtime::bindMount(c, b);
+    CHECK(boost::filesystem::exists(b / "d.txt"));
+
+    // check that mounts are recursive
+    CHECK(!boost::filesystem::exists(a / "d.txt"));
+    runtime::bindMount(b, a, MS_REC);
+    CHECK(boost::filesystem::exists(a / "d.txt"));
+
+    // cleanup
+    CHECK(umount(b.c_str()) == 0);
+    CHECK(umount(a.c_str()) == 0);
 }
 
 TEST(MountUtilitiesTestGroup, loopMountSquashfs) {
