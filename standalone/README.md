@@ -5,24 +5,27 @@ Copyright (c) 2018-2020, ETH Zurich. All rights reserved.
 Please, refer to the LICENSE files in the `licenses` directory.
 SPDX-License-Identifier: BSD-3-Clause
 
-Basic instructions to get started with Sarus standalone follow below.
+To get started with Sarus, follow these simple steps.
 
-Please refer to the Sarus documentation for more information on how to install,
-configure and use Sarus (https://sarus.readthedocs.io).
+1. Get the standalone archive from https://github.com/eth-cscs/sarus/releases and extract it in your installation directory:
 
-1. Get your standanlone `sarus.tar.gz` and extract it in an installation directory.
+        sudo mkdir /opt/sarus && cd /opt/sarus        
+        # Pick your preferred version, this example is for Sarus 1.0.1
+        sudo wget https://github.com/eth-cscs/sarus/releases/download/1.0.1/sarus-Release.tar.gz
+        sudo tar xfv sarus-Release.tar.gz
 
-        sudo mkdir /opt/sarus
-        cd /opt/sarus
-        # download here your sarus.tar.gz from https://github.com/eth-cscs/sarus/releases
-        sudo tar xf sarus.tar.gz
+2. Run the configuration script to finalize the installation of Sarus:
 
-3. Run the configuration script to finalize the installation of Sarus.
-
-        cd /opt/sarus/1.0.1  # adapt folder name to actual version of Sarus
+        # adapt folder name to actual version of Sarus
+        cd /opt/sarus/1.0.1-Release
         sudo ./configure_installation.sh
+        # Follow the printed instructions to add Sarus to your PATH
 
-4. Use Sarus, e.g.:
+3. Try Sarus:
 
-        sarus images
+        sarus version
+        sarus pull alpine
         sarus run alpine cat /etc/os-release
+
+For more information on how to install, configure and use Sarus, 
+please refer to the official documentation at https://sarus.readthedocs.io.
