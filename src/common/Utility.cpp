@@ -540,7 +540,7 @@ std::unordered_map<std::string, std::string> parseMap(const std::string& input,
                                                       const std::string& keyValueSeparators) {
     // check for empty input
     if(input.empty()) {
-        return {};
+        return std::unordered_map<std::string, std::string>{};
     }
 
     auto map = std::unordered_map<std::string, std::string>{};
@@ -602,14 +602,14 @@ std::string makeColonSeparatedListOfPaths(const std::vector<boost::filesystem::p
 boost::filesystem::path getSharedLibLinkerName(const boost::filesystem::path& path) {
     auto extension = std::string{".so"};
     auto filename = path.filename().string();
-    auto dot = std::find_end(filename.cbegin(), filename.cend(), extension.cbegin(), extension.cend());
+    auto dot = std::find_end(filename.begin(), filename.end(), extension.cbegin(), extension.cend());
 
     if(dot == filename.cend() || (dot+3 != filename.cend() && *(dot+3) != '.')) {
         auto message = boost::format{"Failed to parse linker name from invalid library path '%s'"} % path;
         SARUS_THROW_ERROR(message.str());
     }
 
-    filename.erase(dot+3, filename.cend());
+    filename.erase(dot+3, filename.end());
     return filename;
 }
 
