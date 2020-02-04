@@ -40,16 +40,6 @@ check_docs() {
     log "    Check successful"
 }
 
-check_static_snapshot() {
-    log "Building documentation from static snapshot"
-    mkdir /home/docker/sarus-static
-    cp -r $sarus_src_dir/* /home/docker/sarus-static
-    cd /home/docker/sarus-static/doc
-    version_from_file=$(cat ../VERSION)
-    check_links
-    check_docs ${version_from_file}
-}
-
 check_git_repo() {
     log "Building documentation from git repository"
     cp -rT $sarus_src_dir /home/docker/sarus-git
@@ -59,6 +49,5 @@ check_git_repo() {
 }
 
 log "Checking documentation build process"
-check_static_snapshot
 check_git_repo
 cleanup

@@ -2,7 +2,7 @@ stages:
   - test
 
 
-check_version_numbers_and_doc_build:
+check_version_and_docs:
   stage: test
   only:
       - master
@@ -11,7 +11,6 @@ check_version_numbers_and_doc_build:
     - docker_image_build=ethcscs/sarus-ci-build:1.1.0
     - docker_image_run=ethcscs/sarus-ci-run:1.1.0
 
-    - ./CI/check_that_version_file_is_up_to_date.sh
     - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_build} /sarus-source/CI/check_version_from_cmake.sh
     - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_run} /sarus-source/CI/run_documentation_build_test.sh
 

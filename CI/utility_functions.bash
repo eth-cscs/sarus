@@ -71,12 +71,6 @@ build_sarus_archive() {
     cp  ${build_dir}/../standalone/README.md ${build_dir}/../README.md
     cp  ${build_dir}/${archive_name} ${build_dir}/../${archive_name}
 
-    if [ "${TRAVIS}" ]; then
-        # In Travis CI, prepare Github Release Notes.
-        echo "# Release Notes" > ${build_dir}/../release-notes.md
-        git log $(git describe --tags --abbrev=0)..HEAD --oneline | awk '{$1=""; print $0}' >> ${build_dir}/../release-notes.md
-    fi
-
     echo "Successfully built archive"
 }
 

@@ -30,8 +30,7 @@ try:
     full_version = subprocess.check_output(["git", "describe", '--tags'],
                                            universal_newlines=True)
 except:
-    with open('../VERSION') as f:
-        full_version = f.readlines()[0]
+    full_version = "VERSION-NOT-AVAILABLE"
 
 # Set the full version string (including alpha/beta/rc tags) as "release"
 release = full_version
