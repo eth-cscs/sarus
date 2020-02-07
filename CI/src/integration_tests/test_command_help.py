@@ -7,7 +7,6 @@
 
 import unittest
 import subprocess
-import re
 
 
 import common.util as util

@@ -13,8 +13,11 @@
 
 #include <vector>
 #include <unordered_map>
+#include <boost/format.hpp>
 #include <boost/filesystem.hpp>
 #include <sys/types.h>
+
+#include "common/LogLevel.hpp"
 #include "common/PathHash.hpp"
 
 namespace sarus {
@@ -49,6 +52,8 @@ private:
         const std::function<bool(const boost::filesystem::path&, const boost::filesystem::path&)>& abiCompatibilityCheck) const;
     void createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesystem::path& target,
                                                         const boost::filesystem::path& linkFilename) const;
+    void log(const std::string& message, sarus::common::LogLevel level) const;
+    void log(const boost::format& message, sarus::common::LogLevel level) const;
 
 private:
     bool isHookEnabled{ false };

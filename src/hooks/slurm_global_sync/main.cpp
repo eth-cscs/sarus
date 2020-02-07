@@ -10,11 +10,14 @@
 
 #include "common/Error.hpp"
 #include "common/Logger.hpp"
+#include "hooks/common/Utility.hpp"
 #include "Hook.hpp"
 
 
 int main(int argc, char* argv[]) {
     try {
+        sarus::hooks::common::utility::useSarusStdoutStderrIfAvailable();
+        sarus::hooks::common::utility::useSarusLogLevelIfAvailable();
         auto hook = sarus::hooks::slurm_global_sync::Hook{};
         hook.loadConfigs();
         hook.performSynchronization();

@@ -24,6 +24,7 @@
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 
+#include "common/Logger.hpp"
 #include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
 #include "runtime/mount_utilities.hpp"
@@ -33,22 +34,31 @@ namespace hooks {
 namespace mpi {
 
 MpiHook::MpiHook() {
+    log("Initializing hook", sarus::common::LogLevel::INFO);
+
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     sarus::hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
     if(!isHookEnabled) {
+        log("Initialization interrupted (hook disabled)", sarus::common::LogLevel::INFO);
         return;
     }
     parseEnvironmentVariables();
     containerLibraries = sarus::common::getSharedLibsFromDynamicLinker(ldconfig, rootfsDir);
     hostToContainerMpiLibs = mapHostToContainerLibraries(hostMpiLibs, containerLibraries);
     hostToContainerDependencyLibs = mapHostToContainerLibraries(hostDependencyLibs, containerLibraries);
+
+    log("Successfully initialized hook", sarus::common::LogLevel::INFO);
 }
 
 void MpiHook::activateMpiSupport() {
     if(!isHookEnabled) {
+        log("Not activating MPI support (hook disabled)", sarus::common::LogLevel::INFO);
         return;
     }
+
+    log("Activating MPI support", sarus::common::LogLevel::INFO);
+
     if(hostToContainerMpiLibs.empty()) {
         SARUS_THROW_ERROR("Failed to activate MPI support. No MPI libraries"
                           " found in the container. The container should be"
@@ -63,9 +73,13 @@ void MpiHook::activateMpiSupport() {
     injectHostLibraries(hostDependencyLibs, hostToContainerDependencyLibs);
     performBindMounts();
     sarus::common::executeCommand(ldconfig.string() + " -r " + rootfsDir.string()); // update container's dynamic linker
+
+    log("Successfully activated MPI support", sarus::common::LogLevel::INFO);
 }
 
 void MpiHook::parseConfigJSONOfBundle() {
+    log("Parsing bundle's config.json", sarus::common::LogLevel::INFO);
+
     auto json = sarus::common::readJSON(bundleDir / "config.json");
 
     // get rootfs
@@ -76,9 +90,13 @@ void MpiHook::parseConfigJSONOfBundle() {
     if(env["SARUS_MPI_HOOK"] == "1") {
         isHookEnabled = true;
     }
+
+    log("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);
 }
 
 void MpiHook::parseEnvironmentVariables() {
+    log("Parsing environment variables", sarus::common::LogLevel::INFO);
+
     char* p;
 
     if((p = getenv("SARUS_MPI_LDCONFIG_PATH")) == nullptr) {
@@ -98,24 +116,39 @@ void MpiHook::parseEnvironmentVariables() {
     if((p = getenv("SARUS_MPI_BIND_MOUNTS")) != nullptr && std::strcmp(p, "") != 0) {
         boost::split(bindMounts, p, boost::is_any_of(":"), boost::token_compress_on);
     }
+
+    log("Successfully parsed environment variables", sarus::common::LogLevel::INFO);
 }
 
 MpiHook::HostToContainerLibsMap MpiHook::mapHostToContainerLibraries(const std::vector<boost::filesystem::path>& hostLibs,
                                                                      const std::vector<boost::filesystem::path>& containerLibs) const {
+    log("Mapping host's shared libs to container's shared libs",
+        sarus::common::LogLevel::INFO);
+
     auto map = HostToContainerLibsMap{};
 
     for(const auto& hostLib : hostLibs) {
         for(const auto& containerLib : containerLibs) {
             if(sarus::common::getSharedLibLinkerName(hostLib) == sarus::common::getSharedLibLinkerName(containerLib)) {
                 map[hostLib].push_back(containerLib);
+
+                auto message = boost::format("Found mapping: %s (host) -> %s (container)")
+                    % hostLib % containerLib;
+                log(message, sarus::common::LogLevel::DEBUG);
             }
         }
     }
+
+    log("Successfully mapped host's shared libs to container's shared libs",
+        sarus::common::LogLevel::INFO);
 
     return map;
 }
 
 void MpiHook::checkHostMpiLibrariesHaveAbiVersion() const {
+    log("Checking that host's MPI shared libs have ABI version",
+        sarus::common::LogLevel::INFO);
+
     for(const auto lib : hostMpiLibs) {
         auto version = sarus::common::resolveSharedLibAbi(lib);
         if(version.empty()) {
@@ -123,15 +156,21 @@ void MpiHook::checkHostMpiLibrariesHaveAbiVersion() const {
                 "The host's MPI libraries (configured through the env variable SARUS_MPI_LIBS)"
                 " must have at least the MAJOR ABI number, e.g. libmpi.so.<MAJOR>."
                 " Only then can the compatibility between host and container MPI libraries be checked."
-                " Found host's MPI library '%s'."
+                " Found host's MPI library %s."
                 " Please contact your system administrator to solve this issue."
-            ) % lib.string();
+            ) % lib;
             SARUS_THROW_ERROR(message.str());
         }
     }
+
+    log("Successfully checked that host's MPI shared libs have ABI version",
+        sarus::common::LogLevel::INFO);
 }
 
 void MpiHook::checkContainerMpiLibrariesHaveAbiVersion() const {
+    log("Checking that container's MPI shared libs have ABI version",
+        sarus::common::LogLevel::INFO);
+
     for(const auto entry : hostToContainerMpiLibs) {
         bool found = false;
         for(const auto& lib : entry.second) {
@@ -147,15 +186,21 @@ void MpiHook::checkContainerMpiLibrariesHaveAbiVersion() const {
                 "The container's MPI libraries (configured through ldconfig)"
                 " must have at least the MAJOR ABI number, e.g. libmpi.so.<MAJOR>."
                 " Only then can the compatibility between host and container MPI"
-                " libraries be checked. Failed to find a proper '%s' in the container."
+                " libraries be checked. Failed to find a proper %s in the container."
                 " Please adapt your container to meet the ABI compatibility check criteria."
             ) % sarus::common::getSharedLibLinkerName(entry.first);
             SARUS_THROW_ERROR(message.str());
         }
     }
+
+    log("Successfully checked that container's MPI shared libs have ABI version",
+        sarus::common::LogLevel::INFO);
 }
 
 void MpiHook::checkHostContainerAbiCompatibility(const HostToContainerLibsMap& hostToContainerLibs) const {
+    log("Checking shared libs ABI compatibility (host -> container)",
+        sarus::common::LogLevel::INFO);
+
     for(const auto& entry : hostToContainerLibs) {
         for(const auto& containerLib : entry.second) {
             const auto& hostLib = entry.first;
@@ -172,24 +217,33 @@ void MpiHook::checkHostContainerAbiCompatibility(const HostToContainerLibsMap& h
             }
         }
     }
+
+    log("Successfully checked shared libs ABI compatibility (host -> container)",
+        sarus::common::LogLevel::INFO);
 }
 
 void MpiHook::injectHostLibraries(const std::vector<boost::filesystem::path>& hostLibs,
                                   const HostToContainerLibsMap& hostToContainerLibs) const {
+    log("Injecting host's shared libs", sarus::common::LogLevel::INFO);
+
     for(const auto& lib : hostLibs) {
         injectHostLibrary(lib, hostToContainerLibs);
     }
+
+    log("Successfully injected host's shared libs", sarus::common::LogLevel::INFO);
 }
 
 void MpiHook::injectHostLibrary(const boost::filesystem::path& hostLib,
                                 const HostToContainerLibsMap& hostToContainerLibs) const {
+    log(boost::format{"Injecting host's shared lib %s"} % hostLib, sarus::common::LogLevel::DEBUG);
+
     auto it = hostToContainerLibs.find(hostLib);
 
     // no corresponding libs in container => bind mount into /lib
     if(it == hostToContainerDependencyLibs.cend()) {
         sarus::common::createFileIfNecessary(rootfsDir / "lib" / hostLib.filename());
-        auto hostLibReal = sarus::common::realpathWithinRootfs(rootfsDir, "/lib" / hostLib.filename());
-        sarus::runtime::bindMount(hostLib, rootfsDir / hostLibReal);
+        auto containerLibReal = sarus::common::realpathWithinRootfs(rootfsDir, "/lib" / hostLib.filename());
+        sarus::runtime::bindMount(hostLib, rootfsDir / containerLibReal);
         createSymlinksInDynamicLinkerDefaultSearchDirs("/lib" / hostLib.filename(), hostLib.filename());
         return;
     }
@@ -207,14 +261,19 @@ void MpiHook::injectHostLibrary(const boost::filesystem::path& hostLib,
         // not abi-compatible => bind mount into /lib
         else {
             sarus::common::createFileIfNecessary(rootfsDir / "lib" / hostLib.filename());
-            auto hostLibReal = sarus::common::realpathWithinRootfs(rootfsDir, "/lib" / hostLib.filename());
-            sarus::runtime::bindMount(hostLib, rootfsDir / hostLibReal);
+            auto containerLibReal = sarus::common::realpathWithinRootfs(rootfsDir, "/lib" / hostLib.filename());
+            sarus::runtime::bindMount(hostLib, rootfsDir / containerLibReal);
             createSymlinksInDynamicLinkerDefaultSearchDirs("/lib" / hostLib.filename(), hostLib.filename());
         }
     }
+
+    log("Successfully injected host's shared lib", sarus::common::LogLevel::DEBUG);
 }
 
 void MpiHook::performBindMounts() const {
+    log("Performing bind mounts (configured through hook's environment variable SARUS_MPI_BIND_MOUNTS)",
+        sarus::common::LogLevel::INFO);
+
     for(const auto& mount : bindMounts) {
         if(boost::filesystem::is_directory(mount)) {
             sarus::common::createFoldersIfNecessary(rootfsDir / mount);
@@ -224,6 +283,8 @@ void MpiHook::performBindMounts() const {
         }
         sarus::runtime::bindMount(mount, rootfsDir / mount, MS_REC);
     }
+
+    log("Successfully performed bind mounts", sarus::common::LogLevel::INFO);
 }
 
 void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesystem::path& target,
@@ -264,8 +325,19 @@ void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesy
             sarus::common::createFoldersIfNecessary(link.parent_path());
             boost::filesystem::remove(link); // remove if already exists
             boost::filesystem::create_symlink(target, link);
+
+            auto message = boost::format("Created symlink in container %s -> %s") % link % target;
+            log(message, sarus::common::LogLevel::DEBUG);
         }
     }
+}
+
+void MpiHook::log(const std::string& message, sarus::common::LogLevel level) const {
+    sarus::common::Logger::getInstance().log(message, "MPI hook", level);
+}
+
+void MpiHook::log(const boost::format& message, sarus::common::LogLevel level) const {
+    sarus::common::Logger::getInstance().log(message.str(), "MPI hook", level);
 }
 
 }}} // namespace

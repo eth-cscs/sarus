@@ -16,9 +16,10 @@
 #include <iterator>
 #include <boost/format.hpp>
 
-#include "common/Config.hpp"
 #include "common/Error.hpp"
+#include "common/Logger.hpp"
 #include "common/Utility.hpp"
+#include "common/Config.hpp"
 #include "hooks/common/Utility.hpp"
 
 namespace sarus {
@@ -26,12 +27,19 @@ namespace hooks {
 namespace slurm_global_sync {
 
 Hook::Hook() {
+    log("Initializing hook", sarus::common::LogLevel::INFO);
+
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
+
+    log("Successfully initialized hook", sarus::common::LogLevel::INFO);
 }
 
 void Hook::loadConfigs() {
+    log("Loading configuration (based on Slurm environment variables)",
+        sarus::common::LogLevel::INFO);
+
     if(!isHookEnabled) {
         return;
     }
@@ -47,40 +55,64 @@ void Hook::loadConfigs() {
     syncFileArrival = syncDirArrival / ("slurm-procid-" + slurmProcID);
     syncDirDeparture = syncDir / "departure";
     syncFileDeparture = syncDirDeparture / ("slurm-procid-" + slurmProcID);
+
+    log(boost::format{"Sync file arrival: %s"} % syncFileArrival, sarus::common::LogLevel::DEBUG);
+    log(boost::format{"Sync file departure: %s"} % syncFileDeparture, sarus::common::LogLevel::DEBUG);
+
+    log("Successfully loaded configuration", sarus::common::LogLevel::INFO);
 }
 
 void Hook::performSynchronization() const {
     if(!isHookEnabled) {
+        log("Not performing synchronization (hook disabled)", sarus::common::LogLevel::INFO);
         return;
     }
 
+    log("Performing synchronization", sarus::common::LogLevel::INFO);
+
+    synchronizeArrival();
+    synchronizeDeparture();
+
+    log("Successfully performed synchronization", sarus::common::LogLevel::INFO);
+}
+
+void Hook::synchronizeArrival() const {
     signalArrival();
+    log("Waiting for arrival of all container instances", sarus::common::LogLevel::DEBUG);
     while(!allInstancesArrived()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+    log("Successfully waited for arrival of all container instances", sarus::common::LogLevel::DEBUG);
+}
 
+void Hook::synchronizeDeparture() const {
     signalDeparture();
-
     if(slurmProcID == "0") {
+        log("Waiting for departure of all container instances", sarus::common::LogLevel::DEBUG);
         while(!allInstancesDeparted()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-
+        log("Successfully waited for departure of all container instances", sarus::common::LogLevel::DEBUG);
         cleanupSyncDir();
     }
 }
 
 void Hook::signalArrival() const {
-    std::cout << "hook creates sync file arrival: " << syncFileArrival << std::endl;
     createSyncFile(syncFileArrival);
+    log(boost::format{"Signalled arrival (created sync file %s)"} % syncFileArrival,
+        sarus::common::LogLevel::DEBUG);
 }
 
 void Hook::signalDeparture() const {
     createSyncFile(syncFileDeparture);
+    log(boost::format{"Signalled departure (created sync file %s)"} % syncFileDeparture,
+        sarus::common::LogLevel::DEBUG);
 }
 
 void Hook::cleanupSyncDir() const {
     boost::filesystem::remove_all(syncDir);
+    log(boost::format{"Cleaned up sync directory %s"} % syncDir,
+        sarus::common::LogLevel::DEBUG);
 }
 
 bool Hook::allInstancesArrived() const {
@@ -132,6 +164,14 @@ void Hook::parseConfigJSONOfBundle() {
     // get uid + gid of user
     uidOfUser = json["process"]["user"]["uid"].GetInt();
     gidOfUser = json["process"]["user"]["gid"].GetInt();
+}
+
+void Hook::log(const std::string& message, sarus::common::LogLevel level) const {
+    sarus::common::Logger::getInstance().log(message, "Slurm global sync hook", level);
+}
+
+void Hook::log(const boost::format& message, sarus::common::LogLevel level) const {
+    sarus::common::Logger::getInstance().log(message.str(), "Slurm global sync hook", level);
 }
 
 }}} // namesapce

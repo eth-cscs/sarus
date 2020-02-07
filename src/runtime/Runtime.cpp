@@ -10,6 +10,7 @@
 
 #include "Runtime.hpp"
 
+#include <type_traits>
 #include <cerrno>
 #include <cstring>
 #include <sched.h>
@@ -55,6 +56,7 @@ void Runtime::setupOCIBundle() {
     fdHandler.preservePMIFdIfAny();
     fdHandler.passStdoutAndStderrToHooks();
     fdHandler.applyChangesToFdsAndEnvVariables();
+    passLogLevelToHooks();
     bundleConfig.generateConfigFile();
 
     utility::logMessage("Successfully set up OCI Bundle", common::LogLevel::INFO);
@@ -216,6 +218,12 @@ void Runtime::remountRootfsWithNoSuid() const {
         SARUS_THROW_ERROR(message.str());
     }
     utility::logMessage("Successfully remounted rootfs with MS_NOSUID", common::LogLevel::INFO);
+}
+
+void Runtime::passLogLevelToHooks() {
+    using IntType = typename std::underlying_type<common::LogLevel>::type;
+    auto level = static_cast<IntType>(common::Logger::getInstance().getLevel());
+    config->commandRun.hooksEnvironment["SARUS_LOG_LEVEL"] = std::to_string(level);
 }
 
 } // namespace

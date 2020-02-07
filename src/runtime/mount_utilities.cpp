@@ -108,6 +108,8 @@ dev_t getDevice(const boost::filesystem::path& path) {
 
 
 void bindMount(const boost::filesystem::path& from, const boost::filesystem::path& to, unsigned long flags) {
+    utility::logMessage(boost::format{"Bind mounting %s -> %s"} % from % to, common::LogLevel::DEBUG);
+
     unsigned long flagsForBindMount = MS_BIND;
     unsigned long flagsForRemount = MS_REMOUNT | MS_BIND | MS_NOSUID;
     unsigned long flagsForPropagationRemount = 0;

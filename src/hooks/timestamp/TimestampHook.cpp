@@ -22,8 +22,9 @@ namespace sarus {
 namespace hooks {
 namespace timestamp {
 
-
 void TimestampHook::activate() {
+    hooks::common::utility::useSarusStdoutStderrIfAvailable();
+    hooks::common::utility::useSarusLogLevelIfAvailable();
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     sarus::hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();

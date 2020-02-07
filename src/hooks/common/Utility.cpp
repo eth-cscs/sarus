@@ -19,6 +19,7 @@
 
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
+#include "common/Logger.hpp"
 
 namespace rj = rapidjson;
 
@@ -26,6 +27,36 @@ namespace sarus {
 namespace hooks {
 namespace common {
 namespace utility {
+
+static void replaceFdIfAvailable(int oldfd, const std::string& newfdEnvVariable) {
+    char* p;
+    if((p = getenv(newfdEnvVariable.c_str())) == nullptr) {
+        return;
+    }
+    auto newfd = std::stoi(p);
+    if(dup2(newfd, oldfd) == -1) {
+        auto message = boost::format("Failed to use %s with 'dup(%d, %d)': %s")
+            % newfdEnvVariable
+            % oldfd
+            % newfd
+            % std::strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+}
+
+void useSarusStdoutStderrIfAvailable() {
+    replaceFdIfAvailable(1, "SARUS_STDOUT_FD");
+    replaceFdIfAvailable(2, "SARUS_STDERR_FD");
+}
+
+void useSarusLogLevelIfAvailable() {
+    char* p;
+    if((p = getenv("SARUS_LOG_LEVEL")) == nullptr) {
+        return;
+    }
+    auto level = static_cast<sarus::common::LogLevel>(std::stoll(p));
+    sarus::common::Logger::getInstance().setLevel(level);
+}
 
 std::tuple<boost::filesystem::path, pid_t> parseStateOfContainerFromStdin() {
     rj::Document state;
@@ -78,27 +109,6 @@ void enterNamespacesOfProcess(pid_t pid) {
         auto file = boost::format("/proc/%s/ns/pid") % pid;
         enterNamespace(file.str());
     }
-}
-
-static void replaceFdIfAvailable(int oldfd, const std::string& newfdEnvVariable) {
-    char* p;
-    if((p = getenv(newfdEnvVariable.c_str())) == nullptr) {
-        return;
-    }
-    auto newfd = std::stoi(p);
-    if(dup2(newfd, oldfd) == -1) {
-        auto message = boost::format("Failed to use %s with 'dup(%d, %d)': %s")
-            % newfdEnvVariable
-            % oldfd
-            % newfd
-            % std::strerror(errno);
-        SARUS_THROW_ERROR(message.str());
-    }
-}
-
-void useSarusStdoutStderrIfAvailable() {
-    replaceFdIfAvailable(1, "SARUS_STDOUT_FD");
-    replaceFdIfAvailable(2, "SARUS_STDERR_FD");
 }
 
 }}}} // namespace

@@ -22,10 +22,11 @@ namespace hooks {
 namespace common {
 namespace utility {
 
+void useSarusStdoutStderrIfAvailable();
+void useSarusLogLevelIfAvailable();
 std::tuple<boost::filesystem::path, pid_t> parseStateOfContainerFromStdin();
 std::unordered_map<std::string, std::string> parseEnvironmentVariablesFromOCIBundle(const boost::filesystem::path&);
 void enterNamespacesOfProcess(pid_t);
-void useSarusStdoutStderrIfAvailable();
 
 }}}} // namespace
 

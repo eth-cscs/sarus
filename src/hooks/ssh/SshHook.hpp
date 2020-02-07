@@ -44,10 +44,8 @@ private:
     void bindMountSshBinary() const;
     void patchPasswdIfNecessary() const;
     void startSshdInContainer() const;
-    void logMessage(const boost::format& message, sarus::common::LogLevel level,
-                    std::ostream& out = std::cout, std::ostream& err = std::cerr) const;
-    void logMessage(const std::string& message, sarus::common::LogLevel level,
-                std::ostream& out = std::cout, std::ostream& err = std::cerr) const;
+    void log(const boost::format& message, sarus::common::LogLevel level) const;
+    void log(const std::string& message, sarus::common::LogLevel level) const;
 
 private:
     bool isHookEnabled = false;

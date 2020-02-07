@@ -24,6 +24,7 @@ namespace glibc {
 
 class GlibcHook {
 public:
+    GlibcHook();
     void injectGlibcLibrariesIfNecessary();
 
 private:

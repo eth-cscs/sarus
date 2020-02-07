@@ -36,6 +36,7 @@ private:
     void mountInitProgramIntoRootfsIfNecessary() const;
     void performCustomMounts() const;
     void remountRootfsWithNoSuid() const;
+    void passLogLevelToHooks();
 
 private:
     std::shared_ptr<common::Config> config;

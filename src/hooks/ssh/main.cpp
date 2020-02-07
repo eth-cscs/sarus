@@ -22,6 +22,9 @@
 
 int main(int argc, char* argv[]) {
     try {
+        sarus::hooks::common::utility::useSarusStdoutStderrIfAvailable();
+        sarus::hooks::common::utility::useSarusLogLevelIfAvailable();
+
         if(argc < 2) {
             SARUS_THROW_ERROR("Failed to execute SSH hook."
                               " Bad number of CLI arguments.");

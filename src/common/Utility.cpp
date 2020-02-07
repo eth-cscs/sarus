@@ -348,6 +348,10 @@ std::string generateRandomString(size_t size) {
 void createFoldersIfNecessary(const boost::filesystem::path& path, uid_t uid, gid_t gid) {
     auto currentPath = boost::filesystem::path("");
 
+    if(!boost::filesystem::exists(path)) {
+        logMessage(boost::format{"Creating directory %s"} % path, LogLevel::DEBUG);
+    }
+
     for(const auto& element : path) {
         currentPath /= element;
         if(!boost::filesystem::exists(currentPath)) {
@@ -374,6 +378,7 @@ void createFoldersIfNecessary(const boost::filesystem::path& path, uid_t uid, gi
 
 void createFileIfNecessary(const boost::filesystem::path& path, uid_t uid, gid_t gid) {
     if(!boost::filesystem::exists(path)) {
+        logMessage(boost::format{"Creating file %s"} % path, LogLevel::DEBUG);
         if(!boost::filesystem::exists(path.parent_path())) {
             createFoldersIfNecessary(path.parent_path(), uid, gid);
         }
@@ -387,6 +392,7 @@ void createFileIfNecessary(const boost::filesystem::path& path, uid_t uid, gid_t
 }
 
 void copyFile(const boost::filesystem::path& src, const boost::filesystem::path& dst, uid_t uid, gid_t gid) {
+    logMessage(boost::format{"Copying %s -> %s"} % src % dst, LogLevel::DEBUG);
     createFoldersIfNecessary(dst.parent_path(), uid, gid);
     boost::filesystem::remove(dst); // remove dst if already exists
     boost::filesystem::copy_file(src, dst);

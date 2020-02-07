@@ -12,9 +12,11 @@
 #define sarus_hooks_SlurmGlobalSyncHook_hpp
 
 #include <linux/types.h>
+#include <boost/format.hpp>
 #include <boost/filesystem.hpp>
 #include <rapidjson/document.h>
 
+#include "common/LogLevel.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -38,8 +40,12 @@ private:
     void parseConfigJSONOfBundle();
     std::string getEnvironmentVariableInOCIBundleConfig(const rapidjson::Document& json,
                                                         const std::string& key) const;
+    void synchronizeArrival() const;
+    void synchronizeDeparture() const;
     void createSyncFile(const boost::filesystem::path& file) const;
     size_t countFilesInDirectory(const boost::filesystem::path& directory) const;
+    void log(const std::string& message, sarus::common::LogLevel level) const;
+    void log(const boost::format& message, sarus::common::LogLevel level) const;
 
 private:
     bool isHookEnabled{ true };

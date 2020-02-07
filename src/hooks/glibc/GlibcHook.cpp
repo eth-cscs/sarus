@@ -31,13 +31,14 @@ namespace sarus {
 namespace hooks {
 namespace glibc {
 
-
-void GlibcHook::injectGlibcLibrariesIfNecessary() {
+GlibcHook::GlibcHook() {
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     sarus::hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
-    hooks::common::utility::useSarusStdoutStderrIfAvailable();
     parseEnvironmentVariables();
+}
+
+void GlibcHook::injectGlibcLibrariesIfNecessary() {
     auto hostLibc = findLibc(hostLibraries);
     if(!hostLibc) {
         SARUS_THROW_ERROR(  "Failed to inject glibc libraries. Could not find the host's libc."

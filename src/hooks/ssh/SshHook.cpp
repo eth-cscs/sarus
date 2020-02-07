@@ -31,9 +31,13 @@ namespace sarus {
 namespace hooks {
 namespace ssh {
 
-SshHook::SshHook(std::shared_ptr<sarus::common::Config> config): config(config) {}
+SshHook::SshHook(std::shared_ptr<sarus::common::Config> config)
+    : config(config)
+{}
 
 void SshHook::generateSshKeys(bool overwriteSshKeysIfExist) {
+    log("Generating SSH keys", sarus::common::LogLevel::INFO);
+
     uidOfUser = getuid(); // keygen command is executed with user identity
     gidOfUser = getgid();
     config->userIdentity.uid = uidOfUser;
@@ -46,29 +50,39 @@ void SshHook::generateSshKeys(bool overwriteSshKeysIfExist) {
         auto message = boost::format("SSH keys not generated because they already exist in %s."
                                      " Use the '--overwrite' option to overwrite the existing keys.")
                         % getKeysDirInLocalRepository().string();
-        logMessage(message, sarus::common::LogLevel::GENERAL);
+        log(message, sarus::common::LogLevel::GENERAL);
         return;
     }
     boost::filesystem::remove_all(getKeysDirInLocalRepository());
     sarus::common::createFoldersIfNecessary(getKeysDirInLocalRepository());
     sshKeygen(getKeysDirInLocalRepository() / "ssh_host_rsa_key");
     sshKeygen(getKeysDirInLocalRepository() / "id_rsa");
-    logMessage("Successfully generated SSH keys", sarus::common::LogLevel::GENERAL);
+
+    log("Successfully generated SSH keys", sarus::common::LogLevel::GENERAL);
+    log("Successfully generated SSH keys", sarus::common::LogLevel::INFO);
 }
 
 void SshHook::checkLocalRepositoryHasSshKeys() {
+    log("Checking that user's local repository has SSH keys", sarus::common::LogLevel::INFO);
+
     localRepositoryDir = sarus::common::getEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR");
     if(!localRepositoryHasSshKeys()) {
+        log("Could not find SSH keys in user local repository", sarus::common::LogLevel::INFO);
         exit(EXIT_FAILURE); // exit with non-zero to communicate missing keys to calling process (sarus)
     }
+
+    log("Successfully checked that user's local repository has SSH keys", sarus::common::LogLevel::INFO);
 }
 
 void SshHook::startSshd() {
+    log("Activating SSH in container", sarus::common::LogLevel::INFO);
+
     opensshDirInHost = sarus::common::getEnvironmentVariable("SARUS_OPENSSH_DIR");
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
     if(!isHookEnabled) {
+        log("Not activating SSH in container (hook disabled)", sarus::common::LogLevel::INFO);
         return;
     }
     config->userIdentity.uid = uidOfUser;
@@ -80,9 +94,13 @@ void SshHook::startSshd() {
     patchPasswdIfNecessary();
     startSshdInContainer();
     bindMountSshBinary();
+
+    log("Successfully activated SSH in container", sarus::common::LogLevel::INFO);
 }
 
 void SshHook::parseConfigJSONOfBundle() {
+    log("Parsing bundle's config.json", sarus::common::LogLevel::INFO);
+
     auto json = sarus::common::readJSON(bundleDir / "config.json");
 
     // get rootfs
@@ -98,15 +116,21 @@ void SshHook::parseConfigJSONOfBundle() {
     if(env["SARUS_SSH_HOOK"] == "1") {
         isHookEnabled = true;
     }
+
+    log("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);
 }
 
 bool SshHook::localRepositoryHasSshKeys() const {
     auto expectedKeyFiles = std::vector<std::string>{"ssh_host_rsa_key", "ssh_host_rsa_key.pub", "id_rsa", "id_rsa.pub"};
     for(const auto& file : expectedKeyFiles) {
-        if(!boost::filesystem::exists(getKeysDirInLocalRepository() / file)) {
+        auto fullPath = getKeysDirInLocalRepository() / file;
+        if(!boost::filesystem::exists(fullPath)) {
+            auto message = boost::format{"Expected SSH key file %s not found"} % fullPath;
+            log(message, sarus::common::LogLevel::DEBUG);
             return false;
         }
     }
+    log(boost::format{"Found SSH keys in %s"} % getKeysDirInLocalRepository(), sarus::common::LogLevel::DEBUG);
     return true;
 }
 
@@ -118,10 +142,13 @@ void SshHook::sshKeygen(const boost::filesystem::path& outputFile) const {
     auto command = boost::format("%s/bin/ssh-keygen -t rsa -f %s -N \"\"")
         % opensshDirInHost
         % outputFile;
+    log(boost::format{"Executing command '%s'"} % command, sarus::common::LogLevel::DEBUG);
     sarus::common::executeCommand(command.str());
 }
 
 void SshHook::copyKeysIntoBundle() const {
+    log("Copying SSH keys into bundle", sarus::common::LogLevel::INFO);
+
     // server keys
     sarus::common::copyFile(localRepositoryDir / "ssh/ssh_host_rsa_key",
                             opensshDirInBundle / "etc/ssh_host_rsa_key",
@@ -141,6 +168,8 @@ void SshHook::copyKeysIntoBundle() const {
     sarus::common::copyFile(localRepositoryDir / "ssh/id_rsa.pub",
                             opensshDirInBundle / "etc/userkeys/authorized_keys",
                             uidOfUser, gidOfUser);
+
+    log("Successfully copied SSH keys into bundle", sarus::common::LogLevel::INFO);
 }
 
 void SshHook::bindMountSshBinary() const {
@@ -149,6 +178,9 @@ void SshHook::bindMountSshBinary() const {
 }
 
 void SshHook::patchPasswdIfNecessary() const {
+    log("Patching container's /etc/passwd if necessary"
+        " (ensure that command interpreter is valid)", sarus::common::LogLevel::INFO);
+
     auto passwd = sarus::common::PasswdDB{};
     passwd.read(rootfsDir / "etc/passwd");
     for(auto& entry : passwd.getEntries()) {
@@ -158,9 +190,13 @@ void SshHook::patchPasswdIfNecessary() const {
         }
     }
     passwd.write(rootfsDir / "etc/passwd");
+
+    log("Successfully patched container's /etc/passwd", sarus::common::LogLevel::INFO);
 }
 
 void SshHook::startSshdInContainer() const {
+    log("Starting sshd in container", sarus::common::LogLevel::INFO);
+
     std::function<void()> preExecActions = [this]() {
         if(chroot(rootfsDir.c_str()) != 0) {
             auto message = boost::format("Failed to chroot to %s: %s")
@@ -214,17 +250,17 @@ void SshHook::startSshdInContainer() const {
             % status;
         SARUS_THROW_ERROR(message.str());
     }
+
+    log("Successfully started sshd in container", sarus::common::LogLevel::INFO);
 }
 
-void SshHook::logMessage(const boost::format& message, sarus::common::LogLevel level,
-                         std::ostream& out, std::ostream& err) const {
-    logMessage(message.str(), level, out, err);
+void SshHook::log(const boost::format& message, sarus::common::LogLevel level) const {
+    log(message.str(), level);
 }
 
-void SshHook::logMessage(const std::string& message, sarus::common::LogLevel level,
-                         std::ostream& out, std::ostream& err) const {
-    auto subsystemName = "ssh-hook";
-    sarus::common::Logger::getInstance().log(message, subsystemName, level, out, err);
+void SshHook::log(const std::string& message, sarus::common::LogLevel level) const {
+    auto subsystemName = "SSH hook";
+    sarus::common::Logger::getInstance().log(message, subsystemName, level);
 }
 
 }}} // namespace
