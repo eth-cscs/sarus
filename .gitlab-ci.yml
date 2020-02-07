@@ -1,29 +1,29 @@
 stages:
-  - test
+  - build_sarus_images
+  - build_sarus_and_test
+  - build_sarus_from_scratch_and_test
+  - publish_sarus_images
 
+build_sarus_images:
+  stage: build_sarus_images
+  script:
+    - . CI/utility_docker_functions.bash
+    - sarus-build-images
 
 check_version_and_docs:
-  stage: test
+  stage: build_sarus_and_test
   only:
-      - master
-      - develop
+    - master
+    - develop
   script:
-    - docker_image_build=ethcscs/sarus-ci-build:1.1.0
-    - docker_image_run=ethcscs/sarus-ci-run:1.1.0
-
-    - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_build} /sarus-source/CI/check_version_from_cmake.sh
-    - docker run --tty --rm -v $(pwd):/sarus-source ${docker_image_run} /sarus-source/CI/run_documentation_build_test.sh
+    - . CI/utility_docker_functions.bash
+    - sarus-check-version-and-docs
 
 standalone_archive_debug:
-  stage: test
+  stage: build_sarus_and_test
   script:
-    - . ./CI/utility_functions.bash
-    - docker_image_build=ethcscs/sarus-ci-build:1.1.0
-    - docker_image_run=ethcscs/sarus-ci-run:1.1.0
-
-    # Build, install, test
-    - build_type=Debug
-    - build_install_test_sarus ${build_type} ${docker_image_build} ${docker_image_run}
+    - . ./CI/utility_docker_functions.bash
+    - sarus-build-and-test $(pwd) Debug /users/gitlab-runner/cache/ids/sarus
 
   artifacts:
     name: "sarus-Debug-$CI_COMMIT_REF_NAME"
@@ -31,17 +31,11 @@ standalone_archive_debug:
       - sarus-Debug.tar.gz
       - README.md
 
-
 standalone_archive_release:
-  stage: test
+  stage: build_sarus_and_test
   script:
-    - . ./CI/utility_functions.bash
-    - docker_image_build=ethcscs/sarus-ci-build:1.1.0
-    - docker_image_run=ethcscs/sarus-ci-run:1.1.0
-
-    # Build, install, test
-    - build_type=Release
-    - build_install_test_sarus ${build_type} ${docker_image_build} ${docker_image_run}
+    - . ./CI/utility_docker_functions.bash
+    - sarus-build-and-test $(pwd) Release /users/gitlab-runner/cache/ids/sarus
 
   artifacts:
     name: "sarus-Release-$CI_COMMIT_REF_NAME"
@@ -49,39 +43,49 @@ standalone_archive_release:
       - sarus-Release.tar.gz
       - README.md
 
-
+# TODO PART 2: Remove duplicated scripts of all these build_from_source
 from_source_ubuntu18.04:
-  stage: test
+  stage: build_sarus_from_scratch_and_test
   only:
       - master
       - develop
   script:
-      - docker_image=ubuntu:18.04
-      - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/installation/test_driver.sh ${docker_image}
+      - . ./CI/utility_docker_functions.bash
+      - sarus-build-test-from-scratch $(pwd) ubuntu:18.04
 
 from_source_debian10:
-  stage: test
+  stage: build_sarus_from_scratch_and_test
   only:
       - master
       - develop
   script:
-      - docker_image=debian:10
-      - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/installation/test_driver.sh ${docker_image}
+      - . ./CI/utility_docker_functions.bash
+      - sarus-build-test-from-scratch $(pwd) debian:10
 
 from_source_centos7:
-  stage: test
+  stage: build_sarus_from_scratch_and_test
   only:
       - master
       - develop
   script:
-      - docker_image=centos:7
-      - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/installation/test_driver.sh ${docker_image}
+      - . ./CI/utility_docker_functions.bash
+      - sarus-build-test-from-scratch $(pwd) centos:7
 
 spack_package:
-  stage: test
+  stage: build_sarus_from_scratch_and_test
+  # TODO PART 2: Align spack image creation
   only:
       - master
       - develop
   script:
       - docker_image=ethcscs/sarus-spack:1.1.0-ubuntu16.04
       - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/run_spack_package_test.sh
+
+publish_sarus_images:
+  stage: publish_sarus_images
+  only:
+    - master
+    - develop
+  script:
+    - . ./CI/utility_docker_functions.bash
+    - sarus-publish-images

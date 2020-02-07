@@ -1,6 +1,18 @@
+#
+# Sarus
+#
+# Copyright (c) 2018-2020, ETH Zurich. All rights reserved.
+#
+# Please, refer to the LICENSE file in the root directory.
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# -------------------------------------------
+#
+# Docker Image used to run Sarus tests.
+# It expects the standalone already built (see Dockerfile.build)
+# See utility_docker_functions.bash.
+#
 FROM ubuntu:18.04
-
-LABEL version="1.1.0"
 
 RUN apt-get update --fix-missing \
     && apt-get install -y --no-install-recommends \
@@ -18,4 +30,5 @@ RUN echo "docker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 USER docker
 WORKDIR /home/docker
+
 CMD ["/bin/bash"]

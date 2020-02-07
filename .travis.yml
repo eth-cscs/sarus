@@ -7,23 +7,22 @@ before_install:
   - docker --version
 
 install:
-  - docker pull ethcscs/sarus-ci-build:1.1.0
-  - docker pull ethcscs/sarus-ci-run:1.1.0
+  - . CI/utility_docker_functions.bash
+  - sarus-build-images
 
 jobs:
   include:
-    - stage: "Sarus Tests"
+    - stage: "Build Sarus and Test"
       name: "Version and Docs"
-      script:
-      - docker run --tty --rm -v ${TRAVIS_BUILD_DIR}:/sarus-source ethcscs/sarus-ci-build:1.1.0
-        /sarus-source/CI/check_version_from_cmake.sh
-      - docker run --tty --rm -v ${TRAVIS_BUILD_DIR}:/sarus-source ethcscs/sarus-ci-run:1.1.0
-        /sarus-source/CI/run_documentation_build_test.sh
       if: branch IN (master, develop)
+      script:
+      - . CI/utility_docker_functions.bash
+      - sarus-check-version-and-docs ${TRAVIS_BUILD_DIR}
+
     - name: "Standalone + Unit and Integration tests"
       script:
       - ". ./CI/utility_functions.bash"
-      - build_install_test_sarus Release ethcscs/sarus-ci-build:1.1.0 ethcscs/sarus-ci-run:1.1.0
+      - sarus-build-and-test ${TRAVIS_BUILD_DIR} Release
       deploy:
         provider: releases
         name: ${TRAVIS_BRANCH}
@@ -39,26 +38,31 @@ jobs:
         on:
           repo: eth-cscs/sarus
           branch: master
+
+    - name: "Test install from source Ubuntu 18.04"
+      if: branch IN (master, develop)
+      script:
+      - . ./CI/utility_docker_functions.bash
+      - sarus-build-test-from-scratch $(pwd) ubuntu:18.04
+
+    - name: "Test install from source Debian 10"
+      if: branch IM (master, develop)
+      script:
+      - . ./CI/utility_docker_functions.bash
+      - sarus-build-test-from-scratch $(pwd) debian:10
+
+    - name: "Test install from source CentOS 7"
+      if: branch IN (master, develop)
+      script:
+      - . ./CI/utility_docker_functions.bash
+      - sarus-build-test-from-scratch $(pwd) centos:7
+
+    # TODO PART 2: Align spack image creation
     - name: "Test Spack"
+      if: branch IN (master, develop)
       script:
       - docker_image=ethcscs/sarus-spack:1.1.0-ubuntu16.04
       - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/run_spack_package_test.sh
-      if: branch IN (master, develop)
-    - name: "Test install from source Ubuntu 18.04"
-      script:
-      - docker_image=ubuntu:18.04
-      - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/installation/test_driver.sh ${docker_image}
-      if: branch IN (master, develop)
-    - name: "Test install from source Debian 10"
-      script:
-      - docker_image=debian:10
-      - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/installation/test_driver.sh ${docker_image}
-      if: branch IM (master, develop)
-    - name: "Test install from source CentOS 7"
-      script:
-      - docker_image=centos:7
-      - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/installation/test_driver.sh ${docker_image}
-      if: branch IN (master, develop)
 
 notifications:
   email: false

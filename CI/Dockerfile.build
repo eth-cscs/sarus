@@ -1,60 +1,47 @@
+#
+# Sarus
+#
+# Copyright (c) 2018-2020, ETH Zurich. All rights reserved.
+#
+# Please, refer to the LICENSE file in the root directory.
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# -------------------------------------------
+#
+# Docker Image used to build Sarus from its source,
+# but with cached dependencies already in this build image.
+# See utility_docker_functions.bash.
+#
 FROM alpine:3.9
-
-LABEL version="1.1.0"
 
 RUN apk update \
     && apk add bash sudo shadow tar rsync git cmake make gcc g++ squashfs-tools \
                perl linux-headers expat-dev openssl-dev zlib-dev
 
-# libarchive
-RUN cd /opt/ \
-    && mkdir -p libarchive/3.4.1 \
-    && cd libarchive/3.4.1 \
-    && wget https://github.com/libarchive/libarchive/releases/download/v3.4.1/libarchive-3.4.1.tar.gz \
-    && tar xvf libarchive-3.4.1.tar.gz \
-    && mv libarchive-3.4.1 src \
-    && mkdir src/build-cmake && cd src/build-cmake \
-    && cmake -DCMAKE_INSTALL_PREFIX:PATH=../.. .. \
-    && make -j$(nproc) \
-    && make install \
-    && cd ../.. \
-    && rm -r src
+# Install dependencies
+COPY ./installation/install_dep_boost.bash /tmp/
+RUN . /tmp/install_dep_boost.bash
 
-# boost
-RUN cd /opt \
-    && mkdir -p boost/1_65_0 && cd boost/1_65_0 \
-    && wget https://downloads.sourceforge.net/project/boost/boost/1.65.0/boost_1_65_0.tar.bz2 \
-    && tar xf boost_1_65_0.tar.bz2 \
-    && mv boost_1_65_0 src && cd src \
-    && ./bootstrap.sh \
-    && ./b2 -j$(nproc) install --prefix=.. \
-    && cd .. \
-    && rm -r src
+COPY ./installation/install_dep_libarchive.bash /tmp/
+RUN . /tmp/install_dep_libarchive.bash
 
-# cpprestsdk
-RUN cd /opt \
-    && ln -s /usr/include/locale.h /usr/include/xlocale.h \
-    && mkdir -p cpprestsdk/v2.10.0 && cd cpprestsdk/v2.10.0 \
-    && wget https://github.com/Microsoft/cpprestsdk/archive/v2.10.0.tar.gz \
-    && tar xf v2.10.0.tar.gz \
-    && mv cpprestsdk-2.10.0 src && cd src/Release \
-    && mkdir build && cd build \
-    && cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=0 -DWERROR=FALSE -DCMAKE_PREFIX_PATH=../../../../../boost/1_65_0 -DCMAKE_INSTALL_PREFIX=../../.. .. \
-    && sed -i /opt/cpprestsdk/v2.10.0/src/Release/include/cpprest/asyncrt_utils.h -e '1s/^/#include <sys\/time.h>\n/' \
-    && make -j$(nproc) \
-    && make install \
-    && cd ../../.. \
-    && rm -r src
+COPY ./installation/install_dep_cpprestsdk.bash /tmp/
+RUN . /tmp/install_dep_cpprestsdk.bash
 
-#rapidjson
-RUN cd /opt \
-    && mkdir rapidjson && cd rapidjson \
-    && wget -O rapidjson-master.tar.gz https://github.com/Tencent/rapidjson/archive/master.tar.gz \
-    && tar xzf rapidjson-master.tar.gz \
-    && rm rapidjson-master.tar.gz
+COPY ./installation/install_dep_rapidjson.bash /tmp/
+RUN . /tmp/install_dep_rapidjson.bash
 
+COPY ./installation/install_dep_runc.bash /tmp/
+RUN . /tmp/install_dep_runc.bash
+
+COPY ./installation/install_dep_tini.bash /tmp/
+RUN . /tmp/install_dep_tini.bash
+
+# Prepare user
 RUN adduser -h /home/docker -s /bin/bash -D  docker docker
 RUN echo "docker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 USER docker
 WORKDIR /home/docker
+
+# See sarus-build in utility_functions.bash
 CMD ["/bin/bash"]
