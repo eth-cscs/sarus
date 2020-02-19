@@ -124,11 +124,11 @@ run_integration_tests() {
     install_sarus_from_archive /opt/sarus /sarus-source/build-${build_type}/sarus-${build_type}.tar.gz
     fail_on_error "Failed to install Sarus from archive"
 
-    sudo -u docker PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker pytest -v -m 'not asroot' /sarus-source/CI/src/integration_tests/
-    #fail_on_error "Python integration tests failed"
+    sudo -u docker PATH=/opt/sarus/default/bin:$PATH PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker pytest -v -m 'not asroot' /sarus-source/CI/src/integration_tests/
+    fail_on_error "Python integration tests failed"
 
-    sudo PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker pytest -v -m asroot /sarus-source/CI/src/integration_tests/
-    #fail_on_error "Python integration tests as root failed"
+    sudo PATH=/opt/sarus/default/bin:$PATH PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker pytest -v -m asroot /sarus-source/CI/src/integration_tests/
+    fail_on_error "Python integration tests as root failed"
 
     # Run coverage only on Debug build of GitLab CI
     if [ ${CI} ] && [ ${build_type} = "Debug" ]; then
