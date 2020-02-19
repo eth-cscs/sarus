@@ -3,6 +3,9 @@
 # This script starts a virtual cluster through docker-compose and then
 # runs the Sarus's integration tests specific to the virtual cluster.
 
+utilities_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+. "${utilities_dir}/utility_functions.bash"
+
 script_dir=$(cd $(dirname "$0") && pwd)
 cd $script_dir
 
@@ -29,15 +32,6 @@ stop_and_remove_cluster() {
     fi
 }
 
-cleanup_and_exit_if_last_command_failed() {
-    local last_command_exit_code=$?
-    if [ $last_command_exit_code -ne 0 ]; then
-        log "command failed"
-        stop_and_remove_cluster
-        exit 1
-    fi
-}
-
 create_cluster_folder_with_unique_id() {
     local random_id=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
     virtual_cluster_dir=$script_dir/virtual_cluster-$random_id
@@ -57,7 +51,7 @@ start_cluster() {
     cd $virtual_cluster_dir
     mkdir sync
     docker-compose up -d
-    cleanup_and_exit_if_last_command_failed
+    fail_on_error "failed to start cluster with docker-compose up"
     log "successfully started virtual cluster"
 }
 
@@ -84,7 +78,7 @@ run_tests() {
     local tests_dir_in_container=/sarus-source/CI/src
     cd $virtual_cluster_dir
     docker-compose exec --user=docker -T controller bash -c "cd $tests_dir_in_container/integration_tests_for_virtual_cluster && PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=$tests_dir_in_container:\$PYTHONPATH pytest -v $test_files"
-    cleanup_and_exit_if_last_command_failed
+    fail_on_error "failed to run integration tests in virtual cluster"
     log "successfully run integration tests in virtual cluster"
 }
 

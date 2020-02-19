@@ -1,5 +1,8 @@
 #!/bin/bash
 
+utilities_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+. "${utilities_dir}/utility_functions.bash"
+
 log() {
     local message=$1
     echo "[ LOG ]  $message"
@@ -8,15 +11,6 @@ log() {
 cleanup() {
     rm -rf /home/docker/sarus-git
     rm -rf /home/docker/sarus-static
-}
-
-cleanup_and_exit_if_last_command_failed() {
-    local last_command_exit_code=$?
-    if [ $last_command_exit_code -ne 0 ]; then
-        log "command failed"
-        cleanup
-        exit 1
-    fi
 }
 
 sarus_src_dir=/sarus-source
@@ -31,14 +25,14 @@ check_git_repo() {
             -DBUILD_STATIC=TRUE \
             .. \
             > cmake_stdout.txt
-    cleanup_and_exit_if_last_command_failed
+    fail_on_error "failed to run Cmake on git repo"
     log "    Config successful, checking version string"
     version_from_cmake=$(cat cmake_stdout.txt | grep "Sarus version" | awk -F ": " '{print $2}')
     version_from_git=$(git describe --tags --dirty)
     log "    Version from CMake: ${version_from_cmake}"
     log "    Version from git : ${version_from_git}"
     [ "$version_from_git" == "$version_from_cmake" ]
-    cleanup_and_exit_if_last_command_failed
+    fail_on_error "$version_from_git != $version_from_cmake"
     log "    Check successful"
 }
 

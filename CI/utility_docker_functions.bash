@@ -25,6 +25,15 @@ run_image() {
     echo ${run_image}
 }
 
+sarus-check-version-and-docs() {
+    local sarus_source_dir_on_host=${1-${PWD}}; shift
+
+    docker run --tty --rm -v ${sarus_source_dir_on_host}:/sarus-source $(build_image) /sarus-source/CI/check_version_from_cmake.sh
+    fail_on_error "check_version_from_cmake failed"
+    docker run --tty --rm -v ${sarus_source_dir_on_host}:/sarus-source $(run_image) /sarus-source/CI/run_documentation_build_test.sh
+    fail_on_error "documentation check failed"
+}
+
 sarus-build-from-scratch-and-test() {
     # Test whole installation on a supported vanilla linux distro.
     # os_image=[ubuntu:18.04 | debian:10 | centos:7 ]
@@ -153,11 +162,4 @@ sarus-publish-images() {
     # TODO PART 2
     # Publish to Dockehub
     echo TODO
-}
-
-sarus-check-version-and-docs() {
-    local sarus_source_dir_on_host=${1-$PWD}; shift
-
-    docker run --tty --rm -v ${sarus_source_dir_on_host}:/sarus-source $(build_image) /sarus-source/CI/check_version_from_cmake.sh
-    docker run --tty --rm -v ${sarus_source_dir_on_host}:/sarus-source $(run_image) /sarus-source/CI/run_documentation_build_test.sh
 }

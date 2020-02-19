@@ -12,12 +12,9 @@ build_sarus_images:
 
 check_version_and_docs:
   stage: build_sarus_and_test
-  only:
-    - master
-    - develop
   script:
     - . CI/utility_docker_functions.bash
-    - sarus-check-version-and-docs
+    - sarus-check-version-and-docs $(pwd)
 
 standalone_archive_debug:
   stage: build_sarus_and_test
