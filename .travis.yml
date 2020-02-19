@@ -43,19 +43,19 @@ jobs:
       if: branch IN (master, develop)
       script:
       - . ./CI/utility_docker_functions.bash
-      - sarus-build-test-from-scratch $(pwd) ubuntu:18.04
+      - sarus-build-from-scratch-and-test $(pwd) ubuntu:18.04
 
     - name: "Test install from source Debian 10"
       if: branch IM (master, develop)
       script:
       - . ./CI/utility_docker_functions.bash
-      - sarus-build-test-from-scratch $(pwd) debian:10
+      - sarus-build-from-scratch-and-test $(pwd) debian:10
 
     - name: "Test install from source CentOS 7"
       if: branch IN (master, develop)
       script:
       - . ./CI/utility_docker_functions.bash
-      - sarus-build-test-from-scratch $(pwd) centos:7
+      - sarus-build-from-scratch-and-test $(pwd) centos:7
 
     # TODO PART 2: Align spack image creation
     - name: "Test Spack"

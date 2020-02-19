@@ -48,7 +48,7 @@ from_source_ubuntu18.04:
       - develop
   script:
       - . ./CI/utility_docker_functions.bash
-      - sarus-build-test-from-scratch $(pwd) ubuntu:18.04
+      - sarus-build-from-scratch-and-test $(pwd) ubuntu:18.04
 
 from_source_debian10:
   stage: build_sarus_from_scratch_and_test
@@ -57,7 +57,7 @@ from_source_debian10:
       - develop
   script:
       - . ./CI/utility_docker_functions.bash
-      - sarus-build-test-from-scratch $(pwd) debian:10
+      - sarus-build-from-scratch-and-test $(pwd) debian:10
 
 from_source_centos7:
   stage: build_sarus_from_scratch_and_test
@@ -66,7 +66,7 @@ from_source_centos7:
       - develop
   script:
       - . ./CI/utility_docker_functions.bash
-      - sarus-build-test-from-scratch $(pwd) centos:7
+      - sarus-build-from-scratch-and-test $(pwd) centos:7
 
 spack_package:
   stage: build_sarus_from_scratch_and_test
