@@ -214,7 +214,19 @@ TEST(ConfigsMergerTestGroup, hooks_environment) {
         config->commandRun.useMPI = true;
         config->commandRun.hostEnvironment = {};
         metadata.env = {};
-        auto expectedEnvironment = std::unordered_map<std::string, std::string>{{"SARUS_MPI_HOOK", "1"}};
+        auto expectedEnvironment = std::unordered_map<std::string, std::string>{
+            {"SARUS_MPI_HOOK", "1"},
+            {"SARUS_GLIBC_HOOK", "1"}};
+        CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
+    }
+    // GLIBC hook enabled
+    {
+        auto configRAII = test_utility::config::makeConfig();
+        auto& config = configRAII.config;
+        config->commandRun.enableGlibcReplacement = true;
+        config->commandRun.hostEnvironment = {};
+        metadata.env = {};
+        auto expectedEnvironment = std::unordered_map<std::string, std::string>{{"SARUS_GLIBC_HOOK", "1"}};
         CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
     }
     // SSH hook enabled

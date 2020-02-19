@@ -32,13 +32,28 @@ namespace hooks {
 namespace glibc {
 
 GlibcHook::GlibcHook() {
+    logMessage("Initializing hook", sarus::common::LogLevel::INFO);
+
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     sarus::hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
+    if(!isHookEnabled) {
+        logMessage("Initialization interrupted (hook disabled)", sarus::common::LogLevel::INFO);
+        return;
+    }
     parseEnvironmentVariables();
+
+    logMessage("Successfully initialized hook", sarus::common::LogLevel::INFO);
 }
 
 void GlibcHook::injectGlibcLibrariesIfNecessary() {
+    if(!isHookEnabled) {
+        logMessage("Not activating glibc replacement (hook disabled)", sarus::common::LogLevel::INFO);
+        return;
+    }
+
+    logMessage("Replacing glibc libraries", sarus::common::LogLevel::INFO);
+
     auto hostLibc = findLibc(hostLibraries);
     if(!hostLibc) {
         SARUS_THROW_ERROR(  "Failed to inject glibc libraries. Could not find the host's libc."
@@ -57,11 +72,25 @@ void GlibcHook::injectGlibcLibrariesIfNecessary() {
     }
     verifyThatHostAndContainerGlibcAreABICompatible(*hostLibc, *containerLibc);
     replaceGlibcLibrariesInContainer();
+
+    logMessage("Successfully replaced glibc libraries", sarus::common::LogLevel::INFO);
 }
 
 void GlibcHook::parseConfigJSONOfBundle() {
+    logMessage("Parsing bundle's config.json", sarus::common::LogLevel::INFO);
+
     auto json = sarus::common::readJSON(bundleDir / "config.json");
+
+    // get rootfs
     rootfsDir = bundleDir / json["root"]["path"].GetString();
+
+    // get environment variables
+    auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
+    if(env["SARUS_GLIBC_HOOK"] == "1") {
+        isHookEnabled = true;
+    }
+
+    logMessage("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);
 }
 
 void GlibcHook::parseEnvironmentVariables() {
@@ -161,10 +190,16 @@ void GlibcHook::replaceGlibcLibrariesInContainer() const {
     }
 }
 
-void GlibcHook::logMessage( const boost::format& message, sarus::common::LogLevel logLevel,
+void GlibcHook::logMessage( const std::string& message, sarus::common::LogLevel logLevel,
                             std::ostream& out, std::ostream& err) const {
     auto systemName = "glibc-hook";
     sarus::common::Logger::getInstance().log(message, systemName, logLevel, out, err);
+}
+
+void GlibcHook::logMessage( const boost::format& message, sarus::common::LogLevel logLevel,
+                            std::ostream& out, std::ostream& err) const {
+    auto systemName = "glibc-hook";
+    sarus::common::Logger::getInstance().log(message.str(), systemName, logLevel, out, err);
 }
 
 }}} // namespace

@@ -65,6 +65,8 @@ The following is an example ``OCIHooks`` object enabling the glibc hook:
 Sarus support at runtime
 ========================
 
-The glibc hook is self-sufficient and does not require any support
-from the Sarus container engine.
+The glibc hook injects the host glibc in the container filesystem only if the
+environment variable ``SARUS_GLIBC_HOOK=1`` is present in the container. This
+environment variable is automatically set by Sarus if the ``--glibc`` or
+``--mpi`` command line options are passed to :program:`sarus run`.
 

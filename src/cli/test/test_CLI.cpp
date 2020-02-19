@@ -151,16 +151,19 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
         CHECK_EQUAL(conf->imageID.image, std::string{"image"});
         CHECK_EQUAL(conf->imageID.tag, std::string{"latest"});
         CHECK_EQUAL(conf->commandRun.useMPI, 0);
+        CHECK_EQUAL(conf->commandRun.enableGlibcReplacement, 0);
         CHECK(conf->commandRun.execArgs.argc() == 0);
     }
     {
         auto conf = generateConfig({"run",
                                     "--workdir=/workdir",
                                     "--mpi",
+                                    "--glibc",
                                     "--mount=type=bind,source=/source,destination=/destination",
                                     "ubuntu", "bash", "-c", "ls /dev |grep nvidia"});
         CHECK_EQUAL(conf->commandRun.workdir->string(), "/workdir");
         CHECK_EQUAL(conf->commandRun.useMPI, true);
+        CHECK_EQUAL(conf->commandRun.enableGlibcReplacement, true);
         CHECK_EQUAL(conf->commandRun.mounts.size(), 2); // 1 site mount + 1 user mount
         CHECK_EQUAL(conf->imageID.server, std::string{"index.docker.io"});
         CHECK_EQUAL(conf->imageID.repositoryNamespace, std::string{"library"});

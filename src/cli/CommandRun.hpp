@@ -100,6 +100,7 @@ private:
             ("entrypoint",
                 boost::program_options::value<std::string>(&entrypoint)->implicit_value(""),
                 "Overwrite the default ENTRYPOINT of the image")
+            ("glibc", "Enable replacement of the container's GNU C libraries")
             ("init", "Run an init process inside the container that forwards signals and reaps processes")
             ("mount",
                 boost::program_options::value<std::vector<std::string>>(&conf->commandRun.userMounts),
@@ -147,6 +148,9 @@ private:
                 else {
                     conf->commandRun.entrypoint = common::CLIArguments{entrypoint};
                 }
+            }
+            if(values.count("glibc")) {
+                conf->commandRun.enableGlibcReplacement = true;
             }
             if(values.count("init")) {
                 conf->commandRun.addInitProcess = true;

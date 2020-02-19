@@ -527,7 +527,7 @@ Working directory
 -----------------
 
 The working directory inside the container can be controlled using the
-``--workdir`` option of the :program:`sarus run` command:
+``-w/--workdir`` option of the :program:`sarus run` command:
 
 .. code-block:: bash
 
@@ -535,7 +535,7 @@ The working directory inside the container can be controlled using the
 
 If the path does not exist, it is created inside the container.
 
-If the ``--workdir`` option is not specified but the image defines
+If the ``-w/--workdir`` option is not specified but the image defines
 a working directory, the container process will start
 there. Otherwise, the process will start in the container's root directory (``/``).
 Using image-defined working directories can be useful, for example, for
@@ -684,7 +684,7 @@ The following is an example Dockerfile to create a Debian image with MPICH
     will not work with the native MPI support provided by the hook.
 
 Once the system administrator has configured the hook, containers with native
-MPI support, can be launched by passing the ``--mpi`` option to the
+MPI support can be launched by passing the ``--mpi`` option to the
 :program:`sarus run` command, e.g.:
 
 .. code-block:: bash
@@ -768,3 +768,26 @@ We can do so with the following commands:
    srun sarus run --ssh --mount=src=/users,dst=/users,type=bind \
        ethcscs/openmpi:3.1.3  \
        bash -c 'if [ $SLURM_PROCID -eq 0 ]; then mpirun --hostfile $HOME/hostfile -npernode 1 /openmpi-3.1.3/examples/hello_c; else sleep infinity; fi'
+
+Glibc replacement
+-----------------
+
+Sarus's source code includes a hook able to inject glibc libraries from the
+host inside the container, overriding the glibc of the container.
+
+This is useful when injecting some host resources (e.g. MPI libraries) into the
+container and said resources depend on a newer glibc than the container's one.
+
+The host glibc stack to be injected is configured by the system administrator.
+
+If Sarus is configured to use this hook, the glibc replacement can be activated
+by passing the ``--glibc`` option to :program:`sarus run`. Since native MPI
+support is the most common occurrence of host resources injection, the hook is
+also implicitly activated when using the ``--mpi`` option.
+
+Even when the hook is configured and activated, the glibc libraries in the
+container will only be replaced if the following conditions apply:
+
+* the container's libraries are older than the host's libraries;
+
+* host and container glibc libraries have the same soname and are ABI compatible.

@@ -136,6 +136,10 @@ void ConfigsMerger::setHooksEnvironmentVariables(const common::Config::CommandRu
         std::unordered_map<std::string, std::string>& containerEnvironment) const {
     if(commandRun.useMPI) {
         containerEnvironment["SARUS_MPI_HOOK"] = "1";
+        containerEnvironment["SARUS_GLIBC_HOOK"] = "1";
+    }
+    if(commandRun.enableGlibcReplacement) {
+        containerEnvironment["SARUS_GLIBC_HOOK"] = "1";
     }
     if(commandRun.enableSSH) {
         containerEnvironment["SARUS_SSH_HOOK"] = "1";

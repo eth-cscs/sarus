@@ -40,10 +40,13 @@ private:
         const boost::filesystem::path& hostLibc,
         const boost::filesystem::path& containerLibc) const;
     void replaceGlibcLibrariesInContainer() const;
+    void logMessage(const std::string& message, sarus::common::LogLevel logLevel,
+                    std::ostream& out=std::cout, std::ostream& err=std::cerr) const;
     void logMessage(const boost::format& message, sarus::common::LogLevel,
                     std::ostream& out=std::cout, std::ostream& err=std::cerr) const;
 
 private:
+    bool isHookEnabled{ false };
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
     pid_t pidOfContainer;

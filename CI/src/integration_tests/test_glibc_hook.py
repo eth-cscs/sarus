@@ -90,26 +90,53 @@ class TestGlibcHook(unittest.TestCase):
     def _undo_modify_bundle_config(cls):
         subprocess.call(["sudo", "mv", cls._SARUS_CONFIG_FILE + ".bak", cls._SARUS_CONFIG_FILE])
 
+    def setUp(self):
+        self._glibc_command_line_option = None
+        self._mpi_command_line_option = None
+
     def test_container_without_glibc(self):
         self.assertEqual(
             util.run_image_and_get_prettyname(is_centralized_repository=False, image="alpine:3.8"),
             "Alpine Linux")
 
-    def test_no_glibc_injection(self):
+    def test_no_injection_in_container_with_recent_glibc(self):
+        self._glibc_command_line_option = True
         self._container_image = "ubuntu:18.04"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert not hashes
 
-    def test_glibc_injection(self):
+    def test_injection_in_container_with_old_glibc(self):
+        self._glibc_command_line_option = True
         self._container_image = "centos:7"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert hashes
         assert hashes.issuperset(self._HOST_GLIBC_LIBS_HASHES)
 
+    def test_injection_in_container_with_old_glibc_using_mpi_option(self):
+        self._glibc_command_line_option = False
+        self._mpi_command_line_option = True
+        self._container_image = "centos:7"
+        hashes = self._get_hashes_of_host_libs_in_container()
+        assert hashes
+        assert hashes.issuperset(self._HOST_GLIBC_LIBS_HASHES)
+
+    def test_no_hook_activation(self):
+        self._glibc_command_line_option = False
+        self._mpi_command_line_option = False
+        self._container_image = "centos:7"
+        hashes = self._get_hashes_of_host_libs_in_container()
+        assert not hashes
+
     def _get_hashes_of_host_libs_in_container(self):
-        output = util.run_command_in_container( is_centralized_repository=False,
-                                                image=self._container_image,
-                                                command=["mount"])
+        options = []
+        if self._glibc_command_line_option:
+            options.append("--glibc")
+        if self._mpi_command_line_option:
+            options.append("--mpi")
+        output = util.run_command_in_container(is_centralized_repository=False,
+                                               image=self._container_image,
+                                               command=["mount"],
+                                               options_of_run_command=options)
         libs = []
         for line in output:
             if re.search(r".* on .*lib.*\.so(\.[0-9]+)* .*", line):
@@ -120,7 +147,8 @@ class TestGlibcHook(unittest.TestCase):
         for lib in libs:
             output = util.run_command_in_container( is_centralized_repository=False,
                                                     image=self._container_image,
-                                                    command=["md5sum", lib])
+                                                    command=["md5sum", lib],
+                                                    options_of_run_command=options)
             hashes.add(output[0].split()[0])
 
         return hashes

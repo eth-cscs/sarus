@@ -72,6 +72,7 @@ class Config {
             bool allocatePseudoTTY = false;
             bool addInitProcess = false;
             bool useMPI = false;
+            bool enableGlibcReplacement = false;
             bool enableSSH = false;
         };
 

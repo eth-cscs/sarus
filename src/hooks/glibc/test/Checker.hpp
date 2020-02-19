@@ -35,6 +35,11 @@ namespace test {
 
 class Checker {
 public:
+    Checker& setEnvironmentVariablesInConfigJSON(const std::vector<std::string>& variables) {
+        environmentVariables = variables;
+        return *this;
+    }
+
     Checker& addHostLibcAndSymlink( const boost::filesystem::path& dummyLib,
                                     const boost::filesystem::path& hostLib,
                                     const boost::filesystem::path& hostSymlink) {
@@ -106,13 +111,29 @@ public:
 private:
     void setupTestEnvironment() const {
         auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
-        sarus::common::writeJSON(doc, bundleDir / "config.json");
+        createOCIBundleConfigJSON();
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
         sarus::common::setEnvironmentVariable("SARUS_GLIBC_LDCONFIG_PATH=ldconfig");
         sarus::common::setEnvironmentVariable("SARUS_GLIBC_READELF_PATH=readelf");
         sarus::common::setEnvironmentVariable("SARUS_GLIBC_LIBS="
             + sarus::common::makeColonSeparatedListOfPaths(hostLibs));
+    }
+
+    void createOCIBundleConfigJSON() const {
+        auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
+        auto& allocator = doc.GetAllocator();
+        for(const auto& v : environmentVariables) {
+            doc["process"]["env"].PushBack(rj::Value{v.c_str(), allocator}, allocator);
+        }
+
+        try {
+            sarus::common::writeJSON(doc, bundleDir / "config.json");
+        }
+        catch(const std::exception& e) {
+            auto message = boost::format("Failed to write OCI Bundle's JSON configuration");
+            SARUS_RETHROW_ERROR(e, message.str());
+        }
     }
 
     void checkContainerLibraries() const {
@@ -141,6 +162,7 @@ private:
         .parent_path()
         .parent_path() / "CI/dummy_libs";
 
+    std::vector<std::string> environmentVariables;
     std::vector<boost::filesystem::path> hostLibs;
     std::vector<boost::filesystem::path> containerLibs;
     std::vector<boost::filesystem::path> expectedContainerLibsAfterInjection;
