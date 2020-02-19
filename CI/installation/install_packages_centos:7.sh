@@ -3,7 +3,6 @@
 set -ex
 
 # Install packages
-yum install -y sudo
 sudo yum install -y epel-release
 sudo yum install -y centos-release-scl-rh
 sudo yum install -y devtoolset-3-gcc-c++ glibc-static sudo curl wget rsync which \
