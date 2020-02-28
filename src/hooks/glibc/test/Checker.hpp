@@ -13,6 +13,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <unistd.h>
 #include <sys/mount.h>
 
@@ -35,8 +36,8 @@ namespace test {
 
 class Checker {
 public:
-    Checker& setEnvironmentVariablesInConfigJSON(const std::vector<std::string>& variables) {
-        environmentVariables = variables;
+    Checker& setAnnotationsInConfigJSON(const std::unordered_map<std::string, std::string>& annotations) {
+        this->annotations = annotations;
         return *this;
     }
 
@@ -123,17 +124,14 @@ private:
     void createOCIBundleConfigJSON() const {
         auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
         auto& allocator = doc.GetAllocator();
-        for(const auto& v : environmentVariables) {
-            doc["process"]["env"].PushBack(rj::Value{v.c_str(), allocator}, allocator);
+
+        for(const auto& annotation : annotations) {
+            auto key = rj::Value{annotation.first.c_str(), allocator};
+            auto value = rj::Value{annotation.second.c_str(), allocator};
+            doc["annotations"].AddMember(key, value, allocator);
         }
 
-        try {
-            sarus::common::writeJSON(doc, bundleDir / "config.json");
-        }
-        catch(const std::exception& e) {
-            auto message = boost::format("Failed to write OCI Bundle's JSON configuration");
-            SARUS_RETHROW_ERROR(e, message.str());
-        }
+        sarus::common::writeJSON(doc, bundleDir / "config.json");
     }
 
     void checkContainerLibraries() const {
@@ -162,7 +160,7 @@ private:
         .parent_path()
         .parent_path() / "CI/dummy_libs";
 
-    std::vector<std::string> environmentVariables;
+    std::unordered_map<std::string, std::string> annotations;
     std::vector<boost::filesystem::path> hostLibs;
     std::vector<boost::filesystem::path> containerLibs;
     std::vector<boost::filesystem::path> expectedContainerLibsAfterInjection;

@@ -15,7 +15,6 @@
 #include <unordered_map>
 #include <string>
 #include <boost/filesystem.hpp>
-#include <rapidjson/document.h>
 
 #include "common/Config.hpp"
 #include "common/ImageMetadata.hpp"
@@ -33,9 +32,9 @@ namespace runtime {
 class ConfigsMerger {
 public:
     ConfigsMerger(std::shared_ptr<const common::Config>, const common::ImageMetadata&);
-    rapidjson::Value getHooks(rapidjson::MemoryPoolAllocator<>&) const;
     boost::filesystem::path getWorkdirInContainer() const;
     std::unordered_map<std::string, std::string> getEnvironmentInContainer() const;
+    std::unordered_map<std::string, std::string> getBundleAnnotations() const;
     common::CLIArguments getCommandToExecuteInContainer() const;
 
 private:
@@ -44,9 +43,6 @@ private:
     void setNvidiaEnvironmentVariables(
             const std::unordered_map<std::string, std::string>& hostEnvironment,
             std::unordered_map<std::string, std::string>& containerEnvironment) const;
-    void setHooksEnvironmentVariables(
-        const common::Config::CommandRun& commandRun,
-        std::unordered_map<std::string, std::string>& containerEnvironment) const;
 };
 
 }

@@ -43,13 +43,7 @@ void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir, const s
         doc["process"]["env"].PushBack(rj::Value{logVar.c_str(), allocator}, allocator);
     }
 
-    try {
-        sarus::common::writeJSON(doc, bundleDir / "config.json");
-    }
-    catch(const std::exception& e) {
-        auto message = boost::format("Failed to write OCI Bundle's JSON configuration");
-        SARUS_RETHROW_ERROR(e, message.str());
-    }
+    sarus::common::writeJSON(doc, bundleDir / "config.json");
 }
 
 TEST(TimestampTestGroup, test_disabled_hook) {

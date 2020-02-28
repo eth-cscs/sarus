@@ -23,8 +23,6 @@ namespace hooks {
 namespace timestamp {
 
 void TimestampHook::activate() {
-    hooks::common::utility::useSarusStdoutStderrIfAvailable();
-    hooks::common::utility::useSarusLogLevelIfAvailable();
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     sarus::hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
@@ -37,6 +35,8 @@ void TimestampHook::activate() {
 
 void TimestampHook::parseConfigJSONOfBundle() {
     auto json = sarus::common::readJSON(bundleDir / "config.json");
+
+    hooks::common::utility::applyLoggingConfigIfAvailable(json);
 
     // get uid + gid of user
     uidOfUser = json["process"]["user"]["uid"].GetInt();

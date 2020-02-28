@@ -12,6 +12,8 @@
 #include <string>
 #include <fstream>
 
+#include <boost/format.hpp>
+
 #include "test_utility/config.hpp"
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
@@ -80,9 +82,19 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     CHECK(boost::filesystem::exists(actualConfigFile));
     auto expectedPermissions = boost::filesystem::perms::owner_read | boost::filesystem::perms::owner_write;
     CHECK_EQUAL(expectedPermissions, boost::filesystem::status(actualConfigFile).permissions())
-    auto expectedContent = common::removeWhitespaces(common::readFile(expectedConfigFile));
-    auto actualContent = common::removeWhitespaces(common::readFile(actualConfigFile));
-    CHECK_EQUAL(expectedContent, actualContent);
+
+    auto expectedJson = common::readJSON(expectedConfigFile);
+    auto actualJson = common::readJSON(actualConfigFile);
+
+    if(actualJson != expectedJson) {
+        auto message =
+            boost::format{"Generated config.json doesn't match expected config.json."
+                          "\n\nEXPECTED:\n%s\n\nACTUAL:\n%s"}
+            % common::readFile(expectedConfigFile)
+            % common::readFile(actualConfigFile);
+        std::cerr << message << std::endl;
+        CHECK(false);
+    }
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();

@@ -46,12 +46,13 @@ void FileDescriptorHandler::passStdoutAndStderrToHooks() {
     // Note: force duplication of stdout and stderr file descriptors because runc
     // replaces them prior executing the hooks, i.e. the Sarus's stdout and stderr
     // wouldn't be accessible from the hooks if not duplicated.
-    fileDescriptorsToPreserve[1] = { "stdout", {}, std::string{"SARUS_STDOUT_FD"}, true };
-    fileDescriptorsToPreserve[2] = { "stderr", {}, std::string{"SARUS_STDERR_FD"}, true };
+    fileDescriptorsToPreserve[1] = { "stdout", {}, std::string{"com.hooks.logging.stdoutfd"}, true };
+    fileDescriptorsToPreserve[2] = { "stderr", {}, std::string{"com.hooks.logging.stderrfd"}, true };
 }
 
-void FileDescriptorHandler::applyChangesToFdsAndEnvVariables() {
-    utility::logMessage("Applying changes to file descriptors and environment variables", common::LogLevel::INFO);
+void FileDescriptorHandler::applyChangesToFdsAndEnvVariablesAndBundleAnnotations() {
+    utility::logMessage("Applying changes to file descriptors, container's environment variables and bundle's annotations",
+                        common::LogLevel::INFO);
 
     // close unwanted file descriptors
     for(auto fd : getOpenFileDescriptors()) {
@@ -79,14 +80,15 @@ void FileDescriptorHandler::applyChangesToFdsAndEnvVariables() {
             config->commandRun.hostEnvironment[*fdInfo.containerEnvVariable] = std::to_string(newFd);
         }
 
-        if(fdInfo.hookEnvVariable) {
-            utility::logMessage(boost::format("Setting hooks env variable %s=%d") % *fdInfo.hookEnvVariable % newFd, common::LogLevel::DEBUG);
-            config->commandRun.hooksEnvironment[*fdInfo.hookEnvVariable] = std::to_string(newFd);
+        if(fdInfo.bundleAnnotation) {
+            utility::logMessage(boost::format("Setting bundle annotation %s=%d") % *fdInfo.bundleAnnotation % newFd, common::LogLevel::DEBUG);
+            config->commandRun.bundleAnnotations[*fdInfo.bundleAnnotation] = std::to_string(newFd);
         }
     }
 
     utility::logMessage(boost::format("Total extra file descriptors: %d") % extraFileDescriptors, common::LogLevel::DEBUG);
-    utility::logMessage("Successfully applied changes to file descriptors and environment variables", common::LogLevel::INFO);
+    utility::logMessage("Successfully applied changes to file descriptors, container's environment variables and bundle's annotations",
+                        common::LogLevel::INFO);
 }
 
 std::vector<int> FileDescriptorHandler::getOpenFileDescriptors() const {

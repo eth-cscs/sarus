@@ -16,14 +16,14 @@
 #include <unordered_map>
 #include <sys/types.h>
 #include <boost/filesystem.hpp>
+#include <rapidjson/document.h>
 
 namespace sarus {
 namespace hooks {
 namespace common {
 namespace utility {
 
-void useSarusStdoutStderrIfAvailable();
-void useSarusLogLevelIfAvailable();
+void applyLoggingConfigIfAvailable(const rapidjson::Document&);
 std::tuple<boost::filesystem::path, pid_t> parseStateOfContainerFromStdin();
 std::unordered_map<std::string, std::string> parseEnvironmentVariablesFromOCIBundle(const boost::filesystem::path&);
 void enterNamespacesOfProcess(pid_t);

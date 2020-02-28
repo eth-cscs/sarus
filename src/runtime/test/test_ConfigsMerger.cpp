@@ -22,62 +22,6 @@ namespace test {
 TEST_GROUP(ConfigsMergerTestGroup) {
 };
 
-std::vector<std::unordered_map<std::string, std::string>> getHooksEnvironments(const rapidjson::Value& hooks) {
-    auto envs = std::vector<std::unordered_map<std::string, std::string>>{};
-
-    for(const auto& hookType : {"prestart", "poststart", "poststop"}) {
-        if(!hooks.HasMember(hookType)) {
-            continue;
-        }
-
-        for(auto& hook : hooks[hookType].GetArray()) {
-            if(!hook.HasMember("env")) {
-                continue;
-            }
-            auto env = std::unordered_map<std::string, std::string>{};
-            for(const auto& var : hook["env"].GetArray()) {
-                std::string key;
-                std::string value;
-                std::tie(key, value) = common::parseEnvironmentVariable(var.GetString());
-                env[key] = value;
-            }
-            envs.push_back(std::move(env));
-        }
-    }
-
-    CHECK(!envs.empty());
-
-    return envs;
-}
-
-TEST(ConfigsMergerTestGroup, hooks) {
-    auto configRAII = test_utility::config::makeConfig();
-    auto& config = configRAII.config;
-
-    // check that the hooks's environment variables are not set yet
-    CHECK(config->json.HasMember("OCIHooks"));
-    auto envs = getHooksEnvironments(configRAII.config->json["OCIHooks"]);
-    for(const auto& env : envs) {
-        CHECK(env.find("key0") == env.cend());
-        CHECK(env.find("key1") == env.cend());
-    }
-
-    config->commandRun.hooksEnvironment["key0"] = "value0";
-    config->commandRun.hooksEnvironment["key1"] = "value1";
-
-    // check that ConfigsMerger generates hooks's JSON
-    // with the expected environment variables
-    auto metadata = common::ImageMetadata{};
-    auto configsMerger = ConfigsMerger{config, metadata};
-    auto doc = rapidjson::Document{};
-    auto hooks = configsMerger.getHooks(doc.GetAllocator());
-    envs = getHooksEnvironments(hooks);
-    for(const auto& env : envs) {
-        CHECK(env.find("key0") != env.cend());
-        CHECK(env.find("key1") != env.cend());
-    }
-}
-
 TEST(ConfigsMergerTestGroup, workdir) {
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
@@ -195,51 +139,56 @@ TEST(ConfigsMergerTestGroup, nvidia_environment) {
     }
 }
 
-TEST(ConfigsMergerTestGroup, hooks_environment) {
+TEST(ConfigsMergerTestGroup, bundle_annotations) {
     auto metadata = common::ImageMetadata{};
 
     // No hooks enabled
     {
         auto configRAII = test_utility::config::makeConfig();
         auto& config = configRAII.config;
-        config->commandRun.hostEnvironment = {};
-        metadata.env = {};
-        auto expectedEnvironment = std::unordered_map<std::string, std::string>{};
-        CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
+        auto expectedAnnotations = std::unordered_map<std::string, std::string>{
+            {"com.test.dummy_key", "dummy_value"},
+            {"com.hooks.logging.level", "2"},
+        };
+        CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
+    }
+    // glibc hook enabled
+    {
+        auto configRAII = test_utility::config::makeConfig();
+        auto& config = configRAII.config;
+        config->commandRun.enableGlibcReplacement = true;
+        auto expectedAnnotations = std::unordered_map<std::string, std::string>{
+            {"com.test.dummy_key", "dummy_value"},
+            {"com.hooks.logging.level", "2"},
+            {"com.hooks.glibc.enabled", "true"},
+        };
+        CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
     }
     // MPI hook enabled
     {
         auto configRAII = test_utility::config::makeConfig();
         auto& config = configRAII.config;
         config->commandRun.useMPI = true;
-        config->commandRun.hostEnvironment = {};
-        metadata.env = {};
-        auto expectedEnvironment = std::unordered_map<std::string, std::string>{
-            {"SARUS_MPI_HOOK", "1"},
-            {"SARUS_GLIBC_HOOK", "1"}};
-        CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
-    }
-    // GLIBC hook enabled
-    {
-        auto configRAII = test_utility::config::makeConfig();
-        auto& config = configRAII.config;
-        config->commandRun.enableGlibcReplacement = true;
-        config->commandRun.hostEnvironment = {};
-        metadata.env = {};
-        auto expectedEnvironment = std::unordered_map<std::string, std::string>{{"SARUS_GLIBC_HOOK", "1"}};
-        CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
+        auto expectedAnnotations = std::unordered_map<std::string, std::string>{
+            {"com.test.dummy_key", "dummy_value"},
+            {"com.hooks.logging.level", "2"},
+            {"com.hooks.glibc.enabled", "true"},
+            {"com.hooks.mpi.enabled", "true"},
+        };
+        CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
     }
     // SSH hook enabled
     {
         auto configRAII = test_utility::config::makeConfig();
         auto& config = configRAII.config;
         config->commandRun.enableSSH = true;
-        config->commandRun.hostEnvironment = {};
-        metadata.env = {};
-        auto expectedEnvironment = std::unordered_map<std::string, std::string>{
-            {"SARUS_SSH_HOOK", "1"},
-            {"SARUS_SLURM_GLOBAL_SYNC_HOOK", "1"}};
-        CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
+        auto expectedAnnotations = std::unordered_map<std::string, std::string>{
+            {"com.test.dummy_key", "dummy_value"},
+            {"com.hooks.logging.level", "2"},
+            {"com.hooks.slurm-global-sync.enabled", "true"},
+            {"com.hooks.ssh.enabled", "true"},
+        };
+        CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
     }
 }
 

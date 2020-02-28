@@ -143,12 +143,17 @@ size_t Hook::countFilesInDirectory(const boost::filesystem::path& directory) con
 void Hook::parseConfigJSONOfBundle() {
     auto json = sarus::common::readJSON(bundleDir / "config.json");
 
-    // get environment variables
-    auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
-    if(env["SARUS_SLURM_GLOBAL_SYNC_HOOK"] != "1") {
+    hooks::common::utility::applyLoggingConfigIfAvailable(json);
+
+    if(!json.HasMember("annotations")
+       || !json["annotations"].HasMember("com.hooks.slurm-global-sync.enabled")
+       || json["annotations"]["com.hooks.slurm-global-sync.enabled"].GetString() != std::string{"true"}) {
         isHookEnabled = false;
         return;
     }
+
+    // get environment variables
+    auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
     if(env.find("SLURM_JOB_ID") == env.cend()
         || env.find("SLURM_STEPID") == env.cend()
         || env.find("SLURM_NTASKS") == env.cend()

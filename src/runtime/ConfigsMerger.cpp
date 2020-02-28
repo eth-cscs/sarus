@@ -24,34 +24,6 @@ ConfigsMerger::ConfigsMerger(std::shared_ptr<const common::Config> config, const
     , metadata{metadata}
 {}
 
-rapidjson::Value ConfigsMerger::getHooks(rapidjson::MemoryPoolAllocator<>& allocator) const {
-    if(!config->json.HasMember("OCIHooks")) {
-        return rj::Value{ rj::kObjectType }; // no hooks
-    }
-
-    auto hooks = rj::Value{};
-    hooks.CopyFrom(config->json["OCIHooks"], allocator);
-
-    for(const auto& hookType : {"prestart", "poststart", "poststop"}) {
-        if(!hooks.HasMember(hookType)) {
-            continue;
-        }
-
-        for(auto& hook : hooks[hookType].GetArray()) {
-            if(!hook.HasMember("env")) {
-                hook.AddMember("env", rj::Value{rj::kArrayType}, allocator);
-            }
-            for(const auto& var : config->commandRun.hooksEnvironment) {
-                auto str = var.first +  "=" + var.second;
-                auto v = rj::Value{str.c_str(), allocator};
-                hook["env"].GetArray().PushBack(v, allocator);
-            }
-        }
-    }
-
-    return hooks;
-}
-
 boost::filesystem::path ConfigsMerger::getWorkdirInContainer() const {
     if(config->commandRun.workdir) {
         return *config->commandRun.workdir;
@@ -70,8 +42,31 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getEnvironmentInCont
         env[kv.first] = kv.second;
     }
     setNvidiaEnvironmentVariables(config->commandRun.hostEnvironment, env);
-    setHooksEnvironmentVariables(config->commandRun, env);
     return env;
+}
+
+std::unordered_map<std::string, std::string> ConfigsMerger::getBundleAnnotations() const {
+    auto annotations = config->commandRun.bundleAnnotations;
+
+    if(config->commandRun.enableGlibcReplacement) {
+        annotations["com.hooks.glibc.enabled"] = "true";
+    }
+
+    if(config->commandRun.useMPI) {
+        annotations["com.hooks.glibc.enabled"] = "true";
+        annotations["com.hooks.mpi.enabled"] = "true";
+    }
+
+    if(config->commandRun.enableSSH) {
+        annotations["com.hooks.slurm-global-sync.enabled"] = "true";
+        annotations["com.hooks.ssh.enabled"] = "true";
+    }
+
+    using IntType = typename std::underlying_type<common::LogLevel>::type;
+    auto level = static_cast<IntType>(common::Logger::getInstance().getLevel());
+    annotations["com.hooks.logging.level"] = std::to_string(level);
+
+    return annotations;
 }
 
 /**
@@ -129,21 +124,6 @@ void ConfigsMerger::setNvidiaEnvironmentVariables(const std::unordered_map<std::
         containerEnvironment.erase("CUDA_VISIBLE_DEVICES");
         containerEnvironment.erase("NVIDIA_VISIBLE_DEVICES");
         containerEnvironment.erase("NVIDIA_DRIVER_CAPABILITIES");
-    }
-}
-
-void ConfigsMerger::setHooksEnvironmentVariables(const common::Config::CommandRun& commandRun,
-        std::unordered_map<std::string, std::string>& containerEnvironment) const {
-    if(commandRun.useMPI) {
-        containerEnvironment["SARUS_MPI_HOOK"] = "1";
-        containerEnvironment["SARUS_GLIBC_HOOK"] = "1";
-    }
-    if(commandRun.enableGlibcReplacement) {
-        containerEnvironment["SARUS_GLIBC_HOOK"] = "1";
-    }
-    if(commandRun.enableSSH) {
-        containerEnvironment["SARUS_SSH_HOOK"] = "1";
-        containerEnvironment["SARUS_SLURM_GLOBAL_SYNC_HOOK"] = "1";
     }
 }
 

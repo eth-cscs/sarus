@@ -41,8 +41,8 @@ public:
         cleanup();
     }
 
-    Checker& setEnvironmentVariablesInConfigJSON(const std::vector<std::string>& variables) {
-        environmentVariables = variables;
+    Checker& setAnnotationsInConfigJSON(const std::unordered_map<std::string, std::string>& annotations) {
+        this->annotations = annotations;
         return *this;
     }
 
@@ -114,17 +114,14 @@ private:
     void createOCIBundleConfigJSON() const {
         auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
         auto& allocator = doc.GetAllocator();
-        for(const auto& v : environmentVariables) {
-            doc["process"]["env"].PushBack(rj::Value{v.c_str(), allocator}, allocator);
+
+        for(const auto& annotation : annotations) {
+            auto key = rj::Value{annotation.first.c_str(), allocator};
+            auto value = rj::Value{annotation.second.c_str(), allocator};
+            doc["annotations"].AddMember(key, value, allocator);
         }
 
-        try {
-            sarus::common::writeJSON(doc, bundleDir / "config.json");
-        }
-        catch(const std::exception& e) {
-            auto message = boost::format("Failed to write OCI Bundle's JSON configuration");
-            SARUS_RETHROW_ERROR(e, message.str());
-        }
+        sarus::common::writeJSON(doc, bundleDir / "config.json");
     }
 
     void createLibraries() const {
@@ -229,7 +226,7 @@ private:
     boost::filesystem::path bundleDir = boost::filesystem::path{ configRAII.config->json["OCIBundleDir"].GetString() };
     boost::filesystem::path rootfsDir = bundleDir / configRAII.config->json["rootfsFolder"].GetString();
 
-    std::vector<std::string> environmentVariables;
+    std::unordered_map<std::string, std::string> annotations;
     std::vector<boost::filesystem::path> hostMpiLibs;
     std::vector<boost::filesystem::path> hostDependencyLibs;
     std::vector<boost::filesystem::path> preHookContainerLibs;

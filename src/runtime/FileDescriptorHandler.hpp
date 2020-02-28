@@ -23,14 +23,14 @@ public:
     FileDescriptorHandler(std::shared_ptr<common::Config>);
     void preservePMIFdIfAny();
     void passStdoutAndStderrToHooks();
-    void applyChangesToFdsAndEnvVariables();
+    void applyChangesToFdsAndEnvVariablesAndBundleAnnotations();
     int getExtraFileDescriptors() const {return extraFileDescriptors;};
 
 private:
     struct FileDescriptorInfo {
         std::string name;
         boost::optional<std::string> containerEnvVariable;
-        boost::optional<std::string> hookEnvVariable;
+        boost::optional<std::string> bundleAnnotation;
         bool forceDup;
     };
 

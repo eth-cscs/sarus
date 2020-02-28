@@ -113,5 +113,9 @@
 				"env": []
 			}
 		]
+	},
+	"annotations": {
+		"com.test.dummy_key": "dummy_value",
+		"com.hooks.logging.level": "2"
 	}
 }

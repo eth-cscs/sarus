@@ -163,15 +163,12 @@ private:
     void createOCIBundleConfigJSON() const {
         auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, idsOfUser);
         auto& allocator = doc.GetAllocator();
-        doc["process"]["env"].PushBack(rj::Value{"SARUS_SSH_HOOK=1", allocator}, allocator);
 
-        try {
-            sarus::common::writeJSON(doc, bundleDir.getPath() / "config.json");
-        }
-        catch(const std::exception& e) {
-            auto message = boost::format("Failed to write OCI Bundle's JSON configuration");
-            SARUS_RETHROW_ERROR(e, message.str());
-        }
+        auto annotation_key = rj::Value{"com.hooks.ssh.enabled", allocator};
+        auto annotation_value = rj::Value{"true", allocator};
+        doc["annotations"].AddMember(annotation_key, annotation_value, allocator);
+
+        sarus::common::writeJSON(doc, bundleDir.getPath() / "config.json");
     }
 
 private:

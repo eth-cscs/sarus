@@ -81,13 +81,17 @@ void GlibcHook::parseConfigJSONOfBundle() {
 
     auto json = sarus::common::readJSON(bundleDir / "config.json");
 
+    hooks::common::utility::applyLoggingConfigIfAvailable(json);
+
     // get rootfs
     rootfsDir = bundleDir / json["root"]["path"].GetString();
 
-    // get environment variables
-    auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
-    if(env["SARUS_GLIBC_HOOK"] == "1") {
+    // get annotations
+    if(json.HasMember("annotations")
+       && json["annotations"].HasMember("com.hooks.glibc.enabled")
+       && json["annotations"]["com.hooks.glibc.enabled"].GetString() == std::string{"true"}) {
         isHookEnabled = true;
+        return;
     }
 
     logMessage("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);

@@ -43,9 +43,9 @@ void closeFiles(std::vector<int>& fds) {
 }
 
 #ifdef NOTROOT
-IGNORE_TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariables) {
+IGNORE_TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariablesAndBundleAnnotations) {
 #else
-TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariables) {
+TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariablesAndBundleAnnotations) {
 #endif
     // configure
     auto configRAII = test_utility::config::makeConfig();
@@ -62,7 +62,7 @@ TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariables) {
 
     // test base case (nothing to do)
     auto handler = runtime::FileDescriptorHandler{config};
-    handler.applyChangesToFdsAndEnvVariables();
+    handler.applyChangesToFdsAndEnvVariablesAndBundleAnnotations();
     CHECK_EQUAL(0, handler.getExtraFileDescriptors());
 
     // test PMI_FD on lowest test fd
@@ -70,7 +70,7 @@ TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariables) {
     config->commandRun.hostEnvironment["PMI_FD"] = std::to_string(testFDs[0]);
     handler = runtime::FileDescriptorHandler{config};
     handler.preservePMIFdIfAny();
-    handler.applyChangesToFdsAndEnvVariables();
+    handler.applyChangesToFdsAndEnvVariablesAndBundleAnnotations();
     CHECK_EQUAL(1, handler.getExtraFileDescriptors());
     CHECK_EQUAL(std::to_string(3), config->commandRun.hostEnvironment["PMI_FD"]);
     CHECK_EQUAL(testFiles[0].string(), boost::filesystem::canonical("/proc/self/fd/3").string());
@@ -81,7 +81,7 @@ TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariables) {
     config->commandRun.hostEnvironment["PMI_FD"] = std::to_string(testFDs[2]);
     handler = runtime::FileDescriptorHandler{config};
     handler.preservePMIFdIfAny();
-    handler.applyChangesToFdsAndEnvVariables();
+    handler.applyChangesToFdsAndEnvVariablesAndBundleAnnotations();
     CHECK_EQUAL(1, handler.getExtraFileDescriptors());
     CHECK_EQUAL(std::to_string(3), config->commandRun.hostEnvironment["PMI_FD"]);
     CHECK_EQUAL(testFiles[2].string(), boost::filesystem::canonical("/proc/self/fd/3").string());
@@ -94,7 +94,7 @@ TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariables) {
     config->commandRun.hostEnvironment["PMI_FD"] = std::to_string(testFDs[2]);
     handler = runtime::FileDescriptorHandler{config};
     handler.preservePMIFdIfAny();
-    handler.applyChangesToFdsAndEnvVariables();
+    handler.applyChangesToFdsAndEnvVariablesAndBundleAnnotations();
     CHECK_EQUAL(1, handler.getExtraFileDescriptors());
     CHECK_EQUAL(std::to_string(3), config->commandRun.hostEnvironment["PMI_FD"]);
     CHECK_EQUAL(testFiles[2].string(), boost::filesystem::canonical("/proc/self/fd/3").string());
@@ -104,10 +104,10 @@ TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariables) {
     testFDs = openFiles(testFiles);
     handler = runtime::FileDescriptorHandler{config};
     handler.passStdoutAndStderrToHooks();
-    handler.applyChangesToFdsAndEnvVariables();
+    handler.applyChangesToFdsAndEnvVariablesAndBundleAnnotations();
     CHECK_EQUAL(2, handler.getExtraFileDescriptors());
-    CHECK_EQUAL(std::to_string(3), config->commandRun.hooksEnvironment["SARUS_STDOUT_FD"]);
-    CHECK_EQUAL(std::to_string(4), config->commandRun.hooksEnvironment["SARUS_STDERR_FD"]);
+    CHECK_EQUAL(std::to_string(3), config->commandRun.bundleAnnotations["com.hooks.logging.stdoutfd"]);
+    CHECK_EQUAL(std::to_string(4), config->commandRun.bundleAnnotations["com.hooks.logging.stderrfd"]);
     CHECK(boost::filesystem::canonical("/proc/self/fd/1") == boost::filesystem::canonical("/proc/self/fd/3"));
     CHECK(boost::filesystem::canonical("/proc/self/fd/2") == boost::filesystem::canonical("/proc/self/fd/4"));
 
@@ -117,10 +117,10 @@ TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariables) {
     handler = runtime::FileDescriptorHandler{config};
     handler.passStdoutAndStderrToHooks();
     handler.preservePMIFdIfAny();
-    handler.applyChangesToFdsAndEnvVariables();
+    handler.applyChangesToFdsAndEnvVariablesAndBundleAnnotations();
     CHECK_EQUAL(3, handler.getExtraFileDescriptors());
-    CHECK_EQUAL(std::to_string(3), config->commandRun.hooksEnvironment["SARUS_STDOUT_FD"]);
-    CHECK_EQUAL(std::to_string(4), config->commandRun.hooksEnvironment["SARUS_STDERR_FD"]);
+    CHECK_EQUAL(std::to_string(3), config->commandRun.bundleAnnotations["com.hooks.logging.stdoutfd"]);
+    CHECK_EQUAL(std::to_string(4), config->commandRun.bundleAnnotations["com.hooks.logging.stderrfd"]);
     CHECK_EQUAL(std::to_string(5), config->commandRun.hostEnvironment["PMI_FD"]);
     CHECK(boost::filesystem::canonical("/proc/self/fd/1") == boost::filesystem::canonical("/proc/self/fd/3"));
     CHECK(boost::filesystem::canonical("/proc/self/fd/2") == boost::filesystem::canonical("/proc/self/fd/4"));

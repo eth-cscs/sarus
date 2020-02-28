@@ -11,13 +11,18 @@
 #include <iostream>
 
 #include "common/Logger.hpp"
+#include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
 
 using namespace sarus;
 
 int main(int argc, char* argv[]) {
-    hooks::common::utility::useSarusStdoutStderrIfAvailable();
-    hooks::common::utility::useSarusLogLevelIfAvailable();
+    boost::filesystem::path bundleDir;
+    pid_t pidOfContainer;
+    std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
+    hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
+    auto json = sarus::common::readJSON(bundleDir / "config.json");
+    hooks::common::utility::applyLoggingConfigIfAvailable(json);
 
     std::cout << "hook's stdout" << std::endl;
     std::cerr << "hook's stderr" << std::endl;

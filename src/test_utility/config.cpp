@@ -138,6 +138,7 @@ ConfigRAII makeConfig() {
     raii.config->directories.images = raii.config->directories.repository / "images";
 
     raii.config->commandRun.hostEnvironment = {{"key", "value"}};
+    raii.config->commandRun.bundleAnnotations = {{"com.test.dummy_key", "dummy_value"}};
 
     return raii;
 }

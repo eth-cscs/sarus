@@ -55,15 +55,15 @@ void createSarusJSON(const sarus::common::Config& config,
 void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir,
                                const boost::filesystem::path& rootfsDir,
                                const std::tuple<uid_t, gid_t>& idsOfUser,
-                               bool setActivationEnvironmentVariable=true,
+                               bool enableHook=true,
                                bool generateSlurmEnvironmentVariables=true) {
     namespace rj = rapidjson;
     auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, idsOfUser);
     auto& allocator = doc.GetAllocator();
 
-    if(setActivationEnvironmentVariable) {
-        doc["process"]["env"].PushBack(rj::Value{"SARUS_SLURM_GLOBAL_SYNC_HOOK=1", allocator}, allocator);
-    }
+    auto annotation_key = rj::Value{"com.hooks.slurm-global-sync.enabled", allocator};
+    auto annotation_value = rj::Value{enableHook ? "true" : "false", allocator};
+    doc["annotations"].AddMember(annotation_key, annotation_value, allocator);
 
     if(generateSlurmEnvironmentVariables) {
         doc["process"]["env"].PushBack(rj::Value{"SLURM_JOB_ID=256", allocator}, allocator);
@@ -72,40 +72,34 @@ void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir,
         doc["process"]["env"].PushBack(rj::Value{"SLURM_NTASKS=2", allocator}, allocator);
     }
 
-    try {
-        sarus::common::writeJSON(doc, bundleDir / "config.json");
-    }
-    catch(const std::exception& e) {
-        auto message = boost::format("Failed to write OCI Bundle's JSON configuration");
-        SARUS_RETHROW_ERROR(e, message.str());
-    }
+    sarus::common::writeJSON(doc, bundleDir / "config.json");
 }
 
 TEST(SlurmGlobalSyncTestGroup, test_hook_disabled) {
     createSarusJSON(*configRAII.config, configJsonSchema, prefixDir.getPath());
     {
-        bool setActivationEnvironmentVariable = false;
+        bool enableHook = false;
         bool generateSlurmEnvironmentVariables = false;
-        createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser, setActivationEnvironmentVariable,
-                                  generateSlurmEnvironmentVariables);
+        createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser,
+                                  enableHook, generateSlurmEnvironmentVariables);
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
         auto hook = Hook{};
         hook.performSynchronization(); // just verify that no errors occur
     }
     {
-        bool setActivationEnvironmentVariable = true;
+        bool enableHook = true;
         bool generateSlurmEnvironmentVariables = false;
-        createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser, setActivationEnvironmentVariable,
-                                  generateSlurmEnvironmentVariables);
+        createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser,
+                                  enableHook, generateSlurmEnvironmentVariables);
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
         auto hook = Hook{};
         hook.performSynchronization(); // just verify that no errors occur
     }
     {
-        bool setActivationEnvironmentVariable = false;
+        bool enableHook = false;
         bool generateSlurmEnvironmentVariables = true;
-        createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser, setActivationEnvironmentVariable,
-                                  generateSlurmEnvironmentVariables);
+        createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser,
+                                  enableHook, generateSlurmEnvironmentVariables);
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
         auto hook = Hook{};
         hook.performSynchronization(); // just verify that no errors occur

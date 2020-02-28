@@ -35,6 +35,8 @@ private:
     rapidjson::Value makeMemberRoot() const;
     rapidjson::Value makeMemberMounts() const;
     rapidjson::Value makeMemberLinux() const;
+    rapidjson::Value makeMemberHooks() const;
+    rapidjson::Value makeMemberAnnotations() const;
 
     boost::optional<gid_t> findGidOfTtyGroup() const;
 

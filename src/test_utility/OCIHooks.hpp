@@ -87,6 +87,12 @@ rapidjson::Document createBaseConfigJSON(const boost::filesystem::path& rootfsDi
         rj::Document{rj::kArrayType},
         allocator);
 
+    // annotations
+    doc.AddMember(
+        "annotations",
+        rj::Document{rj::kObjectType},
+        allocator);
+
     return doc;
 }
 

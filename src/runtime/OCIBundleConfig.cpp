@@ -66,7 +66,10 @@ void OCIBundleConfig::makeJsonDocument() const {
                         makeMemberLinux(),
                         *allocator);
     document->AddMember("hooks",
-                        configsMerger.getHooks(*allocator),
+                        makeMemberHooks(),
+                        *allocator);
+    document->AddMember("annotations",
+                        makeMemberAnnotations(),
                         *allocator);
 }
 
@@ -284,6 +287,28 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
         linux.AddMember("readonlyPaths", paths, *allocator);
     }
     return linux;
+}
+
+rj::Value OCIBundleConfig::makeMemberHooks() const {
+    if(config->json.HasMember("OCIHooks")) {
+        return rj::Value{config->json["OCIHooks"],
+                         *allocator};
+    }
+    else {
+        return rj::Value{rj::kObjectType};
+    }
+}
+
+rapidjson::Value OCIBundleConfig::makeMemberAnnotations() const {
+    auto annotations = rj::Value{rj::kObjectType};
+
+    for(const auto& annotation : configsMerger.getBundleAnnotations()) {
+        auto key = rj::Value{annotation.first.c_str(), *allocator};
+        auto value = rj::Value{annotation.second.c_str(), *allocator};
+        annotations.AddMember(key, value, *allocator);
+    }
+
+    return annotations;
 }
 
 boost::optional<gid_t> OCIBundleConfig::findGidOfTtyGroup() const {

@@ -28,15 +28,9 @@ namespace hooks {
 namespace common {
 namespace utility {
 
-static void replaceFdIfAvailable(int oldfd, const std::string& newfdEnvVariable) {
-    char* p;
-    if((p = getenv(newfdEnvVariable.c_str())) == nullptr) {
-        return;
-    }
-    auto newfd = std::stoi(p);
+static void replaceFd(int oldfd, int newfd) {
     if(dup2(newfd, oldfd) == -1) {
-        auto message = boost::format("Failed to use %s with 'dup(%d, %d)': %s")
-            % newfdEnvVariable
+        auto message = boost::format("Failed to replace fd with 'dup(%d, %d)': %s")
             % oldfd
             % newfd
             % std::strerror(errno);
@@ -44,18 +38,24 @@ static void replaceFdIfAvailable(int oldfd, const std::string& newfdEnvVariable)
     }
 }
 
-void useSarusStdoutStderrIfAvailable() {
-    replaceFdIfAvailable(1, "SARUS_STDOUT_FD");
-    replaceFdIfAvailable(2, "SARUS_STDERR_FD");
-}
-
-void useSarusLogLevelIfAvailable() {
-    char* p;
-    if((p = getenv("SARUS_LOG_LEVEL")) == nullptr) {
+void applyLoggingConfigIfAvailable(const rapidjson::Document& json) {
+    if(!json.HasMember("annotations")) {
         return;
     }
-    auto level = static_cast<sarus::common::LogLevel>(std::stoll(p));
-    sarus::common::Logger::getInstance().setLevel(level);
+
+    if(json["annotations"].HasMember("com.hooks.logging.level")) {
+        auto str = json["annotations"]["com.hooks.logging.level"].GetString();
+        auto level = static_cast<sarus::common::LogLevel>(std::stoi(str));
+        sarus::common::Logger::getInstance().setLevel(level);
+    }
+
+    if(json["annotations"].HasMember("com.hooks.logging.stdoutfd")) {
+        replaceFd(1, std::stoi(json["annotations"]["com.hooks.logging.stdoutfd"].GetString()));
+    }
+
+    if(json["annotations"].HasMember("com.hooks.logging.stderrfd")) {
+        replaceFd(2, std::stoi(json["annotations"]["com.hooks.logging.stderrfd"].GetString()));
+    }
 }
 
 std::tuple<boost::filesystem::path, pid_t> parseStateOfContainerFromStdin() {

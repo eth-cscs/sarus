@@ -82,12 +82,13 @@ void MpiHook::parseConfigJSONOfBundle() {
 
     auto json = sarus::common::readJSON(bundleDir / "config.json");
 
-    // get rootfs
+    hooks::common::utility::applyLoggingConfigIfAvailable(json);
+
     rootfsDir = bundleDir / json["root"]["path"].GetString();
 
-    // get environment variables
-    auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
-    if(env["SARUS_MPI_HOOK"] == "1") {
+    if(json.HasMember("annotations")
+       && json["annotations"].HasMember("com.hooks.mpi.enabled")
+       && json["annotations"]["com.hooks.mpi.enabled"].GetString() == std::string{"true"}) {
         isHookEnabled = true;
     }
 

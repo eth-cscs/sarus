@@ -103,6 +103,8 @@ void SshHook::parseConfigJSONOfBundle() {
 
     auto json = sarus::common::readJSON(bundleDir / "config.json");
 
+    hooks::common::utility::applyLoggingConfigIfAvailable(json);
+
     // get rootfs
     rootfsDir = bundleDir / json["root"]["path"].GetString();
     opensshDirInBundle = rootfsDir / "opt/sarus/openssh";
@@ -111,9 +113,10 @@ void SshHook::parseConfigJSONOfBundle() {
     uidOfUser = json["process"]["user"]["uid"].GetInt();
     gidOfUser = json["process"]["user"]["gid"].GetInt();
 
-    // get environment variables
-    auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
-    if(env["SARUS_SSH_HOOK"] == "1") {
+    // get annotations
+    if(json.HasMember("annotations")
+       && json["annotations"].HasMember("com.hooks.ssh.enabled")
+       && json["annotations"]["com.hooks.ssh.enabled"].GetString() == std::string{"true"}) {
         isHookEnabled = true;
     }
 
