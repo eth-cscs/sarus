@@ -50,7 +50,6 @@ private:
 private:
     bool isHookEnabled{ true };
     boost::filesystem::path bundleDir;
-    boost::filesystem::path localRepositoryDir;
     boost::filesystem::path syncDir;
     boost::filesystem::path syncDirArrival;
     boost::filesystem::path syncDirDeparture;

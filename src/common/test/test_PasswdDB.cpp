@@ -37,8 +37,7 @@ TEST(PasswdDBTestGroup, testRead) {
         << std::endl;
 
     // read from file
-    auto passwd = PasswdDB{};
-    passwd.read(file);
+    auto passwd = PasswdDB{file};
     const auto& entries = passwd.getEntries();
 
     CHECK(entries.size() == 3);

@@ -192,7 +192,7 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Failed to bind mount /invalid-s87dfs9 on container\'s /dst: mount source doesn\'t exist"
         self._check(command, expected_message)
 
-        sarus_ssh_dir = os.getenv("HOME") + "/.sarus/ssh"
+        sarus_ssh_dir = os.getenv("HOME") + "/.oci-hooks/ssh"
         shutil.rmtree(sarus_ssh_dir, ignore_errors=True) # remove ssh keys
         command = ["sarus", "run", "--ssh", "alpine", "true"]
         expected_message = "Failed to check the SSH keys. Hint: try to generate the SSH keys with 'sarus ssh-keygen'."
@@ -238,8 +238,15 @@ class TestErrorMessages(unittest.TestCase):
                 self.fail("Sarus didn't generate any error, but at least one was expected.")
 
             stderr_without_trailing_whitespaces = proc.stderr.rstrip()
-            return stderr_without_trailing_whitespaces.decode()
+            out = stderr_without_trailing_whitespaces.decode()
 
+        # filter out profiling messages
+        lines_filtered = []
+        for line in out.split('\n'):
+            if not line.startswith("profiling:"):
+                lines_filtered.append(line)
+
+        return '\n'.join(lines_filtered)
 
 if __name__ == "__main__":
     unittest.main()

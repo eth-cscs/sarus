@@ -20,8 +20,6 @@
 
 #include <common/Error.hpp>
 #include <common/Logger.hpp>
-#include <common/Config.hpp>
-
 
 namespace sarus {
 namespace hooks {
@@ -29,15 +27,14 @@ namespace ssh {
 
 class SshHook {
 public:
-    SshHook(std::shared_ptr<sarus::common::Config> config);
     void generateSshKeys(bool overwriteSshKeysIfExist);
-    void checkLocalRepositoryHasSshKeys();
+    void checkUserHasSshKeys();
     void startSshd();
 
 private:
     void parseConfigJSONOfBundle();
-    bool localRepositoryHasSshKeys() const;
-    boost::filesystem::path getKeysDirInLocalRepository() const;
+    bool userHasSshKeys() const;
+    boost::filesystem::path getSshKeysDir() const;
     void sshKeygen(const boost::filesystem::path& outputFile) const;
     void checkThatOpenSshIsUntamperable() const;
     void copyKeysIntoBundle() const;
@@ -49,7 +46,7 @@ private:
 
 private:
     bool isHookEnabled = false;
-    boost::filesystem::path localRepositoryDir;
+    boost::filesystem::path sshKeysDir;
     boost::filesystem::path opensshDirInHost;
     boost::filesystem::path opensshDirInBundle;
     boost::filesystem::path bundleDir;
@@ -57,7 +54,6 @@ private:
     pid_t pidOfContainer;
     uid_t uidOfUser;
     gid_t gidOfUser;
-    std::shared_ptr<sarus::common::Config> config;
 };
 
 }}} // namespace

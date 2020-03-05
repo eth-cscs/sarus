@@ -23,8 +23,9 @@
             {
                 "path": "@CMAKE_INSTALL_PREFIX@/bin/ssh_hook",
                 "env": [
-                    "SARUS_PREFIX_DIR=@CMAKE_INSTALL_PREFIX@",
-                    "SARUS_OPENSSH_DIR=@CMAKE_INSTALL_PREFIX@/openssh"
+                    "HOOK_BASE_DIR=/home",
+                    "PASSWD_FILE=@CMAKE_INSTALL_PREFIX@/etc/passwd",
+                    "OPENSSH_DIR=@CMAKE_INSTALL_PREFIX@/openssh"
                 ],
                 "args": [
                     "ssh_hook",

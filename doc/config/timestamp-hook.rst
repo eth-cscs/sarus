@@ -106,8 +106,9 @@ For example, using other hooks described in this documentation:
             {
                 "path": "/opt/sarus/bin/ssh_hook",
                 "env": [
-                    "SARUS_LOCAL_REPOSITORY_BASE_DIR=/home",
-                    "SARUS_OPENSSH_DIR=/opt/sarus/openssh"
+                    "HOOK_BASE_DIR=/home",
+                    "PASSWD_FILE=/opt/sarus/etc/passwd",
+                    "OPENSSH_DIR=/opt/sarus/openssh"
                 ],
                 "args": [
                     "ssh_hook",
@@ -123,7 +124,8 @@ For example, using other hooks described in this documentation:
             {
                 "path": "/opt/sarus/bin/slurm_global_sync_hook",
                 "env": [
-                    "SARUS_LOCAL_REPOSITORY_BASE_DIR=/home"
+                    "HOOK_BASE_DIR=/home",
+                    "PASSWD_FILE=/opt/sarus/etc/passwd"
                 ]
             },
             {

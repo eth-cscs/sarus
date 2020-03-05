@@ -47,7 +47,6 @@ int forkExecWait(const common::CLIArguments& args,
                  const boost::optional<std::function<void()>>& preExecActions = {});
 void SetStdinEcho(bool);
 std::string getHostname();
-std::string getUsername(const common::Config&);
 size_t getFileSize(const boost::filesystem::path& filename);
 std::tuple<uid_t, gid_t> getOwner(const boost::filesystem::path&);
 void setOwner(const boost::filesystem::path&, uid_t, gid_t);

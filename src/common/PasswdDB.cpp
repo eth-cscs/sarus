@@ -19,16 +19,13 @@
 namespace sarus {
 namespace common {
 
-void PasswdDB::read(const boost::filesystem::path& file) {
-    std::ifstream is{file.c_str()};
+PasswdDB::PasswdDB(const boost::filesystem::path& file) {
+    auto is = std::ifstream{file.c_str()};
     read(is);
 }
 
-void PasswdDB::read(std::istream& is) {
-    std::string line;
-    while(std::getline(is, line)) {
-        entries.push_back(parseLine(line));
-    }
+PasswdDB::PasswdDB(std::istream& is) {
+    read(is);
 }
 
 void PasswdDB::write(const boost::filesystem::path& file) const {
@@ -50,12 +47,33 @@ void PasswdDB::write(const boost::filesystem::path& file) const {
     }
 }
 
+std::string PasswdDB::getUsername(uid_t uid) const {
+    // Note: the retrieval of a username is usually done through the getpwuid function.
+    // However, musl fails to retrieve all the passwd entries from certain systems, e.g. LDAP at CSCS.
+
+    for(const auto& entry : entries) {
+        if(entry.uid == uid) {
+            return entry.loginName;
+        }
+    }
+
+    auto message = boost::format("Failed to retrieve username for uid=%d") % uid;
+    SARUS_THROW_ERROR(message.str());
+}
+
 const std::vector<PasswdDB::Entry>& PasswdDB::getEntries() const {
     return entries;
 }
 
 std::vector<PasswdDB::Entry>& PasswdDB::getEntries() {
     return entries;
+}
+
+void PasswdDB::read(std::istream& is) {
+    std::string line;
+    while(std::getline(is, line)) {
+        entries.push_back(parseLine(line));
+    }
 }
 
 PasswdDB::Entry PasswdDB::parseLine(const std::string& line) const {

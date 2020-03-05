@@ -47,7 +47,7 @@ public:
     void execute() override {
         cli::utility::printLog("Executing run command", common::LogLevel::INFO);
 
-        if(conf->commandRun.enableSSH && !checkSshKeysInLocalRepository()) {
+        if(conf->commandRun.enableSSH && !checkUserHasSshKeys()) {
             auto message = boost::format("Failed to check the SSH keys. Hint: try to"
                                          " generate the SSH keys with 'sarus ssh-keygen'.");
             common::Logger::getInstance().log(message, "CLI", common::LogLevel::GENERAL, std::cerr);
@@ -231,22 +231,35 @@ private:
         return maps;
     }
 
-    bool checkSshKeysInLocalRepository() const {
-        cli::utility::printLog( "Checking that the SSH keys are in the local repository",
+    bool checkUserHasSshKeys() const {
+        cli::utility::printLog( "Checking that the user has SSH keys",
                                 common::LogLevel::INFO);
-        common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR="
-            + common::getLocalRepositoryDirectory(*conf).string());
-        common::setEnvironmentVariable(std::string{"SARUS_PREFIX_DIR="}
-            + conf->json["prefixDir"].GetString());
-        auto command = boost::format("%s/bin/ssh_hook check-localrepository-has-sshkeys")
-            % conf->json["prefixDir"].GetString();
-        try {
-            common::executeCommand(command.str());
-        }
-        catch(const common::Error&) {
-            return false;
-        }
-        return true;
+
+        common::setEnvironmentVariable("HOOK_BASE_DIR=" + std::string{conf->json["localRepositoryBaseDir"].GetString()});
+
+        auto passwdFile = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "etc/passwd";
+        common::setEnvironmentVariable("PASSWD_FILE=" + passwdFile.string());
+
+        auto args = common::CLIArguments{
+            std::string{ conf->json["prefixDir"].GetString() } + "/bin/ssh_hook",
+            "check-user-has-sshkeys"
+        };
+
+        auto setUserIdentity = [this]() {
+            auto gid = conf->userIdentity.gid;
+            if(setresgid(gid, gid, gid) != 0) {
+                auto message = boost::format("Failed to setresgid(%1%, %1%, %1%): %2%") % gid % strerror(errno);
+                SARUS_THROW_ERROR(message.str());
+            }
+
+            auto uid = conf->userIdentity.uid;
+            if(setresuid(uid, uid, uid) != 0) {
+                auto message = boost::format("Failed to setresuid(%1%, %1%, %1%): %2%") % uid % strerror(errno);
+                SARUS_THROW_ERROR(message.str());
+            }
+        };
+
+        return common::forkExecWait(args, std::function<void()>{setUserIdentity}) == 0;
     }
 
     void verifyThatImageIsAvailable() const {

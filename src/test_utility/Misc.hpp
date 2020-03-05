@@ -22,9 +22,7 @@ namespace misc {
 std::tuple<uid_t, gid_t> getNonRootUserIds() {
     auto out = sarus::common::executeCommand("getent passwd");
     std::stringstream ss{out};
-
-    auto passwd = sarus::common::PasswdDB{};
-    passwd.read(ss);
+    auto passwd = sarus::common::PasswdDB{ss};
 
     for(const auto& entry : passwd.getEntries()) {
         if(entry.uid != 0) {

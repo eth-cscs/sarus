@@ -40,18 +40,11 @@ public:
     Helper() {
         configRAII.config->userIdentity.uid = std::get<0>(idsOfUser);
         configRAII.config->userIdentity.gid = std::get<1>(idsOfUser);
-        localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*configRAII.config);
     }
 
     void setupTestEnvironment() {
         // host test environment
-        configRAII.config->json["securityChecks"].SetBool(false);
-        sarus::common::createFoldersIfNecessary(prefixDir.getPath() / "etc");
-        sarus::common::writeJSON(configRAII.config->json, prefixDir.getPath() / "etc/sarus.json");
-        sarus::common::copyFile(configJsonSchema, prefixDir.getPath() / "etc/sarus.schema.json");
-
-        sarus::common::createFoldersIfNecessary(localRepositoryDir);
-        sarus::common::setOwner(localRepositoryDir, std::get<0>(idsOfUser), std::get<1>(idsOfUser));
+        sarus::common::createFoldersIfNecessary(sshKeysDir, std::get<0>(idsOfUser), std::get<1>(idsOfUser));
 
         sarus::common::createFoldersIfNecessary(opensshDirInHost.getPath());
         boost::format extractArchiveCommand = boost::format("tar xf %s -C %s --strip-components=1")
@@ -59,29 +52,29 @@ public:
             % opensshDirInHost.getPath();
         sarus::common::executeCommand(extractArchiveCommand.str());
 
-        sarus::common::setEnvironmentVariable("SARUS_PREFIX_DIR=" + prefixDir.getPath().string());
-        sarus::common::setEnvironmentVariable("SARUS_OPENSSH_DIR=" + opensshDirInHost.getPath().string());
-        sarus::common::setEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR=" + localRepositoryDir.string());
+        sarus::common::setEnvironmentVariable("HOOK_BASE_DIR=" + sshKeysBaseDir.string());
+        sarus::common::setEnvironmentVariable("PASSWD_FILE=" + passwdFile.string());
+        sarus::common::setEnvironmentVariable("OPENSSH_DIR=" + opensshDirInHost.getPath().string());
 
         // bundle test environment
         createOCIBundleConfigJSON();
 
         for(const auto& folder : rootfsFolders) {
-            sarus::common::createFoldersIfNecessary(rootfsDir / folder);
-            runtime::bindMount(boost::filesystem::path{"/"} / folder, rootfsDir / folder);
-        }
+            auto lowerDir = "/" / folder;
+            auto upperDir = bundleDir / "upper-dirs" / folder;
+            auto workDir = bundleDir / "work-dirs" / folder;
+            auto mergedDir = rootfsDir / folder;
 
-        sarus::common::createFoldersIfNecessary(rootfsDir / "proc");
-        if(mount(NULL, (rootfsDir / "proc").c_str(), "proc", 0, NULL) != 0) {
-            auto message = boost::format("Failed to setup proc filesystem on %s: %s")
-                % (rootfsDir / "proc")
-                % strerror(errno);
-            SARUS_THROW_ERROR(message.str());
+            sarus::common::createFoldersIfNecessary(upperDir);
+            sarus::common::createFoldersIfNecessary(workDir);
+            sarus::common::createFoldersIfNecessary(mergedDir);
+
+            runtime::mountOverlayfs(lowerDir, upperDir, workDir, mergedDir);
         }
     }
 
     void writeContainerStateToStdin() const {
-        test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
+        test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
     }
 
     void cleanupTestEnvironment() const {
@@ -92,8 +85,6 @@ public:
             CHECK(umount2((rootfsDir / folder).c_str(), MNT_FORCE | MNT_DETACH) == 0);
             boost::filesystem::remove_all(rootfsDir / folder);
         }
-
-        CHECK(umount2((rootfsDir / "proc").c_str(), MNT_FORCE | MNT_DETACH) == 0);
     }
 
     void setUserIds() const {
@@ -111,10 +102,10 @@ public:
     }
 
     void checkLocalRepositoryHasSshKeys() const {
-        CHECK(boost::filesystem::exists(localRepositoryDir / "ssh/ssh_host_rsa_key"));
-        CHECK(boost::filesystem::exists(localRepositoryDir / "ssh/ssh_host_rsa_key.pub"));
-        CHECK(boost::filesystem::exists(localRepositoryDir / "ssh/id_rsa"));
-        CHECK(boost::filesystem::exists(localRepositoryDir / "ssh/id_rsa.pub"));
+        CHECK(boost::filesystem::exists(sshKeysDir / "ssh_host_rsa_key"));
+        CHECK(boost::filesystem::exists(sshKeysDir / "ssh_host_rsa_key.pub"));
+        CHECK(boost::filesystem::exists(sshKeysDir / "id_rsa"));
+        CHECK(boost::filesystem::exists(sshKeysDir / "id_rsa.pub"));
     }
 
     void checkContainerHasServerKeys() const {
@@ -168,7 +159,7 @@ private:
         auto annotation_value = rj::Value{"true", allocator};
         doc["annotations"].AddMember(annotation_key, annotation_value, allocator);
 
-        sarus::common::writeJSON(doc, bundleDir.getPath() / "config.json");
+        sarus::common::writeJSON(doc, bundleDir / "config.json");
     }
 
 private:
@@ -176,20 +167,17 @@ private:
     std::tuple<uid_t, gid_t> idsOfUser = test_utility::misc::getNonRootUserIds();
 
     test_utility::config::ConfigRAII configRAII = test_utility::config::makeConfig();
-    boost::filesystem::path configJsonSchema = boost::filesystem::path{__FILE__}
-        .parent_path()
-        .parent_path()
-        .parent_path()
-        .parent_path()
-        .parent_path() / "sarus.schema.json";
-    sarus::common::PathRAII prefixDir = sarus::common::PathRAII{configRAII.config->json["prefixDir"].GetString()};
-    sarus::common::PathRAII bundleDir = sarus::common::PathRAII{configRAII.config->json["OCIBundleDir"].GetString()};
-    boost::filesystem::path rootfsDir = bundleDir.getPath() / configRAII.config->json["rootfsFolder"].GetString();
-    boost::filesystem::path localRepositoryDir;
+    boost::filesystem::path prefixDir = configRAII.config->json["prefixDir"].GetString();
+    boost::filesystem::path passwdFile = prefixDir / "etc/passwd";
+    boost::filesystem::path bundleDir = configRAII.config->json["OCIBundleDir"].GetString();
+    boost::filesystem::path rootfsDir = bundleDir / configRAII.config->json["rootfsFolder"].GetString();
+    boost::filesystem::path sshKeysBaseDir = configRAII.config->json["localRepositoryBaseDir"].GetString();
+    std::string username = sarus::common::PasswdDB{passwdFile}.getUsername(std::get<0>(idsOfUser));
+    boost::filesystem::path sshKeysDir = sshKeysBaseDir / username / ".oci-hooks/ssh/keys";
     sarus::common::PathRAII opensshDirInHost = sarus::common::PathRAII{boost::filesystem::absolute(
                                                sarus::common::makeUniquePathWithRandomSuffix("./sarus-test-opensshstatic"))};
     boost::filesystem::path opensshDirInContainer = rootfsDir / "opt/sarus/openssh";
-    std::vector<std::string> rootfsFolders = {"etc", "dev", "bin", "sbin", "usr", "lib", "lib64"}; // necessary to chroot into rootfs
+    std::vector<boost::filesystem::path> rootfsFolders = {"etc", "dev", "bin", "sbin", "usr", "lib", "lib64"}; // necessary to chroot into rootfs
 };
 
 TEST_GROUP(SSHHookTestGroup) {
@@ -201,19 +189,16 @@ TEST(SSHHookTestGroup, testSshHook) {
     helper.setRootIds();
     helper.setupTestEnvironment();
 
-    boost::filesystem::path sarusInstallationPrefixDir = sarus::common::getEnvironmentVariable("SARUS_PREFIX_DIR");
-    auto config = std::make_shared<sarus::common::Config>(sarusInstallationPrefixDir);
-
     // generate + check SSH keys in local repository
     helper.setUserIds(); // keygen is executed with user privileges
-    SshHook{config}.generateSshKeys(true);
+    SshHook{}.generateSshKeys(true);
+    SshHook{}.checkUserHasSshKeys();
     helper.setRootIds();
     helper.checkLocalRepositoryHasSshKeys();
-    SshHook{config}.checkLocalRepositoryHasSshKeys();
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{config}.startSshd();
+    SshHook{}.startSshd();
     helper.checkContainerHasServerKeys();
     helper.checkContainerHasClientKeys();
     helper.checkContainerHasChrootFolderForSshd();

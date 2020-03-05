@@ -42,7 +42,7 @@ class TestSshHook(unittest.TestCase):
         self.assertEqual(prettyname, "Debian GNU/Linux 9 (stretch)")
 
     def _check_ssh_keys_generation(self):
-        ssh_dir = os.environ['HOME'] + "/.sarus/ssh"
+        ssh_dir = os.environ['HOME'] + "/.oci-hooks/ssh"
         fingerprint_command = ["bash", "-c", "find " + ssh_dir + r" -type f -exec sum {} \; | sum"]
 
         # check keys generation

@@ -19,7 +19,7 @@
 #include "common/Error.hpp"
 #include "common/Logger.hpp"
 #include "common/Utility.hpp"
-#include "common/Config.hpp"
+#include "common/PasswdDB.hpp"
 #include "hooks/common/Utility.hpp"
 
 namespace sarus {
@@ -37,20 +37,18 @@ Hook::Hook() {
 }
 
 void Hook::loadConfigs() {
-    log("Loading configuration (based on Slurm environment variables)",
-        sarus::common::LogLevel::INFO);
-
     if(!isHookEnabled) {
+        log("Not loading configuration (hook disabled)", sarus::common::LogLevel::INFO);
         return;
     }
 
-    boost::filesystem::path sarusInstallationPrefixDir = sarus::common::getEnvironmentVariable("SARUS_PREFIX_DIR");
-    auto config = std::make_shared<sarus::common::Config>(sarusInstallationPrefixDir);
-    config->userIdentity.uid = uidOfUser;
-    config->userIdentity.gid = gidOfUser;
+    log("Loading configuration (based on environment variables)",
+        sarus::common::LogLevel::INFO);
 
-    localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*config);
-    syncDir = localRepositoryDir / "slurm_global_sync" / ("slurm-jobid-" + slurmJobID + "-stepid-" + slurmStepID);
+    auto baseDir = boost::filesystem::path{ sarus::common::getEnvironmentVariable("HOOK_BASE_DIR") };
+    auto passwdFile = sarus::common::getEnvironmentVariable("PASSWD_FILE");
+    auto username = sarus::common::PasswdDB{passwdFile}.getUsername(uidOfUser);
+    syncDir = baseDir / username / ".oci-hooks/slurm-global-sync" / ("jobid-" + slurmJobID + "-stepid-" + slurmStepID);
     syncDirArrival = syncDir / "arrival";
     syncFileArrival = syncDirArrival / ("slurm-procid-" + slurmProcID);
     syncDirDeparture = syncDir / "departure";

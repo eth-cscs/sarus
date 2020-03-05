@@ -44,9 +44,13 @@ Sarus configuration
 -------------------
 
 The program is meant to be run as a **prestart** hook and does not accept any
-argument. The only required configuration setting is the following environment variable:
+argument. The following environment variables must be defined:
 
-* ``SARUS_PREFIX_DIR``: Absolute path to the installation directory of Sarus.
+* ``HOOK_BASE_DIR``: Absolute base path to the directory where the hook will create and access the synchronization
+  files. The sync directory will be located in ``<HOOK_BASE_DIR>/<username>/.oci-hooks/slurm-global-sync``.
+
+* ``PASSWD_FILE``: Absolute path to a password file (PASSWD(5)).
+  The file is used by the hook to retrieve the username of the user.
 
 The following is an example ``OCIHooks`` object enabling the MPI hook:
 
@@ -57,7 +61,8 @@ The following is an example ``OCIHooks`` object enabling the MPI hook:
             {
                 "path": "/opt/sarus/bin/slurm_global_sync_hook",
                 "env": [
-                    "SARUS_PREFIX_DIR=/opt/sarus/default"
+                    "HOOK_BASE_DIR=/home",
+                    "PASSWD_FILE=/opt/sarus/etc/passwd"
                 ]
             }
         ]

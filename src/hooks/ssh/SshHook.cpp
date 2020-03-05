@@ -18,7 +18,6 @@
 #include <sys/prctl.h>
 #include <boost/format.hpp>
 
-#include "common/Config.hpp"
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
 #include "common/Lockfile.hpp"
@@ -31,53 +30,53 @@ namespace sarus {
 namespace hooks {
 namespace ssh {
 
-SshHook::SshHook(std::shared_ptr<sarus::common::Config> config)
-    : config(config)
-{}
-
 void SshHook::generateSshKeys(bool overwriteSshKeysIfExist) {
     log("Generating SSH keys", sarus::common::LogLevel::INFO);
 
     uidOfUser = getuid(); // keygen command is executed with user identity
     gidOfUser = getgid();
-    config->userIdentity.uid = uidOfUser;
-    config->userIdentity.gid = gidOfUser;
-    localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*config);
-    opensshDirInHost = sarus::common::getEnvironmentVariable("SARUS_OPENSSH_DIR");
+    sshKeysDir = getSshKeysDir();
+    opensshDirInHost = sarus::common::getEnvironmentVariable("OPENSSH_DIR");
 
-    sarus::common::Lockfile lock{ getKeysDirInLocalRepository() }; // protect keys from concurrent writes
-    if(localRepositoryHasSshKeys() && !overwriteSshKeysIfExist) {
+    sarus::common::createFoldersIfNecessary(sshKeysDir);
+    sarus::common::Lockfile lock{ sshKeysDir }; // protect keys from concurrent writes
+
+    if(userHasSshKeys() && !overwriteSshKeysIfExist) {
         auto message = boost::format("SSH keys not generated because they already exist in %s."
                                      " Use the '--overwrite' option to overwrite the existing keys.")
-                        % getKeysDirInLocalRepository().string();
+                        % sshKeysDir;
         log(message, sarus::common::LogLevel::GENERAL);
         return;
     }
-    boost::filesystem::remove_all(getKeysDirInLocalRepository());
-    sarus::common::createFoldersIfNecessary(getKeysDirInLocalRepository());
-    sshKeygen(getKeysDirInLocalRepository() / "ssh_host_rsa_key");
-    sshKeygen(getKeysDirInLocalRepository() / "id_rsa");
+
+    boost::filesystem::remove_all(sshKeysDir);
+    sarus::common::createFoldersIfNecessary(sshKeysDir);
+    sshKeygen(sshKeysDir / "ssh_host_rsa_key");
+    sshKeygen(sshKeysDir / "id_rsa");
 
     log("Successfully generated SSH keys", sarus::common::LogLevel::GENERAL);
     log("Successfully generated SSH keys", sarus::common::LogLevel::INFO);
 }
 
-void SshHook::checkLocalRepositoryHasSshKeys() {
-    log("Checking that user's local repository has SSH keys", sarus::common::LogLevel::INFO);
+void SshHook::checkUserHasSshKeys() {
+    log("Checking that user has SSH keys", sarus::common::LogLevel::INFO);
 
-    localRepositoryDir = sarus::common::getEnvironmentVariable("SARUS_LOCAL_REPOSITORY_DIR");
-    if(!localRepositoryHasSshKeys()) {
-        log("Could not find SSH keys in user local repository", sarus::common::LogLevel::INFO);
+    uidOfUser = getuid(); // "user-has-ssh-keys" command is executed with user identity
+    gidOfUser = getgid();
+    sshKeysDir = getSshKeysDir();
+
+    if(!userHasSshKeys()) {
+        log(boost::format{"Could not find SSH keys in %s"} % sshKeysDir, sarus::common::LogLevel::INFO);
         exit(EXIT_FAILURE); // exit with non-zero to communicate missing keys to calling process (sarus)
     }
 
-    log("Successfully checked that user's local repository has SSH keys", sarus::common::LogLevel::INFO);
+    log("Successfully checked that user has SSH keys", sarus::common::LogLevel::INFO);
 }
 
 void SshHook::startSshd() {
     log("Activating SSH in container", sarus::common::LogLevel::INFO);
 
-    opensshDirInHost = sarus::common::getEnvironmentVariable("SARUS_OPENSSH_DIR");
+    opensshDirInHost = sarus::common::getEnvironmentVariable("OPENSSH_DIR");
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
@@ -85,9 +84,7 @@ void SshHook::startSshd() {
         log("Not activating SSH in container (hook disabled)", sarus::common::LogLevel::INFO);
         return;
     }
-    config->userIdentity.uid = uidOfUser;
-    config->userIdentity.gid = gidOfUser;
-    localRepositoryDir = sarus::common::getLocalRepositoryDirectory(*config);
+    sshKeysDir = getSshKeysDir();
     sarus::common::copyFolder(opensshDirInHost, opensshDirInBundle);
     copyKeysIntoBundle();
     sarus::common::createFoldersIfNecessary(rootfsDir / "tmp/var/empty"); // sshd's chroot folder
@@ -123,22 +120,25 @@ void SshHook::parseConfigJSONOfBundle() {
     log("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);
 }
 
-bool SshHook::localRepositoryHasSshKeys() const {
+bool SshHook::userHasSshKeys() const {
     auto expectedKeyFiles = std::vector<std::string>{"ssh_host_rsa_key", "ssh_host_rsa_key.pub", "id_rsa", "id_rsa.pub"};
     for(const auto& file : expectedKeyFiles) {
-        auto fullPath = getKeysDirInLocalRepository() / file;
+        auto fullPath = sshKeysDir / file;
         if(!boost::filesystem::exists(fullPath)) {
             auto message = boost::format{"Expected SSH key file %s not found"} % fullPath;
             log(message, sarus::common::LogLevel::DEBUG);
             return false;
         }
     }
-    log(boost::format{"Found SSH keys in %s"} % getKeysDirInLocalRepository(), sarus::common::LogLevel::DEBUG);
+    log(boost::format{"Found SSH keys in %s"} % sshKeysDir, sarus::common::LogLevel::DEBUG);
     return true;
 }
 
-boost::filesystem::path SshHook::getKeysDirInLocalRepository() const {
-    return localRepositoryDir / "ssh";
+boost::filesystem::path SshHook::getSshKeysDir() const {
+    auto baseDir = boost::filesystem::path{ sarus::common::getEnvironmentVariable("HOOK_BASE_DIR") };
+    auto passwdFile = boost::filesystem::path{ sarus::common::getEnvironmentVariable("PASSWD_FILE") };
+    auto username = sarus::common::PasswdDB{passwdFile}.getUsername(uidOfUser);
+    return baseDir / username / ".oci-hooks/ssh/keys";
 }
 
 void SshHook::sshKeygen(const boost::filesystem::path& outputFile) const {
@@ -153,22 +153,22 @@ void SshHook::copyKeysIntoBundle() const {
     log("Copying SSH keys into bundle", sarus::common::LogLevel::INFO);
 
     // server keys
-    sarus::common::copyFile(localRepositoryDir / "ssh/ssh_host_rsa_key",
+    sarus::common::copyFile(sshKeysDir / "ssh_host_rsa_key",
                             opensshDirInBundle / "etc/ssh_host_rsa_key",
                             uidOfUser, gidOfUser);
-    sarus::common::copyFile(localRepositoryDir / "ssh/ssh_host_rsa_key.pub",
+    sarus::common::copyFile(sshKeysDir / "ssh_host_rsa_key.pub",
                             opensshDirInBundle / "etc/ssh_host_rsa_key.pub",
                             uidOfUser, gidOfUser);
 
     // user keys
     boost::filesystem::remove_all(opensshDirInBundle / "etc/userkeys");
-    sarus::common::copyFile(localRepositoryDir / "ssh/id_rsa",
+    sarus::common::copyFile(sshKeysDir / "id_rsa",
                             opensshDirInBundle / "etc/userkeys/id_rsa",
                             uidOfUser, gidOfUser);
-    sarus::common::copyFile(localRepositoryDir / "ssh/id_rsa.pub",
+    sarus::common::copyFile(sshKeysDir / "id_rsa.pub",
                             opensshDirInBundle / "etc/userkeys/id_rsa.pub",
                             uidOfUser, gidOfUser);
-    sarus::common::copyFile(localRepositoryDir / "ssh/id_rsa.pub",
+    sarus::common::copyFile(sshKeysDir / "id_rsa.pub",
                             opensshDirInBundle / "etc/userkeys/authorized_keys",
                             uidOfUser, gidOfUser);
 
@@ -184,8 +184,7 @@ void SshHook::patchPasswdIfNecessary() const {
     log("Patching container's /etc/passwd if necessary"
         " (ensure that command interpreter is valid)", sarus::common::LogLevel::INFO);
 
-    auto passwd = sarus::common::PasswdDB{};
-    passwd.read(rootfsDir / "etc/passwd");
+    auto passwd = sarus::common::PasswdDB{rootfsDir / "etc/passwd"};
     for(auto& entry : passwd.getEntries()) {
         if( entry.userCommandInterpreter
             && !boost::filesystem::exists(rootfsDir / *entry.userCommandInterpreter)) {

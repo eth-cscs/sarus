@@ -33,13 +33,16 @@ public:
     };
 
 public:
-    void read(const boost::filesystem::path&);
-    void read(std::istream&);
+    PasswdDB() = default;
+    PasswdDB(const boost::filesystem::path&);
+    PasswdDB(std::istream&);
     void write(const boost::filesystem::path&) const;
+    std::string getUsername(uid_t) const;
     const std::vector<Entry>& getEntries() const;
     std::vector<Entry>& getEntries();
 
 private:
+    void read(std::istream&);
     Entry parseLine(const std::string& line) const;
 
 private:

@@ -4,7 +4,7 @@ set -ex
 
 # Install cpprestsdk
 cd /opt && \
-    ln -s /usr/include/locale.h /usr/include/xlocale.h && \
+    ([ -e /usr/include/xlocale.h ] || ln -s /usr/include/locale.h /usr/include/xlocale.h) && \
     mkdir -p cpprestsdk/v2.10.0 && cd cpprestsdk/v2.10.0 && \
     wget https://github.com/Microsoft/cpprestsdk/archive/v2.10.0.tar.gz && \
     tar xf v2.10.0.tar.gz && \

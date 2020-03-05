@@ -39,9 +39,12 @@ public:
     }
 
     void execute() override {
-        common::setEnvironmentVariable(std::string{"SARUS_PREFIX_DIR="} + conf->json["prefixDir"].GetString());
-        common::setEnvironmentVariable("SARUS_OPENSSH_DIR="
-            + (conf->json["prefixDir"].GetString() + std::string{"/openssh"}));
+        common::setEnvironmentVariable("HOOK_BASE_DIR=" + std::string{conf->json["localRepositoryBaseDir"].GetString()});
+        auto passwdFile = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "etc/passwd";
+        common::setEnvironmentVariable("PASSWD_FILE=" + passwdFile.string());
+        auto opensshDir = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "openssh";
+        common::setEnvironmentVariable("OPENSSH_DIR=" + opensshDir.string());
+
         auto sshHook = boost::filesystem::path{conf->json["prefixDir"].GetString()} / "bin/ssh_hook";
         auto args = common::CLIArguments{sshHook.string(), "keygen"};
         if(overwriteSshKeysIfExist) {

@@ -29,10 +29,13 @@ receive its own name/location as the first argument, and the string
 ``start-sshd`` as positional argument. In addition, the following
 environment variables must be defined:
 
-* ``SARUS_PREFIX_DIR``: Absolute path to the installation directory of Sarus.
+* ``HOOK_BASE_DIR``: Absolute base path to the directory where the hook will create and access the SSH keys.
+  The keys directory will be located in ``<HOOK_BASE_DIR>/<username>/.oci-hooks/ssh/keys``.
 
-* ``SARUS_OPENSSH_DIR``: Absolute path to the location of Sarus's custom
-  OpenSSH software.
+* ``PASSWD_FILE``: Absolute path to a password file (PASSWD(5)).
+  The file is used by the hook to retrieve the username of the user.
+
+* ``OPENSSH_DIR``: Absolute path to the location of the custom OpenSSH software.
 
 The following is an example ``OCIHooks`` object enabling the SSH hook:
 
@@ -43,8 +46,9 @@ The following is an example ``OCIHooks`` object enabling the SSH hook:
             {
                 "path": "/opt/sarus/bin/ssh_hook",
                 "env": [
-                    "SARUS_PREFIX_DIR=/opt/sarus",
-                    "SARUS_OPENSSH_DIR=/opt/sarus/openssh"
+                    "HOOK_BASE_DIR=/home",
+                    "PASSWD_FILE=/opt/sarus/etc/passwd",
+                    "OPENSSH_DIR=/opt/sarus/openssh"
                 ],
                 "args": [
                     "ssh_hook",
