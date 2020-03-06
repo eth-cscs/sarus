@@ -20,7 +20,7 @@ namespace sarus {
 namespace common {
 
 PasswdDB::PasswdDB(const boost::filesystem::path& file) {
-    auto is = std::ifstream{file.c_str()};
+    std::ifstream is{file.c_str()};
     read(is);
 }
 
