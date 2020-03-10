@@ -35,13 +35,13 @@ Sarus configuration
 The program is meant to be run as a **prestart** hook and does not accept
 arguments, but its actions are controlled through a few environment variables:
 
-* ``SARUS_GLIBC_LIBS``: Colon separated list of full paths to the host's glibc
+* ``GLIBC_LIBS``: Colon separated list of full paths to the host's glibc
   libraries that will substitute the container's libraries.
 
-* ``SARUS_GLIBC_LDCONFIG_PATH``: Absolute path to a trusted ``ldconfig``
+* ``LDCONFIG_PATH``: Absolute path to a trusted ``ldconfig``
   program **on the host**.
 
-* ``SARUS_GLIBC_READELF_PATH``: Absolute path to a trusted ``readelf``
+* ``READELF_PATH``: Absolute path to a trusted ``readelf``
   program **on the host**.
 
 The following is an example ``OCIHooks`` object enabling the glibc hook:
@@ -54,9 +54,9 @@ The following is an example ``OCIHooks`` object enabling the glibc hook:
             {
                 "path": "/opt/sarus/bin/glibc_hook",
                 "env": [
-                    "SARUS_GLIBC_LDCONFIG_PATH=/sbin/ldconfig",
-                    "SARUS_GLIBC_READELF_PATH=/usr/bin/readelf",
-                    "SARUS_GLIBC_LIBS=/lib64/libSegFault.so:/lib64/librt.so.1:/lib64/libnss_dns.so.2:/lib64/libanl.so.1:/lib64/libresolv.so.2:/lib64/libnsl.so.1:/lib64/libBrokenLocale.so.1:/lib64/ld-linux-x86-64.so.2:/lib64/libnss_hesiod.so.2:/lib64/libutil.so.1:/lib64/libnss_files.so.2:/lib64/libnss_compat.so.2:/lib64/libnss_db.so.2:/lib64/libm.so.6:/lib64/libcrypt.so.1:/lib64/libc.so.6:/lib64/libpthread.so.0:/lib64/libdl.so.2:/lib64/libmvec.so.1:/lib64/libthread_db.so.1"
+                    "LDCONFIG_PATH=/sbin/ldconfig",
+                    "READELF_PATH=/usr/bin/readelf",
+                    "GLIBC_LIBS=/lib64/libSegFault.so:/lib64/librt.so.1:/lib64/libnss_dns.so.2:/lib64/libanl.so.1:/lib64/libresolv.so.2:/lib64/libnsl.so.1:/lib64/libBrokenLocale.so.1:/lib64/ld-linux-x86-64.so.2:/lib64/libnss_hesiod.so.2:/lib64/libutil.so.1:/lib64/libnss_files.so.2:/lib64/libnss_compat.so.2:/lib64/libnss_db.so.2:/lib64/libm.so.6:/lib64/libcrypt.so.1:/lib64/libc.so.6:/lib64/libpthread.so.0:/lib64/libdl.so.2:/lib64/libmvec.so.1:/lib64/libthread_db.so.1"
                 ]
             }
         ]

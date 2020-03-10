@@ -303,10 +303,10 @@ Example configuration file
                 {
                     "path": "/opt/sarus/bin/mpi_hook",
                     "env": [
-                        "SARUS_MPI_LDCONFIG_PATH=/sbin/ldconfig",
-                        "SARUS_MPI_LIBS=/usr/lib64/mvapich2-2.2/lib/libmpi.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpicxx.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpifort.so.12.0.5",
-                        "SARUS_MPI_DEPENDENCY_LIBS=",
-                        "SARUS_MPI_BIND_MOUNTS="
+                        "LDCONFIG_PATH=/sbin/ldconfig",
+                        "MPI_LIBS=/usr/lib64/mvapich2-2.2/lib/libmpi.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpicxx.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpifort.so.12.0.5",
+                        "MPI_DEPENDENCY_LIBS=",
+                        "BIND_MOUNTS="
                     ]
                 },
                 {

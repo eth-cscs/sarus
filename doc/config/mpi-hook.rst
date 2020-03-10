@@ -32,10 +32,10 @@ Sarus configuration
 The program is meant to be run as a **prestart** hook and does not accept
 arguments, but its actions are controlled through a few environment variables:
 
-* ``SARUS_MPI_LDCONFIG_PATH``: Absolute path to a trusted ``ldconfig``
+* ``LDCONFIG_PATH``: Absolute path to a trusted ``ldconfig``
   program **on the host**.
 
-* ``SARUS_MPI_LIBS``: Colon separated list of full paths to the host's
+* ``MPI_LIBS``: Colon separated list of full paths to the host's
   libraries that will substitute the container's libraries. The ABI
   compatibility check is performed by comparing the version numbers specified in
   the libraries' file names as follows:
@@ -50,11 +50,11 @@ arguments, but its actions are controlled through a few environment variables:
   This compatibility check is in agreement with the MPICH ABI version number
   schema.
 
-* ``SARUS_MPI_DEPENDENCY_LIBS``: Colon separated list of absolute paths to
-  libraries that are dependencies of the ``SARUS_MPI_LIBS``. These libraries
+* ``MPI_DEPENDENCY_LIBS``: Colon separated list of absolute paths to
+  libraries that are dependencies of the ``MPI_LIBS``. These libraries
   are always bind mounted in the container under ``/usr/lib``.
 
-* ``SARUS_MPI_BIND_MOUNTS``: Colon separated list of absolute paths to generic
+* ``BIND_MOUNTS``: Colon separated list of absolute paths to generic
   files or directories that are required for the correct functionality of the
   host MPI implementation (e.g. specific device files). These resources will
   be bind mounted inside the container with the same path they have on the host.
@@ -69,10 +69,10 @@ The following is an example ``OCIHooks`` object enabling the MPI hook:
             {
                 "path": "/opt/sarus/bin/mpi_hook",
                 "env": [
-                    "SARUS_MPI_LDCONFIG_PATH=/sbin/ldconfig",
-                    "SARUS_MPI_LIBS=/usr/lib64/mvapich2-2.2/lib/libmpi.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpicxx.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpifort.so.12.0.5",
-                    "SARUS_MPI_DEPENDENCY_LIBS=",
-                    "SARUS_MPI_BIND_MOUNTS="
+                    "LDCONFIG_PATH=/sbin/ldconfig",
+                    "MPI_LIBS=/usr/lib64/mvapich2-2.2/lib/libmpi.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpicxx.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpifort.so.12.0.5",
+                    "MPI_DEPENDENCY_LIBS=",
+                    "BIND_MOUNTS="
                 ]
             }
         ]

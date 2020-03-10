@@ -115,9 +115,9 @@ private:
         createOCIBundleConfigJSON();
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
-        sarus::common::setEnvironmentVariable("SARUS_GLIBC_LDCONFIG_PATH=ldconfig");
-        sarus::common::setEnvironmentVariable("SARUS_GLIBC_READELF_PATH=readelf");
-        sarus::common::setEnvironmentVariable("SARUS_GLIBC_LIBS="
+        sarus::common::setEnvironmentVariable("LDCONFIG_PATH=ldconfig");
+        sarus::common::setEnvironmentVariable("READELF_PATH=readelf");
+        sarus::common::setEnvironmentVariable("GLIBC_LIBS="
             + sarus::common::makeColonSeparatedListOfPaths(hostLibs));
     }
 

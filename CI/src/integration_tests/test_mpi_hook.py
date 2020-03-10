@@ -73,11 +73,11 @@ class TestMPIHook(unittest.TestCase):
         mpi_hook = dict()
         mpi_hook["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/mpi_hook"
         mpi_hook["env"] = list()
-        mpi_hook["env"].append("SARUS_MPI_LDCONFIG_PATH=ldconfig")
+        mpi_hook["env"].append("LDCONFIG_PATH=ldconfig")
         libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_LIBS]
-        mpi_hook["env"].append("SARUS_MPI_LIBS=" + ":".join(libs))
+        mpi_hook["env"].append("MPI_LIBS=" + ":".join(libs))
         libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_DEPENDENCY_LIBS]
-        mpi_hook["env"].append("SARUS_MPI_DEPENDENCY_LIBS=" + ":".join(libs))
+        mpi_hook["env"].append("MPI_DEPENDENCY_LIBS=" + ":".join(libs))
 
         hooks = dict()
         hooks["prestart"] = [mpi_hook]

@@ -103,7 +103,14 @@ void SshHook::parseConfigJSONOfBundle() {
     hooks::common::utility::applyLoggingConfigIfAvailable(json);
 
     // get rootfs
-    rootfsDir = bundleDir / json["root"]["path"].GetString();
+    auto root = boost::filesystem::path{ json["root"]["path"].GetString() };
+    if(root.is_absolute()) {
+        rootfsDir = root;
+    }
+    else {
+        rootfsDir = bundleDir / root;
+    }
+
     opensshDirInBundle = rootfsDir / "opt/sarus/openssh";
 
     // get uid + gid of user

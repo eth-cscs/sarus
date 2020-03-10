@@ -84,7 +84,13 @@ void MpiHook::parseConfigJSONOfBundle() {
 
     hooks::common::utility::applyLoggingConfigIfAvailable(json);
 
-    rootfsDir = bundleDir / json["root"]["path"].GetString();
+    auto root = boost::filesystem::path{ json["root"]["path"].GetString() };
+    if(root.is_absolute()) {
+        rootfsDir = root;
+    }
+    else {
+        rootfsDir = bundleDir / root;
+    }
 
     if(json.HasMember("annotations")
        && json["annotations"].HasMember("com.hooks.mpi.enabled")
@@ -98,23 +104,20 @@ void MpiHook::parseConfigJSONOfBundle() {
 void MpiHook::parseEnvironmentVariables() {
     log("Parsing environment variables", sarus::common::LogLevel::INFO);
 
+    ldconfig = sarus::common::getEnvironmentVariable("LDCONFIG_PATH");
+
+    auto hostMpiLibsColonSeparated = sarus::common::getEnvironmentVariable("MPI_LIBS");
+    if(hostMpiLibsColonSeparated.empty()) {
+        SARUS_THROW_ERROR("The environment variable MPI_LIBS is expected to be a non-empty colon-separated list of paths");
+    }
+    boost::split(hostMpiLibs, hostMpiLibsColonSeparated, boost::is_any_of(":"), boost::token_compress_on);
+
     char* p;
-
-    if((p = getenv("SARUS_MPI_LDCONFIG_PATH")) == nullptr) {
-        SARUS_THROW_ERROR("Environment doesn't contain variable SARUS_MPI_LDCONFIG_PATH");
-    }
-    ldconfig = p;
-
-    if((p = getenv("SARUS_MPI_LIBS")) == nullptr && std::strcmp(p, "") != 0) {
-        SARUS_THROW_ERROR("Environment doesn't contain variable SARUS_MPI_LIBS");
-    }
-    boost::split(hostMpiLibs, p, boost::is_any_of(":"), boost::token_compress_on);
-
-    if((p = getenv("SARUS_MPI_DEPENDENCY_LIBS")) != nullptr && std::strcmp(p, "") != 0) {
+    if((p = getenv("MPI_DEPENDENCY_LIBS")) != nullptr && std::strcmp(p, "") != 0) {
         boost::split(hostDependencyLibs, p, boost::is_any_of(":"), boost::token_compress_on);
     }
 
-    if((p = getenv("SARUS_MPI_BIND_MOUNTS")) != nullptr && std::strcmp(p, "") != 0) {
+    if((p = getenv("BIND_MOUNTS")) != nullptr && std::strcmp(p, "") != 0) {
         boost::split(bindMounts, p, boost::is_any_of(":"), boost::token_compress_on);
     }
 
@@ -154,7 +157,7 @@ void MpiHook::checkHostMpiLibrariesHaveAbiVersion() const {
         auto version = sarus::common::resolveSharedLibAbi(lib);
         if(version.empty()) {
             auto message = boost::format(
-                "The host's MPI libraries (configured through the env variable SARUS_MPI_LIBS)"
+                "The host's MPI libraries (configured through the env variable MPI_LIBS)"
                 " must have at least the MAJOR ABI number, e.g. libmpi.so.<MAJOR>."
                 " Only then can the compatibility between host and container MPI libraries be checked."
                 " Found host's MPI library %s."
@@ -272,7 +275,7 @@ void MpiHook::injectHostLibrary(const boost::filesystem::path& hostLib,
 }
 
 void MpiHook::performBindMounts() const {
-    log("Performing bind mounts (configured through hook's environment variable SARUS_MPI_BIND_MOUNTS)",
+    log("Performing bind mounts (configured through hook's environment variable BIND_MOUNTS)",
         sarus::common::LogLevel::INFO);
 
     for(const auto& mount : bindMounts) {

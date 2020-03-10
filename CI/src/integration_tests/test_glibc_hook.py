@@ -68,9 +68,9 @@ class TestGlibcHook(unittest.TestCase):
         glibc_hook = dict()
         glibc_hook["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/glibc_hook"
         glibc_hook["env"] = list()
-        glibc_hook["env"].append("SARUS_GLIBC_LIBS=" + ":".join(cls._HOST_GLIBC_LIBS))
-        glibc_hook["env"].append("SARUS_GLIBC_LDCONFIG_PATH=ldconfig")
-        glibc_hook["env"].append("SARUS_GLIBC_READELF_PATH=readelf")
+        glibc_hook["env"].append("GLIBC_LIBS=" + ":".join(cls._HOST_GLIBC_LIBS))
+        glibc_hook["env"].append("LDCONFIG_PATH=ldconfig")
+        glibc_hook["env"].append("READELF_PATH=readelf")
 
         hooks = dict()
         hooks["prestart"] = [glibc_hook]

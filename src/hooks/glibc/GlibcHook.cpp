@@ -60,14 +60,17 @@ void GlibcHook::injectGlibcLibrariesIfNecessary() {
                             " Please contact the system administrator to properly configure the glibc hook");
     }
     if(!containerHasGlibc()) {
+        logMessage("Not replacing glibc libraries (container doesn't have glibc)", sarus::common::LogLevel::INFO);
         return; // nothing to do
     }
     containerLibraries = get64bitContainerLibraries();
     auto containerLibc = findLibc(containerLibraries);
     if(!containerLibc) {
+        logMessage("Not replacing glibc libraries (container doesn't have 64-bit libc)", sarus::common::LogLevel::INFO);
         return; // nothing to do (could be a 32-bit container without a 64-bit libc)
     }
     if(!containerGlibcHasToBeReplaced(*hostLibc, *containerLibc)) {
+        logMessage("Not replacing glibc libraries (container's glibc is new enough)", sarus::common::LogLevel::INFO);
         return; // nothing to do
     }
     verifyThatHostAndContainerGlibcAreABICompatible(*hostLibc, *containerLibc);
@@ -84,7 +87,13 @@ void GlibcHook::parseConfigJSONOfBundle() {
     hooks::common::utility::applyLoggingConfigIfAvailable(json);
 
     // get rootfs
-    rootfsDir = bundleDir / json["root"]["path"].GetString();
+    auto root = boost::filesystem::path{ json["root"]["path"].GetString() };
+    if(root.is_absolute()) {
+        rootfsDir = root;
+    }
+    else {
+        rootfsDir = bundleDir / root;
+    }
 
     // get annotations
     if(json.HasMember("annotations")
@@ -98,22 +107,16 @@ void GlibcHook::parseConfigJSONOfBundle() {
 }
 
 void GlibcHook::parseEnvironmentVariables() {
-    char* p;
+    logMessage("Parsing environment variables", sarus::common::LogLevel::INFO);
 
-    if((p = getenv("SARUS_GLIBC_LDCONFIG_PATH")) == nullptr) {
-        SARUS_THROW_ERROR("Environment doesn't contain variable SARUS_GLIBC_LDCONFIG_PATH");
-    }
-    ldconfigPath = boost::filesystem::path(p);
+    ldconfigPath = sarus::common::getEnvironmentVariable("LDCONFIG_PATH");
 
-    if((p = getenv("SARUS_GLIBC_READELF_PATH")) == nullptr) {
-        SARUS_THROW_ERROR("Environment doesn't contain variable SARUS_GLIBC_READELF_PATH");
-    }
-    readelfPath = boost::filesystem::path(p);
+    readelfPath = sarus::common::getEnvironmentVariable("READELF_PATH");
 
-    if((p = getenv("SARUS_GLIBC_LIBS")) == nullptr) {
-        SARUS_THROW_ERROR("Environment doesn't contain variable SARUS_GLIBC_LIBS");
-    }
-    boost::split(hostLibraries, p, boost::is_any_of(":"));
+    auto hostLibrariesColonSeparated = sarus::common::getEnvironmentVariable("GLIBC_LIBS");
+    boost::split(hostLibraries, hostLibrariesColonSeparated, boost::is_any_of(":"));
+
+    logMessage("Successfully parsed environment variables", sarus::common::LogLevel::INFO);
 }
 
 bool GlibcHook::containerHasGlibc() const {

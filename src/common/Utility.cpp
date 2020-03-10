@@ -83,6 +83,7 @@ std::string getEnvironmentVariable(const std::string& key) {
         auto message = boost::format("Environment doesn't contain variable with key %s") % key;
         SARUS_THROW_ERROR(message.str());
     }
+    logMessage(boost::format("Got environment variable %s=%s") % key % p, common::LogLevel::DEBUG);
     return p;
 }
 
@@ -94,6 +95,7 @@ void setEnvironmentVariable(const std::string& variable) {
             % variable % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
+    logMessage(boost::format("Put environment variable %s") % variable, common::LogLevel::DEBUG);
 }
 
 std::string removeWhitespaces(const std::string& s) {
