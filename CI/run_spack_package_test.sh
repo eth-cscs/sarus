@@ -31,12 +31,5 @@ spack install --verbose sarus@develop
 
 # Check installation
 spack load sarus
-sarus pull alpine
-if [ "$?" != "0" ]; then
-    exit 1
-fi
-
-sarus run alpine cat /etc/os-release > sarus.out
-if [ "$(head -n 1 sarus.out)" != "NAME=\"Alpine Linux\"" ]; then
-    exit 1
-fi
+. ${sarus_src_dir}/CI/utility_functions.bash
+run_smoke_tests

@@ -60,7 +60,7 @@ coverage data. We can process and summarize these data using `gcov` and the
 Integration tests
 =================
 
-Integration tests use Python 2.7 and the packages indicated in the
+Integration tests use Python 3 and the packages indicated in the
 :ref:`Requirements page <requirements-packages>`. Sarus must be correctly
 installed and configured on the system in order to successfully perform
 integration testing. Before running the tests, we need to re-target the

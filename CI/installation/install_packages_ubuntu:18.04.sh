@@ -1,9 +1,7 @@
 #!/bin/bash
-
 set -ex
 
 # Install packages
-apt-get update && apt-get install -y sudo
 sudo apt-get update --fix-missing
 sudo apt-get install -y --no-install-recommends build-essential
 sudo apt-get install -y --no-install-recommends \

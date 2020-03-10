@@ -23,10 +23,43 @@ change_uid_gid_of_docker_user() {
     echo "Successfully changed UID/GID of Docker user"
 }
 
+build_and_install_sarus() {
+    local build_type=${1-"Debug"}; shift
+    local build_dir=${1-"$PWD/build-$build_type"}; shift
+    local install_dir=${1-"/opt/sarus"}; shift
+
+    # DOCS: Create a new folder
+    mkdir -p ${build_dir} && cd ${build_dir}
+
+    # DOCS: Configure and build
+    cmake -DCMAKE_TOOLCHAIN_FILE=${build_dir}/../cmake/toolchain_files/gcc.cmake \
+        -DCMAKE_PREFIX_PATH="/usr/local/include/rapidjson" \
+        -DCMAKE_BUILD_TYPE=${build_type} \
+        -DCMAKE_INSTALL_PREFIX=${install_dir} \
+        ..
+
+    make -j$(nproc)
+
+    # DOCS: Install Sarus
+    sudo make install
+
+    # DOCS: Create OCI bundle dir
+    sudo mkdir -p ${install_dir}/var/OCIBundleDir
+
+    # DOCS: Finalize installation
+    sudo cp /usr/local/bin/tini-static-amd64 ${install_dir}/bin || true
+    sudo cp /usr/local/bin/runc.amd64 ${install_dir}/bin || true
+
+    sudo ${install_dir}/configure_installation.sh
+    export PATH=${install_dir}/bin:${PATH}
+
+    # DOCS: EO Finalize installation
+}
+
 build_sarus_archive() {
     # Build and package Sarus as a standalone archive ready for installation
-    local build_type=$1; shift
-    local build_dir=$1; shift
+    local build_type=${1-"Debug"}; shift
+    local build_dir=${1-"$PWD/build-$build_type"}; shift
 
     # Enable code coverage only with debug build
     if [ "$build_type" = "Debug" ]; then
@@ -35,13 +68,13 @@ build_sarus_archive() {
         local cmake_toolchain_file=../cmake/toolchain_files/gcc.cmake
     fi
 
-    # Build Sarus
-    echo "Building Sarus (build type = ${build_type})"
+    echo "Building Sarus (${build_type}) in ${build_dir}"
+
     mkdir -p ${build_dir} && cd ${build_dir}
+
     local prefix_dir=${build_dir}/install/$(git describe --tags --dirty)-${build_type}
     cmake   -DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file} \
-            -DCMAKE_PREFIX_PATH="/opt/boost/1_65_0;/opt/cpprestsdk/v2.10.0;/opt/libarchive/3.4.1;/opt/rapidjson/rapidjson-master" \
-            -Dcpprestsdk_INCLUDE_DIR=/opt/cpprestsdk/v2.10.0/include \
+            -DCMAKE_PREFIX_PATH="/usr/local/include/rapidjson" \
             -DCMAKE_BUILD_TYPE=${build_type} \
             -DBUILD_STATIC=TRUE \
             -DENABLE_TESTS_WITH_VALGRIND=FALSE \
@@ -49,14 +82,21 @@ build_sarus_archive() {
             -DCMAKE_INSTALL_PREFIX=${prefix_dir} \
             ..
     make -j$(nproc)
+
+    fail_on_error "Failed to build Sarus (cmake + make)"
+
     echo "Successfully built Sarus"
 
     # Build archive
     local archive_name="sarus-${build_type}.tar.gz"
     echo "Building archive ${archive_name}"
     rm -rf ${prefix_dir}/*
+
     make install
+
+    fail_on_error "Failed to make install Sarus"
     rsync -arvL --chmod=go-w ${build_dir}/../standalone/ ${prefix_dir}/
+
     mkdir -p ${prefix_dir}/var/OCIBundleDir
 
     # Bring cached binaries if available (see Dockerfile.build)
@@ -83,19 +123,21 @@ install_sarus_from_archive() {
 
     echo "Installing Sarus from archive ${archive}"
 
-    mkdir -p ${root_dir}
+    sudo mkdir -p ${root_dir}
     fail_on_error "Failed to install Sarus"
     cd ${root_dir}
-    rm -rf * #remove any other installation
-    tar xf ${archive}
+    sudo rm -rf * #remove any other installation
+    sudo tar xf ${archive}
     fail_on_error "Failed to install Sarus"
     local sarus_version=$(ls)
-    ln -s ${sarus_version} default
-    fail_on_error "Failed to install Sarus"
-    ./default/configure_installation.sh
+    sudo ln -s ${sarus_version} default
     fail_on_error "Failed to install Sarus"
 
     export PATH=/opt/sarus/default/bin:${PATH}
+    sudo /opt/sarus/default/configure_installation.sh
+
+    fail_on_error "Failed to install Sarus"
+
     echo "Successfully installed Sarus"
 
     cd ${pwd_backup}
@@ -113,7 +155,7 @@ run_unit_tests() {
 
     # Adjust ownership of coverage files (Debug only)
     # after execution of unit tests as root
-    find ${build_dir} -name "*.gcda" -exec chown docker:docker {} \;
+    find ${build_dir} -name "*.gcda" -exec sudo chown docker:docker {} \;
     fail_on_error "Failed to chown *.gcda files (necessary to update code coverage as non-root user)"
 }
 
@@ -161,9 +203,10 @@ run_smoke_tests() {
     sarus images
     fail_on_error "Failed to list images"
 
-    sarus run alpine cat /etc/os-release > sarus.out
-    if [ "$(head -n 1 sarus.out)" != "NAME=\"Alpine Linux\"" ]; then
+    sarus run alpine cat /etc/os-release > /tmp/sarus.out
+    if [ "$(head -n 1 /tmp/sarus.out)" != "NAME=\"Alpine Linux\"" ]; then
         echo "Failed to run container"
         exit 1
     fi
+    rm /tmp/sarus.out
 }

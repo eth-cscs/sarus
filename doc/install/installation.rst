@@ -72,26 +72,26 @@ Installing from source
 Build and install
 -----------------
 
-Change directory to the Sarus's sources:
+Get Sarus source code:
 
-.. literalinclude:: ../../CI/installation/install_sarus_from_source_and_test.sh
+.. code-block:: bash
+
+    git clone git@github.com:eth-cscs/sarus.git
+    cd sarus
+
+Create a new folder ``${build_dir}}`` to build Sarus from source. e.g. ``build-Release``:
+
+.. literalinclude:: ../../CI/utility_functions.bash
    :language: bash
-   :start-after: # Chdir to Sarus source directory
-   :end-before: # Create build dir
+   :start-after: # DOCS: Create a new folder
+   :end-before: # DOCS: Configure and build
 
-Create a new folder to build Sarus out-of-source:
+Configure and build (in this example ``${build_type}`` is ``Release``:
 
-.. literalinclude:: ../../CI/installation/install_sarus_from_source_and_test.sh
+.. literalinclude:: ../../CI/utility_functions.bash
    :language: bash
-   :start-after: # Create build dir
-   :end-before: # Configure and build
-
-Configure and build:
-
-.. literalinclude:: ../../CI/installation/install_sarus_from_source_and_test.sh
-   :language: bash
-   :start-after: # Configure and build
-   :end-before: # Install Sarus
+   :start-after: # DOCS: Configure and build
+   :end-before: # DOCS: Install Sarus
 
 .. note::
     CMake should automatically find the dependencies (include directories,
@@ -99,7 +99,7 @@ Configure and build:
     its location can be manually specified through the command line. E.g.::
 
        cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc.cmake \
-             -DCMAKE_INSTALL_PREFIX=${install_prefix} \
+             -DCMAKE_INSTALL_PREFIX=${prefix_dir} \
              -DCMAKE_BUILD_TYPE=Release \
              -DCMAKE_PREFIX_PATH="<boost install dir>;<cpprestsdk install dir>;<libarchive install dir>;<rapidjson install dir>" \
              -Dcpprestsdk_INCLUDE_DIR=<cpprestsdk include dir> \
@@ -119,19 +119,19 @@ order to customize your build:
 
 Copy files to the installation directory:
 
-.. literalinclude:: ../../CI/installation/install_sarus_from_source_and_test.sh
+.. literalinclude:: ../../CI/utility_functions.bash
    :language: bash
-   :start-after: # Install Sarus
-   :end-before: # Create OCI bundle dir
+   :start-after: # DOCS: Install Sarus
+   :end-before: # DOCS: Create OCI bundle dir
 
 Create the directory in which Sarus will create the OCI
 bundle for containers. The location of this directory is configurable at any time, as
 described in the next section. As an example, taking default values:
 
-.. literalinclude:: ../../CI/installation/install_sarus_from_source_and_test.sh
+.. literalinclude:: ../../CI/utility_functions.bash
    :language: bash
-   :start-after: # Create OCI bundle dir
-   :end-before: # Finalize installation
+   :start-after: # DOCS: Create OCI bundle dir
+   :end-before: # DOCS: Finalize installation
 
 Finalize the installation
 -------------------------
@@ -141,10 +141,10 @@ located in the installation path.
 This script needs to run with root privileges in order to set Sarus as a
 root-owned SUID program:
 
-.. literalinclude:: ../../CI/installation/install_sarus_from_source_and_test.sh
+.. literalinclude:: ../../CI/utility_functions.bash
    :language: bash
-   :start-after: # Finalize installation
-   :end-before: # Check installation
+   :start-after: # DOCS: Finalize installation
+   :end-before: # DOCS: EO Finalize installation
 
 .. note::
    The configuration script will create a minimal working configuration.

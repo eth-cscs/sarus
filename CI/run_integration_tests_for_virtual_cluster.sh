@@ -49,7 +49,7 @@ adapt_docker_compose_file() {
 start_cluster() {
     log "starting virtual cluster"
     cd $virtual_cluster_dir
-    mkdir sync
+    mkdir -p sync
     docker-compose up -d
     fail_on_error "failed to start cluster with docker-compose up"
     log "successfully started virtual cluster"

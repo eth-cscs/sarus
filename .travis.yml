@@ -57,7 +57,6 @@ jobs:
       - . ./CI/utility_docker_functions.bash
       - sarus-build-from-scratch-and-test $(pwd) centos:7
 
-    # TODO PART 2: Align spack image creation
     - name: "Test Spack"
       if: branch IN (master, develop)
       script:

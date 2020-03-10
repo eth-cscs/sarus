@@ -3,6 +3,7 @@ stages:
   - build_sarus_and_test
   - build_sarus_from_scratch_and_test
   - publish_sarus_images
+  - cleanup_sarus_images
 
 build_sarus_images:
   stage: build_sarus_images
@@ -20,7 +21,7 @@ standalone_archive_debug:
   stage: build_sarus_and_test
   script:
     - . ./CI/utility_docker_functions.bash
-    - sarus-build-and-test $(pwd) Debug /users/gitlab-runner/cache/ids/sarus
+    - sarus-build-and-test $(pwd) Debug ~/cache/ids/sarus ~/cache/ids/sarus
 
   artifacts:
     name: "sarus-Debug-$CI_COMMIT_REF_NAME"
@@ -32,7 +33,7 @@ standalone_archive_release:
   stage: build_sarus_and_test
   script:
     - . ./CI/utility_docker_functions.bash
-    - sarus-build-and-test $(pwd) Release /users/gitlab-runner/cache/ids/sarus
+    - sarus-build-and-test $(pwd) Release ~/cache/ids/sarus ~/cache/ids/sarus
 
   artifacts:
     name: "sarus-Release-$CI_COMMIT_REF_NAME"
@@ -40,37 +41,28 @@ standalone_archive_release:
       - sarus-Release.tar.gz
       - README.md
 
-# TODO PART 2: Remove duplicated scripts of all these build_from_source
-from_source_ubuntu18.04:
+.from_source:
   stage: build_sarus_from_scratch_and_test
   only:
-      - master
-      - develop
-  script:
-      - . ./CI/utility_docker_functions.bash
-      - sarus-build-from-scratch-and-test $(pwd) ubuntu:18.04
+    - master
+    - develop
+  before_script:
+    - . ./CI/utility_docker_functions.bash
+
+from_source_ubuntu18.04:
+  extends: .from_source
+  script: sarus-build-from-scratch-and-test $(pwd) ubuntu:18.04
 
 from_source_debian10:
-  stage: build_sarus_from_scratch_and_test
-  only:
-      - master
-      - develop
-  script:
-      - . ./CI/utility_docker_functions.bash
-      - sarus-build-from-scratch-and-test $(pwd) debian:10
+  extends: .from_source
+  script: sarus-build-from-scratch-and-test $(pwd) debian:10
 
 from_source_centos7:
-  stage: build_sarus_from_scratch_and_test
-  only:
-      - master
-      - develop
-  script:
-      - . ./CI/utility_docker_functions.bash
-      - sarus-build-from-scratch-and-test $(pwd) centos:7
+  extends: .from_source
+  script: sarus-build-from-scratch-and-test $(pwd) centos:7
 
 spack_package:
   stage: build_sarus_from_scratch_and_test
-  # TODO PART 2: Align spack image creation
   only:
       - master
       - develop
@@ -86,3 +78,12 @@ publish_sarus_images:
   script:
     - . ./CI/utility_docker_functions.bash
     - sarus-publish-images
+
+cleanup_sarus_images:
+  stage: cleanup_sarus_images
+  except:
+    - master
+    - develop
+  script:
+    - . ./CI/utility_docker_functions.bash
+    - sarus-cleanup-images

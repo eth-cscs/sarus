@@ -25,27 +25,28 @@ For Debian-based systems (tested on Debian 10 and Ubuntu 18.04):
 
 .. literalinclude:: ../../CI/installation/install_packages_ubuntu:18.04.sh
    :language: bash
-   :start-after: # Install packages
+   :start-after: set -ex
 
 For CentOS 7:
 
 .. literalinclude:: ../../CI/installation/install_packages_centos:7.sh
    :language: bash
-   :start-after: # Install packages
+   :start-after: set -ex
+   :end-before: # DOCS: END
 
-Python 2.7 is required if you are interested to also run the integration tests:
+Python 3 is required if you are interested to also run the integration tests:
 
 .. code-block:: bash
 
     # Debian/Ubuntu
-    $ sudo apt-get install python python-pip
+    $ sudo apt-get install python3 python3-pip python3-setuptools
 
     # CentOS
-    $ sudo yum install python python2-pip
+    $ sudo yum install python3 python3-pip python3-setuptools
 
     # All platforms, after installing Python + pip
-    $ pip install setuptools
-    $ pip install pytest gcovr pexpect
+    $ pip3 install setuptools
+    $ pip3 install pytest gcovr pexpect
 
 .. note::
     If you plan to install Sarus using the Spack package manager, you can skip
@@ -74,10 +75,21 @@ package manager, we suggest to install from source:
     CMake options for libarchive and C++ REST SDK and the ``--prefix`` option for
     the Boost libraries.
 
-.. literalinclude:: ../../CI/installation/install_dependencies.sh
+.. literalinclude:: ../../CI/installation/install_dep_boost.bash
    :language: bash
-   :start-after: # Dependencies from source --------------
-   :end-before: # Pre-built dependencies --------------
+   :start-after: set -ex
+
+.. literalinclude:: ../../CI/installation/install_dep_libarchive.bash
+   :language: bash
+   :start-after: set -ex
+
+.. literalinclude:: ../../CI/installation/install_dep_cpprestsdk.bash
+   :language: bash
+   :start-after: set -ex
+
+.. literalinclude:: ../../CI/installation/install_dep_rapidjson.bash
+   :language: bash
+   :start-after: set -ex
 
 .. note::
     Should you have trouble pointing to a specific version of Boost when
@@ -99,10 +111,9 @@ the Open Container Initiative. The recommended version is **v1.0.0-rc10**.
 The simplest solution is to download a pre-built binary release from the
 project's GitHub page:
 
-.. literalinclude:: ../../CI/installation/install_dependencies.sh
+.. literalinclude:: ../../CI/installation/install_dep_runc.bash
    :language: bash
-   :start-after: # Install runc
-   :end-before: # Install tini
+   :start-after: set -ex
 
 Alternatively, you can follow the instructions to `build from source
 <https://github.com/opencontainers/runc#building>`__, which allows more
@@ -124,9 +135,9 @@ also used by Docker. The recommended version is **v0.18.0**.
 The simplest solution is to download a pre-built binary release from the
 project's GitHub page:
 
-.. literalinclude:: ../../CI/installation/install_dependencies.sh
+.. literalinclude:: ../../CI/installation/install_dep_tini.bash
    :language: bash
-   :start-after: # Install tini
+   :start-after: set -ex
 
 Alternatively, you can follow the instructions to `build from source
 <https://github.com/krallin/tini#building-tini>`__.

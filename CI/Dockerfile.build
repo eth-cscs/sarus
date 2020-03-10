@@ -37,6 +37,8 @@ RUN . /tmp/install_dep_runc.bash
 COPY ./installation/install_dep_tini.bash /tmp/
 RUN . /tmp/install_dep_tini.bash
 
+RUN rm -rf /tmp/*
+
 # Prepare user
 RUN adduser -h /home/docker -s /bin/bash -D  docker docker
 RUN echo "docker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
