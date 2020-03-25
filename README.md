@@ -39,7 +39,7 @@ directory and can be built using Python 3 and Sphinx:
 cd doc
 python3 -m venv ./venv
 source venv/bin/activate
-pip install sphinx sphinx-rtd-theme
+pip3 install -r requirements.txt
 make html
 ```
 

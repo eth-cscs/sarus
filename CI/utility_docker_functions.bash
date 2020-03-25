@@ -8,31 +8,49 @@
 utilities_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 . "${utilities_dir}/utility_functions.bash"
 
-sarus-build-images() {
-    # Use develop as closest cache possible
-    docker pull ethcscs/sarus-ci-build:develop || true
-
-    echo "Building Sarus Images with tag $(git_branch)"
-    docker build -t $(build_image) -f ./CI/Dockerfile.build ./CI
-    fail_on_error "failed to build sarus build image"
-    docker build -t $(run_image) -f ./CI/Dockerfile.run ./CI
-    fail_on_error "failed to build sarus run image"
-}
-
 git_branch() {
     local git_branch=""
-    git_branch=$(git symbolic-ref --short -q HEAD) || git_branch=${CI_COMMIT_REF_NAME} || git_branch=${TRAVIS_BRANCH} || git_branch="git-detached"
-    echo ${git_branch}
+    if [ -n "${TRAVIS_BRANCH}" ]; then
+        git_branch=${TRAVIS_BRANCH}  # TravisCI
+    else
+        git_branch=$(git symbolic-ref --short -q HEAD) || git_branch=${CI_COMMIT_REF_NAME} || git_branch="git-detached"
+    fi
+    echo "${git_branch}"
 }
 
 build_image() {
     local build_image="ethcscs/sarus-ci-build:$(git_branch)"
-    echo ${build_image}
+    echo "${build_image}"
 }
 
 run_image() {
     local run_image="ethcscs/sarus-ci-run:$(git_branch)"
-    echo ${run_image}
+    echo "${run_image}"
+}
+
+sarus-build-images() {
+    echo "Building Sarus Images with tag $(git_branch)"
+
+    # Travis is not supporting buildkit at the moment :(
+    local BK=1
+    local BKIC=1
+    if [ "${TRAVIS}" == "true" ]; then
+        BK=0
+        BKIC=0
+    fi
+
+    # Use develop as build cache source
+    if [ "$(git_branch)" == "develop" ]; then
+        DOCKER_BUILDKIT=${BK} docker build --build-arg BUILDKIT_INLINE_CACHE=${BKIC} -t $(build_image) -f ./CI/Dockerfile.build ./CI
+        fail_on_error "failed to build sarus build image"
+        DOCKER_BUILDKIT=${BK} docker build --build-arg BUILDKIT_INLINE_CACHE=${BKIC} -t $(run_image) -f ./CI/Dockerfile.run ./CI
+        fail_on_error "failed to build sarus run image"
+    else
+        DOCKER_BUILDKIT=${BK} docker build --cache-from ethcscs/sarus-ci-build:develop -t $(build_image) -f ./CI/Dockerfile.build ./CI
+        fail_on_error "failed to build sarus build image"
+        DOCKER_BUILDKIT=${BK} docker build --cache-from ethcscs/sarus-ci-run:develop -t $(run_image) -f ./CI/Dockerfile.run ./CI
+        fail_on_error "failed to build sarus run image"
+    fi
 }
 
 sarus-check-version-and-docs() {

@@ -64,4 +64,7 @@ jobs:
       - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/run_spack_package_test.sh
 
 notifications:
-  email: false
+  email:
+    recipients:
+      - taliaga@cscs.ch
+    on_success: change

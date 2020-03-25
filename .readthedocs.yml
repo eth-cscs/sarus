@@ -16,4 +16,4 @@ formats: all
 python:
   version: 3.6
   install:
-    - requirements: doc/requirements.txt
+    - requirements: CI/doc_requirements.txt

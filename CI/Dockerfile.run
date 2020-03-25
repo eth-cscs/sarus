@@ -23,7 +23,9 @@ RUN apt-get update --fix-missing \
 
 RUN ln -sfn /usr/bin/gcov-8 /usr/bin/gcov # use gcov-8 by default to be compatible with the CI build image
 
-RUN pip3 install setuptools pytest gcovr pexpect sphinx sphinx-rtd-theme
+RUN pip3 install setuptools pytest gcovr pexpect
+COPY doc_requirements.txt /tmp/requirements.txt
+RUN pip3 install -r /tmp/requirements.txt
 
 RUN useradd -m docker && echo "docker:docker" | chpasswd
 RUN echo "docker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers

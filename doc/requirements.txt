@@ -1,2 +1,1 @@
-Sphinx==1.8.2
-sphinx-rtd-theme==0.4.2
+../CI/doc_requirements.txt
