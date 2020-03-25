@@ -191,7 +191,7 @@ TEST(MPIHookTestGroup, test_abi_compatibility_check) {
         .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
         .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
         .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.6"})
-        .checkFailure();
+        .checkSuccessfull();
 
     // incompatible libraries (incompatible MAJOR)
     Checker{}
@@ -234,7 +234,7 @@ TEST(MPIHookTestGroup, test_abi_compatibility_check) {
         .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
         .setHostMpiLibraries({"/lib/libmpi.so.12"})
         .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.1"})
-        .checkFailure();
+        .checkSuccessfull();
 }
 
 }}}} // namespace

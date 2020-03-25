@@ -105,7 +105,7 @@ private:
             ("mount",
                 boost::program_options::value<std::vector<std::string>>(&conf->commandRun.userMounts),
                 "Mount custom directories into the container")
-            ("mpi,m", "Enable MPI support")
+            ("mpi,m", "Enable MPI support. Implies '--glibc'")
             ("ssh", "Enable SSH in the container")
             ("tty,t", "Allocate a pseudo-TTY in the container")
             ("workdir,w",

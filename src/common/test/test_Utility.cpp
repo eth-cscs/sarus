@@ -351,18 +351,20 @@ TEST(UtilityTestGroup, resolveSharedLibAbi) {
     CHECK(common::resolveSharedLibAbi("/libtest_symlink_within_rootdir.so", testDir) == (std::vector<std::string>{"1", "2"}));
 }
 
-TEST(UtilityTestGroup, areAbiVersionsCompatible) {
+TEST(UtilityTestGroup, getAbiVersionsCompatibility) {
     // compatible
-    CHECK(common::areAbiVersionsCompatible({}, {}));
-    CHECK(common::areAbiVersionsCompatible({"1", "0"}, {"1", "0"}));
-    CHECK(common::areAbiVersionsCompatible({"1", "1"}, {"1", "0"}));
-    CHECK(common::areAbiVersionsCompatible({"1", "0", "0"}, {"1", "0", "1"}));
+    CHECK(common::getAbiVersionsCompatibility({}, {})                           == common::AbiCompatibility::COMPATIBLE);
+    CHECK(common::getAbiVersionsCompatibility({"1", "0"}, {"1", "0"})           == common::AbiCompatibility::COMPATIBLE);
+    CHECK(common::getAbiVersionsCompatibility({"1", "1"}, {"1", "0"})           == common::AbiCompatibility::COMPATIBLE);
+    CHECK(common::getAbiVersionsCompatibility({"1", "0", "0"}, {"1", "0", "1"}) == common::AbiCompatibility::COMPATIBLE);
 
-    // uncompatible
-    CHECK(!common::areAbiVersionsCompatible({"1"}, {}));
-    CHECK(!common::areAbiVersionsCompatible({}, {"1"}));
-    CHECK(!common::areAbiVersionsCompatible({"1"}, {"2"}));
-    CHECK(!common::areAbiVersionsCompatible({"1", "0"}, {"1", "1"}));
+    // major not compatible
+    CHECK(common::getAbiVersionsCompatibility({"1"}, {})    == common::AbiCompatibility::MAJOR_NOT_COMPATIBLE);
+    CHECK(common::getAbiVersionsCompatibility({}, {"1"})    == common::AbiCompatibility::MAJOR_NOT_COMPATIBLE);
+    CHECK(common::getAbiVersionsCompatibility({"1"}, {"2"}) == common::AbiCompatibility::MAJOR_NOT_COMPATIBLE);
+
+    // minor not compatible
+    CHECK(common::getAbiVersionsCompatibility({"1", "0"}, {"1", "1"}) == common::AbiCompatibility::MINOR_NOT_COMPATIBLE);
 }
 
 TEST(UtilityTestGroup, getSharedLibSoname) {

@@ -8,11 +8,7 @@
 import unittest
 import subprocess
 import os
-import sys
-import tempfile
-import re
 import json
-import hashlib
 
 import common.util as util
 
@@ -133,22 +129,7 @@ class TestGlibcHook(unittest.TestCase):
             options.append("--glibc")
         if self._mpi_command_line_option:
             options.append("--mpi")
-        output = util.run_command_in_container(is_centralized_repository=False,
-                                               image=self._container_image,
-                                               command=["mount"],
-                                               options_of_run_command=options)
-        libs = []
-        for line in output:
-            if re.search(r".* on .*lib.*\.so(\.[0-9]+)* .*", line):
-                lib = re.sub(r".* on (.*lib.*\.so(\.[0-9]+)*) .*", r"\1", line)
-                libs.append(lib)
-
-        hashes = set()
-        for lib in libs:
-            output = util.run_command_in_container( is_centralized_repository=False,
-                                                    image=self._container_image,
-                                                    command=["md5sum", lib],
-                                                    options_of_run_command=options)
-            hashes.add(output[0].split()[0])
-
-        return hashes
+        hashes = util.get_hashes_of_host_libs_in_container(is_centralized_repository=False,
+                                                           image=self._container_image,
+                                                           options_of_run_command=options)
+        return set(hashes)

@@ -211,13 +211,24 @@ void MpiHook::checkHostContainerAbiCompatibility(const HostToContainerLibsMap& h
             auto containerAbi = sarus::common::resolveSharedLibAbi(containerLib, rootfsDir);
             auto hostAbi = sarus::common::resolveSharedLibAbi(hostLib);
 
-            if(!sarus::common::areAbiVersionsCompatible(hostAbi, containerAbi))  {
+            auto abiCompatibility = sarus::common::getAbiVersionsCompatibility(hostAbi, containerAbi);
+
+            if(abiCompatibility == sarus::common::AbiCompatibility::MAJOR_NOT_COMPATIBLE) {
                 auto message = boost::format(
                     "Failed to activate MPI support. Host's MPI library %s (ABI '%s') is not ABI"
                     " compatible with container's MPI library %s (ABI '%s').")
                     % hostLib % boost::algorithm::join(hostAbi, ".")
                     % containerLib % boost::algorithm::join(containerAbi, ".");
                 SARUS_THROW_ERROR(message.str());
+            }
+            else if(abiCompatibility == sarus::common::AbiCompatibility::MINOR_NOT_COMPATIBLE) {
+                auto message = boost::format("Partial ABI compatibility detected. Host's MPI library %s (ABI '%s') is is older than"
+                        " the container's MPI library %s (ABI '%s'). The hook will attempt to proceed with the library replacement."
+                        " Be aware that applications are likely to fail if they use symbols which are only present in the container's library."
+                        " More information available at https://sarus.readthedocs.io/en/stable/user/abi_compatibility.html")
+                        % hostLib % boost::algorithm::join(hostAbi, ".")
+                        % containerLib % boost::algorithm::join(containerAbi, ".");
+                log(message, sarus::common::LogLevel::WARN);
             }
         }
     }
@@ -257,7 +268,7 @@ void MpiHook::injectHostLibrary(const boost::filesystem::path& hostLib,
         auto hostAbi = sarus::common::resolveSharedLibAbi(hostLib);
         auto containerAbi = sarus::common::resolveSharedLibAbi(containerLib, rootfsDir);
         // abi-compatible => bind mount on top of it (override)
-        if(sarus::common::areAbiVersionsCompatible(hostAbi, containerAbi)) {
+        if(sarus::common::getAbiVersionsCompatibility(hostAbi, containerAbi) != sarus::common::AbiCompatibility::MAJOR_NOT_COMPATIBLE) {
             auto containerLibReal = sarus::common::realpathWithinRootfs(rootfsDir, containerLib);
             sarus::runtime::bindMount(hostLib, rootfsDir / containerLibReal);
             createSymlinksInDynamicLinkerDefaultSearchDirs(containerLibReal, hostLib.filename());

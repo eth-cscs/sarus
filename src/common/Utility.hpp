@@ -27,6 +27,7 @@
 
 #include "common/Config.hpp"
 #include "common/Logger.hpp"
+#include "common/AbiCompatibility.hpp"
 
 /**
  * Utility functions
@@ -74,7 +75,7 @@ bool isSharedLib(const boost::filesystem::path& file);
 std::vector<std::string> parseSharedLibAbi(const boost::filesystem::path& lib);
 std::vector<std::string> resolveSharedLibAbi(const boost::filesystem::path& lib,
                                            const boost::filesystem::path& rootDir = "/");
-bool areAbiVersionsCompatible(const std::vector<std::string>& hostVersion,
+AbiCompatibility getAbiVersionsCompatibility(const std::vector<std::string>& hostVersion,
                               const std::vector<std::string>& containerVersion);
 std::string getSharedLibSoname(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath);
 bool isLibc(const boost::filesystem::path&);

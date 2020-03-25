@@ -6,6 +6,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import os
+import re
 import shutil
 import subprocess
 
@@ -110,3 +111,29 @@ def run_command_in_container_with_slurm(image, command, options_of_srun_command=
     out = subprocess.check_output(full_command, **subprocess_kwargs).decode()
 
     return command_output_without_trailing_new_lines(out)
+
+
+def get_hashes_of_host_libs_in_container(is_centralized_repository, image, options_of_run_command=None):
+    """
+    Returns a list of md5sum hashes of dynamic libraries which are bind-mounted into a container from the host.
+    This function is used by MPI hook and Glibc hook tests to check libraries replacement.
+    """
+    output = run_command_in_container(is_centralized_repository=is_centralized_repository,
+                                      image=image,
+                                      command=["mount"],
+                                      options_of_run_command=options_of_run_command)
+    libs = []
+    for line in output:
+        if re.search(r".* on .*lib.*\.so(\.[0-9]+)* .*", line):
+            lib = re.sub(r".* on (.*lib.*\.so(\.[0-9]+)*) .*", r"\1", line)
+            libs.append(lib)
+
+    hashes = []
+    for lib in libs:
+        output = run_command_in_container(is_centralized_repository=is_centralized_repository,
+                                          image=image,
+                                          command=["md5sum", lib],
+                                          options_of_run_command=options_of_run_command)
+        hashes.append(output[0].split()[0])
+
+    return hashes

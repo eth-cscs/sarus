@@ -719,23 +719,23 @@ std::vector<std::string> resolveSharedLibAbi(const boost::filesystem::path& lib,
     return longestAbiSoFar;
 }
 
-bool areAbiVersionsCompatible(const std::vector<std::string>& hostVersion,
+AbiCompatibility getAbiVersionsCompatibility(const std::vector<std::string>& hostVersion,
                               const std::vector<std::string>& containerVersion) {
     // check MAJOR version numbers
     auto hostMajor = hostVersion.size() > 0 ? std::stoi(hostVersion[0]) : 0;
     auto containerMajor = containerVersion.size() > 0 ? std::stoi(containerVersion[0]) : 0;
     if(hostMajor != containerMajor) {
-        return false;
+        return AbiCompatibility::MAJOR_NOT_COMPATIBLE;
     }
 
     // check MINOR version numbers
     auto hostMinor = hostVersion.size() > 1 ? std::stoi(hostVersion[1]) : 0;
     auto containerMinor = containerVersion.size() > 1 ? std::stoi(containerVersion[1]) : 0;
     if(hostMinor < containerMinor) {
-        return false;
+        return AbiCompatibility::MINOR_NOT_COMPATIBLE;
     }
 
-    return true;
+    return AbiCompatibility::COMPATIBLE;
 }
 
 bool isLibc(const boost::filesystem::path& lib) {
