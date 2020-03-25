@@ -100,10 +100,11 @@ We can do so with the following commands:
 
    salloc -C gpu -N4 -t5
    sarus ssh-keygen
-   srun hostname >$HOME/hostfile
-   srun sarus run --ssh --mount=src=/users,dst=/users,type=bind \
-       ethcscs/openmpi:3.1.3  \
-       bash -c 'if [ $SLURM_PROCID -eq 0 ]; then mpirun --hostfile $HOME/hostfile -npernode 1 /openmpi-3.1.3/examples/hello_c; else sleep infinity; fi'
+   srun hostname > $SCRATCH/hostfile
+   srun sarus run --ssh \
+        --mount=src=$SCRATCH,dst=$SCRATCH,type=bind \
+        ethcscs/openmpi:3.1.3  \
+        bash -c 'if [ $SLURM_PROCID -eq 0 ]; then mpirun --hostfile $SCRATCH/hostfile -npernode 1 /openmpi-3.1.3/examples/hello_c; else sleep infinity; fi'
 
    Warning: Permanently added '[nid02182]:15263,[148.187.40.151]:15263' (RSA) to the list of known hosts.
    Warning: Permanently added '[nid02180]:15263,[148.187.40.149]:15263' (RSA) to the list of known hosts.

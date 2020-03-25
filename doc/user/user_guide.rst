@@ -766,11 +766,13 @@ We can do so with the following commands:
 
 .. code-block:: bash
 
-   $ salloc -C gpu -N4 -t5
-   $ srun hostname >$HOME/hostfile
-   $ srun sarus run --ssh --mount=src=/users,dst=/users,type=bind \
-         ethcscs/openmpi:3.1.3  \
-         bash -c 'if [ $SLURM_PROCID -eq 0 ]; then mpirun --hostfile $HOME/hostfile -npernode 1 /openmpi-3.1.3/examples/hello_c; else sleep infinity; fi'
+   salloc -C gpu -N4 -t5
+   srun hostname > $SCRATCH/hostfile
+   srun sarus run --ssh \
+        --mount=src=/users,dst=/users,type=bind \
+        --mount=src=$SCRATCH,dst=$SCRATCH,type=bind \
+        ethcscs/openmpi:3.1.3  \
+        bash -c 'if [ $SLURM_PROCID -eq 0 ]; then mpirun --hostfile $SCRATCH/hostfile -npernode 1 /openmpi-3.1.3/examples/hello_c; else sleep infinity; fi'
 
 Glibc replacement
 -----------------
