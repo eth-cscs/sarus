@@ -14,6 +14,8 @@ As indicated in the documentation for the hook, the only conditions required are
 
 * The MPI installed in the container image must comply to the requirements of the
   `MPICH ABI Compatibility Initiative <http://www.mpich.org/abi/>`_.
+  ABI compatibility and its implications are further discussed
+  :doc:`here </user/abi_compatibility>`.
 * The application in the container image must be dynamically linked with the
   MPI libraries.
 

@@ -17,6 +17,8 @@ host and container MPI implementations are ABI-compatible according to the
 standards defined by the `MPICH ABI Compatibility Initiative
 <https://www.mpich.org/abi/>`_. The Initiative is supported by several
 MPICH-based implementations, among which MVAPICH, Intel MPI, and Cray MPT.
+ABI compatibility and its implications are further discussed
+:doc:`here </user/abi_compatibility>`.
 
 Hook installation
 =================
@@ -41,8 +43,11 @@ arguments, but its actions are controlled through a few environment variables:
   the libraries' file names as follows:
 
       - The major numbers (first from the left) must be equal.
-      - The site's minor number (second from the left) must be greater or equal
-        to the container's minor number.
+      - The host's minor number (second from the left) must be greater or equal
+        to the container's minor number. In case the minor number from the
+        container is greater than the host's minor number, the hook will print
+        a warning but will proceed in the attempt to let the container
+        application run.
       - If the host's library name does not contain the version numbers or
         contains only the major version number, the missing numbers are assumed
         to be zero.

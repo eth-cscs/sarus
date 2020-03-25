@@ -635,6 +635,8 @@ how to activate them.
 Here we will illustrate a few cases of general interest for HPC from an end-user
 perspective.
 
+.. _user-mpi-hook:
+
 Native MPI support (MPICH-based)
 --------------------------------
 
@@ -645,38 +647,39 @@ Cray MPT, MVAPICH) which is required to fully leverage a high-speed
 interconnect.
 
 To take advantage of this feature, the MPI installed in the container (and
-dynamically linked to your application) needs to be ABI-compatible with
-the MPI on the host system. Taking as an example the Piz Daint
-Cray XC50 supercomputer at CSCS, to best meet the required
-`ABI-compatibility <https://www.mpich.org/abi/>`_ we recommend that the
-container application uses one of the following MPI implementations:
+dynamically linked to your application) needs to be :doc:`ABI-compatible
+</user/abi_compatibility>` with the MPI on the host system. Taking as an example
+the Piz Daint Cray XC50 supercomputer at CSCS, to best meet the required ABI
+compatibility we recommend that the container application uses one of the
+following MPI implementations:
 
 - `MPICH v3.1.4 <http://www.mpich.org/static/downloads/3.1.4/mpich-3.1.4.tar.gz>`_ (Feburary 2015)
 - `MVAPICH2 2.2 <http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2.tar.gz>`_ (September 2016)
 - Intel MPI Library 2017 Update 1
 
 The following is an example Dockerfile to create a Debian image with MPICH
-3.1.4::
+3.1.4:
 
-    FROM debian:jessie
+.. code-block:: docker
 
-    RUN apt-get update && apt-get install -y \
-            build-essential             \
-            wget                        \
-            --no-install-recommends     \
-        && rm -rf /var/lib/apt/lists/*
+   FROM debian:jessie
 
+   RUN apt-get update && apt-get install -y \
+           build-essential             \
+           wget                        \
+           --no-install-recommends     \
+       && rm -rf /var/lib/apt/lists/*
 
-    RUN wget -q http://www.mpich.org/static/downloads/3.1.4/mpich-3.1.4.tar.gz \
-        && tar xf mpich-3.1.4.tar.gz \
-        && cd mpich-3.1.4 \
-        && ./configure --disable-fortran --enable-fast=all,O3 --prefix=/usr \
-        && make -j$(nproc) \
-        && make install \
-        && ldconfig \
-        && cd .. \
-        && rm -rf mpich-3.1.4 \
-        && rm mpich-3.1.4.tar.gz
+   RUN wget -q http://www.mpich.org/static/downloads/3.1.4/mpich-3.1.4.tar.gz \
+       && tar xf mpich-3.1.4.tar.gz \
+       && cd mpich-3.1.4 \
+       && ./configure --disable-fortran --enable-fast=all,O3 --prefix=/usr \
+       && make -j$(nproc) \
+       && make install \
+       && ldconfig \
+       && cd .. \
+       && rm -rf mpich-3.1.4 \
+       && rm mpich-3.1.4.tar.gz
 
 .. note::
 
@@ -763,11 +766,11 @@ We can do so with the following commands:
 
 .. code-block:: bash
 
-   salloc -C gpu -N4 -t5
-   srun hostname >$HOME/hostfile
-   srun sarus run --ssh --mount=src=/users,dst=/users,type=bind \
-       ethcscs/openmpi:3.1.3  \
-       bash -c 'if [ $SLURM_PROCID -eq 0 ]; then mpirun --hostfile $HOME/hostfile -npernode 1 /openmpi-3.1.3/examples/hello_c; else sleep infinity; fi'
+   $ salloc -C gpu -N4 -t5
+   $ srun hostname >$HOME/hostfile
+   $ srun sarus run --ssh --mount=src=/users,dst=/users,type=bind \
+         ethcscs/openmpi:3.1.3  \
+         bash -c 'if [ $SLURM_PROCID -eq 0 ]; then mpirun --hostfile $HOME/hostfile -npernode 1 /openmpi-3.1.3/examples/hello_c; else sleep infinity; fi'
 
 Glibc replacement
 -----------------
@@ -791,3 +794,117 @@ container will only be replaced if the following conditions apply:
 * the container's libraries are older than the host's libraries;
 
 * host and container glibc libraries have the same soname and are ABI compatible.
+
+.. _user-no-native-mpi:
+
+Running MPI applications without the native MPI hook
+====================================================
+
+The :ref:`MPI replacement mechanism <user-mpi-hook>` controlled by the ``--mpi``
+option is not mandatory to run distributed applications in Sarus containers. It
+is possible to run containers using the MPI implementation embedded in the image,
+foregoing the performance of custom high-performance hardware.
+
+This can be useful in a number of scenarios:
+
+* the software stack in the container should not be altered in any way
+* non-performance-critical testing
+* impossibility to satisfy ABI compatibility for native hardware acceleration
+
+Sarus can be launched as a normal MPI program, and the execution context will be
+propagated to the container application:
+
+.. code-block:: bash
+
+   mpiexec -n <number of ranks> sarus run <image> <MPI application>
+
+The important aspect to consider is that the process management system from the
+host must be able to communicate with the MPI libraries in the container.
+
+MPICH-based MPI implementations by default use the
+`Hydra process manager <https://wiki.mpich.org/mpich/index.php/Hydra_Process_Management_Framework>`_
+and the `PMI-2 interface <https://link.springer.com/chapter/10.1007/978-3-642-15646-5_4>`_
+to communicate between processes. OpenMPI by default uses the
+`OpenRTE (ORTE) framework <https://www.open-mpi.org/papers/euro-pvmmpi-2005-orte/>`_
+and the `PMIx interface <https://pmix.org/>`_, but can be configured to
+support PMI-2.
+
+.. note::
+
+    Additional information about the support provided by PMIx for
+    containers and cross-version use cases can be found here:
+    https://pmix.org/support/faq/how-does-pmix-work-with-containers/
+
+As a general rule of thumb, corresponding MPI implementations (e.g. using an
+MPICH-compiled ``mpiexec`` on the host to launch Sarus containers featuring
+MPICH libraries) should work fine together. As mentioned previously, if an
+OpenMPI library in the container has been configured to support PMI, the
+container should also be able to communicate with an MPICH-compiled ``mpiexec``
+from the host.
+
+The following is a minimal Dockerfile example of building OpenMPI 4.0.2 with
+PMI-2 support on Ubuntu 18.04:
+
+.. code-block:: docker
+
+   FROM ubuntu:18.04
+
+   RUN apt-get update && apt-get install -y \
+           build-essential \
+           ca-certificates \
+           automake \
+           autoconf \
+           libpmi2-0-dev \
+           wget \
+           --no-install-recommends \
+       && rm -rf /var/lib/apt/lists/*
+
+   RUN wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.2.tar.gz \
+       && tar xf openmpi-4.0.2.tar.gz \
+       && cd openmpi-4.0.2 \
+       && ./configure --prefix=/usr --with-pmi=/usr/include/slurm-wlm --with-pmi-libdir=/usr/lib/x86_64-linux-gnu CFLAGS=-I/usr/include/slurm-wlm \
+       && make -j$(nproc) \
+       && make install \
+       && ldconfig \
+       && cd .. \
+       && rm -rf openmpi-4.0.2.tar.gz openmpi-4.0.2
+
+When running under the Slurm workload manager, the process management interface
+can be selected with the ``--mpi`` option to ``srun``. The following example
+shows how to run the :doc:`OSU point-to-point latency test </cookbook/osu_mb/osu_mb>`
+from the Sarus cookbook on CSCS' Piz Daint Cray XC50 system without native
+interconnect support:
+
+.. code-block:: bash
+
+   $ srun -C gpu -N2 -t2 --mpi=pmi2 sarus run ethcscs/mpich:ub1804_cuda92_mpi314_osu ./osu_latency
+   ###MPI-3.0
+   # OSU MPI Latency Test v5.6.1
+   # Size          Latency (us)
+   0                       6.82
+   1                       6.80
+   2                       6.80
+   4                       6.75
+   8                       6.79
+   16                      6.86
+   32                      6.82
+   64                      6.82
+   128                     6.85
+   256                     6.87
+   512                     6.92
+   1024                    9.77
+   2048                   10.75
+   4096                   11.32
+   8192                   12.17
+   16384                  14.08
+   32768                  17.20
+   65536                  29.05
+   131072                 57.25
+   262144                 83.84
+   524288                139.52
+   1048576               249.09
+   2097152               467.83
+   4194304               881.02
+
+Notice that an ``--mpi=pmi2`` option was passed to ``srun`` but *not* to
+:program:`sarus run`.

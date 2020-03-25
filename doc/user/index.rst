@@ -6,4 +6,5 @@ User guides
    :maxdepth: 2
 
    user_guide
+   abi_compatibility
    custom-cuda-images
