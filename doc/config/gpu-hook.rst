@@ -2,8 +2,10 @@ NVIDIA Container Toolkit
 ========================
 
 NVIDIA provides access to GPU devices and their driver stacks inside OCI
-containers through an OCI hook called NVIDIA Container Toolkit, which acts
-as a driver for the `nvidia-container-cli <https://github.com/NVIDIA/libnvidia-container>`_
+containers through an OCI hook called
+`NVIDIA Container Toolkit <https://github.com/NVIDIA/container-toolkit>`_,
+which acts as a driver for the
+`nvidia-container-cli <https://github.com/NVIDIA/libnvidia-container>`_
 utility.
 
 Dependencies
@@ -52,8 +54,8 @@ the system where Sarus is installed:
 Hook installation
 -----------------
 
-At the time of writing, the latest release of the NVIDIA Container Toolkit hook
-is version 3.1.4. NVIDIA no longer provides pre-built binaries for this
+At the time of writing, the latest revision of the NVIDIA Container Toolkit
+is commit 60f165ad69. NVIDIA no longer provides pre-built binaries for this
 software, so it is necessary to build from source.
 
 To do so, an installation of the `Go programming language
@@ -69,14 +71,14 @@ You can now proceed to build the Toolkit from source:
 
 .. code-block:: bash
     
-    $ go get github.com/NVIDIA/nvidia-container-runtime
-    $ cd $GOPATH/src/github.com/NVIDIA/nvidia-container-runtime/
-    $ git checkout v3.1.4
+    $ go get github.com/NVIDIA/container-toolkit
+    $ cd $GOPATH/src/github.com/NVIDIA/container-toolkit/
+    $ git checkout 60f165ad69
     $ cd $GOPATH
-    $ go build -ldflags "-s -w" -v github.com/NVIDIA/nvidia-container-runtime/toolkit/nvidia-container-toolkit
+    $ go build -ldflags "-s -w" -v github.com/NVIDIA/container-toolkit/nvidia-container-toolkit
 
     # Copy the hook binary to an installation directory
-    $ sudo cp $GOPATH/nvidia-container-toolkit /opt/sarus/bin/nvidia-container-toolkit-3.1.4
+    $ sudo cp $GOPATH/nvidia-container-toolkit /opt/sarus/bin/nvidia-container-toolkit-60f165ad69
 
 To ensure correct functionality, the Toolkit also needs a TOML configuration file
 to be present on the system, and will look for it in the default path
@@ -89,7 +91,7 @@ Ubuntu, Debian, CentOS, OpenSUSE Leap and Amazon Linux:
 
     # Install hook config.toml (e.g. for CentOS)
     $ sudo mkdir /etc/nvidia-container-runtime/
-    $ sudo cp $GOPATH/src/github.com/NVIDIA/nvidia-container-runtime/toolkit/config.toml.centos /etc/nvidia-container-runtime/config.toml
+    $ sudo cp $GOPATH/src/github.com/NVIDIA/container-toolkit/config/config.toml.centos /etc/nvidia-container-runtime/config.toml
 
 Sarus configuration
 ---------------------
