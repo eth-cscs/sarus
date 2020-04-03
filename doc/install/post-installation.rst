@@ -30,15 +30,16 @@ Because of the considerable power granted by the requirements above, as a
 security measure Sarus will check that critical files and directories opened
 during privileged execution meet the following restrictions:
 
-  - Their parent directory is owned by root.
-  - Their parent directory is writable only by the owner (no write permissions
-    to group users or other users).
   - They are owned by root.
   - They are writable only by the owner.
+  - All their parent directories (up to the root path) are owned by root.
+  - All their parent directories (up to the root path) are writable only by the
+    owner (no write permissions to group users or other users).
 
 The files checked for the security conditions are:
 
   - ``sarus.json`` in Sarus's configuration directory ``<sarus install prefix>/etc``.
+  - ``sarus.schema.json`` in Sarus's configuration directory ``<sarus install prefix>/etc``.
   - The ``mksquashfs`` utility pointed by ``mksquashfsPath`` in ``sarus.json``.
   - The init binary pointed by ``initPath`` in ``sarus.json``.
   - The OCI-compliant runtime pointed by ``runcPath`` in ``sarus.json``.
@@ -52,6 +53,18 @@ The checked directories are:
     ``sarus.json``.
   - If the :doc:`SSH Hook </config/ssh-hook>` is enabled in ``sarus.json``,
     the directory of the custom OpenSSH software.
+
+Most security checks can be disabled through the :ref:`corresponding parameter
+<config-reference-securityChecks>` in the Sarus configuration file.
+Checks on ``sarus.json`` and ``sarus.schema.json`` will always be performed,
+regardless of the parameter value.
+
+.. important::
+
+    The ability to disable security checks is only meant as a convenience
+    feature when rapidly iterating over test and development installations.
+    It is strongly recommended to keep the checks enabled for production
+    deployments.
 
 
 Load required kernel modules

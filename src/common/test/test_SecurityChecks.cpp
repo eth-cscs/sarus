@@ -34,6 +34,11 @@ TEST(SecurityChecksTestGroup, checkThatPathIsUntamperable) {
     const auto& testDirectory = testPathRAII.getPath();
     common::createFoldersIfNecessary(testDirectory, std::get<0>(rootIds), std::get<1>(rootIds));
 
+    // non-existent file
+    {
+        auto path = testDirectory / "nonexistent-file";
+        securityChecks.checkThatPathIsUntamperable(path);
+    }
     // untamperable file
     {
         auto path = testDirectory / "untamperable-file";

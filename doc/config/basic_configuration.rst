@@ -49,10 +49,10 @@ Sarus, regardless of the installation method chosen.
 
 .. note::
 
-   It is not necessary to manually run the configuration script after
+   Usually it is not  necessary to manually run the configuration script after
    installing Sarus through the Spack package manager.
-   The Spack package already uses the script internally to create a starting
-   configuration.
+   Unless instructed differently, the Spack package already uses the script
+   internally to create a starting configuration.
 
 Please note that ``configure_installation.sh`` will only create a baseline
 configuration. To enable more advanced features of Sarus, *sarus.json* should

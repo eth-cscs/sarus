@@ -23,6 +23,13 @@ void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& 
     auto message = boost::format("Checking that path %s is untamperable") % path;
     logMessage(message, common::LogLevel::INFO);
 
+    // check that path exists
+    if(!boost::filesystem::exists(path)) {
+        message = boost::format("Path %s does not exist, skipping") % path;
+        logMessage(message, common::LogLevel::INFO);
+        return;
+    }
+
     // check that parent paths are untamperable
     auto rootPath = path.root_path();
     auto parentPath = path;
@@ -42,7 +49,8 @@ void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& 
         }
     }
 
-    logMessage("Successfully checked that path is untamperable", common::LogLevel::INFO);
+    message = boost::format("Successfully checked that path %s is untamperable") % path;
+    logMessage(message, common::LogLevel::INFO);
 }
 
 void SecurityChecks::checkThatBinariesInSarusJsonAreUntamperable() const {
@@ -160,8 +168,8 @@ void SecurityChecks::runSecurityChecks(const boost::filesystem::path& sarusInsta
     else {
         checkThatBinariesInSarusJsonAreUntamperable();
         checkThatOCIHooksAreUntamperable();
+        checkThatPathIsUntamperable(boost::filesystem::path{config->json["OCIBundleDir"].GetString()});
         checkThatPathIsUntamperable(boost::filesystem::path{config->json["prefixDir"].GetString() + std::string{"/openssh"}});
-        checkThatPathIsUntamperable(boost::filesystem::path{config->json["prefixDir"].GetString() + std::string{"/bin/ssh_hook"}});
     }
 }
 

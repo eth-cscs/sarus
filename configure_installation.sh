@@ -5,7 +5,8 @@
 # - setting the proper permissions of the Sarus binary
 # - creating the cached passwd database
 # - creating the cached group database
-# - filling the missing parameters in the etc/sarus.json.
+# - ensuring root ownership of etc/sarus.schema.json
+# - filling the missing parameters in etc/sarus.json
 
 function exit_on_error() {
     local last_command_exit_code=$?
@@ -38,6 +39,10 @@ echo "Successfully created cached passwd database"
 echo "Creating cached group database"
 getent group > etc/group
 echo "Successfully created cached group database"
+
+echo "Setting ownership of etc/sarus.schema.json"
+chown root:root etc/sarus.schema.json
+echo "Successfully set ownership of etc/sarus.schema.json"
 
 echo "Configuring etc/sarus.json"
 

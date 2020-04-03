@@ -6,7 +6,8 @@ class Rapidjson(CMakePackage):
 
     homepage = "http://rapidjson.org"
     url      = "https://github.com/Tencent/rapidjson/archive/v1.1.0.tar.gz"
+    git      = 'https://github.com/Tencent/rapidjson.git',
 
     version('663f076',
-            git='https://github.com/Tencent/rapidjson.git',
-            commit='663f076')
+            git = 'https://github.com/Tencent/rapidjson.git',
+            commit = '663f076')

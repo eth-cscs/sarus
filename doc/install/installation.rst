@@ -25,12 +25,17 @@ Installing with Spack is convenient because detection and installation of
 dependencies are handled automatically.
 
 As explained in the :ref:`execution requirements
-<post-installation-permissions-execution>`, Sarus must be installed as a root-owned
-SUID binary. The straightforward way to achieve this is running the installation
-command with super-user privileges.
-Another option is to install as a regular user and ``chown`` to root after that.
+<post-installation-permissions-execution>`, Sarus must be installed as a
+root-owned SUID binary in a directory hierarchy which belongs to the root user
+at all levels.
+The straightforward way to achieve this is to use a root-owned Spack and run the
+installation procedure with super-user privileges.
+An alternative procedure for test/development installations with a non-root
+Spack is discussed in :ref:`this subsection<installation-spack-nonroot>`.
 
-The installation procedure with Spack is as follows:
+The installation procedure with Spack follows below.
+If you are not performing these actions as the root user, prefix each ``spack``
+command with ``sudo``:
 
 .. code-block:: bash
 
@@ -56,12 +61,91 @@ to customize the installation:
 
    - ``ssh``: Build and install the SSH hook and custom OpenSSH software to enable
      connections inside containers [True].
+   - ``configure_installation``: Run the script to setup a starting Sarus
+     configuration as part of the installation phase. Running the script
+     requires super-user privileges [True].
 
 For example, in order to perform a quick installation without SSH we could use:
 
 .. code-block:: bash
 
    spack install --verbose sarus ssh=False
+
+.. _installation-spack-nonroot:
+
+Using Spack as a non-root user (for test and development only)
+--------------------------------------------------------------
+
+By default, the Spack package for Sarus will run a :ref:`configuration script
+<configure-installation-script>` as part of the installation phase to setup a
+minimal working configuration. The script needs to run with root privileges,
+which in turn means the ``spack install`` command must be issued with root powers.
+
+The ``configure_installation`` variant of the Spack package allows to control
+the execution of the script. By negating the variant, Sarus can be installed as
+a user different than root. It is then necessary to access the installation path
+and run the configuration script directly. While doing so still requires
+``sudo``, it can be performed with a user's personal Spack software and the
+amount of root-owned files in the Sarus installation is kept to a minimum.
+
+Installing as non-root likely means that Sarus is located in a directory
+hierarchy which is not root-owned all the way up to ``/``.
+This is not allowed by the program's :ref:`security checks
+<post-installation-permissions-security>`, so they have to be disabled.
+
+.. important::
+
+    The ability to disable security checks is only meant as a convenience
+    feature when rapidly iterating over test and development installations.
+    It is strongly recommended to keep the checks enabled for production
+    deployments.
+
+Sarus can then be loaded and used normally. The procedure is summed up in the
+following example:
+
+.. code-block:: bash
+
+   # Setup Spack bash integration (if you haven't already done so)
+   . ${SPACK_ROOT}/share/spack/setup-env.sh
+
+   # Create a local Spack repository for Sarus-specific dependencies
+   export SPACK_LOCAL_REPO=${SPACK_ROOT}/var/spack/repos/cscs
+   spack repo create ${SPACK_LOCAL_REPO}
+   spack repo add ${SPACK_LOCAL_REPO}
+
+   # Import Spack packages for Cpprestsdk, RapidJSON and Sarus
+   cp -r <Sarus project root dir>/spack/packages/* ${SPACK_LOCAL_REPO}/packages/
+
+    # Install Sarus skipping the configure_installation script
+    $ spack install --verbose sarus@develop ~configure_installation
+
+    # Use 'spack find' to get the installation directory
+    $ spack find -p sarus@develop
+    ==> 1 installed package
+    -- linux-ubuntu18.04-sandybridge / gcc@7.5.0 --------------------
+    sarus@develop  /home/ubuntu/spack/opt/spack/linux-ubuntu18.04-sandybridge/gcc-7.5.0/sarus-develop-dy4f6tlhx3vwf6zmqityvgdhpnc6clg5
+
+    # cd into the installation directory
+    $ cd /home/ubuntu/spack/opt/spack/linux-ubuntu18.04-sandybridge/gcc-7.5.0/sarus-develop-dy4f6tlhx3vwf6zmqityvgdhpnc6clg5
+
+    # Run configure_installation script
+    $ sudo ./configure_installation.sh
+
+    # Disable security checks
+    $ sudo sed -i -e 's/"securityChecks": true/"securityChecks": false/' etc/sarus.json
+
+    # Return to home folder and test Sarus
+    $ cd
+    $ spack load sarus@develop
+    $ sarus pull alpine
+    [...]
+    $ sarus run alpine cat /etc/os-release
+    NAME="Alpine Linux"
+    ID=alpine
+    VERSION_ID=3.11.5
+    PRETTY_NAME="Alpine Linux v3.11"
+    HOME_URL="https://alpinelinux.org/"
+    BUG_REPORT_URL="https://bugs.alpinelinux.org/"
 
 
 .. _installation-source:

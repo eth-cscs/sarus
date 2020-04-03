@@ -9,11 +9,12 @@ class Cpprestsdk(CMakePackage):
 
     homepage = "https://github.com/Microsoft/cpprestsdk"
     url      = "https://github.com/Microsoft/cpprestsdk/archive/v2.10.0.tar.gz"
+    git      = "https://github.com/microsoft/cpprestsdk.git"
 
-    version('2.10.0', '49b5b7789fa844df0e78cc7591aed095')
-    version('2.9.1',  'c3dd67d8cde8a65c2e994e2ede4439a2')
+    version('2.10.0', tag='v2.10.0')
+    version('2.9.1',  tag='v2.9.1')
 
-    depends_on('boost@1.65.0')
+    depends_on('boost@1.65.0 cxxstd=11')
     depends_on('openssl')
 
     root_cmakelists_dir = 'Release'

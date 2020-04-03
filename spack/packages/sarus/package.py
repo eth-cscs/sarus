@@ -30,28 +30,31 @@ class Sarus(CMakePackage):
     """Sarus is an OCI-compliant container engine for HPC systems."""
 
     homepage = "https://github.com/eth-cscs/sarus"
-    url      = "https://github.com/eth-cscs/sarus/archive/1.0.0-rc6.tar.gz"
+    url      = "https://github.com/eth-cscs/sarus/archive/1.1.0.tar.gz"
     git      = "https://github.com/eth-cscs/sarus.git"
 
     version('develop', branch='develop')
     version('master',  branch='master')
-    version('1.0.1',     'abb8c314a196207204826f7b60e50646')
-    version('1.0.0',     'd913b1d0ef3729f9f41ac5bd06dd5615')
-    version('1.0.0-rc7', '26f02cd90bbe57404c259f188eb3cb73')
-    version('1.0.0-rc6', '5c803adf10e1f10d34e83c411b07cbb8')
-    version('1.0.0-rc5', 'd894a96fa350af8947f06e7e8c73d59f')
+    version('1.1.0',   tag='1.1.0')
+    version('1.0.1',   tag='1.0.1')
+    version('1.0.0',   tag='1.0.0')
 
     variant('ssh', default=True,
             description='Build and install the SSH hook and custom OpenSSH software '
                         'to enable connections inside containers')
+    variant('configure_installation', default=True,
+            description='Run the script to setup a starting Sarus configuration as '
+                        'part of the installation phase. Running the script requires '
+                        'super-user privileges.')
 
     depends_on('squashfs', type=('build', 'run'))
-    depends_on('boost@1.65.0')
+    depends_on('boost@1.65.0 cxxstd=11')
     depends_on('cpprestsdk@2.10.0')
     depends_on('libarchive@3.4.1')
     depends_on('rapidjson@663f076', type='build')
 
-    depends_on('python@2.7.15', type='run', when='@develop')
+    # Python 3 is used to run integration tests
+    depends_on('python@3:', type='run', when='@develop')
 
     def cmake_args(self):
         spec = self.spec
@@ -65,7 +68,8 @@ class Sarus(CMakePackage):
             mkdirp(prefix.var.OCIBundleDir)
             self.install_runc(spec, prefix)
             self.install_tini(spec, prefix)
-            self.configure_installation(spec, prefix)
+            if '+configure_installation' in spec:
+                self.configure_installation(spec, prefix)
 
     def install_runc(self, spec, prefix):
         wget = which('wget')
