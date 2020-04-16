@@ -172,7 +172,8 @@ run_unit_tests() {
     sudo -u docker CTEST_OUTPUT_ON_FAILURE=1 ctest --exclude-regex AsRoot
     fail_on_error "Unit tests as normal user failed"
 
-    CTEST_OUTPUT_ON_FAILURE=1 ctest --tests-regex AsRoot
+    CTEST_OUTPUT_ON_FAILURE=1 ctest --tests-regex AsRoot # Add as many regex as you want with -R. Allow output with -VV.
+    # TODO: allow args forwarding to cpputest so we can run specific testswithin the filtered file with -n for example.
     fail_on_error "Unit tests as root user failed"
 
     # Adjust ownership of coverage files (Debug only)

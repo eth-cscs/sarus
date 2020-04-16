@@ -363,18 +363,22 @@ void createFoldersIfNecessary(const boost::filesystem::path& path, uid_t uid, gi
 }
 
 void createFileIfNecessary(const boost::filesystem::path& path, uid_t uid, gid_t gid) {
-    if(!boost::filesystem::exists(path)) {
-        logMessage(boost::format{"Creating file %s"} % path, LogLevel::DEBUG);
-        if(!boost::filesystem::exists(path.parent_path())) {
-            createFoldersIfNecessary(path.parent_path(), uid, gid);
-        }
-        std::ofstream of(path.c_str());
-        if(!of.is_open()) {
-            auto message = boost::format("Failed to create file %s") % path;
-            SARUS_THROW_ERROR(message.str());
-        }
-        setOwner(path, uid, gid);
+    // NOTE: Broken symlinks will NOT be recognized as existing and hence will be overriden.
+    if(boost::filesystem::exists(path)){
+        logMessage(boost::format{"File %s already exists"} % path, LogLevel::DEBUG);
+        return;
     }
+
+    logMessage(boost::format{"Creating file %s"} % path, LogLevel::DEBUG);
+    if(!boost::filesystem::exists(path.parent_path())) {
+        createFoldersIfNecessary(path.parent_path(), uid, gid);
+    }
+    std::ofstream of(path.c_str());
+    if(!of.is_open()) {
+        auto message = boost::format("Failed to create file %s") % path;
+        SARUS_THROW_ERROR(message.str());
+    }
+    setOwner(path, uid, gid);
 }
 
 void copyFile(const boost::filesystem::path& src, const boost::filesystem::path& dst, uid_t uid, gid_t gid) {
@@ -717,25 +721,6 @@ std::vector<std::string> resolveSharedLibAbi(const boost::filesystem::path& lib,
     }
 
     return longestAbiSoFar;
-}
-
-AbiCompatibility getAbiVersionsCompatibility(const std::vector<std::string>& hostVersion,
-                              const std::vector<std::string>& containerVersion) {
-    // check MAJOR version numbers
-    auto hostMajor = hostVersion.size() > 0 ? std::stoi(hostVersion[0]) : 0;
-    auto containerMajor = containerVersion.size() > 0 ? std::stoi(containerVersion[0]) : 0;
-    if(hostMajor != containerMajor) {
-        return AbiCompatibility::MAJOR_NOT_COMPATIBLE;
-    }
-
-    // check MINOR version numbers
-    auto hostMinor = hostVersion.size() > 1 ? std::stoi(hostVersion[1]) : 0;
-    auto containerMinor = containerVersion.size() > 1 ? std::stoi(containerVersion[1]) : 0;
-    if(hostMinor < containerMinor) {
-        return AbiCompatibility::MINOR_NOT_COMPATIBLE;
-    }
-
-    return AbiCompatibility::COMPATIBLE;
 }
 
 bool isLibc(const boost::filesystem::path& lib) {

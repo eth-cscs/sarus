@@ -28,7 +28,7 @@ TEST(MPIHookTestGroup, test_basics) {
         .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "false"}})
         .setHostMpiLibraries({})
         .setPreHookContainerLibraries({})
-        .checkSuccessfull();
+        .checkSuccessful();
 
     // no MPI libraries in host
     Checker{}
@@ -55,9 +55,9 @@ TEST(MPIHookTestGroup, test_mpi_libraries_injection) {
             "/usr/local/lib/libmpi.so.12.5.5",
             "/lib/libmpi.so", "/lib/libmpi.so.12", "/lib/libmpi.so.12.5", "/lib/libmpi.so.12.5.5",
             "/lib64/libmpi.so", "/lib64/libmpi.so.12", "/lib64/libmpi.so.12.5", "/lib64/libmpi.so.12.5.5"})
-        .checkSuccessfull();
+        .checkSuccessful();
 
-    // multiple libraries
+    // multiple host and container libraries, one version of each
     Checker{}
         .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
         .setHostMpiLibraries({"/lib/libmpi.so.12.5.5", "/lib/libmpicxx.so.12.5.5"})
@@ -68,7 +68,7 @@ TEST(MPIHookTestGroup, test_mpi_libraries_injection) {
 
             "/lib/libmpicxx.so", "/lib/libmpicxx.so.12", "/lib/libmpicxx.so.12.5", "/lib/libmpicxx.so.12.5.5",
             "/lib64/libmpicxx.so", "/lib64/libmpicxx.so.12", "/lib64/libmpicxx.so.12.5", "/lib64/libmpicxx.so.12.5.5"})
-        .checkSuccessfull();
+        .checkSuccessful();
 
     // multiple libraries (not all in container, but all injected)
     // Note: we inject all the host MPI libraries also when they are not present in the container because we don't
@@ -83,7 +83,7 @@ TEST(MPIHookTestGroup, test_mpi_libraries_injection) {
 
             "/lib/libmpicxx.so", "/lib/libmpicxx.so.12", "/lib/libmpicxx.so.12.5", "/lib/libmpicxx.so.12.5.5",
             "/lib64/libmpicxx.so", "/lib64/libmpicxx.so.12", "/lib64/libmpicxx.so.12.5", "/lib64/libmpicxx.so.12.5.5"})
-        .checkSuccessfull();
+        .checkSuccessful();
 }
 
 TEST(MPIHookTestGroup, test_dependency_libraries_injection) {
@@ -99,7 +99,7 @@ TEST(MPIHookTestGroup, test_dependency_libraries_injection) {
 
             "/lib/libdep.so",
             "/lib64/libdep.so"})
-        .checkSuccessfull();
+        .checkSuccessful();
 
     // container's libdep.so gets replaced with host's library
     Checker{}
@@ -114,9 +114,9 @@ TEST(MPIHookTestGroup, test_dependency_libraries_injection) {
             "/usr/local/lib/libdep.so",
             "/lib/libdep.so",
             "/lib64/libdep.so"})
-        .checkSuccessfull();
+        .checkSuccessful();
 
-    // multiple libraries (libdep0.so, libdep1.so)
+    // multiple dep libraries in host get all injected (libdep0.so, libdep1.so)
     Checker{}
         .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
         .setHostMpiLibraries({"/lib/libmpi.so.12"})
@@ -131,7 +131,7 @@ TEST(MPIHookTestGroup, test_dependency_libraries_injection) {
 
             "/lib/libdep1.so",
             "/lib64/libdep1.so"})
-        .checkSuccessfull();
+        .checkSuccessful();
 
     // symlinks already exist (are replaced by the hook)
     Checker{}
@@ -145,7 +145,266 @@ TEST(MPIHookTestGroup, test_dependency_libraries_injection) {
 
             "/lib/libdep.so",
             "/lib64/libdep.so"})
-        .checkSuccessfull();
+        .checkSuccessful();
+}
+
+TEST(MPIHookTestGroup, test_libraries_injection_container_version_matching) {
+    /*  NOTES:
+        - To properly check compatbility, the HOST and CONTAINER libraries should be defined with at least 2 of the 3 version numbers.
+          e.g. libmpi.so.12.1 or libmpi.so.12.2.3, or even libmpi.so.12.0 not just libmpi.so.12.
+        - This means, a CONTAINER library can be seen as OLDER, EQUAL or NEWER compared to the HOST version.
+          e.g. for HOST version libmpi.so.12.1, CONTAINER libs libmpi.so.12.0, libmpi.so.12.1 and libmpi.so.13.1 are OLDER, EQUAL and NEWER respectively.
+
+        TESTS:
+        This test checks the policy defined to handle the case when more than one library version is found in the container.
+        Granted, it is a weird case, but it came from a real Sarus user. The container had multiple versions of a "dependecy" library (libgfortran), but
+        we prepare the tests for both MPI and dependencies libraries.
+
+        The HOST is configured to have only 1 version of each library. But the container could bring more than one.
+        When more than one version is available in the container, we have the following possible usecases in the CONTAINER:
+
+        0 to N older (than HOST) versions
+        0 or 1 equal (as HOST) version
+        0 to N newer (than HOST) versions
+
+        The HOOK injection will take this policy:
+        - Only one library version will be injected from the host.
+        - If the same (equal) is available in the container, it will be replaced. The rest of the libs in the container remain untouched.
+        - Otherwise the newest of the older libraries is "chosen".
+            If this is ABI compatible with the host, the container library is replaced.
+            Otherwise, the host library is injected and the container libraries remain untouched.
+        - Otherwise (only newer versions in container):
+            - A warning is printed.
+            - The host library is injected and both the libs and symlinks in the container remain untouched.
+        The full chain of symlinks from linkername to lib is updated only when all container lib versions are ABI compatible with the host one.
+    */
+    // 2 older
+    Checker{}
+        .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
+        .setHostMpiLibraries({"/lib/libmpi.so.12.3"})
+        .setPreHookContainerLibraries({"/lib/libmpi.so.12.1", "/lib/libmpi.so.12.2"})
+        .expectPostHookContainerLibraries({
+            "/lib/libmpi.so", "/lib/libmpi.so.12", "/lib/libmpi.so.12.3",
+            "/lib64/libmpi.so", "/lib64/libmpi.so.12", "/lib64/libmpi.so.12.3",
+
+            "/lib/libmpi.so.12.1",
+            "/lib/libmpi.so.12.2"
+        })
+        .expectPreservedPostHookContainerLibraries({
+            "/lib/libmpi.so.12.1"
+        })
+        .checkSuccessful();
+
+    // 2 older 1 equal
+    Checker{}
+        .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5"})
+        .setPreHookContainerLibraries({"/lib/libmpi.so.12.1.1", "/lib/libmpi.so.12.5", "/lib/libmpi.so.12.2.2"})
+        .expectPostHookContainerLibraries({
+            "/lib/libmpi.so", "/lib/libmpi.so.12", "/lib/libmpi.so.12.5",
+            "/lib64/libmpi.so", "/lib64/libmpi.so.12", "/lib64/libmpi.so.12.5",
+
+            "/lib/libmpi.so.12.1.1",
+            "/lib/libmpi.so.12.2.2"
+        })
+        .expectPreservedPostHookContainerLibraries({
+            "/lib/libmpi.so.12.1.1",
+            "/lib/libmpi.so.12.2.2"
+        })
+        .checkSuccessful();
+
+    // NOTE: Container can't have an incompatible MPI lib (even if there's a compatible one),
+    Checker{}
+        .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
+        .setHostMpiLibraries({"/lib/libmpi.so.12.4"})
+        .setPreHookContainerLibraries({"/lib/libmpi.so.12.1", "/lib64/libmpi.so.13.1"})
+        .expectPostHookContainerLibraries({
+            "/lib/libmpi.so", "/lib/libmpi.so.12", "/lib/libmpi.so.12.4",
+        })
+        .checkFailure();
+    // So, we continue the test with MPI dependency libs (same method is used).
+
+    // 2 older 1 equal 2 newer
+    Checker{}
+        .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
+        .setHostMpiLibraries({"/lib/libmpi.so.12.1"})
+        .setHostMpiDependencyLibraries({"/lib/libdep.so.4.4"})
+        .setPreHookContainerLibraries({"/lib/libmpi.so.12.1", "/lib/libdep.so.4.6", "/lib/libdep.so.4.4", "/lib/libdep.so.4.3", "/lib64/libdep.so.4.2", "/lib64/libdep.so.5.1"})
+        .expectPostHookContainerLibraries({
+            "/lib/libmpi.so", "/lib/libmpi.so.12", "/lib/libmpi.so.12.1",
+            "/lib64/libmpi.so", "/lib64/libmpi.so.12", "/lib64/libmpi.so.12.1",
+
+            "/lib/libdep.so", "/lib/libdep.so.4", "/lib/libdep.so.4.4",
+            "/lib64/libdep.so", "/lib64/libdep.so.4", "/lib64/libdep.so.4.4",
+
+            "/lib/libdep.so.4.6",
+            "/lib/libdep.so.4.3",
+            "/lib64/libdep.so.4.2",
+            "/lib64/libdep.so.5.1",
+        })
+        .expectPreservedPostHookContainerLibraries({
+            "/lib/libdep.so.4.6",
+            "/lib/libdep.so.4.3",
+            "/lib64/libdep.so.4.2",
+            "/lib64/libdep.so.5.1",
+        })
+        .checkSuccessful();
+
+    // 1 equal 2 newer
+    Checker{}
+        .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
+        .setHostMpiLibraries({"/lib/libmpi.so.12.1"})
+        .setHostMpiDependencyLibraries({"/lib/libdep.so.4.3"})
+        .setPreHookContainerLibraries({{"/lib/libmpi.so.12.1", "/lib64/libdep.so.5.0", "/lib/libdep.so.4.3", "/lib/libdep.so.4.5"}})
+        .expectPostHookContainerLibraries({
+            "/lib/libmpi.so", "/lib/libmpi.so.12", "/lib/libmpi.so.12.1",
+            "/lib64/libmpi.so", "/lib64/libmpi.so.12", "/lib64/libmpi.so.12.1",
+
+            "/lib/libdep.so", "/lib/libdep.so.4", "/lib/libdep.so.4.3",
+            "/lib64/libdep.so", "/lib64/libdep.so.4", "/lib64/libdep.so.4.3",
+
+            "/lib64/libdep.so.5.0",
+            "/lib/libdep.so.4.5",
+        })
+        .expectPreservedPostHookContainerLibraries({
+            "/lib64/libdep.so.5.0",
+            "/lib/libdep.so.4.5",
+        })
+        .checkSuccessful();
+
+    // 2 newer
+    Checker{}
+        .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
+        .setHostMpiLibraries({"/lib/libmpi.so.12.1"})
+        .setHostMpiDependencyLibraries({"/lib/libdep.so.4.2"})
+        .setPreHookContainerLibraries({"/lib/libmpi.so.12.1", "/lib64/libdep.so.4.3", "/lib64/libdep.so.4.5"})
+        .expectPostHookContainerLibraries({
+            "/lib/libmpi.so", "/lib/libmpi.so.12", "/lib/libmpi.so.12.1",
+            "/lib64/libmpi.so", "/lib64/libmpi.so.12", "/lib64/libmpi.so.12.1",
+
+            "/lib/libdep.so", "/lib/libdep.so.4", "/lib/libdep.so.4.2",
+            "/lib64/libdep.so", "/lib64/libdep.so.4", "/lib64/libdep.so.4.2",
+
+            "/lib64/libdep.so.4.3",
+            "/lib64/libdep.so.4.5",
+        })
+        .expectPreservedPostHookContainerLibraries({
+            "/lib64/libdep.so.4.3",
+            "/lib64/libdep.so.4.5",
+        })
+        .checkSuccessful();
+}
+
+TEST(MPIHookTestGroup, test_library_injection_preserves_rootlink) {
+    // If existing container libs are FULL ABI compatible, libdep.so can be safely overwritten
+    Checker{}
+        .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
+        .setHostMpiLibraries({"/lib/libmpi.so.12.1"})
+        .setHostMpiDependencyLibraries({"/lib/libdep.so.4.2"})
+        .setPreHookContainerLibraries({"/lib/libmpi.so.12.1", "/lib64/libdep.so", "/lib64/libdep.so.4.1"})
+        .expectPostHookContainerLibraries({
+            "/lib/libmpi.so", "/lib/libmpi.so.12", "/lib/libmpi.so.12.1",
+            "/lib64/libmpi.so", "/lib64/libmpi.so.12", "/lib64/libmpi.so.12.1",
+
+            "/lib/libdep.so", "/lib/libdep.so.4", "/lib/libdep.so.4.2",
+            "/lib64/libdep.so", "/lib64/libdep.so.4", "/lib64/libdep.so.4.2",
+
+            "/lib64/libdep.so.4.1",
+        })
+        .checkSuccessful();
+
+    // If existing container libs are not all FULL ABI compatible (e.g. libdep.so.5),
+    // libdep.so will be preserved if it exists in any of the common ld.so paths
+    std::vector<boost::filesystem::path> commonPaths = {"/lib", "/lib64", "/usr/lib", "/usr/lib64"};
+    // Major Incompatible
+    for (auto& p : commonPaths){
+        Checker{}
+        .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
+        .setHostMpiLibraries({"/lib/libmpi.so.12.1"})
+        .setHostMpiDependencyLibraries({"/lib/libdep.so.4.2"})
+        .setPreHookContainerLibraries({"/lib/libmpi.so.12.1", p/"libdep.so", "/lib64/libdep.so.5"})
+        .expectPostHookContainerLibraries({
+            "/lib/libmpi.so",   "/lib/libmpi.so.12",   "/lib/libmpi.so.12.1",
+            "/lib64/libmpi.so", "/lib64/libmpi.so.12", "/lib64/libmpi.so.12.1",
+
+            "/lib/libdep.so.4",   "/lib/libdep.so.4.2",
+            "/lib64/libdep.so.4", "/lib64/libdep.so.4.2",
+
+            p/"libdep.so",
+            "/lib64/libdep.so.5",
+        })
+        .expectPreservedPostHookContainerLibraries({
+            p/"libdep.so",
+            "/lib64/libdep.so.5",
+        })
+        .checkSuccessful();
+    }
+    // Major-only Compatible
+    for (auto& p : commonPaths){
+        Checker{}
+        .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
+        .setHostMpiLibraries({"/lib/libmpi.so.12.1"})
+        .setHostMpiDependencyLibraries({"/lib/libdep.so.4.2"})
+        .setPreHookContainerLibraries({"/lib/libmpi.so.12.1", p/"libdep.so", "/lib64/libdep.so.4.5"})
+        .expectPostHookContainerLibraries({
+            "/lib/libmpi.so",   "/lib/libmpi.so.12",   "/lib/libmpi.so.12.1",
+            "/lib64/libmpi.so", "/lib64/libmpi.so.12", "/lib64/libmpi.so.12.1",
+
+            "/lib/libdep.so.4",   "/lib/libdep.so.4.2",
+            "/lib64/libdep.so.4", "/lib64/libdep.so.4.2",
+
+            p/"libdep.so",
+            "/lib64/libdep.so.4.5",
+        })
+        .expectPreservedPostHookContainerLibraries({
+            p/"libdep.so",
+            "/lib64/libdep.so.4.5",
+        })
+        .checkSuccessful();
+    }
+}
+
+
+TEST(MPIHookTestGroup, test_dependency_libraries_injection_container_version_matching) {
+    // Reproduces webrt38418
+    Checker{}
+        .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
+        .setHostMpiLibraries({"/lib/libmpi.so.12"})
+        .setHostMpiDependencyLibraries({"/lib/libdep.so.4"})
+        .setPreHookContainerLibraries({"/lib/libmpi.so.12", "/lib64/libdep.so.3", "/lib64/libdep.so.4"})
+        .expectPostHookContainerLibraries({
+            "/lib/libmpi.so",  "/lib/libmpi.so.12",
+            "/lib64/libmpi.so","/lib64/libmpi.so.12",
+
+            "/lib/libdep.so",  "/lib/libdep.so.4",
+            "/lib64/libdep.so","/lib64/libdep.so.4",
+
+            "/lib64/libdep.so.3",
+        })
+        .expectPreservedPostHookContainerLibraries({
+            "/lib64/libdep.so.3",
+        })
+        .checkSuccessful();
+
+    // Reproduces webrt38602
+    Checker{}
+        .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
+        .setHostMpiLibraries({"/lib/libmpi.so.12"})
+        .setHostMpiDependencyLibraries({"/lib/libdep.so.4"})
+        .setPreHookContainerLibraries({"/lib/libmpi.so.12", "/lib64/libdep.so.4", "/lib64/libdep.so.5"})
+        .expectPostHookContainerLibraries({
+            "/lib/libmpi.so",   "/lib/libmpi.so.12",
+            "/lib64/libmpi.so", "/lib64/libmpi.so.12",
+
+            "/lib/libdep.so",  "/lib/libdep.so.4",
+            "/lib64/libdep.so","/lib64/libdep.so.4",
+
+            "/lib64/libdep.so.5",
+        })
+        .expectPreservedPostHookContainerLibraries({
+            "/lib64/libdep.so.5",
+        })
+        .checkSuccessful();
 }
 
 TEST(MPIHookTestGroup, test_bind_mounts) {
@@ -154,7 +413,7 @@ TEST(MPIHookTestGroup, test_bind_mounts) {
         .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
         .setPreHookContainerLibraries({"/lib/libmpi.so.12.5.5"})
         .setMpiBindMounts({"/dev/null", "/dev/zero"})
-        .checkSuccessfull();
+        .checkSuccessful();
 }
 
 TEST(MPIHookTestGroup, test_abi_compatibility_check) {
@@ -163,35 +422,35 @@ TEST(MPIHookTestGroup, test_abi_compatibility_check) {
         .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
         .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
         .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.5.5"})
-        .checkSuccessfull();
+        .checkSuccessful();
 
     // compatible libraries (same MAJOR, MINOR, compatible PATCH)
     Checker{}
         .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
         .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
         .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.5.0"})
-        .checkSuccessfull();
+        .checkSuccessful();
 
     // compatible libraries (same MAJOR, MINOR, compatible PATCH)
     Checker{}
         .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
         .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
         .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.5.10"})
-        .checkSuccessfull();
+        .checkSuccessful();
 
     // compatible libraries (same MAJOR, compatible MINOR)
     Checker{}
         .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
         .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
         .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.4.0"})
-        .checkSuccessfull();
+        .checkSuccessful();
 
     // incompatible libraries (same MAJOR, incompatible MINOR)
     Checker{}
         .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
         .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
         .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.6"})
-        .checkSuccessfull();
+        .checkSuccessful();
 
     // incompatible libraries (incompatible MAJOR)
     Checker{}
@@ -224,17 +483,17 @@ TEST(MPIHookTestGroup, test_abi_compatibility_check) {
         .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
         .setHostMpiLibraries({"/lib/libmpi.so.12.1"})
         .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12"})
-        .checkSuccessfull();
+        .checkSuccessful();
     Checker{}
         .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
         .setHostMpiLibraries({"/lib/libmpi.so.12"})
         .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.0"})
-        .checkSuccessfull();
+        .checkSuccessful();
     Checker{}
         .setAnnotationsInConfigJSON({{"com.hooks.mpi.enabled", "true"}})
         .setHostMpiLibraries({"/lib/libmpi.so.12"})
         .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.1"})
-        .checkSuccessfull();
+        .checkSuccessful();
 }
 
 }}}} // namespace

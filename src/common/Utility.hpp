@@ -75,8 +75,6 @@ bool isSharedLib(const boost::filesystem::path& file);
 std::vector<std::string> parseSharedLibAbi(const boost::filesystem::path& lib);
 std::vector<std::string> resolveSharedLibAbi(const boost::filesystem::path& lib,
                                            const boost::filesystem::path& rootDir = "/");
-AbiCompatibility getAbiVersionsCompatibility(const std::vector<std::string>& hostVersion,
-                              const std::vector<std::string>& containerVersion);
 std::string getSharedLibSoname(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath);
 bool isLibc(const boost::filesystem::path&);
 std::tuple<unsigned int, unsigned int> parseLibcVersion(const boost::filesystem::path&);

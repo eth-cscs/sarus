@@ -70,18 +70,23 @@ public:
         return *this;
     }
 
+    Checker& expectPreservedPostHookContainerLibraries(const std::vector<boost::filesystem::path>& libs) {
+        preservedPostHookContainerLibs = libs;
+        return *this;
+    }
+
     Checker& setMpiBindMounts(const std::vector<boost::filesystem::path>& bindMounts) {
         this->bindMounts = bindMounts;
         return *this;
     }
 
-    void checkSuccessfull() const {
+    void checkSuccessful() const {
         setupTestEnvironment();
         MpiHook{}.activateMpiSupport();
         if(expectedPostHookContainerLibs) {
             checkOnlyExpectedLibrariesAreInRootfs();
             checkExpectedLibrariesAreInLdSoCache();
-            checkExpectedLibrariesAreTheHostLibrary();
+            checkInjectedAndPreservedLibrariesAsExpected();
         }
         checkBindMounts();
         cleanup();
@@ -168,13 +173,24 @@ private:
         std::copy_if(begin, end, std::back_inserter(actual), sarus::common::isSharedLib);
         std::sort(actual.begin(), actual.end());
 
-        CHECK(actual == expected);
+        auto actual_s   = std::string{};
+        for (auto i : actual) actual_s.append(i.filename().string());
+        auto expected_s = std::string{};
+        for (auto i : expected) expected_s.append(i.filename().string());
+        CHECK_EQUAL(expected_s, actual_s);
     }
 
-    void checkExpectedLibrariesAreTheHostLibrary() const {
+    void checkInjectedAndPreservedLibrariesAsExpected() const {
         for(const auto& lib : *expectedPostHookContainerLibs) {
             auto libReal = rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, lib);
-            CHECK(test_utility::filesystem::areFilesEqual(dummyHostLib, libReal));
+
+            auto preservedLib = std::find(preservedPostHookContainerLibs.cbegin(), preservedPostHookContainerLibs.cend(), lib);
+            if (preservedLib != preservedPostHookContainerLibs.cend()){
+                CHECK(test_utility::filesystem::areFilesEqual(dummyContainerLib, libReal));
+            }
+            else{
+                CHECK(test_utility::filesystem::areFilesEqual(dummyHostLib, libReal));
+            }
         }
     }
 
@@ -231,6 +247,7 @@ private:
     std::vector<boost::filesystem::path> hostDependencyLibs;
     std::vector<boost::filesystem::path> preHookContainerLibs;
     boost::optional<std::vector<boost::filesystem::path>> expectedPostHookContainerLibs;
+    std::vector<boost::filesystem::path> preservedPostHookContainerLibs;
     std::vector<boost::filesystem::path> bindMounts;
 };
 

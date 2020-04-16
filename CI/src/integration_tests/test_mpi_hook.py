@@ -147,17 +147,12 @@ class TestMPIHook(unittest.TestCase):
         return hashes
 
     def _assert_sarus_raises_mpi_error_containing_text(self, text):
-        if text in self._get_sarus_error_output():
-            return
-        raise Exception("Sarus didn't generate an MPI error containing the text \"{}\", "
-            "but one was expected.".format(text))
+        assert text in self._get_sarus_error_output(), 'Sarus didn\'t generate an MPI error containing the text "{}", but one was expected.'.format(text)
 
     def _assert_sarus_raises_mpi_warning_containing_text(self, text, expected_occurrences):
         output = self._get_sarus_warn_output()
-        if sum(["[WARN]" in line and text in line for line in output]) == expected_occurrences:
-            return
-        raise Exception("Sarus didn't generate an MPI warning containing the text \"{}\", "
-            "but one was expected.".format(text))
+        number_of_occurrences = sum(["[WARN]" in line and text in line for line in output])
+        assert number_of_occurrences == expected_occurrences, 'Sarus didn\'t generate the expected MPI warnings containing the text "{}".'.format(text)
 
     def _get_sarus_error_output(self):
         command = ["sarus", "run", "--mpi", self._container_image, "true"]

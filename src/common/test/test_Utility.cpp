@@ -306,6 +306,8 @@ TEST(UtilityTestGroup, parseSharedLibAbi) {
     CHECK(common::parseSharedLibAbi("libc.so.1.2") == (std::vector<std::string>{"1", "2"}));
     CHECK(common::parseSharedLibAbi("libc.so.1.2.3") == (std::vector<std::string>{"1", "2", "3"}));
     CHECK(common::parseSharedLibAbi("libc.so.1.2.3rc1") == (std::vector<std::string>{"1", "2", "3rc1"}));
+
+    CHECK(common::parseSharedLibAbi("libfoo.so.0") == (std::vector<std::string>{"0"}));
 }
 
 TEST(UtilityTestGroup, resolveSharedLibAbi) {
@@ -349,22 +351,6 @@ TEST(UtilityTestGroup, resolveSharedLibAbi) {
     boost::filesystem::create_symlink("../libtest_symlink_within_rootdir.so.1.2", testDir / "/subdir/libtest_symlink_within_rootdir.so.1");
     common::createFileIfNecessary(testDir / "libtest_symlink_within_rootdir.so.1.2");
     CHECK(common::resolveSharedLibAbi("/libtest_symlink_within_rootdir.so", testDir) == (std::vector<std::string>{"1", "2"}));
-}
-
-TEST(UtilityTestGroup, getAbiVersionsCompatibility) {
-    // compatible
-    CHECK(common::getAbiVersionsCompatibility({}, {})                           == common::AbiCompatibility::COMPATIBLE);
-    CHECK(common::getAbiVersionsCompatibility({"1", "0"}, {"1", "0"})           == common::AbiCompatibility::COMPATIBLE);
-    CHECK(common::getAbiVersionsCompatibility({"1", "1"}, {"1", "0"})           == common::AbiCompatibility::COMPATIBLE);
-    CHECK(common::getAbiVersionsCompatibility({"1", "0", "0"}, {"1", "0", "1"}) == common::AbiCompatibility::COMPATIBLE);
-
-    // major not compatible
-    CHECK(common::getAbiVersionsCompatibility({"1"}, {})    == common::AbiCompatibility::MAJOR_NOT_COMPATIBLE);
-    CHECK(common::getAbiVersionsCompatibility({}, {"1"})    == common::AbiCompatibility::MAJOR_NOT_COMPATIBLE);
-    CHECK(common::getAbiVersionsCompatibility({"1"}, {"2"}) == common::AbiCompatibility::MAJOR_NOT_COMPATIBLE);
-
-    // minor not compatible
-    CHECK(common::getAbiVersionsCompatibility({"1", "0"}, {"1", "1"}) == common::AbiCompatibility::MINOR_NOT_COMPATIBLE);
 }
 
 TEST(UtilityTestGroup, getSharedLibSoname) {
