@@ -175,7 +175,7 @@ Configure and build (in this example ``${build_type}`` is ``Release``:
 .. literalinclude:: ../../CI/utility_functions.bash
    :language: bash
    :start-after: # DOCS: Configure and build
-   :end-before: # DOCS: Install Sarus
+   :end-before: # DOCS: EO Configure and build
 
 .. note::
     CMake should automatically find the dependencies (include directories,

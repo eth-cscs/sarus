@@ -120,12 +120,12 @@ def get_hashes_of_host_libs_in_container(is_centralized_repository, image, optio
     """
     output = run_command_in_container(is_centralized_repository=is_centralized_repository,
                                       image=image,
-                                      command=["mount"],
+                                      command=["cat", "/proc/mounts"],
                                       options_of_run_command=options_of_run_command)
     libs = []
     for line in output:
-        if re.search(r".* on .*lib.*\.so(\.[0-9]+)* .*", line):
-            lib = re.sub(r".* on (.*lib.*\.so(\.[0-9]+)*) .*", r"\1", line)
+        if re.search(r".* .*lib.*\.so(\.[0-9]+)* .*", line):
+            lib = re.sub(r".* (.*lib.*\.so(\.[0-9]+)*) .*", r"\1", line)
             libs.append(lib)
 
     hashes = []

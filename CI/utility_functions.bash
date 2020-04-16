@@ -1,17 +1,30 @@
 #! /bin/echo This file is meant to be sourced
 
+error() {
+    local message=${1}
+    echo "${message}"
+    exit 1
+}
+
 fail_on_error() {
     local last_command_exit_code=$?
     local message=$1
     if [ ${last_command_exit_code} -ne 0 ]; then
-        echo "${message}"
-        exit 1
+        error "${message}"
     fi
 }
 
 change_uid_gid_of_docker_user() {
-    local host_uid=$1
-    local host_gid=$2
+    local host_uid=$1; shift || error "${FUNCNAME}: missing host_uid argument"
+    local host_gid=$1; shift || error "${FUNCNAME}: missing host_gid argument"
+
+    local container_uid=$(id -u docker)
+    local container_gid=$(id -g docker)
+
+    if [ ${host_uid} -eq ${container_uid} ] && [ ${host_gid} -eq ${container_gid} ]; then
+        echo "Not changing UID/GID of Docker user (container's UID/GID already match with host)"
+        return
+    fi
 
     echo "Changing UID/GID of Docker user"
     sudo usermod -u $host_uid docker
@@ -23,10 +36,10 @@ change_uid_gid_of_docker_user() {
     echo "Successfully changed UID/GID of Docker user"
 }
 
-build_and_install_sarus() {
-    local build_type=${1-"Debug"}; shift
-    local build_dir=${1-"$PWD/build-$build_type"}; shift
-    local install_dir=${1-"/opt/sarus"}; shift
+build_sarus() {
+    local build_type=${1}; shift || error "${FUNCNAME}: missing build_type argument"
+    local build_dir=${1}; shift || error "${FUNCNAME}: missing build_dir argument"
+    local install_dir=${1}; shift || error "${FUNCNAME}: missing install_dir argument"
 
     # DOCS: Create a new folder
     mkdir -p ${build_dir} && cd ${build_dir}
@@ -39,6 +52,14 @@ build_and_install_sarus() {
         ..
 
     make -j$(nproc)
+    # DOCS: EO Configure and build
+}
+
+install_sarus() {
+    local build_dir=${1}; shift || error "${FUNCNAME}: missing build_dir argument"
+    local install_dir=${1}; shift || error "${FUNCNAME}: missing install_dir argument"
+
+    cd ${build_dir}
 
     # DOCS: Install Sarus
     sudo make install
@@ -58,8 +79,8 @@ build_and_install_sarus() {
 
 build_sarus_archive() {
     # Build and package Sarus as a standalone archive ready for installation
-    local build_type=${1-"Debug"}; shift
-    local build_dir=${1-"$PWD/build-$build_type"}; shift
+    local build_type=${1}; shift || error "${FUNCNAME}: missing build_type argument"
+    local build_dir=${1}; shift || error "${FUNCNAME}: missing build_dir argument"
 
     # Enable code coverage only with debug build
     if [ "$build_type" = "Debug" ]; then
@@ -72,7 +93,8 @@ build_sarus_archive() {
 
     mkdir -p ${build_dir} && cd ${build_dir}
 
-    local prefix_dir=${build_dir}/install/$(git describe --tags --dirty)-${build_type}
+    local git_description=$(git describe --tags --dirty || echo "git_version_not_available")
+    local prefix_dir=${build_dir}/install/${git_description}-${build_type}
     cmake   -DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file} \
             -DCMAKE_PREFIX_PATH="/usr/local/include/rapidjson" \
             -DCMAKE_BUILD_TYPE=${build_type} \
@@ -90,11 +112,11 @@ build_sarus_archive() {
     # Build archive
     local archive_name="sarus-${build_type}.tar.gz"
     echo "Building archive ${archive_name}"
-    rm -rf ${prefix_dir}/*
 
+    rm -rf ${build_dir}/install
     make install
-
     fail_on_error "Failed to make install Sarus"
+
     rsync -arvL --chmod=go-w ${build_dir}/../standalone/ ${prefix_dir}/
 
     mkdir -p ${prefix_dir}/var/OCIBundleDir
@@ -163,14 +185,18 @@ run_integration_tests() {
     local build_dir=$1; shift
     local build_type=$1; shift
 
-    install_sarus_from_archive /opt/sarus /sarus-source/build-${build_type}/sarus-${build_type}.tar.gz
-    fail_on_error "Failed to install Sarus from archive"
-
-    sudo -u docker PATH=/opt/sarus/default/bin:$PATH PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker pytest -v -m 'not asroot' /sarus-source/CI/src/integration_tests/
+    echo "Running integration tests with user=docker"
+    sudo -u docker --login bash -c "
+        PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=/sarus-source/CI/src:\$PYTHONPATH \
+        CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker \
+        pytest -v -m 'not asroot' /sarus-source/CI/src/integration_tests/"
     fail_on_error "Python integration tests failed"
+    echo "Successfully run integration tests with user=docker"
 
-    sudo PATH=/opt/sarus/default/bin:$PATH PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker pytest -v -m asroot /sarus-source/CI/src/integration_tests/
+    echo "Running integration tests with user=root"
+    sudo --login bash -c "PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker pytest -v -m asroot /sarus-source/CI/src/integration_tests/"
     fail_on_error "Python integration tests as root failed"
+    echo "Successfully run integration tests with user=root"
 
     # Run coverage only on Debug build of GitLab CI
     if [ ${CI} ] && [ ${build_type} = "Debug" ]; then
@@ -185,28 +211,11 @@ run_integration_tests() {
 
 run_distributed_tests() {
     # Needs docker-compose, so usually runs on host
-    local sarus_source_dir_on_host=$1; shift
-    local build_type=$1; shift
-    local cache_dir=$1; shift
+    local sarus_source_dir_on_host=$1; shift || error "${FUNCNAME}: missing sarus_source_dir_on_host argument"
+    local sarus_archive=$1; shift || error "${FUNCNAME}: missing sarus_archive argument"
+    local cache_oci_hooks_dir=$1; shift || error "${FUNCNAME}: missing cache_oci_hooks_dir argument"
+    local cache_local_repo_dir=$1; shift || error "${FUNCNAME}: missing cache_local_repo_dir argument"
 
-    ${sarus_source_dir_on_host}/CI/run_integration_tests_for_virtual_cluster.sh /sarus-source/build-${build_type}/sarus-${build_type}.tar.gz ${cache_dir}
+    ${sarus_source_dir_on_host}/CI/run_integration_tests_for_virtual_cluster.sh ${sarus_archive} ${cache_oci_hooks_dir} ${cache_local_repo_dir}
     fail_on_error "Distributed tests in virtual cluster failed"
-}
-
-run_smoke_tests() {
-    sarus --version
-    fail_on_error "Failed to call Sarus"
-
-    sarus pull alpine
-    fail_on_error "Failed to pull image"
-
-    sarus images
-    fail_on_error "Failed to list images"
-
-    sarus run alpine cat /etc/os-release > /tmp/sarus.out
-    if [ "$(head -n 1 /tmp/sarus.out)" != "NAME=\"Alpine Linux\"" ]; then
-        echo "Failed to run container"
-        exit 1
-    fi
-    rm /tmp/sarus.out
 }

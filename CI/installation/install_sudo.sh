@@ -13,3 +13,5 @@ else
     echo "Unsupported OS specified"
     exit 1
 fi
+
+echo 'root ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers

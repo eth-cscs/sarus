@@ -8,20 +8,20 @@ stages:
 build_sarus_images:
   stage: build_sarus_images
   script:
-    - . CI/utility_docker_functions.bash
+    - . CI/utility_docker_functions.bash Debug $(pwd) ~/cache/ids/sarus standalone-build standalone-run
     - sarus-build-images
 
 check_version_and_docs:
   stage: build_sarus_and_test
   script:
-    - . CI/utility_docker_functions.bash
+    - . CI/utility_docker_functions.bash Debug $(pwd) ~/cache/ids/sarus standalone-build standalone-run
     - sarus-check-version-and-docs $(pwd)
 
 standalone_archive_debug:
   stage: build_sarus_and_test
   script:
-    - . ./CI/utility_docker_functions.bash
-    - sarus-build-and-test $(pwd) Debug ~/cache/ids/sarus ~/cache/ids/sarus
+    - . ./CI/utility_docker_functions.bash Debug $(pwd) ~/cache/ids/sarus standalone-build standalone-run
+    - sarus-build-and-test
 
   artifacts:
     name: "sarus-Debug-$CI_COMMIT_REF_NAME"
@@ -32,8 +32,8 @@ standalone_archive_debug:
 standalone_archive_release:
   stage: build_sarus_and_test
   script:
-    - . ./CI/utility_docker_functions.bash
-    - sarus-build-and-test $(pwd) Release ~/cache/ids/sarus ~/cache/ids/sarus
+    - . ./CI/utility_docker_functions.bash Release $(pwd) ~/cache/ids/sarus standalone-build standalone-run
+    - sarus-build-and-test
 
   artifacts:
     name: "sarus-Release-$CI_COMMIT_REF_NAME"
@@ -46,20 +46,27 @@ standalone_archive_release:
   only:
     - master
     - develop
-  before_script:
-    - . ./CI/utility_docker_functions.bash
 
 from_source_ubuntu18.04:
   extends: .from_source
-  script: sarus-build-from-scratch-and-test $(pwd) ubuntu:18.04
+  script:
+    - . ./CI/utility_docker_functions.bash Release $(pwd) ~/cache/ids/sarus ubuntu:18.04 ubuntu:18.04
+    - sarus-build-images
+    - sarus-build-from-scratch-and-test
 
 from_source_debian10:
   extends: .from_source
-  script: sarus-build-from-scratch-and-test $(pwd) debian:10
+  script:
+    - . ./CI/utility_docker_functions.bash Release $(pwd) ~/cache/ids/sarus debian:10 debian:10
+    - sarus-build-images
+    - sarus-build-from-scratch-and-test
 
 from_source_centos7:
   extends: .from_source
-  script: sarus-build-from-scratch-and-test $(pwd) centos:7
+  script:
+      - . ./CI/utility_docker_functions.bash Release $(pwd) ~/cache/ids/sarus centos:7 centos:7
+      - sarus-build-images
+      - sarus-build-from-scratch-and-test
 
 spack_package:
   stage: build_sarus_from_scratch_and_test

@@ -21,5 +21,6 @@ class TestCommandVersion(unittest.TestCase):
     def _test_command_version(self, command):
         out = subprocess.check_output(command).decode()
         lines = util.command_output_without_trailing_new_lines(out)
-        self.assertEqual(len(lines), 1)
-        self.assertTrue(re.match(r"^\d+\.\d+\.\d+(-.+)*$", lines[0]) is not None)
+        assert len(lines) == 1
+        assert re.match(r"^\d+\.\d+\.\d+(-.+)*$", lines[0]) is not None \
+               or lines[0] == "VERSION-NOT-AVAILABLE"

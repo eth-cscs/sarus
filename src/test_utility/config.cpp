@@ -66,9 +66,23 @@ static void populateJSON(rj::Document& document) {
     document.AddMember( "ramFilesystemType",
                         rj::Value{"ramfs"},
                         allocator);
-    document.AddMember( "mksquashfsPath",
-                        rj::Value{"/usr/bin/mksquashfs", allocator},
-                        allocator);
+
+    if(boost::filesystem::exists("/usr/bin/mksquashfs")) {
+        document.AddMember( "mksquashfsPath",
+                            rj::Value{"/usr/bin/mksquashfs", allocator},
+                            allocator);
+    }
+    else if(boost::filesystem::exists("/usr/sbin/mksquashfs")) {
+        document.AddMember( "mksquashfsPath",
+                            rj::Value{"/usr/sbin/mksquashfs", allocator},
+                            allocator);
+    }
+    else {
+        SARUS_THROW_ERROR("Failed to find mksquashfs on the system."
+                          " Hint: either install squashfs-tools or extend this test code"
+                          " adding the path where mksquashfs is installed.");
+    }
+
     document.AddMember( "initPath",
                         rj::Value{"/usr/bin/init-program", allocator},
                         allocator);

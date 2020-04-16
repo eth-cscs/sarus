@@ -8,7 +8,8 @@ services:
       - etc-munge-volume:/etc/munge
       - etc-slurm-llnl-volume:/etc/slurm-llnl
       - opt-sarus-volume:/opt/sarus
-      - @cached_home_dir@:/home/docker
+      - @cached_oci_hooks_dir@:/home/docker/.oci-hooks
+      - @cached_local_repo_dir@:/home/docker/.sarus
       - ./sync:/var/sync
       - ../..:/sarus-source
     user: root
@@ -32,7 +33,8 @@ services:
       - etc-munge-volume:/etc/munge
       - etc-slurm-llnl-volume:/etc/slurm-llnl
       - opt-sarus-volume:/opt/sarus
-      - @cached_home_dir@:/home/docker
+      - @cached_oci_hooks_dir@:/home/docker/.oci-hooks
+      - @cached_local_repo_dir@:/home/docker/.sarus
       - ./sync:/var/sync
       - ../..:/sarus-source
     user: root
@@ -60,7 +62,8 @@ services:
       - etc-munge-volume:/etc/munge
       - etc-slurm-llnl-volume:/etc/slurm-llnl
       - opt-sarus-volume:/opt/sarus
-      - @cached_home_dir@:/home/docker
+      - @cached_oci_hooks_dir@:/home/docker/.oci-hooks
+      - @cached_local_repo_dir@:/home/docker/.sarus
       - ./sync:/var/sync
       - ../..:/sarus-source
     user: root

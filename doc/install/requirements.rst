@@ -26,6 +26,7 @@ For Debian-based systems (tested on Debian 10 and Ubuntu 18.04):
 .. literalinclude:: ../../CI/installation/install_packages_ubuntu:18.04.sh
    :language: bash
    :start-after: set -ex
+   :end-before: # DOCS: END
 
 For CentOS 7:
 

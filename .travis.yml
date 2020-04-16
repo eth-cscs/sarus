@@ -17,12 +17,12 @@ jobs:
       if: branch IN (master, develop)
       script:
       - . CI/utility_docker_functions.bash
-      - sarus-check-version-and-docs ${TRAVIS_BUILD_DIR}
+      - sarus-check-version-and-docs $(pwd)
 
     - name: "Standalone + Unit and Integration tests"
       script:
-      - ". ./CI/utility_functions.bash"
-      - sarus-build-and-test ${TRAVIS_BUILD_DIR} Release
+      - . ./CI/utility_docker_functions.bash Release $(pwd) $(pwd)/cache standalone-build standalone-run
+      - sarus-build-and-test
       deploy:
         provider: releases
         name: ${TRAVIS_BRANCH}
@@ -42,20 +42,20 @@ jobs:
     - name: "Test install from source Ubuntu 18.04"
       if: branch IN (master, develop)
       script:
-      - . ./CI/utility_docker_functions.bash
-      - sarus-build-from-scratch-and-test $(pwd) ubuntu:18.04
+      - . ./CI/utility_docker_functions.bash Release $(pwd) $(pwd)/cache ubuntu:18.04 ubuntu:18.04
+      - sarus-build-from-scratch-and-test
 
     - name: "Test install from source Debian 10"
       if: branch IM (master, develop)
       script:
-      - . ./CI/utility_docker_functions.bash
-      - sarus-build-from-scratch-and-test $(pwd) debian:10
+      - . ./CI/utility_docker_functions.bash Release $(pwd) $(pwd)/cache debian:10 debian:10
+      - sarus-build-from-scratch-and-test
 
     - name: "Test install from source CentOS 7"
       if: branch IN (master, develop)
       script:
-      - . ./CI/utility_docker_functions.bash
-      - sarus-build-from-scratch-and-test $(pwd) centos:7
+      - . ./CI/utility_docker_functions.bash Release $(pwd) $(pwd)/cache centos:7 centos:7
+      - sarus-build-from-scratch-and-test
 
     - name: "Test Spack"
       if: branch IN (master, develop)
@@ -67,4 +67,5 @@ notifications:
   email:
     recipients:
       - taliaga@cscs.ch
+      - mkean@cscs.ch
     on_success: change

@@ -9,8 +9,9 @@ utilities_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )
 script_dir=$(cd $(dirname "$0") && pwd)
 cd $script_dir
 
-artifact_name=$1; shift
-cached_home_dir=$1; shift
+artifact_name=$1; shift || error "missing artifact_name argument"
+cached_oci_hooks_dir=$1; shift || error "missing cache_oci_hooks_dir argument"
+cached_local_repo_dir=$1; shift || error "missing cached_local_repo_dir argument"
 
 virtual_cluster_dir=
 
@@ -42,7 +43,8 @@ create_cluster_folder_with_unique_id() {
 adapt_docker_compose_file() {
     sed -i $virtual_cluster_dir/docker-compose.yml -e "s/@host_uid@/$(id -u)/g"
     sed -i $virtual_cluster_dir/docker-compose.yml -e "s/@host_gid@/$(id -g)/g"
-    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@cached_home_dir@#${cached_home_dir}#g"
+    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@cached_oci_hooks_dir@#${cached_oci_hooks_dir}#g"
+    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@cached_local_repo_dir@#${cached_local_repo_dir}#g"
     sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@artifact_name@#${artifact_name}#g"
 }
 

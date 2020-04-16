@@ -8,10 +8,19 @@
 import unittest
 import subprocess
 import os
+import shutil
 import json
 
 import common.util as util
 
+def _get_glibc_path():
+    if os.path.isfile("/lib/x86_64-linux-gnu/libc.so.6"):
+        return "/lib/x86_64-linux-gnu"
+    elif os.path.isfile("/lib64/libc.so.6"):
+        return "/lib64"
+    else:
+        raise Exception("Could not find glibc on the system. Hint: update this"
+                        " test code with the glibc's path on this system")
 
 class TestGlibcHook(unittest.TestCase):
     """
@@ -19,25 +28,24 @@ class TestGlibcHook(unittest.TestCase):
     """
     _SARUS_CONFIG_FILE = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/sarus.json"
     _HOST_GLIBC_LIBS = [
-        "/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
-        "/lib/x86_64-linux-gnu/libBrokenLocale.so.1",
-        "/lib/x86_64-linux-gnu/libSegFault.so",
-        "/lib/x86_64-linux-gnu/libanl.so.1",
-        "/lib/x86_64-linux-gnu/libc.so.6",
-        "/lib/x86_64-linux-gnu/libcidn.so.1",
-        "/lib/x86_64-linux-gnu/libcrypt.so.1",
-        "/lib/x86_64-linux-gnu/libdl.so.2",
-        "/lib/x86_64-linux-gnu/libm.so.6",
-        "/lib/x86_64-linux-gnu/libnsl.so.1",
-        "/lib/x86_64-linux-gnu/libnss_dns.so.2",
-        "/lib/x86_64-linux-gnu/libnss_files.so.2",
-        "/lib/x86_64-linux-gnu/libnss_hesiod.so.2",
-        "/lib/x86_64-linux-gnu/libpthread.so.0",
-        "/lib/x86_64-linux-gnu/libresolv.so.2",
-        "/lib/x86_64-linux-gnu/librt.so.1",
-        "/lib/x86_64-linux-gnu/libthread_db.so.1",
-        "/lib/x86_64-linux-gnu/libutil.so.1"
-    ]
+        os.path.join(_get_glibc_path(), lib) for lib in (
+            "ld-linux-x86-64.so.2",
+            "libBrokenLocale.so.1",
+            "libSegFault.so",
+            "libanl.so.1",
+            "libc.so.6",
+            "libcrypt.so.1",
+            "libdl.so.2",
+            "libm.so.6",
+            "libnsl.so.1",
+            "libnss_dns.so.2",
+            "libnss_files.so.2",
+            "libnss_hesiod.so.2",
+            "libpthread.so.0",
+            "libresolv.so.2",
+            "librt.so.1",
+            "libthread_db.so.1",
+            "libutil.so.1")]
     _HOST_GLIBC_LIBS_HASHES = [subprocess.check_output(["md5sum", lib]).decode().split()[0] for lib in _HOST_GLIBC_LIBS]
 
     @classmethod
@@ -51,9 +59,9 @@ class TestGlibcHook(unittest.TestCase):
 
     @classmethod
     def _pull_docker_images(cls):
-        # note: host is ubuntu 18.04 (glibc 2.27)
-        util.pull_image_if_necessary(is_centralized_repository=False, image="centos:7") # glibc 2.17
-        util.pull_image_if_necessary(is_centralized_repository=False, image="ubuntu:18.04") # glibc 2.27
+        util.pull_image_if_necessary(is_centralized_repository=False, image="alpine:3.8") # no glibc
+        util.pull_image_if_necessary(is_centralized_repository=False, image="centos:6") # glibc 2.12
+        util.pull_image_if_necessary(is_centralized_repository=False, image="fedora:latest") # assumption: glibc >= host's glibc
 
     @classmethod
     def _modify_bundle_config(cls):
@@ -65,8 +73,8 @@ class TestGlibcHook(unittest.TestCase):
         glibc_hook["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/glibc_hook"
         glibc_hook["env"] = list()
         glibc_hook["env"].append("GLIBC_LIBS=" + ":".join(cls._HOST_GLIBC_LIBS))
-        glibc_hook["env"].append("LDCONFIG_PATH=ldconfig")
-        glibc_hook["env"].append("READELF_PATH=readelf")
+        glibc_hook["env"].append("LDCONFIG_PATH=" + shutil.which("ldconfig"))
+        glibc_hook["env"].append("READELF_PATH=" + shutil.which("readelf"))
 
         hooks = dict()
         hooks["prestart"] = [glibc_hook]
@@ -97,13 +105,13 @@ class TestGlibcHook(unittest.TestCase):
 
     def test_no_injection_in_container_with_recent_glibc(self):
         self._glibc_command_line_option = True
-        self._container_image = "ubuntu:18.04"
+        self._container_image = "fedora:latest"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert not hashes
 
     def test_injection_in_container_with_old_glibc(self):
         self._glibc_command_line_option = True
-        self._container_image = "centos:7"
+        self._container_image = "centos:6"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert hashes
         assert hashes.issuperset(self._HOST_GLIBC_LIBS_HASHES)
@@ -111,7 +119,7 @@ class TestGlibcHook(unittest.TestCase):
     def test_injection_in_container_with_old_glibc_using_mpi_option(self):
         self._glibc_command_line_option = False
         self._mpi_command_line_option = True
-        self._container_image = "centos:7"
+        self._container_image = "centos:6"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert hashes
         assert hashes.issuperset(self._HOST_GLIBC_LIBS_HASHES)
@@ -119,7 +127,7 @@ class TestGlibcHook(unittest.TestCase):
     def test_no_hook_activation(self):
         self._glibc_command_line_option = False
         self._mpi_command_line_option = False
-        self._container_image = "centos:7"
+        self._container_image = "centos:6"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert not hashes
 

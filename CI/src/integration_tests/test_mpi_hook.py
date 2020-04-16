@@ -8,6 +8,7 @@
 import unittest
 import subprocess
 import os
+import shutil
 import tempfile
 import json
 
@@ -75,7 +76,7 @@ class TestMPIHook(unittest.TestCase):
         mpi_hook = dict()
         mpi_hook["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/mpi_hook"
         mpi_hook["env"] = list()
-        mpi_hook["env"].append("LDCONFIG_PATH=ldconfig")
+        mpi_hook["env"].append("LDCONFIG_PATH=" + shutil.which("ldconfig"))
         libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_LIBS]
         mpi_hook["env"].append("MPI_LIBS=" + ":".join(libs))
         libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_DEPENDENCY_LIBS]

@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import unittest
 
+
 CONFIG_FILENAME = "/opt/sarus/default/etc/sarus.json"
 SCHEMA_FILENAME = "/opt/sarus/default/etc/sarus.schema.json"
 SARUS_FOO_CMD = ["sarus", "--version"]
@@ -56,7 +57,7 @@ class TestSecurityChecks(unittest.TestCase):
             self._check_untamperable(SCHEMA_FILENAME, "sarus.schema.json")
 
     def test_untamperable_binaries(self):
-        MKSQ_PATH = "/usr/bin/mksquashfs"
+        MKSQ_PATH = shutil.which("mksquashfs")
         INIT_PATH = "/opt/sarus/default/bin/tini-static-amd64"
         RUNC_PATH = "/opt/sarus/default/bin/runc.amd64"
 
@@ -114,8 +115,8 @@ def changed_owner(path, uid, gid):
     """
     Make path owned by uid:gid
     """
-    old_uid = os.stat(CONFIG_FILENAME).st_uid
-    old_gid = os.stat(CONFIG_FILENAME).st_gid
+    old_uid = os.stat(path).st_uid
+    old_gid = os.stat(path).st_gid
     try:
         shutil.chown(path, uid, gid)
         yield
@@ -125,7 +126,7 @@ def changed_owner(path, uid, gid):
 
 @contextmanager
 def changed_permissions(path, mod):
-    old_mod = os.stat(CONFIG_FILENAME).st_mode
+    old_mod = os.stat(path).st_mode
     try:
         os.chmod(path, mod)
         yield
