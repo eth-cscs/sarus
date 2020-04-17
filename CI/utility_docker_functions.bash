@@ -75,7 +75,7 @@ sarus-build-images() {
     if [ "$(_git_branch)" == "develop" ]; then
         DOCKER_BUILDKIT=${BK} docker build --build-arg BUILDKIT_INLINE_CACHE=${BKIC} -t ${image_build} -f ${script_dir}/${dockerfile_build} ${script_dir}
         fail_on_error "failed to build sarus build image"
-        DOCKER_BUILDKIT=${BK} docker build --build-arg BUILDKIT_INLINE_CACHE=${BKIC} -t ${image_run} -f ${script_dir}/${dockerfile_build} ${script_dir}
+        DOCKER_BUILDKIT=${BK} docker build --build-arg BUILDKIT_INLINE_CACHE=${BKIC} -t ${image_run} -f ${script_dir}/${dockerfile_run} ${script_dir}
         fail_on_error "failed to build sarus run image"
     else
         DOCKER_BUILDKIT=${BK} docker build --cache-from ethcscs/sarus-ci-build:develop -t ${image_build} -f ${script_dir}/${dockerfile_build} ${script_dir}
