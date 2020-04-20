@@ -27,7 +27,7 @@ cd
 spack mirror add local_filesystem file://${SPACK_LOCAL_MIRROR}
 
 # Install Sarus
-spack install --verbose sarus@develop
+spack install sarus@develop
 
 # Check installation
 spack load sarus
