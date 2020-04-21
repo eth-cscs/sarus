@@ -220,3 +220,22 @@ run_distributed_tests() {
     ${sarus_source_dir_on_host}/CI/run_integration_tests_for_virtual_cluster.sh ${sarus_archive} ${cache_oci_hooks_dir} ${cache_local_repo_dir}
     fail_on_error "Distributed tests in virtual cluster failed"
 }
+
+run_smoke_tests() {
+    sarus --version
+    fail_on_error "Failed to call Sarus"
+
+    sarus pull alpine
+    fail_on_error "Failed to pull image"
+
+    sarus images
+    fail_on_error "Failed to list images"
+
+    sarus run alpine cat /etc/os-release > /tmp/sarus.out
+    if [ "$(head -n 1 /tmp/sarus.out)" != "NAME=\"Alpine Linux\"" ]; then
+        echo "Failed to run container"
+        exit 1
+    fi
+    rm /tmp/sarus.out
+}
+
