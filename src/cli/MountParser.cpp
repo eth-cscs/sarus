@@ -95,11 +95,14 @@ std::unique_ptr<runtime::Mount> MountParser::parseBindMountRequest(const std::un
 }
 
 /*
- * Generates mount flags from a map that is expected to contain key-value
+ * Generates mount flags bitmask from a map that is expected to contain key-value
  * pairs representing auxiliary options for a custom bind mount.
  */
 unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::string, std::string>& requestMap) {
+    // Default to "recursive private" mount
     unsigned long flags = 0;
+    flags |= MS_REC;
+    flags |= MS_PRIVATE;
 
     // Create local copy of map and remove sub-options not expected as mount flags
     auto flagsMap = requestMap;
@@ -111,10 +114,6 @@ unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::s
     flagsMap.erase("target");
 
     for (auto const& opt : flagsMap) {
-        // Default to "recursive private" mount
-        flags |= MS_REC;
-        flags |= MS_PRIVATE;
-
         if (opt.first == std::string{"readonly"}) {
             if (validationSettings.allowedFlags.at("readonly") == false) {
                 auto message = boost::format("Invalid mount request '%s': option 'readonly' is not allowed")

@@ -71,11 +71,16 @@ TEST(MountParserTestGroup, source_and_destination_of_bind_mount) {
 }
 
 TEST(MountParserTestGroup, user_flags_of_bind_mount) {
+    // no flags: defaults to recursive, private, read/write mount
+    Checker{"type=bind,source=/src,destination=/dest"}
+        .expectFlags(MS_REC | MS_PRIVATE);
+
+    // readonly mount
     Checker{"type=bind,source=/src,destination=/dest,readonly"}
-        .expectFlags({MS_REC | MS_RDONLY | MS_PRIVATE});
+        .expectFlags(MS_REC | MS_RDONLY | MS_PRIVATE);
 
     // checks for deprecated "bind-propagation" flag
-    Checker{"type=bind,source=/src,destination=/dest,bind-propagation=recursive"}.expectFlags({MS_REC});
+    Checker{"type=bind,source=/src,destination=/dest,bind-propagation=recursive"}.expectFlags(MS_REC);
     Checker{"type=bind,source=/src,destination=/dest,bind-propagation=private"}.expectParseError();
     Checker{"type=bind,source=/src,destination=/dest,bind-propagation=rprivate"}.expectParseError();
     Checker{"type=bind,source=/src,destination=/dest,bind-propagation=slave"}.expectParseError();
@@ -83,6 +88,11 @@ TEST(MountParserTestGroup, user_flags_of_bind_mount) {
 }
 
 TEST(MountParserTestGroup, site_flags_of_bind_mount) {
+    // no flags: defaults to recursive, private, read/write mount
+    Checker{"type=bind,source=/src,destination=/dest"}
+        .parseAsSiteMount().expectFlags(MS_REC | MS_PRIVATE);
+
+    // readonly mount
     Checker{"type=bind,source=/src,destination=/dest,readonly"}
         .parseAsSiteMount().expectFlags(MS_REC | MS_RDONLY | MS_PRIVATE);
 
