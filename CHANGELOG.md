@@ -1,7 +1,38 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [1.2.0]
+
+### Added
+
+- Enabled Sarus to print log messages from the OCI Hooks
+- Better documentation for ABI Compatibility [here](https://sarus.readthedocs.io/en/stable/user/abi_compatibility.html)
+- Added User Guide section about running MPI applications without the MPI hook. See [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#running-mpi-applications-without-the-native-mpi-hook)
+
+### Changed
+
+- The glibc Hook is no longer activated by default, unless the `--mpi` option is used. To activate it explicitly, the new --glibc option of sarus run can be used. See [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#glibc-replacement)
+- Using OCI annotations instead of environment variables to pass information to hooks. It is an internal change, transparent to users, moving towards OCI Hooks independence from Sarus
+- Most of the Environment Variables for Hooks were renamed. Sarus Administrators should check the new names in the [respective hook documentation pages](https://sarus.readthedocs.io/en/stable/config/configure_hooks.html#hooks-use-cases)
+- OCI MPI Hook will now enable MPI "backwards" library injections, issuing a warning. More details [here](https://sarus.readthedocs.io/en/stable/user/abi_compatibility.html)
+- Updated Spack packages and installation instructions
+- Updated documentation about the NVIDIA Container Toolkit. See [here](https://sarus.readthedocs.io/en/stable/config/gpu-hook.html)
+- The SSH and Slurm global sync hooks now use configurable paths for their resources and are no longer dependant on Sarus-specific directories
+- Reviewed and updated documentation about runtime security checks. See [here](https://sarus.readthedocs.io/en/stable/install/post-installation.html#security-related)
+- Several improvements to the Continuous Integration workflow
+
+### Fixed
+
+- Fixed bug on OCI MPI Hook which failed to run containers having multiple versions of an MPI Dependency library
+- Runtime security checks no longer fail if a checked path does not exist
+- Fixed setting of default bind propagation values for custom mounts
+
+### Security
+
+- Compiling now with -fstack-protector-strong as a measure against buffer overflows
 
 
 ## [1.1.0] - 2020-02-03
@@ -202,4 +233,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.0.0-rc1] - 2018-11-28
 
 Initial release.
-
