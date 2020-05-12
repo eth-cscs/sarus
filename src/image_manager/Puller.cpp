@@ -164,11 +164,14 @@ namespace image_manager {
             request.set_request_uri(path);
 
             request.headers().clear();
-            std::string header = (boost::format("Bearer %s") % authorizationToken).str();
-            request.headers().add(header_names::authorization, U(header) );
+            std::string authorizationHeader;
+            if (!authorizationToken.empty()) {
+                authorizationHeader = (boost::format("Bearer %s") % authorizationToken).str();
+                request.headers().add(header_names::authorization, U(authorizationHeader) );
+            }
 
-            printLog( boost::format("httpclient: uri=%s, path=%s, header=%25.25s..., digest=%25.25s...")
-                        % getServerUri(config->imageID.server) % path % header % digest, common::LogLevel::DEBUG);
+            printLog( boost::format("httpclient: uri=%s, path=%s, auth-header=%25.25s..., digest=%25.25s...")
+                        % getServerUri(config->imageID.server) % path % authorizationHeader % digest, common::LogLevel::DEBUG);
 
             response = client.request(request).get();
             printLog( boost::format("Received http_response status code (%s): %s, digest=%s")
@@ -178,11 +181,11 @@ namespace image_manager {
                 break;
             }
             // when unauthorized response arrives, request new token
-            else if (response.status_code() == 401) {
-                printLog( boost::format("> %-15.15s: %s") % "tokenExpired" % digest, common::LogLevel::GENERAL);
+            else if (response.status_code() == status_codes::Unauthorized) {
+                printLog( boost::format("> %-15.15s: %s") % "authorization token expired" % digest, common::LogLevel::GENERAL);
 
                 try {
-                    authorizationToken = requestAuthorizationToken();
+                    authorizationToken = requestAuthorizationToken(response);
                 } catch (const std::exception &e) {
                     printLog( boost::format("Failed to get authorized token."), common::LogLevel::ERROR);
                 }
@@ -288,35 +291,67 @@ namespace image_manager {
         printLog(boost::format("Retrieving image manifest from %s") % config->imageID.server,
                  common::LogLevel::INFO);
 
-        // get authorization token
-        try {
-            authorizationToken = requestAuthorizationToken();
-        }
-        catch(common::Error& e) {
-            auto message = boost::format{"Failed authentication for image '%s'"
-                    "\nDid you perform a login with the proper credentials?"
-                    "\nSee 'sarus help pull' (--login option)"}
-                    % config->imageID;
-            printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_RETHROW_ERROR(e, message.str(), common::LogLevel::INFO);
-        }
+        // Attempt to retrieve manifest
+        std::unique_ptr<web::http::client::http_client> client = setupHttpClientWithCredential(getServerUri(config->imageID.server));
+        web::http::http_request              request(methods::GET);
+        pplx::task<web::http::http_response> responseTask;
+        web::http::http_response             response;
 
-        web::http::client::http_client      client( getServerUri(config->imageID.server) );
-        web::http::http_request             request(methods::GET);
-        web::http::http_response            response;
-        
         request.set_request_uri( makeImageManifestUri() );
-        std::string header = (boost::format("Bearer %s") % authorizationToken).str();
-        request.headers().add(header_names::authorization, U(header) );
+        responseTask = client->request(request);
 
-        printLog( boost::format("server      : %s") % getServerUri(config->imageID.server), common::LogLevel::DEBUG);
-        printLog( boost::format("request_uri : %s") % makeImageManifestUri(), common::LogLevel::DEBUG);
-        printLog( boost::format("header      : %s") % U(header), common::LogLevel::DEBUG);
-        
-        response = client.request(request).get();
+        try {
+            responseTask.wait();
+            response = responseTask.get();
+        }
+        catch (const std::exception& e) {
+            SARUS_RETHROW_ERROR(e, "Error while sending request for manifest to remote registry");
+        }
 
+        // If the registry responds we're unauthorized, send a new request with an authorization header
+        if(response.status_code() == status_codes::Unauthorized) {
+            auto message = boost::format("Received http_response status code(%s): %s")
+                % response.status_code() %  response.reason_phrase();
+            printLog(message, common::LogLevel::DEBUG);
+
+            authorizationToken = requestAuthorizationToken(response);
+
+            printLog(boost::format("Constructing new manifest request"), common::LogLevel::DEBUG);
+            web::http::http_request authHeaderRequest(methods::GET);
+            authHeaderRequest.set_request_uri( makeImageManifestUri() );
+            std::string authorizationString = (boost::format("Bearer %s") % authorizationToken).str();
+            authHeaderRequest.headers().add(header_names::authorization, U(authorizationString) );
+
+            printLog( boost::format("server      : %s") % getServerUri(config->imageID.server), common::LogLevel::DEBUG);
+            printLog( boost::format("request_uri : %s") % makeImageManifestUri(), common::LogLevel::DEBUG);
+            printLog( boost::format("header      : %s") % U(authorizationString), common::LogLevel::DEBUG);
+            printLog( boost::format("full request: %s") % authHeaderRequest.to_string(), common::LogLevel::DEBUG);
+
+            response = client->request(authHeaderRequest).get();
+
+            // If an Unauthorized response is returned again, inform the user and suggest to use login credentials
+            if(response.status_code() == status_codes::Unauthorized) {
+                auto message = boost::format{"Failed to pull image '%s'"
+                    "\nThe image may be private or not present in the remote registry."
+                    "\nDid you perform a login with the proper credentials?"
+                    "\nSee 'sarus help pull' (--login option)"} % config->imageID;
+                printLog(message, common::LogLevel::GENERAL, std::cerr);
+
+                message = boost::format{"Failed to pull manifest. Received http_response status code(%s): %s"}
+                    % response.status_code() % response.reason_phrase();
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            }
+        }
+
+        // Throw an error if response is not successful
         if(response.status_code() != status_codes::OK) {
-            auto message = boost::format{"Failed to pull image '%s'\nIs the image ID correct?"} % config->imageID;
+            auto message = boost::format{"Failed to pull image '%s'"}  % config->imageID;
+            if(response.status_code() == status_codes::NotFound){
+                message = boost::format{"%s\nThe image is not present in the remote registry."} % message.str();
+            }
+            else {
+                message = boost::format{"%s\nUnexpected response from remote registry."} % message.str();
+            }
             printLog(message, common::LogLevel::GENERAL, std::cerr);
 
             message = boost::format{"Failed to pull manifest. Received http_response status code(%s): %s"}
@@ -381,52 +416,15 @@ namespace image_manager {
         return true;
     }
 
-    /**
-     * Get params from the HTTP response header(Www-Authenticate)
-     */
-    std::string Puller::getParam(std::string &header, const std::string& param)
-    {
-        int i = header.find(param + "=") + param.size() + 2;
-        int j = header.substr(i, header.size()).find('\"');
-        return header.substr(i, j);
-    }
-
-    std::string Puller::requestAuthorizationToken() {
+    std::string Puller::requestAuthorizationToken(web::http::http_response& response) {
         printLog(boost::format("Getting new authorization token from %s") % config->imageID.server,
                  common::LogLevel::DEBUG);
 
-        // get unauthorized header
-        std::unique_ptr<web::http::client::http_client> client = setupHttpClientWithCredential(getServerUri(config->imageID.server));
-        web::http::http_request              request(methods::GET);
-        pplx::task<web::http::http_response> responseTask;
-        web::http::http_response             response;
-
-        request.set_request_uri( makeImageManifestUri() );
-        responseTask = client->request(request);
-        
-        try {
-            responseTask.wait();
-            response = responseTask.get();
-        }
-        catch (const std::exception& e) {
-            SARUS_RETHROW_ERROR(e, "Failed to get token");
-        }
-
-        if(response.status_code() != 401) {
-            auto message = boost::format("Received http_response status code(%s): %s") 
-                % response.status_code() %  response.reason_phrase();
-            SARUS_THROW_ERROR(message.str());
-        }
-
-        // parse header
+        std::string realm;
+        std::string service;
+        std::string scope;
         auto auth_header = response.headers()[U("Www-Authenticate")];
-        auto realm   = getParam(auth_header, "realm");
-        auto service = getParam(auth_header, "service");
-        auto scope   = getParam(auth_header, "scope");
-
-        printLog( boost::format("real   : %s") % realm, common::LogLevel::DEBUG);
-        printLog( boost::format("service: %s") % service, common::LogLevel::DEBUG);
-        printLog( boost::format("scope  : %s") % scope, common::LogLevel::DEBUG);
+        std::tie(realm, service, scope) = parseWwwAuthenticateHeader(auth_header);
 
         // get authorized token
         std::unique_ptr<web::http::client::http_client> tokenClient = setupHttpClientWithCredential( realm );
@@ -435,15 +433,33 @@ namespace image_manager {
         web::http::http_response tokenResp;
         std::string token;
     
-        tokenUriBuilder.append_query(U("scope"), scope);
-        tokenUriBuilder.append_query(U("service"), service);
+        if (!scope.empty()){
+            tokenUriBuilder.append_query(U("scope"), scope);
+        }
+        if (!service.empty()){
+            tokenUriBuilder.append_query(U("service"), service);
+        }
+
         tokenReq.set_request_uri(tokenUriBuilder.to_string());
 
+        printLog( boost::format("Full auth token request: %s") % tokenReq.to_string(), common::LogLevel::DEBUG);
         tokenResp = tokenClient->request(tokenReq).get();
         if(tokenResp.status_code() != status_codes::OK) {
-            auto message = boost::format("Failed to get token. Received http_response status code(%s): %s")
-                % tokenResp.status_code() %  tokenResp.reason_phrase();
-            SARUS_THROW_ERROR(message.str());
+            if (tokenResp.status_code() == status_codes::Unauthorized) {
+                auto message = boost::format{"Authorization failed when retrieving token for image '%s'"
+                        "\nPlease check the entered credentials."}  % config->imageID;
+                printLog(message, common::LogLevel::GENERAL, std::cerr);
+
+                message = boost::format("Failed to get token. Received http_response status code(%s): %s")
+                    % response.status_code() % response.reason_phrase();
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+
+            }
+            else {
+                auto message = boost::format("Failed to get token. Received http_response status code(%s): %s")
+                    % tokenResp.status_code() %  tokenResp.reason_phrase();
+                SARUS_THROW_ERROR(message.str());
+            }
         }
 
         try {
@@ -471,6 +487,46 @@ namespace image_manager {
         }
 
         return std::unique_ptr<web::http::client::http_client>( new web::http::client::http_client( server ));
+    }
+
+    /**
+     * Parse the Www-Authenticate header from an HTTP response to extract realm,
+     * service and scope parameters (if present)
+     */
+    std::tuple<std::string, std::string, std::string> Puller::parseWwwAuthenticateHeader(const std::string& auth_header) {
+        printLog( boost::format("Parsing Www-Authenticate header from unauthorized response"), common::LogLevel::DEBUG);
+
+        auto realm   = getParam(auth_header, "realm");
+        std::string service;
+        std::string scope;
+
+        if (realm.find("service=") == std::string::npos){
+            service = getParam(auth_header, "service");
+        }
+
+        if (realm.find("scope=") == std::string::npos){
+            scope = getParam(auth_header, "scope");
+        }
+
+        printLog( boost::format("realm   : %s") % realm, common::LogLevel::DEBUG);
+        printLog( boost::format("service : %s") % service, common::LogLevel::DEBUG);
+        printLog( boost::format("scope   : %s") % scope, common::LogLevel::DEBUG);
+
+        return std::tuple<std::string, std::string, std::string>(realm, service, scope);
+    }
+
+    /**
+     * Get params from the HTTP response header(Www-Authenticate)
+     */
+    std::string Puller::getParam(const std::string &header, const std::string& param)
+    {
+        auto paramPosition = header.find(param + "=");
+        if (paramPosition == std::string::npos){
+            return std::string();
+        }
+        int i = paramPosition + param.size() + 2;
+        int j = header.substr(i, header.size()).find('\"');
+        return header.substr(i, j);
     }
 
     std::string Puller::getServerUri(const std::string &server) {

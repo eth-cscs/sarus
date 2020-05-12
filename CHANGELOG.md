@@ -14,10 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- The glibc Hook is no longer activated by default, unless the `--mpi` option is used. To activate it explicitly, the new --glibc option of sarus run can be used. See [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#glibc-replacement)
+- The glibc Hook is no longer activated by default, unless the `--mpi` option is used. To activate it explicitly, the new `--glibc` option of `sarus run` can be used. See [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#glibc-replacement)
 - Using OCI annotations instead of environment variables to pass information to hooks. It is an internal change, transparent to users, moving towards OCI Hooks independence from Sarus
 - Most of the Environment Variables for Hooks were renamed. Sarus Administrators should check the new names in the [respective hook documentation pages](https://sarus.readthedocs.io/en/stable/config/configure_hooks.html#hooks-use-cases)
 - OCI MPI Hook will now enable MPI "backwards" library injections, issuing a warning. More details [here](https://sarus.readthedocs.io/en/stable/user/abi_compatibility.html)
+- Improved the retrieval of image manifests from remote registries to better leverage the OCI Distribution specification
 - Updated Spack packages and installation instructions
 - Updated documentation about the NVIDIA Container Toolkit. See [here](https://sarus.readthedocs.io/en/stable/config/gpu-hook.html)
 - The SSH and Slurm global sync hooks now use configurable paths for their resources and are no longer dependant on Sarus-specific directories
@@ -29,6 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed bug on OCI MPI Hook which failed to run containers having multiple versions of an MPI Dependency library
 - Runtime security checks no longer fail if a checked path does not exist
 - Fixed setting of default bind propagation values for custom mounts
+- Fixed parsing of authentication challenges from the NVIDIA GPU Cloud registry
+- Fixed the ability to pull images from the Quay.io registry
 
 ### Security
 

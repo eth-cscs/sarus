@@ -47,6 +47,10 @@ def list_images(is_centralized_repository):
 def pull_image_if_necessary(is_centralized_repository, image):
     if image in list_images(is_centralized_repository):
         return
+    pull_image(is_centralized_repository, image)
+
+
+def pull_image(is_centralized_repository, image):
     if is_centralized_repository:
         command = ["sarus", "pull", "--centralized-repository", image]
     else:

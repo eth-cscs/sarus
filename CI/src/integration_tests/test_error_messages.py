@@ -114,19 +114,22 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "pull", "invalid-image-1kds710dkj"]
-        expected_message = ("Failed to pull image 'index.docker.io/library/invalid-image-1kds710dkj:latest'\nIs the image ID correct?")
-        self._check(command, expected_message)
-
-        command = ["sarus", "pull", "nvcr.io/nvidia/tensorflow:19.07-py3"] # authentication to NVIDIA NGC is required
-        expected_message = ("Failed authentication for image 'nvcr.io/nvidia/tensorflow:19.07-py3'"
+        expected_message = ("Failed to pull image 'index.docker.io/library/invalid-image-1kds710dkj:latest'"
+                            "\nThe image may be private or not present in the remote registry."
                             "\nDid you perform a login with the proper credentials?"
                             "\nSee 'sarus help pull' (--login option)")
         self._check(command, expected_message)
 
-        command = ["bash", "-c", "printf 'invalid-username\ninvalid-password' |sarus pull --login nvcr.io/nvidia/tensorflow:19.07-py3"]
-        expected_message = ("Failed authentication for image 'nvcr.io/nvidia/tensorflow:19.07-py3'"
+        command = ["sarus", "pull", "ethcscs/private-example"]
+        expected_message = ("Failed to pull image 'index.docker.io/ethcscs/private-example:latest'"
+                            "\nThe image may be private or not present in the remote registry."
                             "\nDid you perform a login with the proper credentials?"
                             "\nSee 'sarus help pull' (--login option)")
+        self._check(command, expected_message)
+
+        command = ["bash", "-c", "printf 'invalid-username\ninvalid-password' |sarus pull --login ethcscs/private-example"]
+        expected_message = ("Authorization failed when retrieving token for image 'index.docker.io/ethcscs/private-example:latest'"
+                            "\nPlease check the entered credentials.")
         self._check(command, expected_message)
 
         command = ["sarus", "pull", "--temp-dir=/invalid-dir", "alpine"]

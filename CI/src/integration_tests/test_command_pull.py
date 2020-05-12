@@ -17,14 +17,26 @@ class TestCommandPull(unittest.TestCase):
     """
 
     def test_command_pull_with_local_repository(self):
-        self._test_command_pull(is_centralized_repository=False)
+        self._test_command_pull("alpine:3.11", is_centralized_repository=False)
 
     def test_command_pull_with_centralized_repository(self):
-        self._test_command_pull(is_centralized_repository=True)
+        self._test_command_pull("alpine:3.11", is_centralized_repository=True)
 
-    def _test_command_pull(self, is_centralized_repository):
-        image = "alpine:latest"
+    def test_command_pull_with_nvcr(self):
+        self._test_command_pull("nvcr.io/nvidia/k8s-device-plugin:1.0.0-beta4",
+                                is_centralized_repository=False)
 
+    def test_command_pull_with_quay(self):
+        self._test_command_pull("quay.io/prometheus/prometheus:v2.18.0",
+                                is_centralized_repository=False)
+
+    def test_multiple_pulls_with_local_repository(self):
+        self._test_multiple_pulls("alpine:3.11", is_centralized_repository=False)
+
+    def test_multiple_pulls_with_centralized_repository(self):
+        self._test_multiple_pulls("alpine:3.11", is_centralized_repository=True)
+
+    def _test_command_pull(self, image, is_centralized_repository):
         util.remove_image_if_necessary(is_centralized_repository, image)
         actual_images = util.list_images(is_centralized_repository)
         self.assertEqual(actual_images.count(image), 0)
@@ -33,8 +45,10 @@ class TestCommandPull(unittest.TestCase):
         actual_images = util.list_images(is_centralized_repository)
         self.assertEqual(actual_images.count(image), 1)
 
-        # check that multiple pulls of the same image don't generate
-        # multiple entries in the list of available images 
-        util.pull_image_if_necessary(is_centralized_repository, image)
-        actual_images = util.list_images(is_centralized_repository)
-        self.assertEqual(actual_images.count(image), 1)
+    # check that multiple pulls of the same image don't generate
+    # multiple entries in the list of available images
+    def _test_multiple_pulls(self, image, is_centralized_repository):
+        for i in range(2):
+            util.pull_image(is_centralized_repository, image)
+            actual_images = util.list_images(is_centralized_repository)
+            self.assertEqual(actual_images.count(image), 1)
