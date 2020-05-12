@@ -702,6 +702,10 @@ std::vector<std::string> resolveSharedLibAbi(const boost::filesystem::path& lib,
             // E.g. on Cray we could have:
             // mpich-gnu-abi/7.1/lib/libmpi.so.12 -> ../../../mpich-gnu/7.1/lib/libmpich_gnu_71.so.3.0.1
             // Let's ignore the symlink's target in this case
+            auto message = boost::format("Failed to resolve ABI version of\n%s -> %s\nThe symlink"
+                                        " and the target library have incompatible linker names. Assuming the symlink is correct.")
+                                        % lib % path;
+            logMessage(message.str(), LogLevel::DEBUG);
             continue;
         }
 
@@ -711,10 +715,14 @@ std::vector<std::string> resolveSharedLibAbi(const boost::filesystem::path& lib,
         const auto& longer = abi.size() > longestAbiSoFar.size() ? abi : longestAbiSoFar;
 
         if(!std::equal(shorter.cbegin(), shorter.cend(), longer.cbegin())) {
+            // Some vendors have symlinks with incompatible major versions. e.g.
+            // libvdpau_nvidia.so.1 -> libvdpau_nvidia.so.440.33.01.
+            // For these cases, we trust the vendor and resolve the Lib Abi to that of the symlink.
             auto message = boost::format("Failed to resolve ABI version of\n%s -> %s\nThe symlink filename"
-                                        " and the target library have incompatible ABI versions.")
+                                        " and the target library have incompatible ABI versions. Assuming symlink is correct.")
                                         % lib % path;
-            SARUS_THROW_ERROR(message.str());
+            logMessage(message.str(), LogLevel::DEBUG);
+            continue;
         }
 
         longestAbiSoFar = std::move(longer);

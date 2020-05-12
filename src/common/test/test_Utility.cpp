@@ -351,6 +351,19 @@ TEST(UtilityTestGroup, resolveSharedLibAbi) {
     boost::filesystem::create_symlink("../libtest_symlink_within_rootdir.so.1.2", testDir / "/subdir/libtest_symlink_within_rootdir.so.1");
     common::createFileIfNecessary(testDir / "libtest_symlink_within_rootdir.so.1.2");
     CHECK(common::resolveSharedLibAbi("/libtest_symlink_within_rootdir.so", testDir) == (std::vector<std::string>{"1", "2"}));
+
+    // Some vendors have symlinks with incompatible major versions,
+    // like libvdpau_nvidia.so.1 -> libvdpau_nvidia.so.440.33.01.
+    // For these cases, we trust the vendor and resolve the Lib Abi to that of the symlink.
+    // Note here we use libtest.so.1 as the "original lib file" and create a symlink to it.
+    boost::filesystem::create_symlink(testDir / "libtest.so.1", testDir / "libtest.so.234.56");
+    CHECK(common::resolveSharedLibAbi(testDir / "libtest.so.234.56") == (std::vector<std::string>{"234", "56"}));
+
+    boost::filesystem::create_symlink("../libtest.so.1.2", testDir / "subdir" / "libtest.so.234.56");
+    CHECK(common::resolveSharedLibAbi(testDir / "subdir" / "libtest.so.234.56") == (std::vector<std::string>{"234", "56"}));
+
+    boost::filesystem::create_symlink("../libtest.so.1.2", testDir / "subdir" / "libtest.so.234");
+    CHECK(common::resolveSharedLibAbi(testDir / "subdir" / "libtest.so.234") == (std::vector<std::string>{"234"}));
 }
 
 TEST(UtilityTestGroup, getSharedLibSoname) {
