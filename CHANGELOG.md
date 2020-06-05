@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Enabled Sarus to print log messages from the OCI Hooks
 - Better documentation for ABI Compatibility [here](https://sarus.readthedocs.io/en/stable/user/abi_compatibility.html)
 - Added User Guide section about running MPI applications without the MPI hook. See [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#running-mpi-applications-without-the-native-mpi-hook)
+- Added documentation about requiring Linux kernel >= 3.0 and util-linux >= 2.20
 
 ### Changed
 
@@ -19,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Most of the Environment Variables for Hooks were renamed. Sarus Administrators should check the new names in the [respective hook documentation pages](https://sarus.readthedocs.io/en/stable/config/configure_hooks.html#hooks-use-cases)
 - OCI MPI Hook will now enable MPI "backwards" library injections, issuing a warning. More details [here](https://sarus.readthedocs.io/en/stable/user/abi_compatibility.html)
 - Improved the retrieval of image manifests from remote registries to better leverage the OCI Distribution specification
+- Removed the explicit use of the `autoclear` option when loop-mounting squashfs images. Explicit use of the option causes a failure on
+  Linux kernels >= 5.4. The `autoclear` option is still set implicitly by the `mount` system utility since June 2011 for kernels > 2.6.37.
 - Updated Spack packages and installation instructions
 - Updated documentation about the NVIDIA Container Toolkit. See [here](https://sarus.readthedocs.io/en/stable/config/gpu-hook.html)
 - The SSH and Slurm global sync hooks now use configurable paths for their resources and are no longer dependant on Sarus-specific directories

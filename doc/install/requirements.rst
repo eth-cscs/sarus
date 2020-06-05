@@ -6,11 +6,14 @@ Requirements
 Operating System
 ================
 
-A Linux system with the following kernel modules loaded:
+* Linux kernel >= 3.0
+* `util-linux <https://github.com/karelzak/util-linux>`_ >= 2.20 (these utilities are usually bundled with the Linux distribution itself;
+  v2.20 was released in August 2011)
+* The following kernel modules loaded:
 
-* loop
-* squashfs
-* overlayfs
+  * loop
+  * squashfs
+  * overlayfs
 
 
 Software

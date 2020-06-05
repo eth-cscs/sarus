@@ -158,7 +158,7 @@ void loopMountSquashfs(const boost::filesystem::path& image, const boost::filesy
     auto command = std::string{"mount"};
     command += " -n";
     command += " -o";
-    command += " loop,nosuid,nodev,autoclear,ro";
+    command += " loop,nosuid,nodev,ro";
     command += " -t squashfs";
     command += " " + image.string();
     command += " " + mountPoint.string();
