@@ -18,7 +18,7 @@ jobs:
 
     - name: "Standalone + Unit and Integration tests"
       script:
-      - . ./CI/utility_docker_functions.bash Release $(pwd) $(pwd)/cache standalone-build standalone-run
+      - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $(pwd)/cache standalone-build standalone-run
       - sarus-build-images
       - sarus-build-and-test
       deploy:
@@ -37,24 +37,31 @@ jobs:
           repo: eth-cscs/sarus
           branch: master
 
+    - name: "Test install from source CentOS 7"
+      if: branch IN (master, develop)
+      script:
+      - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $(pwd)/cache centos:7 centos:7
+      - sarus-build-images
+      - sarus-build-from-scratch-and-test
+
     - name: "Test install from source Ubuntu 18.04"
       if: branch IN (master, develop)
       script:
-      - . ./CI/utility_docker_functions.bash Release $(pwd) $(pwd)/cache ubuntu:18.04 ubuntu:18.04
+      - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $(pwd)/cache ubuntu:18.04 ubuntu:18.04
       - sarus-build-images
       - sarus-build-from-scratch-and-test
 
     - name: "Test install from source Debian 10"
-      if: branch IM (master, develop)
+      if: branch IN (master, develop)
       script:
-      - . ./CI/utility_docker_functions.bash Release $(pwd) $(pwd)/cache debian:10 debian:10
+      - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $(pwd)/cache debian:10 debian:10
       - sarus-build-images
       - sarus-build-from-scratch-and-test
 
-    - name: "Test install from source CentOS 7"
+    - name: "Test install from source Debian 10 with AddressSanitizer"
       if: branch IN (master, develop)
       script:
-      - . ./CI/utility_docker_functions.bash Release $(pwd) $(pwd)/cache centos:7 centos:7
+      - . ./CI/utility_docker_functions.bash Debug gcc-asan.cmake $(pwd) $(pwd)/cache debian:10 debian:10
       - sarus-build-images
       - sarus-build-from-scratch-and-test
 

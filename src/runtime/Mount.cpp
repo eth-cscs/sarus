@@ -34,12 +34,17 @@ Mount::Mount(   const boost::filesystem::path& source,
     : source{source}
     , destination{destination}
     , mountFlags{mountFlags}
-    , config{std::move(config)}
+    , config_weak{config}
 {}
 
 void Mount::performMount() const {
     runtime::utility::logMessage(boost::format("Performing bind mount: source = %s; target = %s; mount flags = %d")
         % source.string() % destination.string() % mountFlags, common::LogLevel::DEBUG);
+
+    auto config = config_weak.lock();
+    if(!config) {
+        SARUS_THROW_ERROR("Internal error: failed to lock std::weak_ptr");
+    }
 
     // switch to user identity to make sure that he has access to the mount source
     auto rootIdentity = common::UserIdentity{};
@@ -90,13 +95,13 @@ void Mount::switchToUnprivilegedUser(const common::UserIdentity& identity) const
                                  % identity.uid % identity.gid,
                                  common::LogLevel::DEBUG);
 
-    if (setgroups(config->userIdentity.supplementaryGids.size(), config->userIdentity.supplementaryGids.data()) != 0) {
+    if (setgroups(identity.supplementaryGids.size(), identity.supplementaryGids.data()) != 0) {
         SARUS_THROW_ERROR("Failed to assume end-user auxiliary gids");
     }
-    if (setegid(config->userIdentity.gid) != 0) {
+    if (setegid(identity.gid) != 0) {
         SARUS_THROW_ERROR("Failed to assume end-user gid");
     }
-    if (seteuid(config->userIdentity.uid) != 0) {
+    if (seteuid(identity.uid) != 0) {
         SARUS_THROW_ERROR("Failed to assume end-user uid");
     }
 

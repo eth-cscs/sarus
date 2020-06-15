@@ -38,6 +38,7 @@ change_uid_gid_of_docker_user() {
 
 build_sarus() {
     local build_type=${1}; shift || error "${FUNCNAME}: missing build_type argument"
+    local toolchain_file=${1}; shift || error "${FUNCNAME}: missing toolchain_file argument"
     local build_dir=${1}; shift || error "${FUNCNAME}: missing build_dir argument"
     local install_dir=${1}; shift || error "${FUNCNAME}: missing install_dir argument"
 
@@ -45,7 +46,7 @@ build_sarus() {
     mkdir -p ${build_dir} && cd ${build_dir}
 
     # DOCS: Configure and build
-    cmake -DCMAKE_TOOLCHAIN_FILE=${build_dir}/../cmake/toolchain_files/gcc.cmake \
+    cmake -DCMAKE_TOOLCHAIN_FILE=${build_dir}/../cmake/toolchain_files/${toolchain_file} \
         -DCMAKE_PREFIX_PATH="/usr/local/include/rapidjson" \
         -DCMAKE_BUILD_TYPE=${build_type} \
         -DCMAKE_INSTALL_PREFIX=${install_dir} \
@@ -80,22 +81,16 @@ install_sarus() {
 build_sarus_archive() {
     # Build and package Sarus as a standalone archive ready for installation
     local build_type=${1}; shift || error "${FUNCNAME}: missing build_type argument"
+    local toolchain_file=${1}; shift || error "${FUNCNAME}: missing toolchain_file argument"
     local build_dir=${1}; shift || error "${FUNCNAME}: missing build_dir argument"
 
-    # Enable code coverage only with debug build
-    if [ "$build_type" = "Debug" ]; then
-        local cmake_toolchain_file=../cmake/toolchain_files/gcc-gcov.cmake
-    else
-        local cmake_toolchain_file=../cmake/toolchain_files/gcc.cmake
-    fi
-
-    echo "Building Sarus (${build_type}) in ${build_dir}"
+    echo "Building Sarus (${build_type} with ${toolchain_file}) in ${build_dir}"
 
     mkdir -p ${build_dir} && cd ${build_dir}
 
     local git_description=$(git describe --tags --dirty || echo "git_version_not_available")
     local prefix_dir=${build_dir}/install/${git_description}-${build_type}
-    cmake   -DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file} \
+    cmake   -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/${toolchain_file} \
             -DCMAKE_PREFIX_PATH="/usr/local/include/rapidjson" \
             -DCMAKE_BUILD_TYPE=${build_type} \
             -DBUILD_STATIC=TRUE \
@@ -169,10 +164,13 @@ run_unit_tests() {
     local build_dir=$1; shift
     cd ${build_dir}
 
-    sudo -u docker CTEST_OUTPUT_ON_FAILURE=1 ctest --exclude-regex AsRoot
+    # Note: use CI/LSan.supp to suppress errors about memory leaks in
+    # Sarus dependencies, e.g. OpenSSL. Such leaks are out of our control.
+
+    sudo -u docker CTEST_OUTPUT_ON_FAILURE=1 ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=${build_dir}/../CI/LSan.supp ctest --exclude-regex AsRoot
     fail_on_error "Unit tests as normal user failed"
 
-    CTEST_OUTPUT_ON_FAILURE=1 ctest --tests-regex AsRoot # Add as many regex as you want with -R. Allow output with -VV.
+    CTEST_OUTPUT_ON_FAILURE=1 ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=${build_dir}/../CI/LSan.supp ctest --tests-regex AsRoot # Add as many regex as you want with -R. Allow output with -VV.
     # TODO: allow args forwarding to cpputest so we can run specific testswithin the filtered file with -n for example.
     fail_on_error "Unit tests as root user failed"
 
@@ -183,8 +181,7 @@ run_unit_tests() {
 }
 
 run_integration_tests() {
-    local build_dir=$1; shift
-    local build_type=$1; shift
+    local build_dir=$1; shift || error "${FUNCNAME}: missing build_dir argument"
 
     echo "Running integration tests with user=docker"
     sudo -u docker --login bash -c "
@@ -198,16 +195,17 @@ run_integration_tests() {
     sudo --login bash -c "PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=/sarus-source/CI/src:$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker pytest -v -m asroot /sarus-source/CI/src/integration_tests/"
     fail_on_error "Python integration tests as root failed"
     echo "Successfully run integration tests with user=root"
+}
 
-    # Run coverage only on Debug build of GitLab CI
-    if [ ${CI} ] && [ ${build_type} = "Debug" ]; then
-        sudo -u docker mkdir ${build_dir}/gcov
-        cd ${build_dir}/gcov
-        sudo -u docker gcov --preserve-paths $(find ${build_dir}/src -name "*.gcno" |grep -v test |tr '\n' ' ')
-        fail_on_error "Failed to run gcov"
-        sudo -u docker gcovr -r /sarus-source/src -k -g --object-directory ${build_dir}/gcov
-        fail_on_error "Failed to run gcovr"
-    fi
+run_gcov() {
+    local build_dir=$1; shift || error "${FUNCNAME}: missing build_dir argument"
+
+    sudo -u docker mkdir ${build_dir}/gcov
+    cd ${build_dir}/gcov
+    sudo -u docker gcov --preserve-paths $(find ${build_dir}/src -name "*.gcno" |grep -v test |tr '\n' ' ')
+    fail_on_error "Failed to run gcov"
+    sudo -u docker gcovr -r /sarus-source/src -k -g --object-directory ${build_dir}/gcov
+    fail_on_error "Failed to run gcovr"
 }
 
 run_distributed_tests() {
@@ -238,4 +236,3 @@ run_smoke_tests() {
     fi
     rm /tmp/sarus.out
 }
-

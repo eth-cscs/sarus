@@ -18,6 +18,7 @@ namespace cli {
 
 class Command {
 public:
+    virtual ~Command() {}
     virtual void execute() = 0;
     virtual bool requiresRootPrivileges() const = 0;
     virtual std::string getBriefDescription() const = 0;

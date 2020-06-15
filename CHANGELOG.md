@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Better documentation for ABI Compatibility [here](https://sarus.readthedocs.io/en/stable/user/abi_compatibility.html)
 - Added User Guide section about running MPI applications without the MPI hook. See [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#running-mpi-applications-without-the-native-mpi-hook)
 - Added documentation about requiring Linux kernel >= 3.0 and util-linux >= 2.20
+- Added AddressSanitizer CI job
 
 ### Changed
 

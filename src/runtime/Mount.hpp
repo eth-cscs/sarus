@@ -44,7 +44,7 @@ private:
     void switchToPrivilegedUser(const common::UserIdentity&) const;
 
 private:
-    std::shared_ptr<const common::Config> config;
+    std::weak_ptr<const common::Config> config_weak;
 };
 
 }} // namespaces

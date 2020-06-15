@@ -88,11 +88,14 @@ std::string getEnvironmentVariable(const std::string& key) {
 }
 
 void setEnvironmentVariable(const std::string& variable) {
-    auto* p = strdup(variable.c_str());
-    if(putenv(p) != 0) {
-        free(p);
-        auto message = boost::format("Failed to set environment variable %s: %s")
-            % variable % strerror(errno);
+    std::string key;
+    std::string value;
+    std::tie(key, value) = parseEnvironmentVariable(variable);
+    int overwrite = 1;
+
+    if(setenv(key.c_str(), value.c_str(), overwrite) != 0) {
+        auto message = boost::format("Failed to setenv(%s, %s, %d): %s")
+            % key % value % overwrite % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
     logMessage(boost::format("Put environment variable %s") % variable, common::LogLevel::DEBUG);

@@ -170,7 +170,7 @@ Create a new folder ``${build_dir}}`` to build Sarus from source. e.g. ``build-R
    :start-after: # DOCS: Create a new folder
    :end-before: # DOCS: Configure and build
 
-Configure and build (in this example ``${build_type}`` is ``Release``:
+Configure and build (in this example ``${build_type} = Release`` and ``${toolchain_file} = gcc.cmake``:
 
 .. literalinclude:: ../../CI/utility_functions.bash
    :language: bash

@@ -1,26 +1,26 @@
 stages:
   - build_sarus_images
   - build_sarus_and_test
-  - build_sarus_from_scratch_and_test
+  - build_sarus_and_test_only_master_and_develop
   - publish_sarus_images
   - cleanup_sarus_images
 
 build_sarus_images:
   stage: build_sarus_images
   script:
-    - . CI/utility_docker_functions.bash Debug $(pwd) ~/cache/ids/sarus standalone-build standalone-run
+    - . CI/utility_docker_functions.bash Debug gcc.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
     - sarus-build-images
 
 check_version_and_docs:
   stage: build_sarus_and_test
   script:
-    - . CI/utility_docker_functions.bash Debug $(pwd) ~/cache/ids/sarus standalone-build standalone-run
+    - . CI/utility_docker_functions.bash Debug gcc.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
     - sarus-check-version-and-docs $(pwd)
 
 standalone_archive_debug:
   stage: build_sarus_and_test
   script:
-    - . ./CI/utility_docker_functions.bash Debug $(pwd) ~/cache/ids/sarus standalone-build standalone-run
+    - . ./CI/utility_docker_functions.bash Debug gcc.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
     - sarus-build-and-test
 
   artifacts:
@@ -32,7 +32,7 @@ standalone_archive_debug:
 standalone_archive_release:
   stage: build_sarus_and_test
   script:
-    - . ./CI/utility_docker_functions.bash Release $(pwd) ~/cache/ids/sarus standalone-build standalone-run
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
     - sarus-build-and-test
 
   artifacts:
@@ -41,38 +41,48 @@ standalone_archive_release:
       - sarus-Release.tar.gz
       - README.md
 
-.from_source:
-  stage: build_sarus_from_scratch_and_test
+.only_master_and_develop:
+  stage: build_sarus_and_test_only_master_and_develop
   only:
     - master
     - develop
 
-from_source_ubuntu18.04:
-  extends: .from_source
+standalone_archive_debug_coverage:
+  extends: .only_master_and_develop
   script:
-    - . ./CI/utility_docker_functions.bash Release $(pwd) ~/cache/ids/sarus ubuntu:18.04 ubuntu:18.04
+    - . ./CI/utility_docker_functions.bash Debug gcc-gcov.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
+    - sarus-build-and-test
+
+from_source_centos7:
+  extends: .only_master_and_develop
+  script:
+      - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus centos:7 centos:7
+      - sarus-build-images
+      - sarus-build-from-scratch-and-test
+
+from_source_ubuntu18.04:
+  extends: .only_master_and_develop
+  script:
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus ubuntu:18.04 ubuntu:18.04
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
 from_source_debian10:
-  extends: .from_source
+  extends: .only_master_and_develop
   script:
-    - . ./CI/utility_docker_functions.bash Release $(pwd) ~/cache/ids/sarus debian:10 debian:10
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus debian:10 debian:10
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
-from_source_centos7:
-  extends: .from_source
+from_source_debian10_asan:
+  extends: .only_master_and_develop
   script:
-      - . ./CI/utility_docker_functions.bash Release $(pwd) ~/cache/ids/sarus centos:7 centos:7
-      - sarus-build-images
-      - sarus-build-from-scratch-and-test
+    - . ./CI/utility_docker_functions.bash Debug gcc-asan.cmake $(pwd) ~/cache/ids/sarus debian:10 debian:10
+    - sarus-build-images
+    - sarus-build-from-scratch-and-test
 
 spack_package:
-  stage: build_sarus_from_scratch_and_test
-  only:
-      - master
-      - develop
+  extends: .only_master_and_develop
   script:
       - docker_image=ethcscs/sarus-spack:1.1.0-ubuntu16.04
       - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/run_spack_package_test.sh

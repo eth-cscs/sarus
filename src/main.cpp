@@ -82,12 +82,16 @@ int main(int argc, char* argv[]) {
 
 static void saveAndClearEnvironmentVariables(common::Config& config) {
     config.commandRun.hostEnvironment = common::parseEnvironmentVariables(environ);
+
     if(clearenv() != 0) {
         SARUS_THROW_ERROR("Failed to clear host environment variables");
     }
-    auto path = "PATH=/bin:/sbin:/usr/bin";
-    if(putenv(strdup(path)) != 0) {
-        auto message = boost::format("Failed to putenv(%s): %s") % path % strerror(errno);
+
+    auto path = std::string{"/bin:/sbin:/usr/bin"};
+    int overwrite = 1;
+    if(setenv("PATH", path.c_str(), overwrite) != 0) {
+        auto message = boost::format("Failed to setenv(\"PATH\", %s, %d): %s")
+            % path.c_str() % overwrite % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
 }

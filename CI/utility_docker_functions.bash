@@ -71,7 +71,7 @@ sarus-build-from-scratch() {
     _run_cmd_in_container ${image_build} docker "bash -i -c '
         . /sarus-source/CI/utility_functions.bash && \
         change_uid_gid_of_docker_user ${host_uid} ${host_gid} && \
-        build_sarus ${build_type} $(_build_dir_container) /opt/sarus/default'"
+        build_sarus ${build_type} ${toolchain_file} $(_build_dir_container) /opt/sarus/default'"
     fail_on_error "${FUNCNAME}: failed to build Sarus"
 }
 
@@ -92,7 +92,7 @@ sarus-build() {
 
     _copy_cached_build_artifacts_if_available ${cache_dir_host} $(_build_dir_host)/dep
 
-    _run_cmd_in_container ${image_build} docker ". /sarus-source/CI/utility_functions.bash && build_sarus_archive ${build_type} $(_build_dir_container)"
+    _run_cmd_in_container ${image_build} docker ". /sarus-source/CI/utility_functions.bash && build_sarus_archive ${build_type} ${toolchain_file} $(_build_dir_container)"
     fail_on_error "${FUNCNAME}: failed to build archive"
 }
 
@@ -103,17 +103,16 @@ sarus-test() {
     sarus-utest
     sarus-itest-standalone
     sarus-dtest
+    sarus-run-gcov
 }
 
 sarus-utest() {
     echo "${FUNCNAME^^} with:"
     _print_parameters
 
-    local build_dir_container=$(_build_dir_container)
-
     _run_cmd_in_container ${image_run} root \
         ". /sarus-source/CI/utility_functions.bash && \
-        run_unit_tests ${build_dir_container}"
+        run_unit_tests $(_build_dir_container)"
 
     fail_on_error "${FUNCNAME}: failed"
 }
@@ -127,7 +126,7 @@ sarus-itest-standalone() {
     _run_cmd_in_container ${image_run} root \
         ". /sarus-source/CI/utility_functions.bash && \
         install_sarus_from_archive /opt/sarus ${sarus_archive} && \
-        run_integration_tests $(_build_dir_container) ${build_type}"
+        run_integration_tests $(_build_dir_container)"
 
     fail_on_error "${FUNCNAME}: failed"
 }
@@ -136,10 +135,15 @@ sarus-itest-from-scratch() {
     echo "${FUNCNAME^^} with:"
     _print_parameters
 
+    if [ ${toolchain_file} = "gcc-asan.cmake" ]; then
+        echo "${FUNCNAME}: skipping integration tests (Sarus doesn't work when built with ASan)"
+        return
+    fi
+
     _run_cmd_in_container ${image_run} root \
         ". /sarus-source/CI/utility_functions.bash && \
         install_sarus $(_build_dir_container) /opt/sarus/default && \
-        run_integration_tests ${build_dir_container} ${build_type}"
+        run_integration_tests $(_build_dir_container)"
 
     fail_on_error "${FUNCNAME}: failed"
 }
@@ -157,6 +161,22 @@ sarus-dtest() {
     mkdir -p ${cache_local_repo_dir}
 
     run_distributed_tests ${sarus_source_dir_host} ${sarus_archive} ${cache_oci_hooks_dir} ${cache_local_repo_dir}
+    fail_on_error "${FUNCNAME}: failed"
+}
+
+sarus-run-gcov() {
+    echo "${FUNCNAME^^} with:"
+    _print_parameters
+
+    if [ ${toolchain_file} != "gcc-gcov.cmake" ]; then
+        echo "${FUNCNAME}: skipping gcov execution (Sarus was not built with gcov instrumentation)"
+        return
+    fi
+
+    _run_cmd_in_container ${image_run} root \
+        ". /sarus-source/CI/utility_functions.bash && \
+        run_gcov $(_build_dir_container)"
+
     fail_on_error "${FUNCNAME}: failed"
 }
 
@@ -218,6 +238,7 @@ _run_cmd_in_container() {
 
 _print_parameters() {
     echo "build_type = ${build_type}"
+    echo "toolchain_file = ${toolchain_file}"
     echo "sarus_source_dir_host = ${sarus_source_dir_host}"
     echo "cache_dir_host = ${cache_dir_host}"
     echo "dockerfile_build = ${dockerfile_build}"
@@ -312,7 +333,7 @@ _job_id_string() {
     # Beware that clashes may occur if multiple develop pipelines run concurrenlty.
     # We agreed that this is a not-so-important corner case for the time being.
 
-    echo "$(_replace_invalid_chars ${image_run})--${build_type}"
+    echo "$(_replace_invalid_chars ${image_run})--${build_type}--$(_replace_invalid_chars ${toolchain_file})"
 }
 
 _replace_invalid_chars() {
@@ -321,6 +342,9 @@ _replace_invalid_chars() {
 }
 
 export build_type=${1-"Debug"}; shift || true
+# Note: the "gcc-gcov.cmake" toolchain file also has the side effect
+# of triggering the executing of gcov, i.e. output code coverage metrics
+export toolchain_file=${1-"gcc.cmake"}; shift || true
 export sarus_source_dir_host=${1-${PWD}}; shift || true
 export cache_dir_host=${1-${sarus_source_dir_host}/cache-base}; shift || true
 export dockerfile_build=Dockerfile.${1-"standalone-build"}
