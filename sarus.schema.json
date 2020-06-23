@@ -1,5 +1,5 @@
 {
-    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$schema": "https://json-schema.org/draft/2019-09/schema#",
     "title": "Sarus",
     "description": "Sarus configuration file",
     "type": "object",
@@ -8,31 +8,34 @@
             "type": "boolean"
         },
         "OCIBundleDir": {
-            "$ref": "#/definitions/AbsolutePath"
+            "$ref": "definitions.schema.json#/AbsolutePath"
         },
         "rootfsFolder": {
-            "$ref": "#/definitions/Folder"
+            "$ref": "definitions.schema.json#/Folder"
         },
         "prefixDir": {
-            "$ref": "#/definitions/AbsolutePath"
+            "$ref": "definitions.schema.json#/AbsolutePath"
+        },
+        "hooksDir": {
+            "$ref": "definitions.schema.json#/AbsolutePath"
         },
         "tempDir": {
-            "$ref": "#/definitions/AbsolutePath"
+            "$ref": "definitions.schema.json#/AbsolutePath"
         },
         "localRepositoryBaseDir": {
-            "$ref": "#/definitions/AbsolutePath"
+            "$ref": "definitions.schema.json#/AbsolutePath"
         },
         "centralizedRepositoryDir": {
-            "$ref": "#/definitions/AbsolutePath"
+            "$ref": "definitions.schema.json#/AbsolutePath"
         },
         "mksquashfsPath": {
-            "$ref": "#/definitions/AbsolutePath"
+            "$ref": "definitions.schema.json#/AbsolutePath"
         },
         "initPath": {
-            "$ref": "#/definitions/AbsolutePath"
+            "$ref": "definitions.schema.json#/AbsolutePath"
         },
         "runcPath": {
-            "$ref": "#/definitions/AbsolutePath"
+            "$ref": "definitions.schema.json#/AbsolutePath"
         },
         "ramFilesystemType": {
             "oneOf": [
@@ -71,7 +74,7 @@
                     }
                 },
                 "unset": {
-                    "$ref": "#/definitions/ArrayOfStrings"
+                    "$ref": "definitions.schema.json#/ArrayOfStrings"
                 }
             }
         },
@@ -79,27 +82,13 @@
             "type": "object",
             "properties": {
                 "notAllowedPrefixesOfPath": {
-                    "$ref": "#/definitions/ArrayOfAbsolutePaths"
+                    "$ref": "definitions.schema.json#/ArrayOfAbsolutePaths"
                 },
                 "notAllowedPaths": {
-                    "$ref": "#/definitions/ArrayOfAbsolutePaths"
+                    "$ref": "definitions.schema.json#/ArrayOfAbsolutePaths"
                 }
             },
             "required":[ "notAllowedPrefixesOfPath", "notAllowedPaths" ]
-        },
-        "OCIHooks": {
-            "type": "object",
-            "properties": {
-                "prestart": {
-                    "$ref": "#/definitions/ArrayOfOCIHooks"
-                },
-                "poststart": {
-                    "$ref": "#/definitions/ArrayOfOCIHooks"
-                },
-                "poststop": {
-                    "$ref": "#/definitions/ArrayOfOCIHooks"
-                }
-            }
         }
     },
     "required": [
@@ -115,42 +104,22 @@
         "ramFilesystemType"
     ],
     "definitions": {
-        "Folder": {
-            "type": "string",
-            "pattern": "[^/]"
-        },
-        "AbsolutePath": {
-            "type": "string",
-            "pattern": "^/"
-        },
-        "ArrayOfAbsolutePaths": {
-            "type": "array",
-            "items": {
-                "$ref": "#/definitions/AbsolutePath"
-            }
-        },
-        "ArrayOfStrings": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        },
-        "Mount" : {
+        "Mount": {
             "type": "object",
             "properties": {
                 "type": {
                     "oneOf": [
-                    	{
+                        {
                             "type": "string",
                             "pattern": "^bind$"
                         }
                     ]
                 },
                 "source": {
-                    "$ref": "#/definitions/AbsolutePath"
+                    "$ref": "definitions.schema.json#/AbsolutePath"
                 },
                 "destination": {
-                    "$ref": "#/definitions/AbsolutePath"
+                    "$ref": "definitions.schema.json#/AbsolutePath"
                 },
                 "flags": {
                     "type": "object",
@@ -203,33 +172,6 @@
             "type": "array",
             "items": {
                 "$ref": "#/definitions/Mount"
-            }
-        },
-        "OCIHook": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "$ref": "#/definitions/AbsolutePath"
-                },
-                "args": {
-                    "$ref": "#/definitions/ArrayOfStrings"
-                },
-                "env": {
-                    "$ref": "#/definitions/ArrayOfStrings"
-                },
-                "timeout": {
-                    "type": "integer",
-                    "minimum": 1
-                }
-            },
-            "required": [
-                "path"
-            ]
-        },
-        "ArrayOfOCIHooks": {
-            "type": "array",
-            "items": {
-                "$ref": "#/definitions/OCIHook"
             }
         }
     }

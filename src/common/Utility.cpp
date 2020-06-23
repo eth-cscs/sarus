@@ -826,29 +826,53 @@ std::string readFile(const boost::filesystem::path& path) {
 }
 
 rapidjson::Document readJSON(const boost::filesystem::path& filename) {
-    rapidjson::Document json;
+    auto json = rapidjson::Document{};
+
     try {
-        std::ifstream schemaInputStream(filename.string());
-        rapidjson::IStreamWrapper schemaStreamWrapper(schemaInputStream);
-        json.ParseStream(schemaStreamWrapper);
+        std::ifstream ifs(filename.string());
+        rapidjson::IStreamWrapper isw(ifs);
+        json.ParseStream(isw);
     }
     catch (const std::exception& e) {
-        auto message = boost::format("Error reading file %s") % filename;
+        auto message = boost::format("Error reading JSON from %s") % filename;
         SARUS_RETHROW_ERROR(e, message.str());
     }
 
     if (json.HasParseError()) {
-        auto message = boost::format("File %s is not a valid JSON.\n"
-                                     "Error(offset %u): %s") %
-                                     filename %
-                                     static_cast<unsigned>(json.GetErrorOffset()) %
-                                     rapidjson::GetParseError_En(json.GetParseError());
+        auto message = boost::format(
+            "Error parsing JSON file %s. Input data is not valid JSON\n"
+            "Error(offset %u): %s")
+            % filename
+            % static_cast<unsigned>(json.GetErrorOffset())
+            % rapidjson::GetParseError_En(json.GetParseError());
         SARUS_THROW_ERROR(message.str());
     }
     return json;
 }
 
-rapidjson::Document readAndValidateJSON(const boost::filesystem::path& jsonFile, const rapidjson::SchemaDocument& schema) {
+rapidjson::SchemaDocument readJSONSchema(const boost::filesystem::path& schemaFile) {
+    class RemoteSchemaDocumentProvider : public rapidjson::IRemoteSchemaDocumentProvider {
+    public:
+        RemoteSchemaDocumentProvider(const boost::filesystem::path& schemasDir)
+            : schemasDir{schemasDir}
+        {}
+        const rapidjson::SchemaDocument* GetRemoteDocument(const char* uri, rapidjson::SizeType length) override {
+            auto filename = std::string(uri, length);
+            auto schema = common::readJSON(schemasDir / filename);
+            return new rapidjson::SchemaDocument(schema);
+        }
+    private:
+        boost::filesystem::path schemasDir;
+    };
+
+    auto schemaJSON = common::readJSON(schemaFile);
+    auto provider = RemoteSchemaDocumentProvider{ schemaFile.parent_path() };
+    return rapidjson::SchemaDocument{ schemaJSON, nullptr, rapidjson::SizeType(0), &provider };
+}
+
+rapidjson::Document readAndValidateJSON(const boost::filesystem::path& jsonFile, const boost::filesystem::path& schemaFile) {
+    auto schema = readJSONSchema(schemaFile);
+
     rapidjson::Document json;
 
     // Use a reader object to parse the JSON storing configuration settings

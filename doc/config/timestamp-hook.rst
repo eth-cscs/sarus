@@ -45,107 +45,56 @@ The hook optionally supports the following environment variable:
   to the target file. This variable is optional, and it is meant to differentiate
   between subsequent invocations of the timestamp hook for the same container.
 
-The following is an example ``OCIHooks`` object enabling the Timestamp hook:
+The following is an example of `OCI hook JSON configuration file
+<https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
+enabling the Timestamp hook:
 
 .. code-block:: json
 
     {
-        "prestart": [
-            {
-                "path": "/opt/sarus/bin/timestamp_hook",
-                "env": [
-                    "TIMESTAMP_HOOK_MESSAGE=After-runc"
-                ]
-            }
-        ]
+        "version": "1.0.0",
+        "hook": {
+            "path": "/opt/sarus/bin/timestamp_hook",
+            "env": [
+                "TIMESTAMP_HOOK_MESSAGE=After-runc"
+            ]
+        },
+        "when": {
+            "always": true
+        },
+        "stages": ["prestart"]
     }
 
 As mentioned above, the real value of the Timestamp hook lies in interleaving it
 between other hooks in order to have a measurement of the elapsed time.
-For example, using other hooks described in this documentation:
-
-.. code-block:: json
-
-    {
-        "prestart": [
-            {
-                "path": "/opt/sarus/bin/timestamp_hook",
-                "env": [
-                    "TIMESTAMP_HOOK_MESSAGE=After-runc"
-                ]
-            },
-            {
-                "path": "/opt/sarus/bin/nvidia-container-runtime-hook",
-                "args": ["nvidia-container-runtime-hook", "-config=/opt/sarus/etc/nvidia-hook-config.toml", "prestart"],
-                "env": [
-                    "PATH=/usr/local/libnvidia-container_1.0.0-rc.2/bin",
-                    "LD_LIBRARY_PATH=/usr/local/libnvidia-container_1.0.0-rc.2/lib"
-                ]
-            },
-            {
-                "path": "/opt/sarus/bin/timestamp_hook",
-                "env": [
-                    "TIMESTAMP_HOOK_MESSAGE=After-NVIDIA-hook"
-                ]
-            },
-            {
-                "path": "/opt/sarus/bin/mpi_hook",
-                "env": [
-                    "MPI_LIBS=/usr/lib64/mvapich2-2.2/lib/libmpi.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpicxx.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpifort.so.12.0.5",
-                    "MPI_DEPENDENCY_LIBS=",
-                    "BIND_MOUNTS=",
-                    "PATH=/sbin"
-                ]
-            },
-            {
-                "path": "/opt/sarus/bin/timestamp_hook",
-                "env": [
-                    "TIMESTAMP_HOOK_MESSAGE=After-MPI-hook"
-                ]
-            },
-            {
-                "path": "/opt/sarus/bin/ssh_hook",
-                "env": [
-                    "HOOK_BASE_DIR=/home",
-                    "PASSWD_FILE=/opt/sarus/etc/passwd",
-                    "OPENSSH_DIR=/opt/sarus/openssh"
-                ],
-                "args": [
-                    "ssh_hook",
-                    "start-sshd"
-                ]
-            },
-            {
-                "path": "/opt/sarus/bin/timestamp_hook",
-                "env": [
-                    "TIMESTAMP_HOOK_MESSAGE=After-SSH-hook"
-                ]
-            },
-            {
-                "path": "/opt/sarus/bin/slurm_global_sync_hook",
-                "env": [
-                    "HOOK_BASE_DIR=/home",
-                    "PASSWD_FILE=/opt/sarus/etc/passwd"
-                ]
-            },
-            {
-                "path": "/opt/sarus/bin/timestamp_hook",
-                "env": [
-                    "TIMESTAMP_HOOK_MESSAGE=After-SLURM-sync-hook"
-                ]
-            }
-        ]
-    }
-
-The previous example would produce an output in the logfile like the following:
+For example, using other hooks described in this documentation and creating multiple
+Timestamp hook's JSON configuration files:
 
 .. code-block:: bash
 
-    [1552438146.449463] [nid07641-16741] [hook] [INFO] Timestamp hook: After-runc
-    [1552438147.334070] [nid07641-16752] [hook] [INFO] Timestamp hook: After-NVIDIA-hook
-    [1552438147.463971] [nid07641-16760] [hook] [INFO] Timestamp hook: After-MPI-hook
-    [1552438147.502217] [nid07641-16762] [hook] [INFO] Timestamp hook: After-SSH-hook
-    [1552438147.624725] [nid07641-16768] [hook] [INFO] Timestamp hook: After-SLURM-sync-hook
+    $ ls /opt/sarus/etc/hooks.d
+    00-timestamp-hook.json
+    01-glibc-hook.json
+    01-timestamp-hook.json
+    02-nvidia-hook.json
+    02-timestamp-hook.json
+    03-mpi-hook.json
+    03-timestamp-hook.json
+    04-ssh-hook.json
+    04-timestamp-hook.json
+    05-slurm-global-sync-hook.json
+    05-timestamp-hook.json
+
+The previous example could produce an output in the logfile like the following:
+
+.. code-block:: bash
+
+    [775589.671527655] [dom101-12385] [hook] [INFO] Timestamp hook: After-runc
+    [775589.675871678] [dom101-12386] [hook] [INFO] Timestamp hook: After-glibc-hook
+    [775589.682727735] [dom101-12392] [hook] [INFO] Timestamp hook: After-NVIDIA-hook
+    [775589.685961371] [dom101-12393] [hook] [INFO] Timestamp hook: After-MPI-hook
+    [775589.690460309] [dom101-12394] [hook] [INFO] Timestamp hook: After-SSH-hook
+    [775589.693946863] [dom101-12396] [hook] [INFO] Timestamp hook: After-SLURM-global-sync-hook
 
 
 Sarus support at runtime

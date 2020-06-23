@@ -193,6 +193,15 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
 }
 
 TEST(ConfigsMergerTestGroup, command_to_execute) {
+    // init process
+    {
+        auto configRAII = test_utility::config::makeConfig();
+        auto& config = configRAII.config;
+        config->commandRun.addInitProcess = true;
+        config->commandRun.execArgs = common::CLIArguments{"cmd-cli"};
+        auto metadata = common::ImageMetadata{};
+        CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == common::CLIArguments{"/dev/init", "--", "cmd-cli"}));
+    }
     // only CLI cmd
     {
         auto configRAII = test_utility::config::makeConfig();

@@ -14,7 +14,6 @@
 
 #include "common/Error.hpp"
 #include "common/Logger.hpp"
-#include "common/SecurityChecks.hpp"
 #include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
 #include "SshHook.hpp"

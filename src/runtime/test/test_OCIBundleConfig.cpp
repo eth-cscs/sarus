@@ -60,20 +60,12 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     config->userIdentity.gid = 1000; // GID hardcoded in expected json file
     config->userIdentity.supplementaryGids = std::vector<gid_t>{2000, 3000, 4000, 1000}; // GIDs hardcoded in expected json file
     setGidOfTtyInEtcGroup(config, 5); // gid hardcoded in expected json file
-    config->imageID = common::ImageID{"test", "test", "test", "test_image"};
 
     // create test bundle
     auto bundleDir = common::PathRAII{boost::filesystem::path{config->json["OCIBundleDir"].GetString()}};
     auto actualConfigFile = bundleDir.getPath() / "config.json";
     auto expectedConfigFile = boost::filesystem::path{__FILE__}.parent_path() / "expected_config.json";
     common::createFoldersIfNecessary(bundleDir.getPath());
-
-    // create dummy metadata file in image repo
-    auto metadataFile = common::PathRAII{boost::filesystem::path(config->directories.images / (config->imageID.getUniqueKey() + ".meta"))};
-    common::createFileIfNecessary(metadataFile.getPath());
-    std::ofstream metadataStream(metadataFile.getPath().c_str());
-    metadataStream << "{}";
-    metadataStream.close();
 
     // run
     runtime::OCIBundleConfig{config}.generateConfigFile();

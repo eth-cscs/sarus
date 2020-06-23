@@ -19,7 +19,7 @@ class TestMPIHook(unittest.TestCase):
     """
     These tests verify that the host MPI libraries are properly brought into the container.
     """
-    _SARUS_CONFIG_FILE = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/sarus.json"
+    _OCIHOOK_CONFIG_FILE = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/hooks.d/mpi_hook.json"
 
     _SITE_LIBS_PREFIX = tempfile.mkdtemp()
 
@@ -34,12 +34,12 @@ class TestMPIHook(unittest.TestCase):
     def setUpClass(cls):
         cls._pull_docker_images()
         cls._create_site_resources()
-        cls._modify_bundle_config()
+        cls._enable_hook()
 
     @classmethod
     def tearDownClass(cls):
         cls._undo_create_site_resources()
-        cls._undo_modify_bundle_config()
+        cls._disable_hook()
 
     @classmethod
     def _pull_docker_images(cls):
@@ -68,37 +68,34 @@ class TestMPIHook(unittest.TestCase):
         subprocess.call(["rm", "-r", cls._SITE_LIBS_PREFIX])
 
     @classmethod
-    def _modify_bundle_config(cls):
-        # make backup of config file
-        subprocess.call(["sudo", "cp", cls._SARUS_CONFIG_FILE, cls._SARUS_CONFIG_FILE + ".bak"])
+    def _enable_hook(cls):
+        mpi_libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_LIBS]
+        mpi_dependency_libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_DEPENDENCY_LIBS]
 
-        # Build OCIHooks object
-        mpi_hook = dict()
-        mpi_hook["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/mpi_hook"
-        mpi_hook["env"] = list()
-        mpi_hook["env"].append("LDCONFIG_PATH=" + shutil.which("ldconfig"))
-        libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_LIBS]
-        mpi_hook["env"].append("MPI_LIBS=" + ":".join(libs))
-        libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_DEPENDENCY_LIBS]
-        mpi_hook["env"].append("MPI_DEPENDENCY_LIBS=" + ":".join(libs))
+        # create OCI hook's config file
+        hook = dict()
+        hook["version"] = "1.0.0"
+        hook["hook"] = dict()
+        hook["hook"]["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/mpi_hook"
+        hook["hook"]["env"] = [
+            "LDCONFIG_PATH=" + shutil.which("ldconfig"),
+            "MPI_LIBS=" + ":".join(mpi_libs),
+            "MPI_DEPENDENCY_LIBS=" + ":".join(mpi_dependency_libs),
+        ]
 
-        hooks = dict()
-        hooks["prestart"] = [mpi_hook]
+        hook["when"] = dict()
+        hook["when"]["annotations"] = {"^com.hooks.mpi.enabled$": "^true$"}
+        hook["stages"] = ["prestart"]
 
-        # Modify config file
-        with open(cls._SARUS_CONFIG_FILE, 'r') as f:
-            data = f.read().replace('\n', '')
-        config = json.loads(data)
-        config["OCIHooks"] = hooks
-        data = json.dumps(config)
-        with open("sarus.json.dummy", 'w') as f:
-            f.write(data)
-        subprocess.check_output(["sudo", "cp", "sarus.json.dummy", cls._SARUS_CONFIG_FILE])
-        os.remove("sarus.json.dummy")
+        with open("hook_config.json.tmp", 'w') as f:
+            f.write(json.dumps(hook))
+
+        subprocess.check_output(["sudo", "mv", "hook_config.json.tmp", cls._OCIHOOK_CONFIG_FILE])
+        subprocess.check_output(["sudo", "chown", "root:root", cls._OCIHOOK_CONFIG_FILE])
 
     @classmethod
-    def _undo_modify_bundle_config(cls):
-        subprocess.call(["sudo", "mv", cls._SARUS_CONFIG_FILE + ".bak", cls._SARUS_CONFIG_FILE])
+    def _disable_hook(cls):
+        subprocess.call(["sudo", "rm", cls._OCIHOOK_CONFIG_FILE])
 
     def setUp(self):
         self._mpi_command_line_option = None

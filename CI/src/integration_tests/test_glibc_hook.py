@@ -26,7 +26,7 @@ class TestGlibcHook(unittest.TestCase):
     """
     These tests verify that the host Glibc libraries are properly brought into the container.
     """
-    _SARUS_CONFIG_FILE = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/sarus.json"
+    _OCIHOOK_CONFIG_FILE = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/hooks.d/glibc_hook.json"
     _HOST_GLIBC_LIBS = [
         os.path.join(_get_glibc_path(), lib) for lib in (
             "ld-linux-x86-64.so.2",
@@ -51,11 +51,11 @@ class TestGlibcHook(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls._pull_docker_images()
-        cls._modify_bundle_config()
+        cls._enable_hook()
 
     @classmethod
     def tearDownClass(cls):
-        cls._undo_modify_bundle_config()
+        cls._disable_hook()
 
     @classmethod
     def _pull_docker_images(cls):
@@ -64,35 +64,30 @@ class TestGlibcHook(unittest.TestCase):
         util.pull_image_if_necessary(is_centralized_repository=False, image="fedora:latest") # assumption: glibc >= host's glibc
 
     @classmethod
-    def _modify_bundle_config(cls):
-        # make backup of config file
-        subprocess.call(["sudo", "cp", cls._SARUS_CONFIG_FILE, cls._SARUS_CONFIG_FILE + ".bak"])
+    def _enable_hook(cls):
+        # create OCI hook's config file
+        hook = dict()
+        hook["version"] = "1.0.0"
+        hook["hook"] = dict()
+        hook["hook"]["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/glibc_hook"
+        hook["hook"]["env"] = [
+            "GLIBC_LIBS=" + ":".join(cls._HOST_GLIBC_LIBS),
+            "LDCONFIG_PATH=" + shutil.which("ldconfig"),
+            "READELF_PATH=" + shutil.which("readelf"),
+        ]
+        hook["when"] = dict()
+        hook["when"]["annotations"] = {"^com.hooks.glibc.enabled$": "^true$"}
+        hook["stages"] = ["prestart"]
 
-        # Build OCIHooks object
-        glibc_hook = dict()
-        glibc_hook["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/glibc_hook"
-        glibc_hook["env"] = list()
-        glibc_hook["env"].append("GLIBC_LIBS=" + ":".join(cls._HOST_GLIBC_LIBS))
-        glibc_hook["env"].append("LDCONFIG_PATH=" + shutil.which("ldconfig"))
-        glibc_hook["env"].append("READELF_PATH=" + shutil.which("readelf"))
+        with open("hook_config.json.tmp", 'w') as f:
+            f.write(json.dumps(hook))
 
-        hooks = dict()
-        hooks["prestart"] = [glibc_hook]
-
-        # Modify config file
-        with open(cls._SARUS_CONFIG_FILE, 'r') as f:
-            data = f.read().replace('\n', '')
-        config = json.loads(data)
-        config["OCIHooks"] = hooks
-        data = json.dumps(config)
-        with open("sarus.json.dummy", 'w') as f:
-            f.write(data)
-        subprocess.check_output(["sudo", "cp", "sarus.json.dummy", cls._SARUS_CONFIG_FILE])
-        os.remove("sarus.json.dummy")
+        subprocess.check_output(["sudo", "mv", "hook_config.json.tmp", cls._OCIHOOK_CONFIG_FILE])
+        subprocess.check_output(["sudo", "chown", "root:root", cls._OCIHOOK_CONFIG_FILE])
 
     @classmethod
-    def _undo_modify_bundle_config(cls):
-        subprocess.call(["sudo", "mv", cls._SARUS_CONFIG_FILE + ".bak", cls._SARUS_CONFIG_FILE])
+    def _disable_hook(cls):
+        subprocess.call(["sudo", "rm", cls._OCIHOOK_CONFIG_FILE])
 
     def setUp(self):
         self._glibc_command_line_option = None

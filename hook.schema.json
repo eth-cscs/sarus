@@ -1,0 +1,71 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "OCI Hook",
+    "description": "OCI hook configuration file",
+    "type": "object",
+    "properties": {
+        "version": {
+            "type": "string"
+        },
+        "hook": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "$ref": "definitions.schema.json#/AbsolutePath"
+                },
+                "args": {
+                    "$ref": "definitions.schema.json#/ArrayOfStrings"
+                },
+                "env": {
+                    "$ref": "definitions.schema.json#/ArrayOfStrings"
+                },
+                "timeout": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            },
+            "required": [
+                "path"
+            ]
+        },
+        "when": {
+            "type": "object",
+            "properties": {
+                "always": {
+                    "type": "boolean"
+                },
+                "annotations": {
+                    "type": "object",
+                    "patternProperties": {
+                        "": { "type": "string" }
+                    }
+                },
+                "commands": {
+                    "$ref": "definitions.schema.json#/ArrayOfStrings"
+                },
+                "hasBindMounts": {
+                    "type": "boolean"
+                }
+            },
+            "minProperties": 1
+        },
+        "stages": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/Stage"
+            }
+        }
+    },
+    "additionalProperties": false,
+    "required": [
+        "version",
+        "hook",
+        "when",
+        "stages"
+    ],
+    "definitions" : {
+        "Stage": {
+            "enum": ["prestart", "poststart", "poststop"]
+        }
+    }
+}

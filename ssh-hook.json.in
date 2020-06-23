@@ -1,0 +1,21 @@
+{
+    "version": "1.0.0",
+    "hook": {
+        "path": "@CMAKE_INSTALL_PREFIX@/bin/ssh_hook",
+        "env": [
+            "HOOK_BASE_DIR=/home",
+            "PASSWD_FILE=@CMAKE_INSTALL_PREFIX@/etc/passwd",
+            "OPENSSH_DIR=@CMAKE_INSTALL_PREFIX@/openssh"
+        ],
+        "args": [
+            "ssh_hook",
+            "start-sshd"
+        ]
+    },
+    "when": {
+        "annotations": {
+            "^com.hooks.ssh.enabled$": "^true$"
+        }
+    },
+    "stages": ["prestart"]
+}

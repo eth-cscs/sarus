@@ -143,13 +143,6 @@ void Hook::parseConfigJSONOfBundle() {
 
     hooks::common::utility::applyLoggingConfigIfAvailable(json);
 
-    if(!json.HasMember("annotations")
-       || !json["annotations"].HasMember("com.hooks.slurm-global-sync.enabled")
-       || json["annotations"]["com.hooks.slurm-global-sync.enabled"].GetString() != std::string{"true"}) {
-        isHookEnabled = false;
-        return;
-    }
-
     // get environment variables
     auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
     if(env.find("SLURM_JOB_ID") == env.cend()

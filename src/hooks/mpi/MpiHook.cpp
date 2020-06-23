@@ -40,10 +40,6 @@ MpiHook::MpiHook() {
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     sarus::hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
-    if(!isHookEnabled) {
-        log("Initialization interrupted (hook disabled)", sarus::common::LogLevel::INFO);
-        return;
-    }
     parseEnvironmentVariables();
     // Load Container Libraries
     auto containerLibPaths = sarus::common::getSharedLibsFromDynamicLinker(ldconfig, rootfsDir);
@@ -58,11 +54,6 @@ MpiHook::MpiHook() {
 }
 
 void MpiHook::activateMpiSupport() {
-    if(!isHookEnabled) {
-        log("Not activating MPI support (hook disabled)", sarus::common::LogLevel::INFO);
-        return;
-    }
-
     log("Activating MPI support", sarus::common::LogLevel::INFO);
 
     if(hostToContainerMpiLibs.empty()) {
@@ -96,12 +87,6 @@ void MpiHook::parseConfigJSONOfBundle() {
     }
     else {
         rootfsDir = bundleDir / root;
-    }
-
-    if(json.HasMember("annotations")
-       && json["annotations"].HasMember("com.hooks.mpi.enabled")
-       && json["annotations"]["com.hooks.mpi.enabled"].GetString() == std::string{"true"}) {
-        isHookEnabled = true;
     }
 
     log("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);

@@ -41,11 +41,6 @@ public:
         cleanup();
     }
 
-    Checker& setAnnotationsInConfigJSON(const std::unordered_map<std::string, std::string>& annotations) {
-        this->annotations = annotations;
-        return *this;
-    }
-
     Checker& setHostMpiLibraries(const std::vector<boost::filesystem::path>& libs) {
         for(const auto& lib : libs) {
             hostMpiLibs.push_back(bundleDir / lib);
@@ -106,7 +101,8 @@ public:
 private:
     void setupTestEnvironment() const {
         sarus::common::createFoldersIfNecessary(rootfsDir / "etc");
-        createOCIBundleConfigJSON();
+        auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
+        sarus::common::writeJSON(doc, bundleDir / "config.json");
         createLibraries();
         setupDynamicLinkerInContainer();
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
@@ -114,19 +110,6 @@ private:
         sarus::common::setEnvironmentVariable("MPI_LIBS=" + sarus::common::makeColonSeparatedListOfPaths(hostMpiLibs));
         sarus::common::setEnvironmentVariable("MPI_DEPENDENCY_LIBS=" + sarus::common::makeColonSeparatedListOfPaths(hostDependencyLibs));
         sarus::common::setEnvironmentVariable("BIND_MOUNTS=" + sarus::common::makeColonSeparatedListOfPaths(bindMounts));
-    }
-
-    void createOCIBundleConfigJSON() const {
-        auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
-        auto& allocator = doc.GetAllocator();
-
-        for(const auto& annotation : annotations) {
-            auto key = rj::Value{annotation.first.c_str(), allocator};
-            auto value = rj::Value{annotation.second.c_str(), allocator};
-            doc["annotations"].AddMember(key, value, allocator);
-        }
-
-        sarus::common::writeJSON(doc, bundleDir / "config.json");
     }
 
     void createLibraries() const {
@@ -242,7 +225,6 @@ private:
     boost::filesystem::path bundleDir = boost::filesystem::path{ configRAII.config->json["OCIBundleDir"].GetString() };
     boost::filesystem::path rootfsDir = bundleDir / configRAII.config->json["rootfsFolder"].GetString();
 
-    std::unordered_map<std::string, std::string> annotations;
     std::vector<boost::filesystem::path> hostMpiLibs;
     std::vector<boost::filesystem::path> hostDependencyLibs;
     std::vector<boost::filesystem::path> preHookContainerLibs;

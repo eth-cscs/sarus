@@ -3,6 +3,7 @@
     "OCIBundleDir": "@CMAKE_INSTALL_PREFIX@/var/OCIBundleDir",
     "rootfsFolder": "rootfs",
     "prefixDir": "@CMAKE_INSTALL_PREFIX@",
+    "hooksDir": "@CMAKE_INSTALL_PREFIX@/etc/hooks.d",
     "tempDir": "/tmp",
     "localRepositoryBaseDir": "/home",
     "centralizedRepositoryDir": "/var/sarus/centralized_repository",
@@ -17,21 +18,5 @@
             "destination": "/home",
             "flags": {}
         }
-    ],
-    "OCIHooks": {
-        "prestart": [
-            {
-                "path": "@CMAKE_INSTALL_PREFIX@/bin/ssh_hook",
-                "env": [
-                    "HOOK_BASE_DIR=/home",
-                    "PASSWD_FILE=@CMAKE_INSTALL_PREFIX@/etc/passwd",
-                    "OPENSSH_DIR=@CMAKE_INSTALL_PREFIX@/openssh"
-                ],
-                "args": [
-                    "ssh_hook",
-                    "start-sshd"
-                ]
-            }
-        ]
-    }
+    ]
 }

@@ -10,6 +10,5 @@ add_unit_test(test_common_ImageMetadata test_ImageMetadata.cpp "${link_libraries
 add_unit_test(test_common_Lockfile test_Lockfile.cpp "${link_libraries}")
 add_unit_test(test_common_JSON test_JSON.cpp "${link_libraries}")
 add_unit_test(test_common_CLIArguments test_CLIArguments.cpp "${link_libraries}")
-add_unit_test(test_common_SecurityChecks_AsRoot test_SecurityChecks.cpp "${link_libraries}")
 add_unit_test(test_common_PasswdDB test_PasswdDB.cpp "${link_libraries}")
 add_unit_test(test_common_GroupDB test_GroupDB.cpp "${link_libraries}")

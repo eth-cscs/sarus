@@ -37,22 +37,13 @@ GlibcHook::GlibcHook() {
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     sarus::hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
-    if(!isHookEnabled) {
-        logMessage("Initialization interrupted (hook disabled)", sarus::common::LogLevel::INFO);
-        return;
-    }
     parseEnvironmentVariables();
 
     logMessage("Successfully initialized hook", sarus::common::LogLevel::INFO);
 }
 
 void GlibcHook::injectGlibcLibrariesIfNecessary() {
-    if(!isHookEnabled) {
-        logMessage("Not activating glibc replacement (hook disabled)", sarus::common::LogLevel::INFO);
-        return;
-    }
-
-    logMessage("Replacing glibc libraries", sarus::common::LogLevel::INFO);
+    logMessage("Replacing container's glibc libraries", sarus::common::LogLevel::INFO);
 
     auto hostLibc = findLibc(hostLibraries);
     if(!hostLibc) {
@@ -93,14 +84,6 @@ void GlibcHook::parseConfigJSONOfBundle() {
     }
     else {
         rootfsDir = bundleDir / root;
-    }
-
-    // get annotations
-    if(json.HasMember("annotations")
-       && json["annotations"].HasMember("com.hooks.glibc.enabled")
-       && json["annotations"]["com.hooks.glibc.enabled"].GetString() == std::string{"true"}) {
-        isHookEnabled = true;
-        return;
     }
 
     logMessage("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);

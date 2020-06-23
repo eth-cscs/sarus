@@ -23,14 +23,14 @@ class TestRamFilesystem(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         util.pull_image_if_necessary(is_centralized_repository=False, image=cls._CONTAINER_IMAGE)
-        cls._modify_bundle_config()
+        cls._enable_hook()
 
     @classmethod
     def tearDownClass(cls):
-        cls._undo_modify_bundle_config()
+        cls._disable_hook()
 
     @classmethod
-    def _modify_bundle_config(cls):
+    def _enable_hook(cls):
         # make backup of config file
         subprocess.call(["sudo", "cp", cls._SARUS_CONFIG_FILE, cls._SARUS_CONFIG_FILE + ".bak"])
 
@@ -46,7 +46,7 @@ class TestRamFilesystem(unittest.TestCase):
         os.remove("sarus.json.dummy")
 
     @classmethod
-    def _undo_modify_bundle_config(cls):
+    def _disable_hook(cls):
         subprocess.call(["sudo", "mv", cls._SARUS_CONFIG_FILE + ".bak", cls._SARUS_CONFIG_FILE])
 
 class TestRamfs(TestRamFilesystem):

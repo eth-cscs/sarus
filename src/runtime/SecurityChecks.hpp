@@ -20,7 +20,7 @@
 
 
 namespace sarus {
-namespace common {
+namespace runtime {
 
 class SecurityChecks {
 public:
@@ -33,7 +33,6 @@ public:
 private:
     void checkThatPathIsRootOwned(const boost::filesystem::path& path) const;
     void checkThatPathIsNotGroupWritableOrWorldWritable(const boost::filesystem::path& path) const;
-    void checkThatOCIHooksAreUntamperableByType(const std::string& hookType) const;
 
 private:
     std::shared_ptr<const common::Config> config;

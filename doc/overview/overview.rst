@@ -241,7 +241,9 @@ coming from the image. We hereby highlight the most important details:
   thus preventing it from acquiring new privileges by any means. This is done in the
   interest of security.
 * New PID and mount namespaces are setup for the container process.
-* Settings for OCI hooks are :ref:`copied from Sarus's configuration file <config-reference-OCIHooks>`.
+* Settings for OCI hooks are generated from the `OCI hook JSON configuration files
+  <https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
+  which are :doc:`configured</config/configure_hooks>` by the sysadmin.
 
 Container launch
 ----------------

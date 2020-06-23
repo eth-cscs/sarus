@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "Folder": {
+        "type": "string",
+        "pattern": "[^/]"
+    },
+    "AbsolutePath": {
+        "type": "string",
+        "pattern": "^/"
+    },
+    "ArrayOfAbsolutePaths": {
+        "type": "array",
+        "items": {
+            "$ref": "#/AbsolutePath"
+        }
+    },
+    "ArrayOfStrings": {
+        "type": "array",
+        "items": {
+            "type": "string"
+        }
+    }
+}

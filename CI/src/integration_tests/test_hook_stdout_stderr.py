@@ -19,41 +19,36 @@ class TestHookStdoutStderr(unittest.TestCase):
     This test checks that a hook can successfully log messages to stdout and stderr.
     """
 
-    _SARUS_CONFIG_FILE = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/sarus.json"
+    _OCIHOOK_CONFIG_FILE = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/hooks.d/stdout_stderr_test.json"
 
     @classmethod
     def setUpClass(cls):
         util.pull_image_if_necessary(is_centralized_repository=False, image="alpine:latest")
-        cls._enable_stdout_stderr_test_hook()
+        cls._enable_hook()
 
     @classmethod
     def tearDownClass(cls):
-        cls._disable_stdout_stderr_test_hook()
+        cls._disable_hook()
 
     @classmethod
-    def _enable_stdout_stderr_test_hook(cls):
-        # make backup of config file
-        subprocess.call(["sudo", "cp", cls._SARUS_CONFIG_FILE, cls._SARUS_CONFIG_FILE + ".bak"])
-
-        # Build OCIHooks object
+    def _enable_hook(cls):
+        # create OCI hook's config file
         hook = dict()
-        hook["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/stdout_stderr_test_hook"
-        hooks = dict()
-        hooks["prestart"] = [hook]
+        hook["version"] = "1.0.0"
+        hook["hook"] = dict()
+        hook["hook"]["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/stdout_stderr_test_hook"
+        hook["when"] = {"always": True}
+        hook["stages"] = ["prestart"]
 
-        # Modify config file
-        with open(cls._SARUS_CONFIG_FILE, 'r') as f:
-            data = f.read().replace('\n', '')
-        config = json.loads(data)
-        config["OCIHooks"] = hooks
-        data = json.dumps(config)
-        with open("sarus.json.tmp", 'w') as f:
-            f.write(data)
-        subprocess.check_output(["sudo", "cp", "sarus.json.tmp", cls._SARUS_CONFIG_FILE])
+        with open("hook_config.json.tmp", 'w') as f:
+            f.write(json.dumps(hook))
+
+        subprocess.check_output(["sudo", "mv", "hook_config.json.tmp", cls._OCIHOOK_CONFIG_FILE])
+        subprocess.check_output(["sudo", "chown", "root:root", cls._OCIHOOK_CONFIG_FILE])
 
     @classmethod
-    def _disable_stdout_stderr_test_hook(cls):
-        subprocess.call(["sudo", "mv", cls._SARUS_CONFIG_FILE + ".bak", cls._SARUS_CONFIG_FILE])
+    def _disable_hook(cls):
+        subprocess.call(["sudo", "rm", cls._OCIHOOK_CONFIG_FILE])
 
     def test_stdout(self):
         # DEBUG log level

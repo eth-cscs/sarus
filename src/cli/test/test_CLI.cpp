@@ -161,7 +161,7 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
                                     "--glibc",
                                     "--mount=type=bind,source=/source,destination=/destination",
                                     "ubuntu", "bash", "-c", "ls /dev |grep nvidia"});
-        CHECK_EQUAL(conf->commandRun.workdir->string(), "/workdir");
+        CHECK_EQUAL(conf->commandRun.workdir->string(), std::string{"/workdir"});
         CHECK_EQUAL(conf->commandRun.useMPI, true);
         CHECK_EQUAL(conf->commandRun.enableGlibcReplacement, true);
         CHECK_EQUAL(conf->commandRun.mounts.size(), 2); // 1 site mount + 1 user mount

@@ -12,8 +12,8 @@
 #include <memory>
 
 #include "common/PathRAII.hpp"
-#include "common/SecurityChecks.hpp"
 #include "common/Utility.hpp"
+#include "runtime/SecurityChecks.hpp"
 #include "test_utility/config.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
@@ -25,7 +25,7 @@ TEST_GROUP(SecurityChecksTestGroup) {
 TEST(SecurityChecksTestGroup, checkThatPathIsUntamperable) {
     auto configRAII = test_utility::config::makeConfig();
     configRAII.config->json["securityChecks"] = true;
-    auto securityChecks = common::SecurityChecks{configRAII.config};
+    auto securityChecks = runtime::SecurityChecks{configRAII.config};
 
     std::tuple<uid_t, gid_t> rootIds{0, 0};
     std::tuple<uid_t, gid_t> nonRootIds{1000, 1000};

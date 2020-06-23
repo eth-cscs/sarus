@@ -43,7 +43,8 @@ The files checked for the security conditions are:
   - The ``mksquashfs`` utility pointed by ``mksquashfsPath`` in ``sarus.json``.
   - The init binary pointed by ``initPath`` in ``sarus.json``.
   - The OCI-compliant runtime pointed by ``runcPath`` in ``sarus.json``.
-  - All the OCI hooks executables entered in ``sarus.json``.
+  - All the OCI hooks JSON files in the ``hooksDir`` directory specified in ``sarus.json``.
+  - All the executables specified in the OCI hooks JSON files.
 
 For directories, the conditions apply recursively for all their contents.
 The checked directories are:
@@ -51,7 +52,7 @@ The checked directories are:
   - The directory where Sarus will create the OCI bundle.
     This location can be configured through the ``OCIBundleDir`` entry in
     ``sarus.json``.
-  - If the :doc:`SSH Hook </config/ssh-hook>` is enabled in ``sarus.json``,
+  - If the :doc:`SSH Hook </config/ssh-hook>` is installed,
     the directory of the custom OpenSSH software.
 
 Most security checks can be disabled through the :ref:`corresponding parameter

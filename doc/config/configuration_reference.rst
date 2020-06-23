@@ -46,6 +46,19 @@ This path is used to find all needed Sarus-specific utilities.
 
 Recommended value: ``/opt/sarus/<version>``
 
+.. _config-reference-hooksDir:
+
+hooksDir (string, OPTIONAL)
+----------------------------
+Absolute path to the directory containing the `OCI hook JSON configuration files
+<https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_.
+See :doc:`/config/configure_hooks`.
+Sarus will process the JSON files in *hooksDir* and generate the configuration
+file of the OCI bundle accordingly. The hooks will effectively be called by
+the OCI-compliant runtime specified by :ref:`runcPath <config-reference-runcPath>`.
+
+Recommended value: ``/opt/sarus/<version>/etc/hooks.d``
+
 .. _config-reference-tempDir:
 
 tempDir (string, REQUIRED)
@@ -238,16 +251,6 @@ any restriction.
 These limitations apply only to mounts requested through the command line;
 Mounts entered through ``siteMounts`` are not affected by them.
 
-.. _config-reference-OCIHooks:
-
-OCIHooks (object, OPTIONAL)
----------------------------
-Object defining the hooks that will be called to customize the container. Must
-use the format indicated in :doc:`/config/configure_hooks`. This object will be
-copied without modifications by Sarus into the configuration file of the
-generated OCI bundle. The hooks will effectively be called by the OCI-compliant
-runtime specified by :ref:`runcPath <config-reference-runcPath>`.
-
 
 Example configuration file
 ==========================
@@ -258,7 +261,8 @@ Example configuration file
         "securityChecks": true,
         "OCIBundleDir": "/var/sarus/OCIBundleDir",
         "rootfsFolder": "rootfs",
-        "prefixDir": "/opt/sarus",
+        "prefixDir": "/opt/sarus/1.0.0",
+        "hooksDir": "/opt/sarus/1.0.0/etc/hooks.d",
         "tempDir": "/tmp",
         "localRepositoryBaseDir": "/home",
         "centralizedRepositoryDir": "/var/sarus/centralized_repository",
@@ -301,7 +305,7 @@ Example configuration file
         "OCIHooks": {
             "prestart": [
                 {
-                    "path": "/opt/sarus/bin/mpi_hook",
+                    "path": "/opt/sarus/1.0.0/bin/mpi_hook",
                     "env": [
                         "LDCONFIG_PATH=/sbin/ldconfig",
                         "MPI_LIBS=/usr/lib64/mvapich2-2.2/lib/libmpi.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpicxx.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpifort.so.12.0.5",
@@ -310,8 +314,8 @@ Example configuration file
                     ]
                 },
                 {
-                    "path": "/opt/sarus/bin/nvidia-container-runtime-hook.amd64",
-                    "args": ["/opt/sarus/bin/nvidia-container-runtime-hook.amd64", "prestart"],
+                    "path": "/opt/sarus/1.0.0/bin/nvidia-container-runtime-hook.amd64",
+                    "args": ["/opt/sarus/1.0.0/bin/nvidia-container-runtime-hook.amd64", "prestart"],
                     "env": [
                         "PATH=/usr/local/libnvidia-container_1.0.0-rc.2/bin",
                         "LD_LIBRARY_PATH=/usr/local/libnvidia-container_1.0.0-rc.2/lib"

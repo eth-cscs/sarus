@@ -80,10 +80,6 @@ void SshHook::startSshd() {
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
     hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
-    if(!isHookEnabled) {
-        log("Not activating SSH in container (hook disabled)", sarus::common::LogLevel::INFO);
-        return;
-    }
     sshKeysDir = getSshKeysDir();
     sarus::common::copyFolder(opensshDirInHost, opensshDirInBundle);
     copyKeysIntoBundle();
@@ -116,13 +112,6 @@ void SshHook::parseConfigJSONOfBundle() {
     // get uid + gid of user
     uidOfUser = json["process"]["user"]["uid"].GetInt();
     gidOfUser = json["process"]["user"]["gid"].GetInt();
-
-    // get annotations
-    if(json.HasMember("annotations")
-       && json["annotations"].HasMember("com.hooks.ssh.enabled")
-       && json["annotations"]["com.hooks.ssh.enabled"].GetString() == std::string{"true"}) {
-        isHookEnabled = true;
-    }
 
     log("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);
 }

@@ -92,6 +92,19 @@ if [ -e /etc/opt/cray/release/cle-release ]; then
 fi
 
 echo "Successfully configured etc/sarus.json."
+
+# create OCI hooks in etc/hooks.d
+if [ -e etc/hooks.d ]; then
+    for file_json_in in $(cd etc/hooks.d && ls *.json.in); do
+        file_json=$(basename ${file_json_in} .in)
+        echo "Configuring etc/hooks.d/"${file_json}
+        cp etc/hooks.d/${file_json_in} etc/hooks.d/${file_json}
+        exit_on_error "failed to create etc/hooks.d/${file_json}"
+        sed -i etc/hooks.d/${file_json} -e "s|@CMAKE_INSTALL_PREFIX@|${prefix_dir}|g"
+        exit_on_error "failed to set CMAKE_INSTALL_PREFIX in etc/hooks.d/${file_json}"
+    done
+fi
+
 echo "To execute sarus commands run first:"
 echo "export PATH=${prefix_dir}/bin:\${PATH}"
 echo "To persist that for future sessions, consider adding the previous line to your .bashrc or equivalent file"

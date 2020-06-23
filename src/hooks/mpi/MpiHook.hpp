@@ -58,7 +58,6 @@ private:
     void log(const boost::format& message, sarus::common::LogLevel level) const;
 
 private:
-    bool isHookEnabled{ false };
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
     pid_t pidOfContainer;

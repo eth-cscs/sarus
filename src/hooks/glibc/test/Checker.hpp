@@ -36,11 +36,6 @@ namespace test {
 
 class Checker {
 public:
-    Checker& setAnnotationsInConfigJSON(const std::unordered_map<std::string, std::string>& annotations) {
-        this->annotations = annotations;
-        return *this;
-    }
-
     Checker& addHostLibcAndSymlink( const boost::filesystem::path& dummyLib,
                                     const boost::filesystem::path& hostLib,
                                     const boost::filesystem::path& hostSymlink) {
@@ -112,26 +107,13 @@ public:
 private:
     void setupTestEnvironment() const {
         auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
-        createOCIBundleConfigJSON();
+        sarus::common::writeJSON(doc, bundleDir / "config.json");
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
         sarus::common::setEnvironmentVariable("LDCONFIG_PATH=ldconfig");
         sarus::common::setEnvironmentVariable("READELF_PATH=readelf");
         sarus::common::setEnvironmentVariable("GLIBC_LIBS="
             + sarus::common::makeColonSeparatedListOfPaths(hostLibs));
-    }
-
-    void createOCIBundleConfigJSON() const {
-        auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
-        auto& allocator = doc.GetAllocator();
-
-        for(const auto& annotation : annotations) {
-            auto key = rj::Value{annotation.first.c_str(), allocator};
-            auto value = rj::Value{annotation.second.c_str(), allocator};
-            doc["annotations"].AddMember(key, value, allocator);
-        }
-
-        sarus::common::writeJSON(doc, bundleDir / "config.json");
     }
 
     void checkContainerLibraries() const {
@@ -160,7 +142,6 @@ private:
         .parent_path()
         .parent_path() / "CI/dummy_libs";
 
-    std::unordered_map<std::string, std::string> annotations;
     std::vector<boost::filesystem::path> hostLibs;
     std::vector<boost::filesystem::path> containerLibs;
     std::vector<boost::filesystem::path> expectedContainerLibsAfterInjection;

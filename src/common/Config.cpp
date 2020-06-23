@@ -24,11 +24,9 @@ Config::Config(const boost::filesystem::path& sarusInstallationPrefixDir)
 {}
 
 Config::Config(const boost::filesystem::path& configFilename,
-               const boost::filesystem::path& configSchemaFilename) {
-    auto schema = common::readJSON(configSchemaFilename);
-    rapidjson::SchemaDocument schemaDoc(schema);
-    json = common::readAndValidateJSON(configFilename, schemaDoc);
-}
+               const boost::filesystem::path& configSchemaFilename)
+    : json{ common::readAndValidateJSON(configFilename, configSchemaFilename) }
+{}
 
 void Config::Directories::initialize(bool useCentralizedRepository, const common::Config& config) {
     if (useCentralizedRepository) {

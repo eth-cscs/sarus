@@ -104,21 +104,26 @@ will cause the hook to return immediately without performing any action.
 The hook environment also needs to grant visibility to the library and utility
 of libnvidia-container.
 
-The following is an example ``OCIHooks`` object enabling the GPU hook:
+The following is an example of `OCI hook JSON configuration file
+<https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
+enabling the GPU hook:
 
 .. code-block:: json
 
     {
-        "prestart": [
-            {
-                "path": "/opt/sarus/bin/nvidia-container-toolkit-3.1.4",
-                "args": ["/opt/sarus/bin/nvidia-container-toolkit-3.1.4", "prestart"],
-                "env": [
-                    "PATH=/usr/local/libnvidia-container_1.0.6/bin",
-                    "LD_LIBRARY_PATH=/usr/local/libnvidia-container_1.0.6/lib"
-                ]
-            }
-        ]
+        "version": "1.0.0",
+        "hook": {
+            "path": "/opt/sarus/bin//nvidia-container-toolkit",
+            "args": ["/opt/sarus/bin/nvidia-container-toolkit-3.1.4", "prestart"],
+            "env": [
+                "PATH=/usr/local/libnvidia-container_1.0.6/bin",
+                "LD_LIBRARY_PATH=/usr/local/libnvidia-container_1.0.6/lib"
+            ]
+        },
+        "when": {
+            "always": true
+        },
+        "stages": ["prestart"]
     }
 
 ------------
@@ -130,16 +135,19 @@ positional argument. For example:
 .. code-block:: json
 
     {
-        "prestart": [
-            {
-                "path": "/opt/sarus/bin/nvidia-container-toolkit-3.1.4",
-                "args": ["/opt/sarus/bin/nvidia-container-toolkit-3.1.4", "-config=/opt/sarus/etc/nvidia-hook-config.toml", "prestart"],
-                "env": [
-                    "PATH=/usr/local/libnvidia-container_1.0.6/bin",
-                    "LD_LIBRARY_PATH=/usr/local/libnvidia-container_1.0.6/lib"
-                ]
-            }
-        ]
+        "version": "1.0.0",
+        "hook": {
+            "path": "/opt/sarus/bin//nvidia-container-toolkit",
+            "args": ["/opt/sarus/bin/nvidia-container-toolkit-3.1.4", "-config=/opt/sarus/etc/nvidia-hook-config.toml", "prestart"],
+            "env": [
+                "PATH=/usr/local/libnvidia-container_1.0.6/bin",
+                "LD_LIBRARY_PATH=/usr/local/libnvidia-container_1.0.6/lib"
+            ]
+        },
+        "when": {
+            "always": true
+        },
+        "stages": ["prestart"]
     }
 
 Sarus support at runtime

@@ -20,9 +20,9 @@
 #include "common/Config.hpp"
 #include "common/Error.hpp"
 #include "common/Logger.hpp"
-#include "common/SecurityChecks.hpp"
 #include "common/Utility.hpp"
 #include "cli/CLI.hpp"
+#include "runtime/SecurityChecks.hpp"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
         auto sarusInstallationPrefixDir = boost::filesystem::canonical("/proc/self/exe").parent_path().parent_path();
         auto config = std::make_shared<sarus::common::Config>(sarusInstallationPrefixDir);
         config->program_start = program_start;
-        common::SecurityChecks{config}.runSecurityChecks(sarusInstallationPrefixDir);
+        runtime::SecurityChecks{config}.runSecurityChecks(sarusInstallationPrefixDir);
         saveAndClearEnvironmentVariables(*config);
 
 

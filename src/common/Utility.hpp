@@ -82,9 +82,10 @@ bool is64bitSharedLib(const boost::filesystem::path& path, const boost::filesyst
 std::string parseCpusAllowedList(const std::string& procStatus);
 
 std::string readFile(const boost::filesystem::path& path);
+rapidjson::SchemaDocument readJSONSchema(const boost::filesystem::path& schemaFile);
 rapidjson::Document readJSON(const boost::filesystem::path& filename);
-rapidjson::Document readAndValidateJSON(const boost::filesystem::path& configFilename,
-                                        const rapidjson::SchemaDocument& schema);
+rapidjson::Document readAndValidateJSON(const boost::filesystem::path& jsonFile,
+                                        const boost::filesystem::path& schemaFile);
 void writeJSON(const rapidjson::Value& json, const boost::filesystem::path& filename);
 std::string serializeJSON(const rapidjson::Value& json);
 rapidjson::Document convertCppRestJsonToRapidJson(web::json::value&);

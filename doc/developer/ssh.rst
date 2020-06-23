@@ -30,28 +30,32 @@ to the remote container.
 Configuration by the system administrator
 =========================================
 
-Below is an example of how the system administrator should configure the ``OCIHooks`` entry in the
-*sarus.json* in order to enable the SSH hook:
+The following is an example of `OCI hook JSON configuration file
+<https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
+enabling the SSH hook:
 
 .. code-block:: json
 
     {
-        "OCIHooks": {
-            "prestart": [
-                {
-                    "path": "<sarus prefix>/bin/ssh_hook",
-                    "env": [
-                        "HOOK_BASE_DIR=/home",
-                        "PASSWD_FILE=/opt/sarus/etc/passwd",
-                        "OPENSSH_DIR=/opt/sarus/openssh"
-                    ],
-                    "args": [
-                        "ssh_hook",
-                        "start-sshd"
-                    ]
-                }
+        "version": "1.0.0",
+        "hook": {
+            "path": "<sarus prefix>/bin/ssh_hook",
+            "env": [
+                "HOOK_BASE_DIR=/home",
+                "PASSWD_FILE=<sarus prefix>/etc/passwd",
+                "OPENSSH_DIR=<sarus prefix>/openssh"
+            ],
+            "args": [
+                "ssh_hook",
+                "start-sshd"
             ]
-        }
+        },
+        "when": {
+            "annotations": {
+                "^com.hooks.ssh.enabled$": "^true$"
+            }
+        },
+        "stages": ["prestart"]
     }
 
 Architecture
@@ -107,8 +111,8 @@ How the SSH daemon and SSH client are setup in the container
 ------------------------------------------------------------
 
 When the command "sarus run --ssh <image> <command>" is issued, Sarus sets up the OCI bundle and executes
-runc. Then runc executes the OCI prestart hooks specified in sarus.json. The system administrator should have
-specified the SSH hook with the "start-sshd" CLI argument.
+the OCI-compliant runtime. If the SSH hook is active, the OCI-compliant runtime executes the
+SSH hook as a prestart hook passing the "start-sshd" CLI argument.
 
 The hook performs the following operations:
 
@@ -119,14 +123,11 @@ The hook performs the following operations:
 4. Read from stdin the container's state as defined in the OCI specification.
 5. Enter the container's mount namespaces in order to access the container's OCI bundle.
 6. Enter the container's pid namespace in order to start the sshd process inside the container.
-7. Read the container's attributes from the OCI bundle's config.json in order to determine whether
-   the SSH hook is enabled.
-8. If the SSH hook is disabled exit.
-9. Read the user's UID from the OCI bundle's config.json, get the username from the passwd file
+7. Read the user's UID from the OCI bundle's config.json, get the username from the passwd file
    and use it to determine the user's hook directory (where the SSH keys are stored).
-10. Bind mount the custom OpenSSH (executables + configuration files) into the container.
-11. Copy the SSH keys into the container.
-12. Add an "sshd" user to /etc/passwd if necessary.
-13. Chroot to the container and start sshd inside the container.
-14. Bind mount the custom "ssh" binary into the container's /usr/bin, thus the shell
+8. Bind mount the custom OpenSSH (executables + configuration files) into the container.
+9. Copy the SSH keys into the container.
+10. Add an "sshd" user to /etc/passwd if necessary.
+11. Chroot to the container and start sshd inside the container.
+12. Bind mount the custom "ssh" binary into the container's /usr/bin, thus the shell
     will pick the custom binary when the command "ssh" is executed.

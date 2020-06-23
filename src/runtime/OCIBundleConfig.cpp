@@ -19,6 +19,7 @@
 #include "common/GroupDB.hpp"
 #include "common/ImageMetadata.hpp"
 #include "runtime/Utility.hpp"
+#include "runtime/OCIHooksFactory.hpp"
 
 
 namespace rj = rapidjson;
@@ -96,12 +97,6 @@ rj::Value OCIBundleConfig::makeMemberProcess() const {
 
     // args
     auto args = rj::Value{rj::kArrayType};
-    if(config->commandRun.addInitProcess) {
-        args.PushBack(  rj::Value{"/dev/init", *allocator},
-                        *allocator);
-        args.PushBack(  rj::Value{"--", *allocator},
-                        *allocator);
-    }
     for(auto* arg : configsMerger.getCommandToExecuteInContainer()) {
         auto value = rj::Value{arg, *allocator};
         args.PushBack(value, *allocator);
@@ -290,13 +285,32 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
 }
 
 rj::Value OCIBundleConfig::makeMemberHooks() const {
-    if(config->json.HasMember("OCIHooks")) {
-        return rj::Value{config->json["OCIHooks"],
-                         *allocator};
+    auto jsonHooks = rj::Value{rj::kObjectType};
+
+    if(!config->json.HasMember("hooksDir")) {
+        utility::logMessage("Skipping OCI hooks configuration (\"hooksDir\" is not set in Sarus' config)",
+                            common::LogLevel::INFO);
+        return jsonHooks;
     }
-    else {
-        return rj::Value{rj::kObjectType};
+
+    auto hooksDir = boost::filesystem::path{ config->json["hooksDir"].GetString() };
+    auto schemaFile = boost::filesystem::path{ config->json["prefixDir"].GetString() } / "etc/hook.schema.json";
+
+    for(const auto& hook : OCIHooksFactory{}.createHooks(hooksDir, schemaFile)) {
+        if(hook.isActive(config)) {
+            for(const auto& stage : hook.stages) {
+                if(!jsonHooks.HasMember(stage.c_str())) {
+                    auto key = rj::Value{stage.c_str(), *allocator};
+                    jsonHooks.AddMember(key, rj::Value{rj::kArrayType}, *allocator);
+                }
+                auto jsonHook = rj::Document{};
+                jsonHook.CopyFrom(hook.jsonHook, *allocator);
+                jsonHooks[stage.c_str()].PushBack(jsonHook, *allocator);
+            }
+        }
     }
+
+    return jsonHooks;
 }
 
 rapidjson::Value OCIBundleConfig::makeMemberAnnotations() const {

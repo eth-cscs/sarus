@@ -57,7 +57,8 @@ public:
         sarus::common::setEnvironmentVariable("OPENSSH_DIR=" + opensshDirInHost.getPath().string());
 
         // bundle test environment
-        createOCIBundleConfigJSON();
+        auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, idsOfUser);
+        sarus::common::writeJSON(doc, bundleDir / "config.json");
 
         for(const auto& folder : rootfsFolders) {
             auto lowerDir = "/" / folder;
@@ -148,18 +149,6 @@ public:
     void checkContainerHasSshBinary() const {
         //check container's /usr/bin/ssh is /opt/sarus/openssh/bin/ssh
         CHECK(test_utility::filesystem::isSameBindMountedFile(rootfsDir / "usr/bin/ssh", opensshDirInContainer / "bin/ssh"));
-    }
-
-private:
-    void createOCIBundleConfigJSON() const {
-        auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, idsOfUser);
-        auto& allocator = doc.GetAllocator();
-
-        auto annotation_key = rj::Value{"com.hooks.ssh.enabled", allocator};
-        auto annotation_value = rj::Value{"true", allocator};
-        doc["annotations"].AddMember(annotation_key, annotation_value, allocator);
-
-        sarus::common::writeJSON(doc, bundleDir / "config.json");
     }
 
 private:

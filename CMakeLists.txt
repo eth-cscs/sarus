@@ -60,7 +60,8 @@ add_subdirectory(dep)
 add_subdirectory(etc)
 add_subdirectory(src)
 
-install(FILES sarus.json.in sarus.schema.json DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)
+install(FILES sarus.json.in sarus.schema.json hook.schema.json definitions.schema.json DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)
+install(FILES ssh-hook.json.in DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/hooks.d)
 install(FILES configure_installation.sh DESTINATION ${CMAKE_INSTALL_PREFIX} PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE

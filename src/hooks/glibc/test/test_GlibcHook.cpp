@@ -23,21 +23,13 @@ TEST_GROUP(GlibcHookTestGroup) {
 };
 
 TEST(GlibcHookTestGroup, test) {
-    // hook disabled
-    Checker{}
-        .setAnnotationsInConfigJSON({{"com.hooks.glibc.enabled", "false"}})
-        .runLdconfigInContainer()
-        .checkSuccess();
-
     // no glibc libraries in host
     Checker{}
-        .setAnnotationsInConfigJSON({{"com.hooks.glibc.enabled", "true"}})
         .runLdconfigInContainer()
         .checkFailure();
 
     // no libc library in host
     Checker{}
-        .setAnnotationsInConfigJSON({{"com.hooks.glibc.enabled", "true"}})
         .addHostLib("ld-linux-x86-64.so.2-host", "/lib64/ld-linux-x86-64.so.2")
         .checkFailure();
 
@@ -45,13 +37,11 @@ TEST(GlibcHookTestGroup, test) {
     // note that here we don't run ldconfig in the container, i.e. we don't generate /etc/ld.so.cache in the container
     // and the hook assumes that the container doesn't have glibc
     Checker{}
-        .setAnnotationsInConfigJSON({{"com.hooks.glibc.enabled", "true"}})
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .checkSuccess();
 
     // no libc library in container (it is possible in a container with only 32-bit glibc)
     Checker{}
-        .setAnnotationsInConfigJSON({{"com.hooks.glibc.enabled", "true"}})
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addHostLib("ld-linux-x86-64.so.2-host", "/lib64/ld-linux-x86-64.so.2")
         .runLdconfigInContainer()
@@ -59,7 +49,6 @@ TEST(GlibcHookTestGroup, test) {
 
     // no libc library in container (only 32-bit libc in container)
     Checker{}
-        .setAnnotationsInConfigJSON({{"com.hooks.glibc.enabled", "true"}})
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addHostLib("ld-linux-x86-64.so.2-host", "/lib64/ld-linux-x86-64.so.2")
         .addContainerLibcAndSymlink("libc.so.6-32bit-container", "/lib/libc-2.25.so", "/lib/libc.so.6", "libc.so.6-32bit-container")
@@ -68,7 +57,6 @@ TEST(GlibcHookTestGroup, test) {
 
     // incompatible libraries (different ABI string)
     Checker{}
-        .setAnnotationsInConfigJSON({{"com.hooks.glibc.enabled", "true"}})
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addContainerLibcAndSymlink("libc.so.5-container", "/lib64/libc-2.25.so", "/lib64/libc.so.5", {})
         .runLdconfigInContainer()
@@ -76,7 +64,6 @@ TEST(GlibcHookTestGroup, test) {
 
     // no glibc injection needed (container's glibc version == host's glibc version)
     Checker{}
-        .setAnnotationsInConfigJSON({{"com.hooks.glibc.enabled", "true"}})
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addContainerLibcAndSymlink("libc.so.6-container", "/lib64/libc-2.26.so", "/lib64/libc.so.6", "libc.so.6-container")
         .runLdconfigInContainer()
@@ -84,7 +71,6 @@ TEST(GlibcHookTestGroup, test) {
 
     // no glibc injection needed (container's glibc version > host's glibc version)
     Checker{}
-        .setAnnotationsInConfigJSON({{"com.hooks.glibc.enabled", "true"}})
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addContainerLibcAndSymlink("libc.so.6-container", "/lib64/libc-2.27.so", "/lib64/libc.so.6", "libc.so.6-container")
         .runLdconfigInContainer()
@@ -92,7 +78,6 @@ TEST(GlibcHookTestGroup, test) {
 
     // glibc injection of single library
     Checker{}
-        .setAnnotationsInConfigJSON({{"com.hooks.glibc.enabled", "true"}})
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addContainerLibcAndSymlink("libc.so.6-container", "/lib64/libc-2.25.so", "/lib64/libc.so.6", "libc.so.6-host")
         .runLdconfigInContainer()
@@ -100,7 +85,6 @@ TEST(GlibcHookTestGroup, test) {
 
     // glibc injection of single library (some libraries missing in container)
     Checker{}
-        .setAnnotationsInConfigJSON({{"com.hooks.glibc.enabled", "true"}})
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addHostLib("ld-linux-x86-64.so.2-host", "/lib64/ld-linux-x86-64.so.2")
         .addContainerLibcAndSymlink("libc.so.6-container", "/lib64/libc-2.25.so", "/lib64/libc.so.6", "libc.so.6-host")
@@ -109,7 +93,6 @@ TEST(GlibcHookTestGroup, test) {
 
     // glibc injection of multiple libraries
     Checker{}
-        .setAnnotationsInConfigJSON({{"com.hooks.glibc.enabled", "true"}})
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addHostLib("ld-linux-x86-64.so.2-host", "/lib64/ld-linux-x86-64.so.2")
         .addContainerLibcAndSymlink("libc.so.6-container", "/lib64/libc-2.25.so", "/lib64/libc.so.6", "libc.so.6-host")
@@ -119,7 +102,6 @@ TEST(GlibcHookTestGroup, test) {
 
     // mixed 32-bit and 64-bit libraries in container
     Checker{}
-        .setAnnotationsInConfigJSON({{"com.hooks.glibc.enabled", "true"}})
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addHostLib("ld-linux-x86-64.so.2-host", "/lib64/ld-linux-x86-64.so.2")
         .addContainerLibcAndSymlink("libc.so.6-32bit-container", "/lib/libc-2.25.so", "/lib/libc.so.6", "libc.so.6-32bit-container")

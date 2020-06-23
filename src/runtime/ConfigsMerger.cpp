@@ -131,14 +131,20 @@ common::CLIArguments ConfigsMerger::getCommandToExecuteInContainer() const {
     utility::logMessage("Building command to execute in container", common::LogLevel::INFO);
 
     auto result = common::CLIArguments{};
-    // first of all entrypoint (CLI entrypoint overrides metadata/image entrypoint)
+
+    // first of all init program (if requested)
+    if(config->commandRun.addInitProcess) {
+        result.push_back("/dev/init");
+        result.push_back("--");
+    }
+    // then entrypoint (if any) (CLI entrypoint has priority over metadata/image entrypoint)
     if(config->commandRun.entrypoint) {
-        result = *config->commandRun.entrypoint;
+        result += *config->commandRun.entrypoint;
     }
     else if(metadata.entry) {
-        result = *metadata.entry;
+        result += *metadata.entry;
     }
-    // then cmd (CLI command overrides metadata/image command)
+    // then cmd (CLI command has priority over metadata/image command)
     if(!config->commandRun.execArgs.empty()) {
         result += config->commandRun.execArgs;
     }

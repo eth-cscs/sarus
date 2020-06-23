@@ -109,8 +109,16 @@
 	"hooks": {
 		"prestart" : [
 			{
-				"path": "/bin/hook",
-				"env": []
+				"path": "/dir/test_hook",
+				"args": ["test_hook", "arg"],
+				"env": ["KEY0=VALUE0", "KEY1=VALUE1"]
+			}
+		],
+		"poststop" : [
+			{
+				"path": "/dir/test_hook",
+				"args": ["test_hook", "arg"],
+				"env": ["KEY0=VALUE0", "KEY1=VALUE1"]
 			}
 		]
 	},

@@ -69,6 +69,7 @@ class TestSecurityChecks(unittest.TestCase):
 
     def test_untamperable_hooks_and_deps(self):
         # ssh is only default hook enabled
+        self._check_untamperable("/opt/sarus/default/etc/hooks.d/ssh-hook.json", "/opt/sarus/default/etc/hooks.d/ssh-hook.json")
         self._check_untamperable("/opt/sarus/default/bin/ssh_hook", "/opt/sarus/default/bin/ssh_hook")
         self._check_untamperable("/opt/sarus/default/openssh", "/opt/sarus/default/openssh")
 

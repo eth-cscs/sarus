@@ -46,7 +46,6 @@ private:
                     std::ostream& out=std::cout, std::ostream& err=std::cerr) const;
 
 private:
-    bool isHookEnabled{ false };
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
     pid_t pidOfContainer;

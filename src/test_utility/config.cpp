@@ -42,6 +42,7 @@ static void populateJSON(rj::Document& document) {
     auto& allocator = document.GetAllocator();
 
     auto prefixDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("sarus-test-prefix-dir"));
+    auto hooksDir = prefixDir / "etc/hooks.d";
     auto bundleDir = prefixDir / "var/OCIBundle";
     auto localRepositoryBaseDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("sarus-test-localRepositoryBaseDir"));
 
@@ -56,6 +57,9 @@ static void populateJSON(rj::Document& document) {
                         allocator);
     document.AddMember( "prefixDir",
                         rj::Value{prefixDir.c_str(), allocator},
+                        allocator);
+    document.AddMember( "hooksDir",
+                        rj::Value{hooksDir.c_str(), allocator},
                         allocator);
     document.AddMember( "tempDir",
                         rj::Value{"/tmp", allocator},
@@ -123,15 +127,30 @@ static void populateJSON(rj::Document& document) {
     disallowExactValue.PushBack("/opt", allocator);
     userMountsValue.AddMember("notAllowedPaths", disallowExactValue, allocator);
     document.AddMember("userMounts", userMountsValue, allocator);
+}
 
-    // OCIHooks
-    auto hook = rj::Value{ rj::kObjectType };
-    hook.AddMember("path", rj::Value{"/bin/hook"}, allocator);
-    hook.AddMember("env", rj::Value{rj::kArrayType}, allocator);
-    auto hooks = rj::Value{ rj::kObjectType };
-    hooks.AddMember("prestart", rj::Value{rj::kArrayType}, allocator);
-    hooks["prestart"].GetArray().PushBack(hook, allocator);
-    document.AddMember("OCIHooks", hooks, allocator);
+void createOCIHook(const boost::filesystem::path& hooksDir) {
+    common::createFoldersIfNecessary(hooksDir);
+
+    auto hook = hooksDir / "test-hook.json";
+    auto os = std::ofstream{ hook.c_str() };
+
+    os <<
+    "{"
+    "   \"version\": \"1.0.0\","
+    "   \"hook\": {"
+    "       \"path\": \"/dir/test_hook\","
+    "       \"args\": [\"test_hook\", \"arg\"],"
+    "       \"env\": ["
+    "           \"KEY0=VALUE0\","
+    "           \"KEY1=VALUE1\""
+    "       ]"
+    "   },"
+    "   \"when\": {"
+    "       \"always\": true"
+    "   },"
+    "   \"stages\": [\"prestart\", \"poststop\"]"
+    "}";
 }
 
 ConfigRAII makeConfig() {
@@ -141,15 +160,30 @@ ConfigRAII makeConfig() {
     populateJSON(raii.config->json);
 
     auto prefixDir = boost::filesystem::path{ raii.config->json["prefixDir"].GetString() };
+
+    // passwd + group
     common::createFoldersIfNecessary(prefixDir / "etc");
     common::executeCommand("getent passwd >" + prefixDir.string() + "/etc/passwd");
     common::executeCommand("getent group >" + prefixDir.string() + "/etc/group");
 
-    auto repository = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("./sarus-test-repository"));
-    raii.config->directories.repository = repository;
-    raii.config->directories.temp = raii.config->directories.repository / "temp";
-    raii.config->directories.cache = raii.config->directories.repository / "cache";
-    raii.config->directories.images = raii.config->directories.repository / "images";
+    // JSON schemas
+    auto repoRootDir = boost::filesystem::path{__FILE__}.parent_path().parent_path().parent_path();
+    common::copyFile(repoRootDir / "definitions.schema.json", prefixDir / "etc/definitions.schema.json");
+    common::copyFile(repoRootDir / "sarus.schema.json", prefixDir / "etc/sarus.schema.json");
+    common::copyFile(repoRootDir / "hook.schema.json", prefixDir / "etc/hook.schema.json");
+
+    // hooks
+    createOCIHook(raii.config->json["hooksDir"].GetString());
+
+    // directories
+    raii.config->directories.initialize(false, *raii.config);
+
+    // image + metadata
+    raii.config->imageID = common::ImageID{"test", "test", "test", "test_image"};
+    common::createFileIfNecessary(raii.config->getMetadataFileOfImage());
+    std::ofstream metadataStream(raii.config->getMetadataFileOfImage().c_str());
+    metadataStream << "{}";
+    metadataStream.close();
 
     raii.config->commandRun.hostEnvironment = {{"key", "value"}};
     raii.config->commandRun.bundleAnnotations = {{"com.test.dummy_key", "dummy_value"}};

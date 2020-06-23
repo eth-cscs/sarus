@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.3.0]
+
+### Changed
+
+- The OCI hooks are now configured thorough [OCI hook JSON configuration files](https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md). The previous OCI hooks configuration through `sarus.json` is no longer supported and Sarus Administrators should reconfigure their hooks according to the Sarus' [hook documentation page](https://sarus.readthedocs.io/en/stable/config/configure_hooks.html)
+
 
 ## [1.2.0] - 2020-06-17
 
