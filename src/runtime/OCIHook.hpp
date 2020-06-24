@@ -28,6 +28,7 @@ class OCIHook {
 public:
     class Condition {
     public:
+        virtual ~Condition() = default;
         virtual bool evaluate(std::shared_ptr<const common::Config>) const = 0;
     };
 
