@@ -42,7 +42,7 @@ class Config {
             BuildTime();
             std::string version;
             boost::filesystem::path localRepositoryFolder = ".sarus";
-            boost::filesystem::path openSshArchive;
+            boost::filesystem::path dropbearmultiBuildArtifact;
         };
 
         struct Directories {

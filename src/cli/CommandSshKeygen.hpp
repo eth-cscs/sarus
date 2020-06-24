@@ -42,8 +42,8 @@ public:
         common::setEnvironmentVariable("HOOK_BASE_DIR=" + std::string{conf->json["localRepositoryBaseDir"].GetString()});
         auto passwdFile = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "etc/passwd";
         common::setEnvironmentVariable("PASSWD_FILE=" + passwdFile.string());
-        auto opensshDir = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "openssh";
-        common::setEnvironmentVariable("OPENSSH_DIR=" + opensshDir.string());
+        auto dropbearDir = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "dropbear";
+        common::setEnvironmentVariable("DROPBEAR_DIR=" + dropbearDir.string());
 
         auto sshHook = boost::filesystem::path{conf->json["prefixDir"].GetString()} / "bin/ssh_hook";
         auto args = common::CLIArguments{sshHook.string(), "keygen"};

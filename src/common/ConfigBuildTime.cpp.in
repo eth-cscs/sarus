@@ -10,7 +10,9 @@ namespace common {
 
 Config::BuildTime::BuildTime()
     : version{"@LATEST_GIT_TAG@"}
-    , openSshArchive{boost::filesystem::absolute("@OPENSSH_ARCHIVE@")}
+    // path the the dropbearmulti binary in the CMake's build directory
+    // (only needed for tests porpuses)
+    , dropbearmultiBuildArtifact{boost::filesystem::absolute("@DROPBEARMULTI_PATH@")}
 {}
 
 }

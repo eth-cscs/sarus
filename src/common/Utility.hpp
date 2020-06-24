@@ -27,6 +27,7 @@
 
 #include "common/Config.hpp"
 #include "common/Logger.hpp"
+#include "common/UserIdentity.hpp"
 #include "common/AbiCompatibility.hpp"
 
 /**
@@ -43,6 +44,8 @@ void setEnvironmentVariable(const std::string& variable);
 std::string removeWhitespaces(const std::string&);
 std::string replaceString(std::string &buf, const std::string& from, const std::string& to);
 std::string eraseFirstAndLastDoubleQuote(const std::string& buf);
+void switchToUnprivilegedUser(const common::UserIdentity&);
+void switchToPrivilegedUser(const common::UserIdentity&);
 std::string executeCommand(const std::string& command);
 int forkExecWait(const common::CLIArguments& args,
                  const boost::optional<std::function<void()>>& preExecActions = {});

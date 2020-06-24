@@ -16,8 +16,6 @@
 
 #include <sys/stat.h>
 #include <sys/mount.h>
-#include <grp.h>
-#include <errno.h>
 
 #include "common/Utility.hpp"
 #include "runtime/Utility.hpp"
@@ -48,7 +46,7 @@ void Mount::performMount() const {
 
     // switch to user identity to make sure that he has access to the mount source
     auto rootIdentity = common::UserIdentity{};
-    switchToUnprivilegedUser(config->userIdentity);
+    common::switchToUnprivilegedUser(config->userIdentity);
 
     auto rootfsDir = boost::filesystem::path{ config->json["OCIBundleDir"].GetString() }
         / config->json["rootfsFolder"].GetString();
@@ -70,7 +68,7 @@ void Mount::performMount() const {
         SARUS_THROW_ERROR(message.str());
     }
 
-    switchToPrivilegedUser(rootIdentity);
+    common::switchToPrivilegedUser(rootIdentity);
 
     if(boost::filesystem::is_directory(realpathOfSource.get())) {
         common::createFoldersIfNecessary(destinationReal, config->userIdentity.uid, config->userIdentity.gid);
@@ -89,43 +87,6 @@ void Mount::performMount() const {
 
     runtime::utility::logMessage("Successfully performed bind mount", common::LogLevel::DEBUG);
 }
-
-void Mount::switchToUnprivilegedUser(const common::UserIdentity& identity) const {
-    runtime::utility::logMessage(boost::format{"Switching to uprivileged user (uid=%d gid=%d)"}
-                                 % identity.uid % identity.gid,
-                                 common::LogLevel::DEBUG);
-
-    if (setgroups(identity.supplementaryGids.size(), identity.supplementaryGids.data()) != 0) {
-        SARUS_THROW_ERROR("Failed to assume end-user auxiliary gids");
-    }
-    if (setegid(identity.gid) != 0) {
-        SARUS_THROW_ERROR("Failed to assume end-user gid");
-    }
-    if (seteuid(identity.uid) != 0) {
-        SARUS_THROW_ERROR("Failed to assume end-user uid");
-    }
-
-    runtime::utility::logMessage("Successfully switched to uprivileged user", common::LogLevel::DEBUG);
-}
-
-void Mount::switchToPrivilegedUser(const common::UserIdentity& identity) const {
-    runtime::utility::logMessage(boost::format{"Switching to privileged user (uid=%d gid=%d)"}
-                                 % identity.uid % identity.gid,
-                                 common::LogLevel::DEBUG);
-
-    if (seteuid(identity.uid) != 0) {
-        SARUS_THROW_ERROR("Failed to re-assume original user effective uid");
-    }
-    if (setegid(identity.uid) != 0) {
-        SARUS_THROW_ERROR("Failed to re-assume original user effective gid");
-    }
-    if (setgroups(identity.supplementaryGids.size(), identity.supplementaryGids.data()) != 0) {
-        SARUS_THROW_ERROR("Failed to re-assume original user auxiliary gids");
-    }
-
-    runtime::utility::logMessage("Successfully switched to privileged user", common::LogLevel::DEBUG);
-}
-
 
 } // namespace
 } // namespace

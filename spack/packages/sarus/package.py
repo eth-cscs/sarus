@@ -40,7 +40,7 @@ class Sarus(CMakePackage):
     version('1.0.0',   tag='1.0.0')
 
     variant('ssh', default=True,
-            description='Build and install the SSH hook and custom OpenSSH software '
+            description='Build and install the SSH hook and custom SSH software '
                         'to enable connections inside containers')
     variant('configure_installation', default=True,
             description='Run the script to setup a starting Sarus configuration as '

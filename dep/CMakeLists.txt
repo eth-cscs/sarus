@@ -6,13 +6,16 @@ add_custom_target(cpputest_library DEPENDS ${cpputest_file})
 set(CPPUTEST_LIB ${cpputest_file} PARENT_SCOPE)
 set(CPPUTEST_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/cpputest/include PARENT_SCOPE)
 
-# static sshd
+# static ssh binary
 if(${ENABLE_SSH})
-    set(OPENSSH_ARCHIVE ${CMAKE_CURRENT_BINARY_DIR}/openssh.tar CACHE PATH "Archive with the statically-linked openssh")
-    add_custom_command(OUTPUT ${OPENSSH_ARCHIVE} COMMAND bash -c \"cd ${CMAKE_CURRENT_BINARY_DIR} && ${CMAKE_CURRENT_SOURCE_DIR}/build_openssh.sh\")
-    add_custom_target(openssh_archive ALL DEPENDS ${OPENSSH_ARCHIVE})
-    install(CODE "execute_process(COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/openssh)")
-    install(CODE "execute_process(COMMAND tar xf ${OPENSSH_ARCHIVE} -C ${CMAKE_INSTALL_PREFIX}/openssh -p --no-same-owner --strip-components=1)")
-    install(CODE "execute_process(COMMAND chown -R root:root ${CMAKE_INSTALL_PREFIX}/openssh)")
-    install(CODE "execute_process(COMMAND chmod -R g-w ${CMAKE_INSTALL_PREFIX}/openssh)")
+    set(DROPBEARMULTI_PATH ${CMAKE_CURRENT_BINARY_DIR}/dropbearmulti CACHE PATH "Dropbear single executable a la busybox")
+    add_custom_command(OUTPUT ${DROPBEARMULTI_PATH} COMMAND bash -c \"cd ${CMAKE_CURRENT_BINARY_DIR} && ${CMAKE_CURRENT_SOURCE_DIR}/build_dropbear.sh\")
+    add_custom_target(dropbear ALL DEPENDS ${DROPBEARMULTI_PATH})
+    install(FILES ${DROPBEARMULTI_PATH} DESTINATION ${CMAKE_INSTALL_PREFIX}/dropbear/bin PERMISSIONS
+        OWNER_READ OWNER_WRITE OWNER_EXECUTE
+        GROUP_READ GROUP_EXECUTE
+        WORLD_READ WORLD_EXECUTE)
+    install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink dropbearmulti ${CMAKE_INSTALL_PREFIX}/dropbear/bin/dbclient)")
+    install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink dropbearmulti ${CMAKE_INSTALL_PREFIX}/dropbear/bin/dropbear)")
+    install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink dropbearmulti ${CMAKE_INSTALL_PREFIX}/dropbear/bin/dropbearkey)")
 endif(${ENABLE_SSH})

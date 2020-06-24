@@ -5,11 +5,12 @@
         "env": [
             "HOOK_BASE_DIR=/home",
             "PASSWD_FILE=@CMAKE_INSTALL_PREFIX@/etc/passwd",
-            "OPENSSH_DIR=@CMAKE_INSTALL_PREFIX@/openssh"
+            "DROPBEAR_DIR=@CMAKE_INSTALL_PREFIX@/dropbear",
+            "SERVER_PORT=15263"
         ],
         "args": [
             "ssh_hook",
-            "start-sshd"
+            "start-ssh-daemon"
         ]
     },
     "when": {

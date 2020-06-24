@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <pwd.h>
+#include <grp.h>
 #include <limits.h>
 
 #include <boost/regex.hpp>
@@ -127,6 +128,42 @@ std::string eraseFirstAndLastDoubleQuote(const std::string& s) {
     }
     return std::string( s.cbegin() + 1,
                         s.cbegin() + s.size() - 1);
+}
+
+void switchToUnprivilegedUser(const common::UserIdentity& identity) {
+    logMessage(boost::format{"Switching to uprivileged user (uid=%d gid=%d)"}
+               % identity.uid % identity.gid,
+               LogLevel::DEBUG);
+
+    if (setgroups(identity.supplementaryGids.size(), identity.supplementaryGids.data()) != 0) {
+        SARUS_THROW_ERROR("Failed to assume end-user auxiliary gids");
+    }
+    if (setegid(identity.gid) != 0) {
+        SARUS_THROW_ERROR("Failed to assume end-user gid");
+    }
+    if (seteuid(identity.uid) != 0) {
+        SARUS_THROW_ERROR("Failed to assume end-user uid");
+    }
+
+    logMessage("Successfully switched to uprivileged user", LogLevel::DEBUG);
+}
+
+void switchToPrivilegedUser(const common::UserIdentity& identity) {
+    logMessage(boost::format{"Switching to privileged user (uid=%d gid=%d)"}
+               % identity.uid % identity.gid,
+               LogLevel::DEBUG);
+
+    if (seteuid(identity.uid) != 0) {
+        SARUS_THROW_ERROR("Failed to re-assume original user effective uid");
+    }
+    if (setegid(identity.uid) != 0) {
+        SARUS_THROW_ERROR("Failed to re-assume original user effective gid");
+    }
+    if (setgroups(identity.supplementaryGids.size(), identity.supplementaryGids.data()) != 0) {
+        SARUS_THROW_ERROR("Failed to re-assume original user auxiliary gids");
+    }
+
+    logMessage("Successfully switched to privileged user", LogLevel::DEBUG);
 }
 
 std::string executeCommand(const std::string& command) {

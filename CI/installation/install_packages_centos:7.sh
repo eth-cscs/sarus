@@ -6,7 +6,7 @@ sudo yum install -y epel-release
 sudo yum install -y centos-release-scl-rh
 sudo yum install -y devtoolset-8-gcc-c++ glibc-static sudo curl wget rsync which \
     make bzip2 autoconf automake libtool squashfs-tools libcap-devel cmake3 \
-    zlib-devel openssl-devel expat-devel git \
+    zlib-devel zlib-static openssl-devel expat-devel git \
     python3 python3-pip python3-setuptools
 sudo yum clean all
 sudo rm -rf /var/cache/yum

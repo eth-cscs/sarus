@@ -16,7 +16,6 @@
 #include <boost/regex.hpp>
 
 #include "common/Config.hpp"
-#include "common/Logger.hpp"
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
@@ -42,24 +41,58 @@ public:
         configRAII.config->userIdentity.gid = std::get<1>(idsOfUser);
     }
 
+    ~Helper() {
+        // get root privileges in case that the test failure
+        // occurred while we had non-root privileges
+        setRootIds();
+
+        // undo mounts in rootfs
+        for(const auto& folder : rootfsFolders) {
+            umount2((rootfsDir / folder).c_str(), MNT_FORCE | MNT_DETACH);
+        }
+
+        // undo overlayfs mount in ~/.ssh
+        umount2((homeDirInContainer / ".ssh").c_str(), MNT_FORCE | MNT_DETACH);
+
+        // kill SSH daemon
+        auto pid = getSshDaemonPid();
+        if(pid) {
+            kill(*pid, SIGTERM);
+        }
+
+        // NOTE: the test directories are automatically removed by the PathRAII objects
+    }
+
     void setupTestEnvironment() {
-        // host test environment
-        sarus::common::createFoldersIfNecessary(sshKeysDir, std::get<0>(idsOfUser), std::get<1>(idsOfUser));
+        sarus::common::createFoldersIfNecessary(homeDirInHost,
+                                                std::get<0>(idsOfUser),
+                                                std::get<1>(idsOfUser));
 
-        sarus::common::createFoldersIfNecessary(opensshDirInHost.getPath());
-        boost::format extractArchiveCommand = boost::format("tar xf %s -C %s --strip-components=1")
-            % sarus::common::Config::BuildTime{}.openSshArchive
-            % opensshDirInHost.getPath();
-        sarus::common::executeCommand(extractArchiveCommand.str());
+        sarus::common::createFoldersIfNecessary(homeDirInContainer,
+                                                std::get<0>(idsOfUser),
+                                                std::get<1>(idsOfUser));
 
+        // host's dropbear installation
+        sarus::common::createFoldersIfNecessary(dropbearDirInHost.getPath() / "bin");
+        boost::format setupDropbearCommand = boost::format{
+            "cp %1% %2%/bin/dropbearmulti"
+            " && ln -s %2%/bin/dropbearmulti %2%/bin/dbclient"
+            " && ln -s %2%/bin/dropbearmulti %2%/bin/dropbear"
+            " && ln -s %2%/bin/dropbearmulti %2%/bin/dropbearkey"
+        } % sarus::common::Config::BuildTime{}.dropbearmultiBuildArtifact.string()
+          % dropbearDirInHost.getPath().string();
+        sarus::common::executeCommand(setupDropbearCommand.str());
+
+        // hook's environment variables
         sarus::common::setEnvironmentVariable("HOOK_BASE_DIR=" + sshKeysBaseDir.string());
         sarus::common::setEnvironmentVariable("PASSWD_FILE=" + passwdFile.string());
-        sarus::common::setEnvironmentVariable("OPENSSH_DIR=" + opensshDirInHost.getPath().string());
+        sarus::common::setEnvironmentVariable("DROPBEAR_DIR=" + dropbearDirInHost.getPath().string());
+        sarus::common::setEnvironmentVariable("SERVER_PORT=" + std::to_string(serverPort));
 
-        // bundle test environment
         auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, idsOfUser);
         sarus::common::writeJSON(doc, bundleDir / "config.json");
 
+        // rootfs
         for(const auto& folder : rootfsFolders) {
             auto lowerDir = "/" / folder;
             auto upperDir = bundleDir / "upper-dirs" / folder;
@@ -78,16 +111,6 @@ public:
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
     }
 
-    void cleanupTestEnvironment() const {
-        // bundle test environment
-        CHECK(umount((rootfsDir / "usr/bin/ssh").c_str()) == 0);
-
-        for(const auto& folder : rootfsFolders) {
-            CHECK(umount2((rootfsDir / folder).c_str(), MNT_FORCE | MNT_DETACH) == 0);
-            boost::filesystem::remove_all(rootfsDir / folder);
-        }
-    }
-
     void setUserIds() const {
         if(setresuid(std::get<0>(idsOfUser), std::get<0>(idsOfUser), std::get<0>(idsOfRoot)) != 0) {
             auto message = boost::format("Failed to set uid %d: %s") % std::get<0>(idsOfUser) % strerror(errno);
@@ -102,53 +125,56 @@ public:
         }
     }
 
-    void checkLocalRepositoryHasSshKeys() const {
-        CHECK(boost::filesystem::exists(sshKeysDir / "ssh_host_rsa_key"));
-        CHECK(boost::filesystem::exists(sshKeysDir / "ssh_host_rsa_key.pub"));
-        CHECK(boost::filesystem::exists(sshKeysDir / "id_rsa"));
-        CHECK(boost::filesystem::exists(sshKeysDir / "id_rsa.pub"));
+    void checkHostHasSshKeys() const {
+        CHECK(boost::filesystem::exists(sshKeysDirInHost / "dropbear_ecdsa_host_key"));
+        CHECK(boost::filesystem::exists(sshKeysDirInHost / "id_dropbear"));
+        CHECK(boost::filesystem::exists(sshKeysDirInHost / "authorized_keys"));
     }
 
     void checkContainerHasServerKeys() const {
-        CHECK(boost::filesystem::exists(opensshDirInContainer / "etc/ssh_host_rsa_key"));
-        CHECK(sarus::common::getOwner(opensshDirInContainer / "etc/ssh_host_rsa_key") == idsOfUser)
-        CHECK(boost::filesystem::exists(opensshDirInContainer / "etc/ssh_host_rsa_key.pub"));
-        CHECK(sarus::common::getOwner(opensshDirInContainer / "etc/ssh_host_rsa_key.pub") == idsOfUser);
+        CHECK(boost::filesystem::exists(homeDirInContainer / ".ssh/dropbear_ecdsa_host_key"));
+        CHECK(sarus::common::getOwner(homeDirInContainer / ".ssh/dropbear_ecdsa_host_key") == idsOfUser);
     }
 
     void checkContainerHasClientKeys() const {
-        CHECK(boost::filesystem::exists(opensshDirInContainer / "etc/userkeys/id_rsa"));
-        CHECK(sarus::common::getOwner(opensshDirInContainer / "etc/userkeys/id_rsa") == idsOfUser);
-        CHECK(boost::filesystem::exists(opensshDirInContainer / "etc/userkeys/id_rsa.pub"));
-        CHECK(sarus::common::getOwner(opensshDirInContainer / "etc/userkeys/id_rsa.pub") == idsOfUser);
-        CHECK(boost::filesystem::exists(opensshDirInContainer / "etc/userkeys/authorized_keys"));
-        CHECK(sarus::common::getOwner(opensshDirInContainer / "etc/userkeys/authorized_keys") == idsOfUser);
+        CHECK(boost::filesystem::exists(homeDirInContainer / ".ssh/id_dropbear"));
+        CHECK(sarus::common::getOwner(homeDirInContainer / ".ssh/id_dropbear") == idsOfUser);
+        CHECK(boost::filesystem::exists(homeDirInContainer / ".ssh/authorized_keys"));
+        CHECK(sarus::common::getOwner(homeDirInContainer / ".ssh/authorized_keys") == idsOfUser);
     }
 
-    void checkContainerHasChrootFolderForSshd() const {
-        CHECK(boost::filesystem::exists(rootfsDir / "tmp/var/empty"));
-        CHECK(sarus::common::getOwner(rootfsDir / "tmp/var/empty") == idsOfRoot);
-    }
-
-    bool isSshdRunningInContainer() const {
+    boost::optional<pid_t> getSshDaemonPid() const {
         auto out = sarus::common::executeCommand("ps ax -o pid,args");
         std::stringstream ss{out};
         std::string line;
 
         boost::smatch matches;
-        boost::regex pattern("^ *[0-9]+ +/opt/sarus/openssh/sbin/sshd.*$");
+        boost::regex pattern("^ *([0-9]+) +/opt/sarus/dropbear/bin/dropbear.*$");
 
         while(std::getline(ss, line)) {
             if(boost::regex_match(line, matches, pattern)) {
-                return true;
+                return std::stoi(matches[1]);
             }
         }
-        return false;
+        return {};
     }
 
     void checkContainerHasSshBinary() const {
-        //check container's /usr/bin/ssh is /opt/sarus/openssh/bin/ssh
-        CHECK(test_utility::filesystem::isSameBindMountedFile(rootfsDir / "usr/bin/ssh", opensshDirInContainer / "bin/ssh"));
+        CHECK(boost::filesystem::exists(rootfsDir / "usr/bin/ssh"));
+
+        auto expectedScript = boost::format{
+            "#!/bin/sh\n"
+            "/opt/sarus/dropbear/bin/dbclient -y -p %s $*\n"
+        } % serverPort;
+        auto actualScript = sarus::common::readFile(rootfsDir / "usr/bin/ssh");
+        CHECK_EQUAL(actualScript, expectedScript.str());
+
+        auto expectedPermissions =
+            boost::filesystem::owner_all |
+            boost::filesystem::group_read | boost::filesystem::group_exe |
+            boost::filesystem::others_read | boost::filesystem::others_exe;
+        auto status = boost::filesystem::status(rootfsDir / "usr/bin/ssh");
+        CHECK(status.permissions() == expectedPermissions);
     }
 
 private:
@@ -162,10 +188,13 @@ private:
     boost::filesystem::path rootfsDir = bundleDir / configRAII.config->json["rootfsFolder"].GetString();
     boost::filesystem::path sshKeysBaseDir = configRAII.config->json["localRepositoryBaseDir"].GetString();
     std::string username = sarus::common::PasswdDB{passwdFile}.getUsername(std::get<0>(idsOfUser));
-    boost::filesystem::path sshKeysDir = sshKeysBaseDir / username / ".oci-hooks/ssh/keys";
-    sarus::common::PathRAII opensshDirInHost = sarus::common::PathRAII{boost::filesystem::absolute(
-                                               sarus::common::makeUniquePathWithRandomSuffix("./sarus-test-opensshstatic"))};
-    boost::filesystem::path opensshDirInContainer = rootfsDir / "opt/sarus/openssh";
+    boost::filesystem::path homeDirInHost = sshKeysBaseDir / username;
+    boost::filesystem::path homeDirInContainer = rootfsDir / "home" / username;
+    boost::filesystem::path sshKeysDirInHost = homeDirInHost / ".oci-hooks/ssh/keys";
+    sarus::common::PathRAII dropbearDirInHost = sarus::common::PathRAII{boost::filesystem::absolute(
+                                               sarus::common::makeUniquePathWithRandomSuffix("./sarus-test-dropbeardir-in-host"))};
+    boost::filesystem::path dropbearDirInContainer = rootfsDir / "opt/sarus/dropbear";
+    std::uint16_t serverPort = 11111;
     std::vector<boost::filesystem::path> rootfsFolders = {"etc", "dev", "bin", "sbin", "usr", "lib", "lib64"}; // necessary to chroot into rootfs
 };
 
@@ -173,7 +202,7 @@ TEST_GROUP(SSHHookTestGroup) {
 };
 
 TEST(SSHHookTestGroup, testSshHook) {
-    auto helper = Helper{};
+    Helper helper{};
 
     helper.setRootIds();
     helper.setupTestEnvironment();
@@ -183,18 +212,15 @@ TEST(SSHHookTestGroup, testSshHook) {
     SshHook{}.generateSshKeys(true);
     SshHook{}.checkUserHasSshKeys();
     helper.setRootIds();
-    helper.checkLocalRepositoryHasSshKeys();
+    helper.checkHostHasSshKeys();
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshd();
-    helper.checkContainerHasServerKeys();
+    SshHook{}.startSshDaemon();
     helper.checkContainerHasClientKeys();
-    helper.checkContainerHasChrootFolderForSshd();
-    CHECK(helper.isSshdRunningInContainer());
+    helper.checkContainerHasServerKeys();
+    CHECK(static_cast<bool>(helper.getSshDaemonPid()));
     helper.checkContainerHasSshBinary();
-
-    helper.cleanupTestEnvironment();
 }
 
 }}}} // namespace

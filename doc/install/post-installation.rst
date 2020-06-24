@@ -53,7 +53,7 @@ The checked directories are:
     This location can be configured through the ``OCIBundleDir`` entry in
     ``sarus.json``.
   - If the :doc:`SSH Hook </config/ssh-hook>` is installed,
-    the directory of the custom OpenSSH software.
+    the directory of the custom SSH software.
 
 Most security checks can be disabled through the :ref:`corresponding parameter
 <config-reference-securityChecks>` in the Sarus configuration file.

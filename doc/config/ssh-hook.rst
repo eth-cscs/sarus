@@ -16,8 +16,8 @@ The hook is written in C++ and it will be compiled along with Sarus if the
 option is enabled by default). The Sarus installation scripts will also
 automatically install the hook in the ``<CMAKE_INSTALL_PREFIX>/bin`` directory.
 
-A custom OpenSSH software will also be built and installed in the
-``<CMAKE_INSTALL_PREFIX>/openssh`` directory. This directory must satisfy the
+A custom SSH software (statically linked Dropbear) will also be built and installed in the
+``<CMAKE_INSTALL_PREFIX>/dropbear`` directory. This directory must satisfy the
 :ref:`security requirements <post-installation-permissions-security>` for critical
 files and directories.
 
@@ -26,7 +26,7 @@ Sarus configuration
 
 The SSH hook must be configured to run as a **prestart** hook. It expects to
 receive its own name/location as the first argument, and the string
-``start-sshd`` as positional argument. In addition, the following
+``start-ssh-daemon`` as positional argument. In addition, the following
 environment variables must be defined:
 
 * ``HOOK_BASE_DIR``: Absolute base path to the directory where the hook will create and access the SSH keys.
@@ -35,7 +35,11 @@ environment variables must be defined:
 * ``PASSWD_FILE``: Absolute path to a password file (PASSWD(5)).
   The file is used by the hook to retrieve the username of the user.
 
-* ``OPENSSH_DIR``: Absolute path to the location of the custom OpenSSH software.
+* ``DROPBEAR_DIR``: Absolute path to the location of the custom SSH software.
+
+* ``"SERVER_PORT``: TCP port on which the SSH daemon will listen. This must be an unused
+  port and is tipically set to a value different than 22 in order to avoid clashes with an SSH
+  daemon that could be running on the host.
 
 The following is an example of `OCI hook JSON configuration file
 <https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
@@ -50,11 +54,12 @@ enabling the SSH hook:
             "env": [
                 "HOOK_BASE_DIR=/home",
                 "PASSWD_FILE=/opt/sarus/etc/passwd",
-                "OPENSSH_DIR=/opt/sarus/openssh"
+                "DROPBEAR_DIR=/opt/sarus/dropbear",
+                "SERVER_PORT=15263"
             ],
             "args": [
                 "ssh_hook",
-                "start-sshd"
+                "start-ssh-daemon"
             ]
         },
         "when": {

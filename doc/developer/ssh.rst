@@ -14,8 +14,8 @@ First of all, the user needs to run the command ``sarus ssh-keygen``. This comma
 that will be used by the SSH daemons as well as the SSH clients in the containers.
 
 Then the user can execute a container passing the ``--ssh`` option, e.g. ``sarus run --ssh <image> <command>``.
-This will first check that the user previously generated the SSH keys, and then will instantiate an sshd
-per container and setup a custom ``ssh`` binary inside the containers.
+This will first check that the user previously generated the SSH keys, and then will instantiate an SSH daemon
+per container and setup a custom ``ssh`` executable inside the containers.
 
 Within a container spawned with the ``--ssh`` option, the user can ssh into other containers by simply issuing the
 ``ssh`` command available in the default search PATH. E.g.
@@ -24,7 +24,7 @@ Within a container spawned with the ``--ssh`` option, the user can ssh into othe
 
     ssh <hostname of other node>
 
-The custom ``ssh`` binary will take care of using the proper keys and non-standard port in order to connect
+The custom ``ssh`` executable will take care of using the proper keys and non-standard port in order to connect
 to the remote container.
 
 Configuration by the system administrator
@@ -43,11 +43,12 @@ enabling the SSH hook:
             "env": [
                 "HOOK_BASE_DIR=/home",
                 "PASSWD_FILE=<sarus prefix>/etc/passwd",
-                "OPENSSH_DIR=<sarus prefix>/openssh"
+                "DROPBEAR_DIR=<sarus prefix>/dropbear",
+                "SERVER_PORT=15263"
             ],
             "args": [
                 "ssh_hook",
-                "start-sshd"
+                "start-ssh-daemon"
             ]
         },
         "when": {
@@ -67,17 +68,11 @@ performs different ssh-related operations depending on the CLI command that rece
 The nitty gritty
 ================
 
-The Sarus's custom OpenSSH
-----------------------------
+The Sarus's custom SSH software
+-------------------------------
 
-Sarus uses a custom statically-linked version of OpenSSH. At build time, if the CMake's parameter
-ENABLE_SSH=TRUE is specified, the custom OpenSSH is built and installed under the Sarus's installation directory.
-Two custom configuration files (sshd_config, ssh_config) are also installed along with the various SSH binaries
-(ssh, sshd, ssh-keygen, etc.) . The "sshd" and "ssh" custom binaries are configured (hard coded)
-to pick the custom configuration files inside the container (sshd_config and ssh_config respectively).
-The custom sshd_config file instructs sshd to listen on a specific non-standard port and to only accept
-authentications from the SSH key generated through the "sarus ssh-keygen" command. The custom ssh_config
-instructs ssh to connect to the non-standard port and to use the SSH key generated through the "sarus ssh-keygen" command.
+Sarus uses a custom statically-linked version of Dropbear. At build time, if the CMake's parameter
+ENABLE_SSH=TRUE is specified, the custom Dropbear is built and installed under the Sarus's installation directory.
 
 How the SSH keys are generated
 ------------------------------
@@ -90,8 +85,8 @@ The hook performs the following operations:
 1. Read from the environment variables the hook base directory.
 2. Read from the environment variables the location of the passwd file.
 3. Get the username from the passwd file and use it to determine the user's hook directory (where the SSH keys are stored).
-4. Read from the environment variables the location of the custom OpenSSH.
-5. Execute the program "ssh-keygen" to generate two pairs of public/private keys in the user's hook directory.
+4. Read from the environment variables the location of the custom SSH software.
+5. Execute the program "dropbearkey" to generate two pairs of public/private keys in the user's hook directory.
    One pair will be used by the SSH daemon, the other pair will be used by the SSH client.
 
 How the existance of the SSH keys is checked
@@ -111,23 +106,25 @@ How the SSH daemon and SSH client are setup in the container
 ------------------------------------------------------------
 
 When the command "sarus run --ssh <image> <command>" is issued, Sarus sets up the OCI bundle and executes
-the OCI-compliant runtime. If the SSH hook is active, the OCI-compliant runtime executes the
-SSH hook as a prestart hook passing the "start-sshd" CLI argument.
+runc. Then runc executes the OCI prestart hooks specified in sarus.json. The system administrator should have
+specified the SSH hook with the "start-ssh-daemon" CLI argument.
 
 The hook performs the following operations:
 
-
 1. Read from the environment variables the hook base directory.
 2. Read from the environment variables the location of the passwd file.
-3. Read from the environment variables the location of the custom OpenSSH
-4. Read from stdin the container's state as defined in the OCI specification.
-5. Enter the container's mount namespaces in order to access the container's OCI bundle.
-6. Enter the container's pid namespace in order to start the sshd process inside the container.
-7. Read the user's UID from the OCI bundle's config.json, get the username from the passwd file
-   and use it to determine the user's hook directory (where the SSH keys are stored).
-8. Bind mount the custom OpenSSH (executables + configuration files) into the container.
-9. Copy the SSH keys into the container.
-10. Add an "sshd" user to /etc/passwd if necessary.
-11. Chroot to the container and start sshd inside the container.
-12. Bind mount the custom "ssh" binary into the container's /usr/bin, thus the shell
-    will pick the custom binary when the command "ssh" is executed.
+3. Read from the environment variables the location of the custom SSH software.
+4. Read from the environment variables the port number to be used by the SSH daemon.
+5. Read from stdin the container's state as defined in the OCI specification.
+6. Enter the container's mount namespaces in order to access the container's OCI bundle.
+7. Enter the container's pid namespace in order to start the sshd process inside the container.
+8. Read the container's attributes from the OCI bundle's config.json in order to determine whether
+   the SSH hook is enabled.
+9. If the SSH hook is disabled exit.
+10. Read the user's UID from the OCI bundle's config.json, get the username from the passwd file
+    and use it to determine the user's hook directory (where the SSH keys are stored).
+11. Copy the custom SSH software into the contaier (SSH daemon, SSH client).
+12. Copy the SSH keys into the container.
+13. Chroot to the container, drop privileges, start the SSH deamon inside the container.
+14. Create a shell script /usr/bin/ssh which transparenty uses the dropbear SSH client (dbclient)
+    and the proper keys and port number to establish SSH sessions.

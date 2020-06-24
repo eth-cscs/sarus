@@ -42,8 +42,8 @@ int main(int argc, char* argv[]) {
         else if(argv[1] == std::string{"check-user-has-sshkeys"}) {
             sarus::hooks::ssh::SshHook{}.checkUserHasSshKeys();
         }
-        else if(argv[1] == std::string("start-sshd")) {
-            sarus::hooks::ssh::SshHook{}.startSshd();
+        else if(argv[1] == std::string("start-ssh-daemon")) {
+            sarus::hooks::ssh::SshHook{}.startSshDaemon();
         }
         else {
             auto message = boost::format("Failed to execute SSH hook. CLI argument %s is not supported.")

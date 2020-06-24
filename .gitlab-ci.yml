@@ -84,7 +84,7 @@ from_source_debian10_asan:
 spack_package:
   extends: .only_master_and_develop
   script:
-      - docker_image=ethcscs/sarus-spack:1.1.0-ubuntu16.04
+      - docker_image=ethcscs/sarus-spack:1.2.0-ubuntu16.04
       - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/run_spack_package_test.sh
 
 publish_sarus_images:

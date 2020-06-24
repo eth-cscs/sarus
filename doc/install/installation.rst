@@ -59,7 +59,7 @@ use the ``@develop`` version specifier.
 The Spack package for Sarus supports the following `variants <https://spack.readthedocs.io/en/latest/basic_usage.html#basic-variants>`_
 to customize the installation:
 
-   - ``ssh``: Build and install the SSH hook and custom OpenSSH software to enable
+   - ``ssh``: Build and install the SSH hook and custom SSH software to enable
      connections inside containers [True].
    - ``configure_installation``: Run the script to setup a starting Sarus
      configuration as part of the installation phase. Running the script
@@ -197,7 +197,7 @@ Below are listed the Sarus-specific options that can be passed to CMake in
 order to customize your build:
 
    - ``CMAKE_INSTALL_PREFIX``: installation directory of Sarus [/usr/local].
-   - ``ENABLE_SSH``: build and install the SSH hook and custom OpenSSH software to enable
+   - ``ENABLE_SSH``: build and install the SSH hook and custom SSH software to enable
      connections inside containers [TRUE].
    - ``ENABLE_TESTS_WITH_VALGRIND``: run each unit test through valgrind [FALSE].
 

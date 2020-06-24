@@ -15,9 +15,6 @@
 #include <boost/filesystem.hpp>
 #include <sys/mount.h>
 
-#include "common/UserIdentity.hpp"
-
-
 namespace sarus {
 
 // forward declaration to avoid cyclic dependency of headers
@@ -38,10 +35,6 @@ public: // public for test purpose
     boost::filesystem::path source;
     boost::filesystem::path destination;
     unsigned long mountFlags;
-
-private:
-    void switchToUnprivilegedUser(const common::UserIdentity&) const;
-    void switchToPrivilegedUser(const common::UserIdentity&) const;
 
 private:
     std::weak_ptr<const common::Config> config_weak;

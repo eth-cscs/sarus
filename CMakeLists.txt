@@ -16,7 +16,7 @@ if(${BUILD_STATIC})
 endif(${BUILD_STATIC})
 
 set(LIBEXECDIR ${CMAKE_INSTALL_PREFIX}/libexec CACHE PATH "libexec directory [$CMAKE_INSTALL_PREFIX/libexec]")
-set(ENABLE_SSH TRUE CACHE BOOL "Build a statically-linked ssh to be executed inside the container [TRUE]")
+set(ENABLE_SSH TRUE CACHE BOOL "Build a statically-linked SSH software to be executed inside the container [TRUE]")
 
 set(ENABLE_TESTS_WITH_VALGRIND FALSE CACHE BOOL "Run each unit test through valgrind [FALSE]")
 
@@ -61,7 +61,8 @@ add_subdirectory(etc)
 add_subdirectory(src)
 
 install(FILES sarus.json.in sarus.schema.json hook.schema.json definitions.schema.json DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)
-install(FILES ssh-hook.json.in DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/hooks.d)
+install(FILES 01-ssh-hook.json.in DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/hooks.d)
+install(FILES 02-slurm-global-sync-hook.json.in DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/hooks.d)
 install(FILES configure_installation.sh DESTINATION ${CMAKE_INSTALL_PREFIX} PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE

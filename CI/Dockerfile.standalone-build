@@ -15,8 +15,8 @@
 FROM alpine:3.9
 
 RUN apk update \
-    && apk add bash sudo shadow tar rsync git cmake make gcc g++ squashfs-tools \
-               perl linux-headers expat-dev openssl-dev zlib-dev
+    && apk add bash sudo shadow tar rsync git cmake make gcc g++ autoconf \
+               perl linux-headers expat-dev openssl-dev zlib-dev squashfs-tools
 
 # Install dependencies
 COPY ./installation/install_dep_boost.bash /tmp/

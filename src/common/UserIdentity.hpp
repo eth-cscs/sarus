@@ -20,6 +20,7 @@ namespace common {
 
 struct UserIdentity {
     UserIdentity();
+    UserIdentity(uid_t, gid_t, const std::vector<gid_t>&);
     uid_t uid;
     gid_t gid;
     std::vector<gid_t> supplementaryGids;

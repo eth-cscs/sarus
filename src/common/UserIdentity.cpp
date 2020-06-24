@@ -40,4 +40,10 @@ UserIdentity::UserIdentity() {
     }
 }
 
+UserIdentity::UserIdentity(uid_t uid, gid_t gid, const std::vector<gid_t>& supplementaryGids)
+    : uid{uid}
+    , gid{gid}
+    , supplementaryGids(supplementaryGids)
+{}
+
 }} // namespaces

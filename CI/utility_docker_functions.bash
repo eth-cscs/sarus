@@ -277,9 +277,9 @@ _copy_cached_build_artifacts_if_available() {
 
     mkdir -p ${to}
 
-    if [ -e ${from}/openssh.tar ]; then
-        cp ${from}/openssh.tar ${to}/openssh.tar
-        echo "Copied ${from}/openssh.tar to ${to}/openssh.tar"
+    if [ -e ${from}/dropbearmulti ]; then
+        cp ${from}/dropbearmulti ${to}/dropbearmulti
+        echo "Copied ${from}/dropbearmulti to ${to}/dropbearmulti"
     fi
 
     if [ -e ${from}/cpputest ]; then
