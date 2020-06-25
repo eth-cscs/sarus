@@ -61,7 +61,7 @@ jobs:
     - name: "Test Spack"
       if: branch IN (master, develop, fix-travis)
       script:
-      - docker_image=ethcscs/sarus-spack:1.1.0-ubuntu16.04
+      - docker_image=ethcscs/sarus-spack:1.2.0-ubuntu16.04
       - travis_wait 60 docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/run_spack_package_test.sh
 
 notifications:
