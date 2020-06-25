@@ -84,6 +84,7 @@ class TestGlibcHook(unittest.TestCase):
 
         subprocess.check_output(["sudo", "mv", "hook_config.json.tmp", cls._OCIHOOK_CONFIG_FILE])
         subprocess.check_output(["sudo", "chown", "root:root", cls._OCIHOOK_CONFIG_FILE])
+        subprocess.check_output(["sudo", "chmod", "644", cls._OCIHOOK_CONFIG_FILE])
 
     @classmethod
     def _disable_hook(cls):
