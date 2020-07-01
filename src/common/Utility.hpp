@@ -82,7 +82,8 @@ std::string getSharedLibSoname(const boost::filesystem::path& path, const boost:
 bool isLibc(const boost::filesystem::path&);
 std::tuple<unsigned int, unsigned int> parseLibcVersion(const boost::filesystem::path&);
 bool is64bitSharedLib(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath);
-std::string parseCpusAllowedList(const std::string& procStatus);
+std::vector<int> getCpuAffinity();
+void setCpuAffinity(const std::vector<int>&);
 
 std::string readFile(const boost::filesystem::path& path);
 rapidjson::SchemaDocument readJSONSchema(const boost::filesystem::path& schemaFile);

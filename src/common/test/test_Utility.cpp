@@ -447,14 +447,28 @@ TEST(UtilityTestGroup, convertCppRestJsonToRapidJson) {
     CHECK_EQUAL(rapidJson["object"]["subobject"]["string"].GetString(), std::string{"text"});
 }
 
-TEST(UtilityTestGroup, parseCpusAllowedList) {
-    CHECK_EQUAL(common::parseCpusAllowedList("Cpus_allowed_list:\t0-2"), std::string{"0-2"});
-    CHECK_EQUAL(common::parseCpusAllowedList("Cpus_allowed_list:0-2"), std::string{"0-2"});
-    CHECK_EQUAL(common::parseCpusAllowedList("Cpus_allowed_list: 0-2"), std::string{"0-2"});
-    CHECK_EQUAL(common::parseCpusAllowedList("   Cpus_allowed_list: 0-2   "), std::string{"0-2"});
-    CHECK_EQUAL(common::parseCpusAllowedList("...\nCpus_allowed_list: 0-2\n..."), std::string{"0-2"});
-    CHECK_THROWS(common::Error, common::parseCpusAllowedList(""));
-    CHECK_THROWS(common::Error, common::parseCpusAllowedList("Cpus_allowed_list:"));
+TEST(UtilityTestGroup, setCpuAffinity_invalid_argument) {
+    CHECK_THROWS(common::Error, common::setCpuAffinity({})); // no CPUs
+}
+
+TEST(UtilityTestGroup, getCpuAffinity_setCpuAffinity) {
+    auto initialCpus = common::getCpuAffinity();
+
+    if(initialCpus.size() <= 1) {
+        std::cerr << "Skipping CPU affinity unit test. Not enough CPUs available" << std::endl;
+        return;
+    }
+
+    // set new affinity (removing one CPU)
+    auto newCpus = initialCpus;
+    newCpus.pop_back();
+    common::setCpuAffinity(newCpus);
+
+    // check
+    CHECK(common::getCpuAffinity() == newCpus);
+
+    // restore initial affinity
+    common::setCpuAffinity(initialCpus);
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();

@@ -76,7 +76,7 @@
 	"linux": {
 		"resources": {
 			"cpu": {
-				"cpus": "3-17"
+				"cpus": "0,1,2,3"
 			}
 		},
 		"namespaces": [

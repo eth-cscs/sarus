@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sched.h>
 #include <pwd.h>
 #include <grp.h>
 #include <limits.h>
@@ -833,26 +834,47 @@ bool is64bitSharedLib(const boost::filesystem::path& path, const boost::filesyst
     return false;
 }
 
-std::string parseCpusAllowedList(const std::string& procStatus) {
-    logMessage("Parsing Cpus_allowed_list in contents of /proc/<pid>/status", LogLevel::DEBUG);
+std::vector<int> getCpuAffinity() {
+    logMessage("Getting CPU affinity (list of CPU ids)", common::LogLevel::INFO);
 
-    auto lines = std::vector<std::string>{};
-    boost::split(lines, procStatus, boost::is_any_of("\n"));
+    auto set = cpu_set_t{};
 
-    boost::regex re("^\\s*Cpus_allowed_list:\\s*(\\S+)\\s*$");
-    boost::cmatch matches;
+    if(sched_getaffinity(getpid(), sizeof(cpu_set_t), &set) != 0) {
+        auto message = boost::format("sched_getaffinity failed: %s ") % std::strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
 
-    for(const auto& line : lines) {
-        if (boost::regex_match(line.c_str(), matches, re)) {
-            auto list = std::move(matches[1]);
-            auto message = boost::format("Successfully parsed CpusAllosedList=%s"
-                                        " in contents of /proc/<pid>/status") % list;
-            logMessage(message.str(), LogLevel::DEBUG);
-            return list;
+    auto cpus = std::vector<int>{};
+
+    for(int cpu=0; cpu<CPU_SETSIZE; ++cpu) {
+        if(CPU_ISSET(cpu, &set)) {
+            cpus.push_back(cpu);
+            logMessage(boost::format("Detected CPU %d") % cpu, common::LogLevel::DEBUG);
         }
     }
 
-    SARUS_THROW_ERROR("Failed to parse Cpus_allowed_list in contents of /proc/<pid>/status");
+    logMessage("Successfully got CPU affinity", common::LogLevel::INFO);
+
+    return cpus;
+}
+
+void setCpuAffinity(const std::vector<int>& cpus) {
+    logMessage("Setting CPU affinity", common::LogLevel::INFO);
+
+    auto set = cpu_set_t{};
+    CPU_ZERO(&set);
+
+    for(auto cpu : cpus) {
+        CPU_SET(cpu, &set);
+        logMessage(boost::format("Set CPU %d") % cpu, common::LogLevel::DEBUG);
+    }
+
+    if(sched_setaffinity(getpid(), sizeof(cpu_set_t), &set) != 0) {
+        auto message = boost::format{"sched_setaffinity failed: %s"} % std::strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    logMessage("Successfully set CPU affinity", common::LogLevel::INFO);
 }
 
 std::string readFile(const boost::filesystem::path& path) {

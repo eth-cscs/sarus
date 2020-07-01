@@ -11,6 +11,8 @@
 #include "OCIBundleConfig.hpp"
 
 #include <fstream>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/writer.h>
 
@@ -234,11 +236,27 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
     auto linux = rj::Value{rj::kObjectType};
     // resources
     {
+        // Slurm performs the CPU pinning of the host process through sched_setaffinity(2),
+        // instead of modifying the cpuset cgroup. See Slurm's code and explanation here:
+        // https://github.com/SchedMD/slurm/blob/44e651a5d1f688ec012d0bc5c0c9dd4a0df8ee94/src/plugins/task/cgroup/task_cgroup_cpuset.c#L1227
+        //
+        // Because Slurm modifies the host process through sched_setaffinity(2), the resulting
+        // CPU pinning might be different from the host process' cpuset cgroup. If this happens,
+        // the OCI runtime could take the "cpuset" cgroup of the host process, apply it as it is
+        // to the container process and by doing so the CPU pinning previously performed by Slurm
+        // with sched_setaffinity(2) may be removed. This issue was observed while using runc, as
+        // well as crun.
+        //
+        // To fix the issue and make sure that we preserve the Slurm's CPU pinning inside the
+        // container, we explicitely specify the cpuset cgroup in the OCI bundle's config file
+        // with the values obtained from sched_getaffinity(2).
         auto resources = rj::Value{rj::kObjectType};
         auto cpu = rj::Value{rj::kObjectType};
-        auto cpusAllowedList = rj::Value{config->commandRun.cpusAllowedList.c_str(), *allocator};
+        auto intToString = boost::adaptors::transformed([](int i) { return std::to_string(i); });
+        auto cpus = boost::join(config->commandRun.cpuAffinity |intToString, ",");
+        auto cpuAffinity = rj::Value{cpus.c_str(), *allocator};
 
-        cpu.AddMember("cpus", cpusAllowedList, *allocator);
+        cpu.AddMember("cpus", cpuAffinity, *allocator);
         resources.AddMember("cpu", cpu, *allocator);
         linux.AddMember("resources", resources, *allocator);
     }

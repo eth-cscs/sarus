@@ -53,7 +53,7 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     // create test config
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
-    config->commandRun.cpusAllowedList = "3-17";
+    config->commandRun.cpuAffinity = {0, 1, 2, 3};
     config->commandRun.execArgs = common::CLIArguments{"/bin/bash"};
     config->commandRun.addInitProcess = true;
     config->userIdentity.uid = 1000; // UID hardcoded in expected json file
