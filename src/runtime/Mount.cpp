@@ -77,13 +77,7 @@ void Mount::performMount() const {
         common::createFileIfNecessary(destinationReal, config->userIdentity.uid, config->userIdentity.gid);
     }
 
-    try {
-        bindMount(realpathOfSource.get(), destinationReal, mountFlags);
-    }
-    catch(common::Error& e) {
-        auto message = boost::format("Failed user requested bind mount from %s to %s") % source % destination;
-        SARUS_THROW_ERROR(message.str());
-    }
+    bindMount(realpathOfSource.get(), destinationReal, mountFlags);
 
     runtime::utility::logMessage("Successfully performed bind mount", common::LogLevel::DEBUG);
 }

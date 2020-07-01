@@ -137,13 +137,13 @@ void bindMount(const boost::filesystem::path& from, const boost::filesystem::pat
 
     // bind mount
     if(mount(from.c_str(), to.c_str(), "bind", flagsForBindMount, NULL) != 0) {
-        auto message = boost::format("Failed to bind mount from %s to %s (error: %s)") % from % to % strerror(errno);
+        auto message = boost::format("Failed to bind mount %s -> %s (error: %s)") % from % to % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
 
-    // remount to to apply flags
+    // remount to apply flags
     if(mount(from.c_str(), to.c_str(), "bind", flagsForRemount, NULL) != 0) {
-        auto message = boost::format("Failed to bind mount from %s to %s (error: %s)") % from % to % strerror(errno);
+        auto message = boost::format("Failed to re-bind mount %s -> %s (error: %s)") % from % to % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
 
