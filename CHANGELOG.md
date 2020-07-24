@@ -8,9 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- The OCI hooks are now configured thorough [OCI hook JSON configuration files](https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md). The previous OCI hooks configuration through `sarus.json` is no longer supported and Sarus Administrators should reconfigure their hooks according to the Sarus' [hook documentation page](https://sarus.readthedocs.io/en/stable/config/configure_hooks.html)
+- The OCI hooks are now configured through [OCI hook JSON configuration files](https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md). The previous OCI hooks configuration through `sarus.json` is no longer supported and Sarus Administrators should reconfigure their hooks according to the Sarus' [hook documentation page](https://sarus.readthedocs.io/en/stable/config/configure_hooks.html)
 - Replaced the custom OpenSSH used by the SSH hook with Dropbear
 - Made CPU affinity detection more robust
+
+### Fixed
+
+- CLI: fixed detection of option values separated by whitespace
+- CLI: 'sarus run' does not return an error anymore when passing an option (i.e. a token starting with "-") as the first argument to the container application.
+  This allows to directly pass options to containers which feature an entrypoint.
+
 
 ## [1.2.0] - 2020-06-17
 

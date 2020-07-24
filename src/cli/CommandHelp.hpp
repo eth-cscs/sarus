@@ -28,8 +28,8 @@ class CommandHelp : public Command {
 public:
     CommandHelp() = default;
 
-    CommandHelp(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config>) {
-        if(!argsGroups.empty() && argsGroups[0].argc() > 1) {
+    CommandHelp(const common::CLIArguments& args, std::shared_ptr<common::Config>) {
+        if(args.argc() > 1) {
             auto message = boost::format("Command 'help' doesn't support options");
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);

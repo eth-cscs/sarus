@@ -37,11 +37,11 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandRun(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config> conf)
+    CommandRun(const common::CLIArguments& args, std::shared_ptr<common::Config> conf)
         : conf{std::move(conf)}
     {
         initializeOptionsDescription();
-        parseCommandArguments(argsGroups);
+        parseCommandArguments(args);
     }
 
     void execute() override {
@@ -66,7 +66,7 @@ public:
 
         auto setupEnd = std::chrono::high_resolution_clock::now();
         auto setupTime = std::chrono::duration<double>(setupEnd - setupBegin);
-        message = boost::format("successfully set up container in %.6f seconds") % setupTime.count();
+        message = boost::format("Successfully set up container in %.6f seconds") % setupTime.count();
         cli::utility::printLog(message, common::LogLevel::INFO);
 
         runtime.executeContainer();
@@ -98,7 +98,7 @@ private:
         optionsDescription.add_options()
             ("centralized-repository", "Use centralized repository instead of the local one")
             ("entrypoint",
-                boost::program_options::value<std::string>(&entrypoint)->implicit_value(""),
+                boost::program_options::value<std::string>(&entrypoint),
                 "Overwrite the default ENTRYPOINT of the image")
             ("glibc", "Enable replacement of the container's GNU C libraries")
             ("init", "Run an init process inside the container that forwards signals and reaps processes")
@@ -113,40 +113,40 @@ private:
                 "Set working directory inside the container");
     }
 
-    void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
+    void parseCommandArguments(const common::CLIArguments& args) {
         cli::utility::printLog("parsing CLI arguments of run command", common::LogLevel::DEBUG);
 
-        // the run command expects at least two arguments (run + image)
-        if(argsGroups.size() < 2) {
-            auto message = boost::format("Bad number of arguments for command 'run'"
-                                        "\nSee 'sarus help run'");
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-        }
+        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
+
+        // the run command expects at least one positional argument (the image name)
+        cli::utility::validateNumberOfPositionalArguments(positionalArgs, 1, INT_MAX, "run");
 
         try {
             // Parse options
             boost::program_options::variables_map values;
             boost::program_options::parsed_options parsed =
-                boost::program_options::command_line_parser(argsGroups[0].argc(), argsGroups[0].argv())
+                boost::program_options::command_line_parser(nameAndOptionArgs.argc(), nameAndOptionArgs.argv())
                         .options(optionsDescription)
+                        .style(boost::program_options::command_line_style::unix_style)
                         .run();
             boost::program_options::store(parsed, values);
             boost::program_options::notify(values);
 
-            conf->imageID = cli::utility::parseImageID(argsGroups[1]);
+            conf->imageID = cli::utility::parseImageID(positionalArgs.argv()[0]);
             conf->useCentralizedRepository = values.count("centralized-repository");
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
             // the remaining arguments (after image) are all part of the command to be executed in the container
-            conf->commandRun.execArgs = std::accumulate(argsGroups.cbegin()+2, argsGroups.cend(), common::CLIArguments{});
-
+            conf->commandRun.execArgs = common::CLIArguments(positionalArgs.begin()+1, positionalArgs.end());
 
             if(values.count("entrypoint")) {
                 if(entrypoint.empty()) {
                     conf->commandRun.entrypoint = common::CLIArguments{};
                 }
                 else {
-                    conf->commandRun.entrypoint = common::CLIArguments{entrypoint};
+                    std::vector<std::string> entrypointArgs;
+                    boost::algorithm::split(entrypointArgs, entrypoint, boost::algorithm::is_space());
+                    conf->commandRun.entrypoint = common::CLIArguments{entrypointArgs.cbegin(), entrypointArgs.cend()};
                 }
             }
             if(values.count("glibc")) {

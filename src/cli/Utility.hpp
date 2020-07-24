@@ -32,6 +32,13 @@ common::ImageID parseImageID(const common::CLIArguments& imageArgs);
 
 common::ImageID parseImageID(const std::string& input);
 
+std::tuple<common::CLIArguments, common::CLIArguments> groupOptionsAndPositionalArguments(
+        const common::CLIArguments&,
+        const boost::program_options::options_description& optionsDescription);
+
+void validateNumberOfPositionalArguments(const common::CLIArguments& positionalArgs,
+        const int min, const int max, const std::string& command);
+
 void printLog(  const std::string& message, common::LogLevel LogLevel,
                 std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr);
 

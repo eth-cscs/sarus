@@ -32,6 +32,10 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "'invalid-command' is not a Sarus command\nSee 'sarus help'"
         self._check(command, expected_message)
 
+        command = ["sarus", "--verbose", "---run"]
+        actual_message = self._get_sarus_error_output(command)
+        self.assertTrue("'---run' is not a Sarus command" in actual_message)
+
     def test_command_help(self):
         command = ["sarus", "help", "--invalid-option"]
         expected_message = "Command 'help' doesn't support options"
@@ -47,7 +51,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "help", "run", "extra-argument"]
-        expected_message = "Bad number of arguments for command 'help'\nSee 'sarus help help'"
+        expected_message = "Too many arguments for command 'help'\nSee 'sarus help help'"
         self._check(command, expected_message)
 
     def test_command_images(self):
@@ -56,7 +60,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "images", "extra-argument"]
-        expected_message = "Bad number of arguments for command 'images'\nSee 'sarus help images'"
+        expected_message = "Too many arguments for command 'images'\nSee 'sarus help images'"
         self._check(command, expected_message)
 
     def test_command_load(self):
@@ -65,21 +69,19 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "load"]
-        expected_message = "Bad number of arguments for command 'load'\nSee 'sarus help load'"
+        expected_message = "Too few arguments for command 'load'\nSee 'sarus help load'"
         self._check(command, expected_message)
 
         command = ["sarus", "load", "archive.tar"]
-        expected_message = "Bad number of arguments for command 'load'\nSee 'sarus help load'"
+        expected_message = "Too few arguments for command 'load'\nSee 'sarus help load'"
         self._check(command, expected_message)
 
         command = ["sarus", "load", "archive.tar", "imageid", "extra-argument"]
-        expected_message = "Bad number of arguments for command 'load'\nSee 'sarus help load'"
+        expected_message = "Too many arguments for command 'load'\nSee 'sarus help load'"
         self._check(command, expected_message)
 
         command = ["sarus", "load", "archive.tar", "alpine", "--invalid-option"]
-        expected_message = ("Invalid image ID [\"alpine\", \"--invalid-option\"]\n"
-                           "The image ID is expected to be a single token without options\n"
-                           "See 'sarus help load'")
+        expected_message = "Too many arguments for command 'load'\nSee 'sarus help load'"
         self._check(command, expected_message)
 
         command = ["sarus", "load", "archive.tar", "///"]
@@ -96,17 +98,15 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "pull"]
-        expected_message = "Bad number of arguments for command 'pull'\nSee 'sarus help pull'"
+        expected_message = "Too few arguments for command 'pull'\nSee 'sarus help pull'"
         self._check(command, expected_message)
 
         command = ["sarus", "pull", "alpine", "extra-argument"]
-        expected_message = "Bad number of arguments for command 'pull'\nSee 'sarus help pull'"
+        expected_message = "Too many arguments for command 'pull'\nSee 'sarus help pull'"
         self._check(command, expected_message)
 
         command = ["sarus", "pull", "alpine", "--invalid-option"]
-        expected_message = ("Invalid image ID [\"alpine\", \"--invalid-option\"]\n"
-                           "The image ID is expected to be a single token without options\n"
-                           "See 'sarus help pull'")
+        expected_message = "Too many arguments for command 'pull'\nSee 'sarus help pull'"
         self._check(command, expected_message)
 
         command = ["sarus", "pull", "///"]
@@ -142,17 +142,15 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "rmi"]
-        expected_message = "Bad number of arguments for command 'rmi'\nSee 'sarus help rmi'"
+        expected_message = "Too few arguments for command 'rmi'\nSee 'sarus help rmi'"
         self._check(command, expected_message)
 
         command = ["sarus", "rmi", "alpine", "extra-argument"]
-        expected_message = "Bad number of arguments for command 'rmi'\nSee 'sarus help rmi'"
+        expected_message = "Too many arguments for command 'rmi'\nSee 'sarus help rmi'"
         self._check(command, expected_message)
 
         command = ["sarus", "rmi", "alpine", "--invalid-option"]
-        expected_message = ("Invalid image ID [\"alpine\", \"--invalid-option\"]\n"
-                           "The image ID is expected to be a single token without options\n"
-                           "See 'sarus help rmi'")
+        expected_message = "Too many arguments for command 'rmi'\nSee 'sarus help rmi'"
         self._check(command, expected_message)
 
         command = ["sarus", "rmi", "///"]
@@ -168,14 +166,12 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help run'"
         self._check(command, expected_message)
 
-        command = ["sarus", "run"]
-        expected_message = "Bad number of arguments for command 'run'\nSee 'sarus help run'"
+        command = ["sarus", "run", "--workdir=/usr", "--workdir", "/tmp", "alpine", "true"]
+        expected_message = "option '--workdir' cannot be specified more than once\nSee 'sarus help run'"
         self._check(command, expected_message)
 
-        command = ["sarus", "run", "alpine", "--invalid-option", "true"]
-        expected_message = ("Invalid image ID [\"alpine\", \"--invalid-option\"]\n"
-                           "The image ID is expected to be a single token without options\n"
-                           "See 'sarus help run'")
+        command = ["sarus", "run"]
+        expected_message = "Too few arguments for command 'run'\nSee 'sarus help run'"
         self._check(command, expected_message)
 
         command = ["sarus", "run", "///", "true"]
@@ -218,7 +214,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "ssh-keygen", "extra-argument"]
-        expected_message = "Bad number of arguments for command 'ssh-keygen'\nSee 'sarus help ssh-keygen'"
+        expected_message = "Too many arguments for command 'ssh-keygen'\nSee 'sarus help ssh-keygen'"
         self._check(command, expected_message)
 
     def test_command_version(self):
@@ -227,7 +223,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "version", "extra-argument"]
-        expected_message = "Bad number of arguments for command 'version'\nSee 'sarus help version'"
+        expected_message = "Too many arguments for command 'version'\nSee 'sarus help version'"
         self._check(command, expected_message)
 
     def _check(self, command, expected_message):

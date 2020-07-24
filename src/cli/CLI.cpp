@@ -38,15 +38,17 @@ CLI::CLI() {
 }
 
 std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& args, std::shared_ptr<common::Config> conf) const {
-    auto argsGroups = groupArgumentsAndCorrespondingOptions(args);
+    common::CLIArguments nameAndOptionArgs, positionalArgs;
+    std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
     boost::program_options::variables_map values;
     auto factory = cli::CommandObjectsFactory{};
     auto& logger = common::Logger::getInstance();
 
     try {
         boost::program_options::store(
-            boost::program_options::command_line_parser(argsGroups.front().argc(), argsGroups.front().argv())
+            boost::program_options::command_line_parser(nameAndOptionArgs.argc(), nameAndOptionArgs.argv())
                 .options(optionsDescription)
+                .style(boost::program_options::command_line_style::unix_style)
                 .run(), values);
         boost::program_options::notify(values); // throw if options are invalid
     }
@@ -67,85 +69,55 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
         logger.setLevel(common::LogLevel::WARN);
     }
 
-    // drop first argument
-    // (string "sarus" and the related general options that we have already parsed)
-    argsGroups.pop_front();
-
     // --help option
     if(values.count("help")) {
-        argsGroups.clear(); // --help overrides other arguments and options
-        return factory.makeCommandObject("help", argsGroups, std::move(conf));
+        // --help overrides other arguments and options
+        return factory.makeCommandObject("help", common::CLIArguments{}, std::move(conf));
     }
 
     // --version option
     if(values.count("version")) {
-        argsGroups.clear(); // --version overrides other arguments and options
-        return factory.makeCommandObject("version", argsGroups, std::move(conf));
+        // --version overrides other arguments and options
+        return factory.makeCommandObject("version", common::CLIArguments{}, std::move(conf));
     }
 
     // no command name => return help command
-    if(argsGroups.empty()) {
+    if(positionalArgs.empty()) {
         return factory.makeCommandObject("help");
     }
 
-    auto commandName = std::string{argsGroups.front().argv()[0]};
+    auto commandName = std::string{positionalArgs.argv()[0]};
 
     // process help command of another command
-    bool isCommandHelpFollowedByAnArgument = commandName == "help" && argsGroups.size() > 1;
+    bool isCommandHelpFollowedByAnArgument = commandName == "help" && positionalArgs.argc() > 1;
     if(isCommandHelpFollowedByAnArgument) {
-        return parseCommandHelpOfCommand(argsGroups);
+        return parseCommandHelpOfCommand(positionalArgs);
     }
 
-    return factory.makeCommandObject(commandName, argsGroups, std::move(conf));
+    return factory.makeCommandObject(commandName, positionalArgs, std::move(conf));
 }
 
 const boost::program_options::options_description& CLI::getOptionsDescription() const {
     return optionsDescription;
 }
 
-
-/**
- * Group the arguments and their options into individual CLIArguments objects.
- * 
- * E.g. the CLI arguments "sarus --verbose run image command" is broken down into
- * four CLIArguments objects ("sarus --verbose", "run", "image", "command").
- */
-std::deque<common::CLIArguments> CLI::groupArgumentsAndCorrespondingOptions(const common::CLIArguments& args) const {
-    auto isOption = [](char* s) {
-        bool hasDashPrefix = strlen(s) > 1 && s[0]=='-' && s[1]!='-';
-        bool hasDashDashPrefix = strlen(s) > 2 && s[0]=='-' && s[1]=='-' && s[2]!='-';
-        return hasDashPrefix || hasDashDashPrefix;
-    };
-
-    assert(args.argc() >= 1);
-    assert(!isOption(args.argv()[0]));
-
-    auto result = std::deque<common::CLIArguments>{ };
-
-    for(const auto arg : args) {
-        if(!isOption(arg)) {
-            result.push_back(common::CLIArguments{});
-        }
-        result.back().push_back(arg);
-    }
-
-    return result;
-}
-
-std::unique_ptr<cli::Command> CLI::parseCommandHelpOfCommand(const std::deque<common::CLIArguments>& argsGroups) const {
-    if(argsGroups[0].argc() > 1) {
+std::unique_ptr<cli::Command> CLI::parseCommandHelpOfCommand(const common::CLIArguments& args) const {
+    auto optionsDescription = boost::program_options::options_description();
+    common::CLIArguments nameAndOptionArgs, positionalArgs;
+    std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
+    if(nameAndOptionArgs.argc() > 1) {
         auto message = boost::format("Command 'help' doesn't support options");
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
-    if(argsGroups.size() > 2) {
-        auto message = boost::format("Bad number of arguments for command 'help'"
+    if(positionalArgs.argc() > 1) {
+        auto message = boost::format("Too many arguments for command 'help'"
                                      "\nSee 'sarus help help'");
         utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
     auto factory = cli::CommandObjectsFactory{};
-    auto commandName = std::string{ argsGroups[1].argv()[0] };
+    auto commandName = std::string{ positionalArgs.argv()[0] };
     return factory.makeCommandObjectHelpOfCommand(commandName);
 }
 

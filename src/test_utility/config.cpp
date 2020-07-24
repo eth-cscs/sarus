@@ -45,6 +45,7 @@ static void populateJSON(rj::Document& document) {
     auto hooksDir = prefixDir / "etc/hooks.d";
     auto bundleDir = prefixDir / "var/OCIBundle";
     auto localRepositoryBaseDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("sarus-test-localRepositoryBaseDir"));
+    auto centralizedRepositoryDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("sarus-test-centralizedRepositoryDir"));
 
     document.AddMember( "securityChecks",
                         false,
@@ -66,6 +67,9 @@ static void populateJSON(rj::Document& document) {
                         allocator);
     document.AddMember( "localRepositoryBaseDir",
                         rj::Value{localRepositoryBaseDir.c_str(), allocator},
+                        allocator);
+    document.AddMember( "centralizedRepositoryDir",
+                        rj::Value{centralizedRepositoryDir.c_str(), allocator},
                         allocator);
     document.AddMember( "ramFilesystemType",
                         rj::Value{"ramfs"},
@@ -105,13 +109,6 @@ static void populateJSON(rj::Document& document) {
                             allocator);
     mountValue.AddMember(   "destination",
                             rj::Value{"/destination", allocator},
-                            allocator);
-    rj::Value flagsValue(rj::kObjectType);
-    flagsValue.AddMember(   "bind-propagation",
-                            rj::Value{"rprivate", allocator},
-                            allocator);
-    mountValue.AddMember(   "flags",
-                            flagsValue,
                             allocator);
     siteMountsValue.PushBack(mountValue, allocator);
     document.AddMember("siteMounts", siteMountsValue, allocator);

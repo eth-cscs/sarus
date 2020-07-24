@@ -34,6 +34,13 @@ public:
     CLIArguments(const CLIArguments& rhs);
     CLIArguments(int argc, char* argv[]);
     CLIArguments(std::initializer_list<std::string> args);
+    template<class InputIter>
+    CLIArguments(InputIter begin, InputIter end) : CLIArguments() {
+        for(InputIter arg=begin; arg!=end; ++arg) {
+            push_back(*arg);
+        }
+    };
+
     ~CLIArguments();
 
     CLIArguments& operator=(const CLIArguments& rhs);

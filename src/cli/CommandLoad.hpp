@@ -36,11 +36,11 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandLoad(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config> conf)
+    CommandLoad(const common::CLIArguments& args, std::shared_ptr<common::Config> conf)
     : conf{std::move(conf)}
     {
         initializeOptionsDescription();
-        parseCommandArguments(argsGroups);
+        parseCommandArguments(args);
     }
 
     void execute() override {
@@ -72,28 +72,27 @@ private:
             ("centralized-repository", "Use centralized repository instead of the local one");
     }
 
-    void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
+    void parseCommandArguments(const common::CLIArguments& args) {
         cli::utility::printLog( boost::format("parsing CLI arguments of load command"), common::LogLevel::DEBUG);
 
-        // the load command supports exactly three arguments
-        if(argsGroups.size() != 3) {
-            auto message = boost::format("Bad number of arguments for command 'load'"
-                                        "\nSee 'sarus help load'");
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-        }
+        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
+
+        // the load command expects exactly two positional arguments
+        cli::utility::validateNumberOfPositionalArguments(positionalArgs, 2, 2, "load");
 
         try {
             boost::program_options::variables_map values;
             boost::program_options::store(
-                boost::program_options::command_line_parser(argsGroups[0].argc(), argsGroups[0].argv())
+                boost::program_options::command_line_parser(nameAndOptionArgs.argc(), nameAndOptionArgs.argv())
                         .options(optionsDescription)
+                        .style(boost::program_options::command_line_style::unix_style)
                         .run(), values);
             boost::program_options::notify(values);
 
-            parsePathOfArchiveToBeLoaded(argsGroups[1]);
+            parsePathOfArchiveToBeLoaded(positionalArgs.argv()[0]);
 
-            conf->imageID = cli::utility::parseImageID(argsGroups[2]);
+            conf->imageID = cli::utility::parseImageID(positionalArgs.argv()[1]);
             conf->imageID.server = "load";
             conf->useCentralizedRepository = values.count("centralized-repository");
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
@@ -107,16 +106,11 @@ private:
         cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
     }
 
-    void parsePathOfArchiveToBeLoaded(const common::CLIArguments& archiveArgs) {
-        if(archiveArgs.argc() != 1) {
-            SARUS_THROW_ERROR("failed to parse archive's path"
-                                " (archive's path is expected to be a single token without options)")
-        }
-
+    void parsePathOfArchiveToBeLoaded(const boost::filesystem::path& archiveArg) {
         try {
-            conf->archivePath = boost::filesystem::absolute(archiveArgs.argv()[0]);
+            conf->archivePath = boost::filesystem::absolute(archiveArg);
         } catch(const std::exception& e) {
-            auto message = boost::format("failed to convert archive's path %s to absolute path") % archiveArgs.argv()[0];
+            auto message = boost::format("failed to convert archive's path %s to absolute path") % archiveArg;
             SARUS_RETHROW_ERROR(e, message.str());
         }
     }

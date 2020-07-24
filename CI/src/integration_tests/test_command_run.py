@@ -44,6 +44,15 @@ class TestCommandRun(unittest.TestCase):
                                     options_of_run_command=["--workdir=/non-exising-dir-2931"])
         self.assertEqual(out, ["/non-exising-dir-2931"])
 
+    def test_entrypoint_with_option_arguments(self):
+        util.pull_image_if_necessary(is_centralized_repository=True, image="alpine:3.8")
+
+        out = util.run_command_in_container(is_centralized_repository=False,
+                                    image="alpine:3.8",
+                                    command=["--option", "arg"],
+                                    options_of_run_command=["--entrypoint=echo"])
+        self.assertEqual(out, ["--option arg"])
+
     def test_init_process(self):
         # without init process
         processes = self._run_ps_in_container(with_init_process=False)

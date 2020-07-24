@@ -62,7 +62,7 @@ std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(const std
 
 std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(
     const std::string& commandName,
-    const std::deque<common::CLIArguments>& commandArgsGroups,
+    const common::CLIArguments& commandArgs,
     std::shared_ptr<common::Config> config) const {
     if(!isValidCommandName(commandName)) {
         auto message = boost::format("'%s' is not a Sarus command\nSee 'sarus help'")
@@ -71,7 +71,7 @@ std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
     auto it = mapWithArguments.find(commandName);
-    return it->second(commandArgsGroups, std::move(config));
+    return it->second(commandArgs, std::move(config));
 }
 
 std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObjectHelpOfCommand(const std::string& commandName) const {

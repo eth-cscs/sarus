@@ -33,11 +33,11 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandRmi(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config> conf)
+    CommandRmi(const common::CLIArguments& args, std::shared_ptr<common::Config> conf)
         : conf{std::move(conf)}
     {
         initializeOptionsDescription();
-        parseCommandArguments(argsGroups);
+        parseCommandArguments(args);
     }
 
     void execute() override {
@@ -70,26 +70,25 @@ private:
             ("centralized-repository", "Use centralized repository instead of the local one");
     }
 
-    void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
+    void parseCommandArguments(const common::CLIArguments& args) {
         cli::utility::printLog(boost::format("parsing CLI arguments of rmi command"), common::LogLevel::DEBUG);
 
-        // the rmi command expects exactly two arguments
-        if(argsGroups.size() != 2) {
-            auto message = boost::format("Bad number of arguments for command 'rmi'"
-                                        "\nSee 'sarus help rmi'");
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-        }
+        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
+
+        // the rmi command expects exactly one positional argument
+        cli::utility::validateNumberOfPositionalArguments(positionalArgs, 1, 1, "rmi");
 
         try {
             boost::program_options::variables_map values;
             boost::program_options::store(
-                boost::program_options::command_line_parser(argsGroups[0].argc(), argsGroups[0].argv())
+                boost::program_options::command_line_parser(nameAndOptionArgs.argc(), nameAndOptionArgs.argv())
                         .options(optionsDescription)
+                        .style(boost::program_options::command_line_style::unix_style)
                         .run(), values);
             boost::program_options::notify(values);
 
-            conf->imageID = cli::utility::parseImageID(argsGroups[1]);
+            conf->imageID = cli::utility::parseImageID(positionalArgs.argv()[0]);
             conf->useCentralizedRepository = values.count("centralized-repository");
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }

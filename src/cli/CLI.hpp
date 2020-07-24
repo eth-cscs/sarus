@@ -34,11 +34,10 @@ public:
 
 // these methods are public for test purpose
 public:
-    std::deque<common::CLIArguments> groupArgumentsAndCorrespondingOptions(const common::CLIArguments&) const;
     const boost::program_options::options_description& getOptionsDescription() const;
 
 private:
-    std::unique_ptr<cli::Command> parseCommandHelpOfCommand(const std::deque<common::CLIArguments>&) const;
+    std::unique_ptr<cli::Command> parseCommandHelpOfCommand(const common::CLIArguments&) const;
 
 private:
     boost::program_options::options_description optionsDescription{"Options"};

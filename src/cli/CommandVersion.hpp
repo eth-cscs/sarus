@@ -27,10 +27,10 @@ class CommandVersion : public Command {
 public:
     CommandVersion() = default;
 
-    CommandVersion(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<const common::Config> conf)
+    CommandVersion(const common::CLIArguments& args, std::shared_ptr<const common::Config> conf)
         : conf{std::move(conf)}
     {
-        parseCommandArguments(argsGroups);
+        parseCommandArguments(args);
     }
 
     void execute() override {
@@ -53,18 +53,18 @@ public:
     }
 
 private:
-    void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
+    void parseCommandArguments(const common::CLIArguments& args) {
         cli::utility::printLog(boost::format("parsing CLI arguments of version command"), common::LogLevel::DEBUG);
 
-        // the version command doesn't support additional arguments
-        if(argsGroups.size() > 1) {
-            auto message = boost::format("Bad number of arguments for command 'version'"
-                                         "\nSee 'sarus help version'");
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-        }
+        auto optionsDescription = boost::program_options::options_description();
+        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
+
+        // the version command doesn't support positional arguments
+        cli::utility::validateNumberOfPositionalArguments(positionalArgs, 0, 0, "version");
+
         // the version command doesn't support options
-        if(!argsGroups.empty() && argsGroups[0].argc() > 1) {
+        if(nameAndOptionArgs.argc() > 1) {
             auto message = boost::format("Command 'version' doesn't support options"
                                          "\nSee 'sarus help version'");
             utility::printLog(message, common::LogLevel::GENERAL, std::cerr);

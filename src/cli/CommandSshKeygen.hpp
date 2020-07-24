@@ -29,11 +29,11 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandSshKeygen(const std::deque<common::CLIArguments>& argsGroups, std::shared_ptr<common::Config> config)
+    CommandSshKeygen(const common::CLIArguments& args, std::shared_ptr<common::Config> config)
         : conf{std::move(config)}
     {
         initializeOptionsDescription();
-        parseCommandArguments(argsGroups);
+        parseCommandArguments(args);
         conf->useCentralizedRepository = false;
         conf->directories.initialize(conf->useCentralizedRepository, *conf);
     }
@@ -75,22 +75,21 @@ private:
             ("overwrite", "Overwrite the SSH keys if they already exist");
     }
 
-    void parseCommandArguments(const std::deque<common::CLIArguments>& argsGroups) {
+    void parseCommandArguments(const common::CLIArguments& args) {
         cli::utility::printLog(boost::format("parsing CLI arguments of ssh-keygen command"), common::LogLevel::DEBUG);
 
-        // the ssh-keygen command doesn't support additional arguments
-        if(argsGroups.size() > 1) {
-            auto message = boost::format("Bad number of arguments for command 'ssh-keygen'"
-                                         "\nSee 'sarus help ssh-keygen'");
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-        }
+        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
+
+        // the ssh-keygen command doesn't support positional arguments
+        cli::utility::validateNumberOfPositionalArguments(positionalArgs, 0, 0, "ssh-keygen");
 
         try {
             boost::program_options::variables_map values;
             boost::program_options::store(
-                boost::program_options::command_line_parser(argsGroups[0].argc(), argsGroups[0].argv())
+                boost::program_options::command_line_parser(nameAndOptionArgs.argc(), nameAndOptionArgs.argv())
                         .options(optionsDescription)
+                        .style(boost::program_options::command_line_style::unix_style)
                         .run(), values);
             boost::program_options::notify(values);
 
