@@ -48,10 +48,9 @@ make html
 
 If you think you've identified a security issue in the project, please *DO NOT*
 report the issue publicly via the Github issue tracker. Instead, send an
-email with as many details as possible to the following addresses:
-`alberto.madonna@cscs.ch`,
-`kean.mariotti@cscs.ch`.
-These are the business addresses of the core Sarus maintainers.
+email with as many details as possible to the following address:
+`alberto.madonna@cscs.ch`.
+This is the business address of the core Sarus maintainer.
 
 To report bugs and request new features, you can use GitHub [issues](https://github.com/eth-cscs/sarus/issues).
 

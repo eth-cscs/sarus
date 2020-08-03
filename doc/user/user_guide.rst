@@ -509,16 +509,22 @@ entrypoint the default arguments get discarded as well:
     SUPPORT_URL="https://www.debian.org/support"
     BUG_REPORT_URL="https://bugs.debian.org/"
 
-The entrypoint can be removed by using ``--entrypoint`` without arguments. This
+The entrypoint can be removed by passing an empty value to ``--entrypoint``. This
 is useful, for example, for inspecting and debugging containers:
 
 .. code-block:: bash
 
-    $ srun --pty sarus run --entrypoint -t <image repo>/echo bash
+    $ srun --pty sarus run --entrypoint "" -t <image repo>/echo bash
     $ env | grep ^PATH
     PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
     $ exit
+
+.. note::
+
+    Using the "adjacent value" style to remove an image entrypoint
+    (i.e. ``--entrypoint=""``) is not supported. Please pass the empty string
+    value separated by a whitespace.
 
 
 .. _user-working-dir:
@@ -835,7 +841,7 @@ support PMI-2.
 
     Additional information about the support provided by PMIx for
     containers and cross-version use cases can be found here:
-    https://pmix.org/support/faq/how-does-pmix-work-with-containers/
+    https://openpmix.github.io/support/faq/how-does-pmix-work-with-containers
 
 As a general rule of thumb, corresponding MPI implementations (e.g. using an
 MPICH-compiled ``mpiexec`` on the host to launch Sarus containers featuring
