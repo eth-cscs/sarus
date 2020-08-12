@@ -36,6 +36,7 @@ ConfigRAII::~ConfigRAII() {
         boost::filesystem::remove_all(dir);
     }
     boost::filesystem::remove_all(config->directories.repository);
+    boost::filesystem::current_path(startingPath);
 }
 
 static void populateJSON(rj::Document& document) {
@@ -152,6 +153,7 @@ void createOCIHook(const boost::filesystem::path& hooksDir) {
 
 ConfigRAII makeConfig() {
     auto raii = ConfigRAII{};
+    raii.startingPath = boost::filesystem::current_path();
     raii.config = std::make_shared<common::Config>();
 
     populateJSON(raii.config->json);

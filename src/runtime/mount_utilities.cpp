@@ -163,6 +163,8 @@ void loopMountSquashfs(const boost::filesystem::path& image, const boost::filesy
     command += " " + image.string();
     command += " " + mountPoint.string();
 
+    utility::logMessage(boost::format{"Performing loop mount: %s "} % command, common::LogLevel::DEBUG);
+
     try {
         common::executeCommand(command);
     }
@@ -180,6 +182,8 @@ void mountOverlayfs(const boost::filesystem::path& lowerDir,
         % lowerDir.string()
         % upperDir.string()
         % workDir.string();
+    utility::logMessage(boost::format{"Performing overlay mount to %s "} % mountPoint, common::LogLevel::DEBUG);
+    utility::logMessage(boost::format{"Overlay options: %s "} % options.str(), common::LogLevel::DEBUG);
     if(mount("overlay", mountPoint.c_str(), "overlay", MS_MGC_VAL, options.str().c_str()) != 0) {
         auto message = boost::format("Failed to mount OverlayFS on %s (options: %s): %s")
             % mountPoint % options % strerror(errno);

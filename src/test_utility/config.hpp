@@ -17,6 +17,8 @@
 
 #include <memory>
 
+#include <boost/filesystem.hpp>
+
 #include "common/Config.hpp"
 
 namespace test_utility {
@@ -25,6 +27,7 @@ namespace config {
 struct ConfigRAII {
     ~ConfigRAII();
     std::shared_ptr<sarus::common::Config> config;
+    boost::filesystem::path startingPath;
 };
 
 ConfigRAII makeConfig();

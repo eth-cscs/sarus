@@ -65,7 +65,8 @@ TEST(MountUtilitiesTestGroup, validate_mount_destination_test) {
     // Test mount on other device
     auto otherDeviceDir = boost::filesystem::path{"/otherDevice"};
     common::createFoldersIfNecessary(rootfsDir / otherDeviceDir);
-    runtime::loopMountSquashfs("test_image.squashfs", rootfsDir / otherDeviceDir);
+    auto imageSquashfs = boost::filesystem::path{__FILE__}.parent_path() / "test_image.squashfs";
+    runtime::loopMountSquashfs(imageSquashfs, rootfsDir / otherDeviceDir);
     CHECK_THROWS(common::Error, runtime::validateMountDestination(rootfsDir / otherDeviceDir, config));
     CHECK(umount((rootfsDir / otherDeviceDir).c_str()) == 0);
 

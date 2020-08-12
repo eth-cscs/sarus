@@ -390,7 +390,7 @@ void createFoldersIfNecessary(const boost::filesystem::path& path, uid_t uid, gi
                 SARUS_RETHROW_ERROR(e, message.str());
             }
             if(!created) {
-                // the creation might have failed because another process cuncurrently
+                // the creation might have failed because another process concurrently
                 // created the same directory. So check whether the directory was indeed
                 // created by another process.
                 if(!boost::filesystem::is_directory(currentPath)) {
@@ -404,7 +404,7 @@ void createFoldersIfNecessary(const boost::filesystem::path& path, uid_t uid, gi
 }
 
 void createFileIfNecessary(const boost::filesystem::path& path, uid_t uid, gid_t gid) {
-    // NOTE: Broken symlinks will NOT be recognized as existing and hence will be overriden.
+    // NOTE: Broken symlinks will NOT be recognized as existing and hence will be overridden.
     if(boost::filesystem::exists(path)){
         logMessage(boost::format{"File %s already exists"} % path, LogLevel::DEBUG);
         return;

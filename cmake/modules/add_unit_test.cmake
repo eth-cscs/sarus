@@ -9,7 +9,7 @@ function(add_unit_test test_name test_src_file link_libraries)
     target_link_libraries(${test_bin_file} ${link_libraries} ${CPPUTEST_LIB})
     add_dependencies(${test_bin_file} cpputest_library)
 
-    set(test_commands "cd ${CMAKE_CURRENT_SOURCE_DIR} && ${CMAKE_CURRENT_BINARY_DIR}/${test_bin_file}")
+    set(test_commands "cd ${CMAKE_CURRENT_BINARY_DIR} && ${CMAKE_CURRENT_BINARY_DIR}/${test_bin_file}")
 
     if(${ENABLE_TESTS_WITH_VALGRIND})
         set(test_commands "${test_commands} && valgrind --tool=memcheck --leak-check=full --suppressions=valgrind.suppressions --error-exitcode=1 ${CMAKE_CURRENT_BINARY_DIR}/${test_bin_file}")
