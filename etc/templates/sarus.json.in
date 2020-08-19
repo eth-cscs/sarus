@@ -1,0 +1,17 @@
+{
+    "securityChecks": true,
+    "OCIBundleDir": "@INSTALL_PATH@/var/OCIBundleDir",
+    "rootfsFolder": "rootfs",
+    "prefixDir": "@INSTALL_PATH@",
+    "hooksDir": "@INSTALL_PATH@/etc/hooks.d",
+    "tempDir": "/tmp",
+    "localRepositoryBaseDir": "@LOCAL_REPO_DIR@",
+    "centralizedRepositoryDir": "@CENTRAL_REPO_DIR@",
+    "mksquashfsPath": "@MKSQUASHFS_PATH@",
+    "initPath": "@INIT_PATH@",
+    "runcPath": "@RUNC_PATH@",
+    "ramFilesystemType": "tmpfs",
+    "siteMounts": [
+        @SITE_MOUNTS@
+    ]
+}

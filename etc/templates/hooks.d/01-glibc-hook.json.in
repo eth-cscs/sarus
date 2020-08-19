@@ -1,0 +1,17 @@
+{
+    "version": "1.0.0",
+    "hook": {
+        "path": "@INSTALL_PATH@/bin/glibc_hook",
+        "env": [
+            "LDCONFIG_PATH=/sbin/ldconfig",
+            "READELF_PATH=/usr/bin/readelf",
+            "GLIBC_LIBS=@GLIBC_LIBS@"
+        ]
+    },
+    "when": {
+        "annotations": {
+            "^com.hooks.glibc.enabled$": "^true$"
+        }
+    },
+    "stages": ["prestart"]
+}

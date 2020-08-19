@@ -165,11 +165,11 @@ ConfigRAII makeConfig() {
     common::executeCommand("getent passwd >" + prefixDir.string() + "/etc/passwd");
     common::executeCommand("getent group >" + prefixDir.string() + "/etc/group");
 
-    // JSON schemas
+     // JSON schemas
     auto repoRootDir = boost::filesystem::path{__FILE__}.parent_path().parent_path().parent_path();
-    common::copyFile(repoRootDir / "definitions.schema.json", prefixDir / "etc/definitions.schema.json");
-    common::copyFile(repoRootDir / "sarus.schema.json", prefixDir / "etc/sarus.schema.json");
-    common::copyFile(repoRootDir / "hook.schema.json", prefixDir / "etc/hook.schema.json");
+    common::copyFile(repoRootDir / "etc/definitions.schema.json", prefixDir / "etc/definitions.schema.json");
+    common::copyFile(repoRootDir / "etc/sarus.schema.json", prefixDir / "etc/sarus.schema.json");
+    common::copyFile(repoRootDir / "etc/hook.schema.json", prefixDir / "etc/hook.schema.json");
 
     // hooks
     createOCIHook(raii.config->json["hooksDir"].GetString());

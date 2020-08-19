@@ -29,7 +29,7 @@ TEST_GROUP(OCIHooksTestGroup) {
         .parent_path()
         .parent_path()
         .parent_path()
-        .parent_path() / "hook.schema.json";
+        .parent_path() / "etc/hook.schema.json";
 };
 
 TEST(OCIHooksTestGroup, create_hook_with_schema_incompatibility) {

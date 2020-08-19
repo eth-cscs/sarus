@@ -41,10 +41,10 @@ class TestSecurityChecks(unittest.TestCase):
         self._sarus_foo()
 
     def test_untamperable_config(self):
-        self._check_untamperable(CONFIG_FILENAME, "sarus.json")
+        self._check_untamperable(CONFIG_FILENAME)
 
     def test_untamperable_config_schema(self):
-        self._check_untamperable(SCHEMA_FILENAME, "sarus.schema.json")
+        self._check_untamperable(SCHEMA_FILENAME)
 
     def test_disabled_security_checks(self):
         with disabled_security_checks():
@@ -53,30 +53,30 @@ class TestSecurityChecks(unittest.TestCase):
                 self._sarus_foo()
 
             # but not these two...
-            self._check_untamperable(CONFIG_FILENAME, "sarus.json")
-            self._check_untamperable(SCHEMA_FILENAME, "sarus.schema.json")
+            self._check_untamperable(CONFIG_FILENAME)
+            self._check_untamperable(SCHEMA_FILENAME)
 
     def test_untamperable_binaries(self):
         MKSQ_PATH = shutil.which("mksquashfs")
         INIT_PATH = "/opt/sarus/default/bin/tini-static-amd64"
         RUNC_PATH = "/opt/sarus/default/bin/runc.amd64"
 
-        self._check_untamperable(MKSQ_PATH, MKSQ_PATH)
-        self._check_untamperable(INIT_PATH, INIT_PATH)
-        self._check_untamperable(RUNC_PATH, RUNC_PATH)
+        self._check_untamperable(MKSQ_PATH)
+        self._check_untamperable(INIT_PATH)
+        self._check_untamperable(RUNC_PATH)
 
-        self._check_untamperable("/opt/sarus/default/bin/", "/opt/sarus/default/bin")
+        self._check_untamperable("/opt/sarus/default/bin/")
 
     def test_untamperable_hooks_and_deps(self):
         # ssh is only default hook enabled
-        self._check_untamperable("/opt/sarus/default/etc/hooks.d/01-ssh-hook.json", "/opt/sarus/default/etc/hooks.d/01-ssh-hook.json")
-        self._check_untamperable("/opt/sarus/default/bin/ssh_hook", "/opt/sarus/default/bin/ssh_hook")
-        self._check_untamperable("/opt/sarus/default/dropbear", "/opt/sarus/default/dropbear")
+        self._check_untamperable("/opt/sarus/default/etc/hooks.d/07-ssh-hook.json")
+        self._check_untamperable("/opt/sarus/default/bin/ssh_hook")
+        self._check_untamperable("/opt/sarus/default/dropbear")
 
 
     def _assert_raises(self, command, expected_message_content):
             actual_message = self._get_sarus_error_output(command)
-            assert expected_message_content in  actual_message
+            assert expected_message_content in actual_message
 
     def _get_sarus_error_output(self, command):
         with open(os.devnull, 'wb') as devnull:
@@ -95,15 +95,20 @@ class TestSecurityChecks(unittest.TestCase):
             res = subprocess.run(SARUS_FOO_CMD, stdout=devnull, check=True)
         assert res.returncode == 0
 
-    def _check_untamperable(self, path, err_substr):
+    def _check_untamperable(self, path):
+        if os.path.isdir(path):
+            entry = path if path[-1] != '/' else path[:-1]
+        else:
+            entry = os.path.basename(path)
+
         with changed_owner(path, NONROOT_ID, NONROOT_ID):
-            self._assert_raises(SARUS_FOO_CMD, err_substr + '" must be owned by root')
+            self._assert_raises(SARUS_FOO_CMD, '{}" must be owned by root'.format(entry))
 
         with changed_permissions(path, stat.S_IWGRP):
-            self._assert_raises(SARUS_FOO_CMD, err_substr + '" cannot be group- or world-writable')
+            self._assert_raises(SARUS_FOO_CMD, '{}" cannot be group- or world-writable'.format(entry))
 
         with changed_permissions(path, stat.S_IWOTH):
-            self._assert_raises(SARUS_FOO_CMD, err_substr + '" cannot be group- or world-writable')
+            self._assert_raises(SARUS_FOO_CMD, '{}" cannot be group- or world-writable'.format(entry))
 
 
     def tearDown(self):

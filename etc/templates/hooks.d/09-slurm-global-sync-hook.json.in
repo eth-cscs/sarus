@@ -1,10 +1,10 @@
 {
     "version": "1.0.0",
     "hook": {
-        "path": "@CMAKE_INSTALL_PREFIX@/bin/slurm_global_sync_hook",
+        "path": "@INSTALL_PATH@/bin/slurm_global_sync_hook",
         "env": [
-            "HOOK_BASE_DIR=/home",
-            "PASSWD_FILE=@CMAKE_INSTALL_PREFIX@/etc/passwd"
+            "HOOK_BASE_DIR=@HOOK_BASE_DIR@",
+            "PASSWD_FILE=@INSTALL_PATH@/etc/passwd"
         ]
     },
     "when": {

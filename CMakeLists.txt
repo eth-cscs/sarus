@@ -60,9 +60,6 @@ add_subdirectory(dep)
 add_subdirectory(etc)
 add_subdirectory(src)
 
-install(FILES sarus.json.in sarus.schema.json hook.schema.json definitions.schema.json DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)
-install(FILES 01-ssh-hook.json.in DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/hooks.d)
-install(FILES 02-slurm-global-sync-hook.json.in DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/hooks.d)
 install(FILES configure_installation.sh DESTINATION ${CMAKE_INSTALL_PREFIX} PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE

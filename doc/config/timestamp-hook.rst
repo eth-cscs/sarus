@@ -18,7 +18,7 @@ The timestamp has the following format:
 
 The following is an actual timestamp example:
 
-``[1552438146.449463] [nid07641-16741] [hook] [INFO] Timestamp hook: After-runc``
+``[1552438146.449463] [nid07641-16741] [hook] [INFO] Timestamp hook: After-runtime``
 
 This hook does not alter the container in any way, and is primarily meant as a
 tool for developers and system administrators working with OCI hooks.
@@ -56,7 +56,7 @@ enabling the Timestamp hook:
         "hook": {
             "path": "/opt/sarus/bin/timestamp_hook",
             "env": [
-                "TIMESTAMP_HOOK_MESSAGE=After-runc"
+                "TIMESTAMP_HOOK_MESSAGE=After-runtime"
             ]
         },
         "when": {
@@ -89,7 +89,7 @@ The previous example could produce an output in the logfile like the following:
 
 .. code-block:: bash
 
-    [775589.671527655] [dom101-12385] [hook] [INFO] Timestamp hook: After-runc
+    [775589.671527655] [dom101-12385] [hook] [INFO] Timestamp hook: After-runtime
     [775589.675871678] [dom101-12386] [hook] [INFO] Timestamp hook: After-glibc-hook
     [775589.682727735] [dom101-12392] [hook] [INFO] Timestamp hook: After-NVIDIA-hook
     [775589.685961371] [dom101-12393] [hook] [INFO] Timestamp hook: After-MPI-hook

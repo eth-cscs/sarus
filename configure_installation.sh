@@ -51,12 +51,12 @@ if [ -e etc/sarus.json ]; then
     echo "Found existing configuration. Creating backup (etc/sarus.json.bak)."
     mv etc/sarus.json etc/sarus.json.bak
 fi
-cp etc/sarus.json.in etc/sarus.json
+cp etc/templates/sarus.json.in etc/sarus.json
 exit_on_error "failed to create etc/sarus.json"
 
 # configure PREFIX_DIR
-sed -i etc/sarus.json -e "s|@CMAKE_INSTALL_PREFIX@|${prefix_dir}|g"
-exit_on_error "failed to set CMAKE_INSTALL_PREFIX in etc/sarus.json"
+sed -i etc/sarus.json -e "s|@INSTALL_PATH@|${prefix_dir}|g"
+exit_on_error "failed to set INSTALL_PATH in etc/sarus.json"
 
 # configure MKSQUASHFS_PATH
 mksquashfs_path=$(which mksquashfs)
@@ -82,6 +82,21 @@ fi
 sed -i etc/sarus.json -e "s|@RUNC_PATH@|${runc_path}|g"
 exit_on_error "failed to set RUNC_PATH in etc/sarus.json"
 
+# configure repository dirs
+sed -i etc/sarus.json -e "s|@LOCAL_REPO_DIR@|/home|g"
+exit_on_error "failed to set LOCAL_REPO_DIR in etc/sarus.json"
+sed -i etc/sarus.json -e "s|@CENTRAL_REPO_DIR@|/var/sarus/centralized_repository|g"
+exit_on_error "failed to set CENTRAL_REPO_DIR in etc/sarus.json"
+
+# configure sitemounts
+sed -i etc/sarus.json -e 's|@SITE_MOUNTS@|{ \
+                                            "type": "bind", \
+                                            "source": "/home", \
+                                            "destination": "/home", \
+                                            "flags": {} \
+                                          }|g'
+exit_on_error "failed to set SITE_MOUNTS in etc/sarus.json"
+
 # issue warning about tmpfs filesystem on Cray CLE <7
 if [ -e /etc/opt/cray/release/cle-release ]; then
     cle_version=$(cat /etc/opt/cray/release/cle-release |head -n 1 |sed 's/RELEASE=\([0-9]\+\).*/\1/')
@@ -98,10 +113,15 @@ if [ -e etc/hooks.d ]; then
     for file_json_in in $(cd etc/hooks.d && ls *.json.in); do
         file_json=$(basename ${file_json_in} .in)
         echo "Configuring etc/hooks.d/"${file_json}
+
         cp etc/hooks.d/${file_json_in} etc/hooks.d/${file_json}
         exit_on_error "failed to create etc/hooks.d/${file_json}"
-        sed -i etc/hooks.d/${file_json} -e "s|@CMAKE_INSTALL_PREFIX@|${prefix_dir}|g"
-        exit_on_error "failed to set CMAKE_INSTALL_PREFIX in etc/hooks.d/${file_json}"
+
+        sed -i etc/hooks.d/${file_json} -e "s|@INSTALL_PATH@|${prefix_dir}|g"
+        exit_on_error "failed to set INSTALL_PATH in etc/hooks.d/${file_json}"
+
+        sed -i etc/hooks.d/${file_json} -e "s|@HOOK_BASE_DIR@|/home|g"
+        exit_on_error "failed to set HOOK_BASE_DIR in etc/hooks.d/${file_json}"
     done
 fi
 

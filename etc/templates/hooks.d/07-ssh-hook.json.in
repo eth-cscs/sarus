@@ -1,11 +1,11 @@
 {
     "version": "1.0.0",
     "hook": {
-        "path": "@CMAKE_INSTALL_PREFIX@/bin/ssh_hook",
+        "path": "@INSTALL_PATH@/bin/ssh_hook",
         "env": [
-            "HOOK_BASE_DIR=/home",
-            "PASSWD_FILE=@CMAKE_INSTALL_PREFIX@/etc/passwd",
-            "DROPBEAR_DIR=@CMAKE_INSTALL_PREFIX@/dropbear",
+            "HOOK_BASE_DIR=@HOOK_BASE_DIR@",
+            "PASSWD_FILE=@INSTALL_PATH@/etc/passwd",
+            "DROPBEAR_DIR=@INSTALL_PATH@/dropbear",
             "SERVER_PORT=15263"
         ],
         "args": [

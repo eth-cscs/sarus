@@ -1,0 +1,18 @@
+{
+    "version": "1.0.0",
+    "hook": {
+        "path": "@INSTALL_PATH@/bin/mpi_hook",
+        "env": [
+            "LDCONFIG_PATH=/sbin/ldconfig",
+            "MPI_LIBS=@MPI_LIBS@",
+            "MPI_DEPENDENCY_LIBS=@MPI_DEPENDENCY_LIBS@",
+            "BIND_MOUNTS=@MPI_BIND_MOUNTS@"
+        ]
+    },
+    "when": {
+        "annotations": {
+            "^com.hooks.mpi.enabled$": "^true$"
+        }
+    },
+    "stages": ["prestart"]
+}

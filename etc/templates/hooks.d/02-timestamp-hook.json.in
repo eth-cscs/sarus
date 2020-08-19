@@ -1,0 +1,13 @@
+{
+    "version": "1.0.0",
+    "hook": {
+        "path": "@INSTALL_PATH@/bin/timestamp_hook",
+        "env": [
+            "TIMESTAMP_HOOK_MESSAGE=After-glibc-hook"
+        ]
+    },
+    "when": {
+        "always": true
+    },
+    "stages": ["prestart"]
+}
