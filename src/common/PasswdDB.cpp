@@ -61,6 +61,19 @@ std::string PasswdDB::getUsername(uid_t uid) const {
     SARUS_THROW_ERROR(message.str());
 }
 
+boost::filesystem::path PasswdDB::getHomeDirectory(uid_t uid) const {
+    for(const auto& entry : entries) {
+        if(entry.uid == uid) {
+            logMessage(boost::format("Found home directory for uid=%d: %s") % uid % entry.userHomeDirectory,
+                common::LogLevel::DEBUG);
+            return entry.userHomeDirectory;
+        }
+    }
+
+    auto message = boost::format("Failed to retrieve home directory for uid=%d") % uid;
+    SARUS_THROW_ERROR(message.str());
+}
+
 const std::vector<PasswdDB::Entry>& PasswdDB::getEntries() const {
     return entries;
 }
@@ -96,6 +109,17 @@ PasswdDB::Entry PasswdDB::parseLine(const std::string& line) const {
     }
 
     return entry;
+}
+
+void PasswdDB::logMessage(const boost::format& message, common::LogLevel level,
+                std::ostream& out, std::ostream& err) const {
+    logMessage(message.str(), level, out, err);
+}
+
+void PasswdDB::logMessage(const std::string& message, common::LogLevel level,
+                std::ostream& out, std::ostream& err) const {
+    auto subsystemName = "PasswdDB";
+    common::Logger::getInstance().log(message, subsystemName, level, out, err);
 }
 
 }} // namespace

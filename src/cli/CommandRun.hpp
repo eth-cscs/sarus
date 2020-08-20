@@ -244,6 +244,12 @@ private:
             std::string{ conf->json["prefixDir"].GetString() } + "/bin/ssh_hook",
             "check-user-has-sshkeys"
         };
+        if(sarus::common::Logger::getInstance().getLevel() == sarus::common::LogLevel::INFO) {
+            args.push_back("--verbose");
+        }
+        else if(sarus::common::Logger::getInstance().getLevel() == sarus::common::LogLevel::DEBUG) {
+            args.push_back("--debug");
+        }
 
         auto setUserIdentity = [this]() {
             auto gid = conf->userIdentity.gid;

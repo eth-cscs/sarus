@@ -47,6 +47,50 @@ TEST(UtilityTestGroup, parseEnvironmentVariables) {
     }
 }
 
+TEST(UtilityTestGroup, getEnvironmentVariable) {
+    auto testKey = std::string{"SARUS_UNITTEST_GETVAR"};
+    auto testValue = std::string{"dummy"};
+    auto testVariable = std::string{"SARUS_UNITTEST_GETVAR=dummy"};
+
+    // test with variable unset
+    CHECK_THROWS(common::Error, common::getEnvironmentVariable(testKey));
+
+    // test with variable set
+    common::setEnvironmentVariable(testVariable);
+    auto fallbackValue = std::string("fallback");
+    CHECK_EQUAL(common::getEnvironmentVariable(testKey), testValue);
+}
+
+TEST(UtilityTestGroup, setEnvironmentVariable) {
+    auto testKey = std::string{"SARUS_UNITTEST_SETVAR"};
+    auto testValue = std::string{"dummy"};
+    auto testVariable = std::string{"SARUS_UNITTEST_SETVAR=dummy"};
+
+    // test with variable not set
+    if (unsetenv(testKey.c_str()) != 0) {
+        auto message = boost::format("Error un-setting the variable used by the test: %s") % strerror(errno);
+        FAIL(message.str().c_str());
+    }
+    common::setEnvironmentVariable(testVariable);
+    char *envValue = getenv(testKey.c_str());
+    if (envValue == nullptr) {
+        auto message = boost::format("Error getting the test variable from the environment");
+        FAIL(message.str().c_str());
+    }
+    CHECK_EQUAL(std::string(envValue), testValue);
+
+    // test overwrite with variable set
+    testVariable = std::string{"SARUS_UNITTEST_SETVAR=overwrite_dummy"};
+    testValue = std::string{"overwrite_dummy"};
+    common::setEnvironmentVariable(testVariable);
+    envValue = getenv(testKey.c_str());
+    if (envValue == nullptr) {
+        auto message = boost::format("Error getting the test variable from the environment");
+        FAIL(message.str().c_str());
+    }
+    CHECK_EQUAL(std::string(envValue), testValue);
+}
+
 TEST(UtilityTestGroup, executeCommand) {
     CHECK_EQUAL(common::executeCommand("printf stdout"), std::string{"stdout"});
     CHECK_EQUAL(common::executeCommand("bash -c 'printf stderr >&2'"), std::string{"stderr"});

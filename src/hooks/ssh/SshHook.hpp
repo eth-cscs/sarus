@@ -36,6 +36,7 @@ private:
     bool userHasSshKeys() const;
     std::string getUsername(uid_t) const;
     boost::filesystem::path getSshKeysDirInHost(const std::string& username) const;
+    boost::filesystem::path getSshKeysDirInContainer() const ;
     void sshKeygen(const boost::filesystem::path& outputFile) const;
     void generateAuthorizedKeys(const boost::filesystem::path& userKeyFile,
                                 const boost::filesystem::path& authorizedKeysFile) const;
@@ -44,6 +45,8 @@ private:
     void copySshKeysIntoContainer() const;
     void createSshExecutableInContainer() const;
     void patchPasswdIfNecessary() const;
+    void createEnvironmentFile() const;
+    void createEtcProfileModule() const;
     void startSshDaemonInContainer() const;
     void log(const boost::format& message, sarus::common::LogLevel level) const;
     void log(const std::string& message, sarus::common::LogLevel level) const;
@@ -55,6 +58,7 @@ private:
     boost::filesystem::path sshKeysDirInContainer;
     boost::filesystem::path dropbearDirInHost;
     boost::filesystem::path dropbearDirInContainer;
+    boost::filesystem::path dropbearRelativeDirInContainer;
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
     pid_t pidOfContainer;

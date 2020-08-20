@@ -50,6 +50,12 @@ public:
         if(overwriteSshKeysIfExist) {
             args.push_back("--overwrite");
         }
+        if(sarus::common::Logger::getInstance().getLevel() == sarus::common::LogLevel::INFO) {
+            args.push_back("--verbose");
+        }
+        else if(sarus::common::Logger::getInstance().getLevel() == sarus::common::LogLevel::DEBUG) {
+            args.push_back("--debug");
+        }
         common::forkExecWait(args);
     }
 

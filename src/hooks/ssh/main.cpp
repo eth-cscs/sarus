@@ -18,6 +18,9 @@
 #include "hooks/common/Utility.hpp"
 #include "SshHook.hpp"
 
+static void parseKeygenCLIOptions(int argc, char* argv[], bool * const overwrite);
+static void parseCheckUserKeysCLIOptions(int argc, char* argv[]);
+
 int main(int argc, char* argv[]) {
     try {
         if(argc < 2) {
@@ -27,19 +30,11 @@ int main(int argc, char* argv[]) {
 
         if(argv[1] == std::string{"keygen"}) {
             bool overwriteSshKeysIfExist = false;
-            if(argc > 2) {
-                if(argv[2] == std::string{"--overwrite"}) {
-                    overwriteSshKeysIfExist = true;
-                }
-                else {
-                    auto message = boost::format("Failed to execute SSH hook. Invalid"
-                                                 "option %s for the 'keygen' command.") % argv[2];
-                    SARUS_THROW_ERROR(message.str());
-                }
-            }
+            parseKeygenCLIOptions(argc, argv, &overwriteSshKeysIfExist);
             sarus::hooks::ssh::SshHook{}.generateSshKeys(overwriteSshKeysIfExist);
         }
         else if(argv[1] == std::string{"check-user-has-sshkeys"}) {
+            parseCheckUserKeysCLIOptions(argc, argv);
             sarus::hooks::ssh::SshHook{}.checkUserHasSshKeys();
         }
         else if(argv[1] == std::string("start-ssh-daemon")) {
@@ -59,4 +54,43 @@ int main(int argc, char* argv[]) {
     }
 
     return 0;
+}
+
+static void parseKeygenCLIOptions(int argc, char* argv[], bool * const overwrite) {
+    *overwrite = false;
+    if(argc > 2) {
+        for (int i=2; i < argc; ++i) {
+            if(argv[i] == std::string{"--overwrite"}) {
+                *overwrite = true;
+            }
+            else if(argv[i] == std::string{"--verbose"}) {
+                if (sarus::common::Logger::getInstance().getLevel() > sarus::common::LogLevel::INFO) {
+                    sarus::common::Logger::getInstance().setLevel(sarus::common::LogLevel::INFO);
+                }
+            }
+            else if(argv[i] == std::string{"--debug"}) {
+                sarus::common::Logger::getInstance().setLevel(sarus::common::LogLevel::DEBUG);
+            }
+            else {
+                auto message = boost::format("Failed to execute SSH hook. Invalid"
+                                             "option %s for the 'keygen' command.") % argv[2];
+                SARUS_THROW_ERROR(message.str());
+            }
+        }
+    }
+}
+
+static void parseCheckUserKeysCLIOptions(int argc, char* argv[]){
+    if(argc > 2) {
+        for (int i=2; i < argc; ++i) {
+            if(argv[i] == std::string{"--verbose"}) {
+                if (sarus::common::Logger::getInstance().getLevel() > sarus::common::LogLevel::INFO) {
+                    sarus::common::Logger::getInstance().setLevel(sarus::common::LogLevel::INFO);
+                }
+            }
+            else if(argv[i] == std::string{"--debug"}) {
+                sarus::common::Logger::getInstance().setLevel(sarus::common::LogLevel::DEBUG);
+            }
+        }
+    }
 }

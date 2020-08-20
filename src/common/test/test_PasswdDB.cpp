@@ -22,6 +22,32 @@ namespace common {
 namespace test {
 
 TEST_GROUP(PasswdDBTestGroup) {
+
+    PasswdDB passwd{};
+
+    void setup()
+    {
+        // create entry
+        auto entry0 = PasswdDB::Entry{
+            "loginName0",
+            "x",
+            1000,
+            1001,
+            "UserNameOrCommentField0",
+            "/home/dir0",
+            boost::filesystem::path{"/optional/UserCommandInterpreter0"}
+        };
+        auto entry1 = PasswdDB::Entry {
+            "loginName1",
+            "y",
+            2000,
+            2001,
+            "UserNameOrCommentField1",
+            "/home/dir1",
+            {}
+        };
+        passwd.getEntries() = {entry0, entry1};
+    }
 };
 
 TEST(PasswdDBTestGroup, testRead) {
@@ -37,7 +63,7 @@ TEST(PasswdDBTestGroup, testRead) {
         << std::endl;
 
     // read from file
-    auto passwd = PasswdDB{file};
+    passwd = PasswdDB{file};
     const auto& entries = passwd.getEntries();
 
     CHECK(entries.size() == 3);
@@ -71,28 +97,6 @@ TEST(PasswdDBTestGroup, testWrite) {
     auto path = common::PathRAII{boost::filesystem::path{"/tmp/test-passwd-file"}};
     const auto& file = path.getPath();
 
-    // create entry
-    auto entry0 = PasswdDB::Entry{
-        "loginName0",
-        "x",
-        1000,
-        1001,
-        "UserNameOrCommentField0",
-        "/home/dir0",
-        boost::filesystem::path{"/optional/UserCommandInterpreter0"}
-    };
-    auto entry1 = PasswdDB::Entry {
-        "loginName1",
-        "y",
-        2000,
-        2001,
-        "UserNameOrCommentField1",
-        "/home/dir1",
-        {}
-    };
-    auto passwd = PasswdDB{};
-    passwd.getEntries() = {entry0, entry1};
-
     // write to file
     passwd.write(file);
 
@@ -102,6 +106,16 @@ TEST(PasswdDBTestGroup, testWrite) {
     auto expectedData = std::string{"loginName0:x:1000:1001:UserNameOrCommentField0:/home/dir0:/optional/UserCommandInterpreter0\n"
                                     "loginName1:y:2000:2001:UserNameOrCommentField1:/home/dir1:\n"};
     CHECK_EQUAL(data, expectedData);
+}
+
+TEST(PasswdDBTestGroup, testGetUsername) {
+    CHECK_EQUAL(passwd.getUsername(1000), std::string{"loginName0"});
+    CHECK_EQUAL(passwd.getUsername(2000), std::string{"loginName1"});
+}
+
+TEST(PasswdDBTestGroup, testGetHomeDirectory) {
+    CHECK(passwd.getHomeDirectory(1000) == boost::filesystem::path{"/home/dir0"});
+    CHECK(passwd.getHomeDirectory(2000) == boost::filesystem::path{"/home/dir1"});
 }
 
 }}} // namespace

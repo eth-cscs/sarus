@@ -22,7 +22,7 @@ A custom SSH software (statically linked Dropbear) will also be built and instal
 files and directories.
 
 Sarus configuration
----------------------
+-------------------
 
 The SSH hook must be configured to run as a **prestart** hook. It expects to
 receive its own name/location as the first argument, and the string

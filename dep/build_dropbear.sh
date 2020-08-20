@@ -17,12 +17,18 @@ cat <<EOF >dropbear-build/localoptions.h
 /* Disable password authentication on server */
 #define DROPBEAR_SVR_PASSWORD_AUTH 0
 
-/* Disable passowrd authenticatiion from client */
+/* Disable password authentication from client */
 #define DROPBEAR_CLI_PASSWORD_AUTH 0
 
 /* Disable possibility of running an SFTP server
  * (not included with Dropbear) */
 #define DROPBEAR_SFTPSERVER 0
+
+/* Default PATH when logging into remote hosts */
+#define DEFAULT_PATH "/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
+
+/* Include verbose debug output, enabled with -v at runtime. */
+#define DEBUG_TRACE 1
 
 #endif /* DROPBEAR_LOCAL_OPTIONS_H_ */
 EOF

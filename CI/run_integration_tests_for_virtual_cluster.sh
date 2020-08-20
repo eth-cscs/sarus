@@ -79,7 +79,7 @@ run_tests() {
     local test_files=$(cd $script_dir/src/integration_tests_for_virtual_cluster && ls test_*.py)
     local tests_dir_in_container=/sarus-source/CI/src
     cd $virtual_cluster_dir
-    docker-compose exec --user=docker -T controller bash -c "cd $tests_dir_in_container/integration_tests_for_virtual_cluster && PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=$tests_dir_in_container:\$PYTHONPATH pytest -v $test_files"
+    docker-compose exec --user=docker -T controller bash -c "cd $tests_dir_in_container/integration_tests_for_virtual_cluster && PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=$tests_dir_in_container:\$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/default pytest -v $test_files"
     fail_on_error "failed to run integration tests in virtual cluster"
     log "successfully run integration tests in virtual cluster"
 }

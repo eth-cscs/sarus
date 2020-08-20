@@ -71,7 +71,7 @@ void SshHook::checkUserHasSshKeys() {
 
     if(!userHasSshKeys()) {
         log(boost::format{"Could not find SSH keys in %s"} % sshKeysDirInHost, sarus::common::LogLevel::INFO);
-        exit(EXIT_FAILURE); // exit with non-zero to communicate missing keys to calling process (sarus)
+        exit(EXIT_FAILURE); // exit with non-zero to communicate missing keys to calling process
     }
 
     log("Successfully checked that user has SSH keys", sarus::common::LogLevel::INFO);
@@ -80,6 +80,7 @@ void SshHook::checkUserHasSshKeys() {
 void SshHook::startSshDaemon() {
     log("Activating SSH in container", sarus::common::LogLevel::INFO);
 
+    dropbearRelativeDirInContainer = boost::filesystem::path("/opt/oci-hooks/dropbear");
     dropbearDirInHost = sarus::common::getEnvironmentVariable("DROPBEAR_DIR");
     serverPort = std::stoi(sarus::common::getEnvironmentVariable("SERVER_PORT"));
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
@@ -87,11 +88,13 @@ void SshHook::startSshDaemon() {
     parseConfigJSONOfBundle();
     username = getUsername(uidOfUser);
     sshKeysDirInHost = getSshKeysDirInHost(username);
-    sshKeysDirInContainer = rootfsDir / "home" / username / ".ssh";
+    sshKeysDirInContainer = getSshKeysDirInContainer();
     copyDropbearIntoContainer();
     setupSshKeysDirInContainer();
     copySshKeysIntoContainer();
     patchPasswdIfNecessary();
+    createEnvironmentFile();
+    createEtcProfileModule();
     startSshDaemonInContainer();
     createSshExecutableInContainer();
 
@@ -114,7 +117,7 @@ void SshHook::parseConfigJSONOfBundle() {
         rootfsDir = bundleDir / root;
     }
 
-    dropbearDirInContainer = rootfsDir / "opt/sarus/dropbear";
+    dropbearDirInContainer = rootfsDir / dropbearRelativeDirInContainer;
 
     // get uid + gid of user
     uidOfUser = json["process"]["user"]["uid"].GetInt();
@@ -145,6 +148,24 @@ std::string SshHook::getUsername(uid_t uid) const {
 boost::filesystem::path SshHook::getSshKeysDirInHost(const std::string& username) const {
     auto baseDir = boost::filesystem::path{ sarus::common::getEnvironmentVariable("HOOK_BASE_DIR") };
     return baseDir / username / ".oci-hooks/ssh/keys";
+}
+
+boost::filesystem::path SshHook::getSshKeysDirInContainer() const {
+    // For an explanation of the logic within this function please consult
+    // https://sarus.readthedocs.io/en/latest/developer/ssh.html#determining-the-location-of-the-ssh-keys-inside-the-container
+    auto homeDirectory = sarus::common::PasswdDB{rootfsDir / "etc/passwd"}.getHomeDirectory(uidOfUser);
+
+    if (homeDirectory.empty() || homeDirectory == boost::filesystem::path{"/nonexistent"}) {
+        log(boost::format("SSH Hook: Found invalid home directory in container's /etc/passwd for user %s (%d): \"%s\"")
+            % username % uidOfUser % homeDirectory,
+            sarus::common::LogLevel::GENERAL);
+        exit(EXIT_FAILURE);
+    }
+
+    auto sshKeysFullPath = rootfsDir / homeDirectory / ".ssh";
+    log(boost::format("Setting SSH keys directory in container to %s") % sshKeysFullPath,
+        sarus::common::LogLevel::DEBUG);
+    return sshKeysFullPath;
 }
 
 void SshHook::sshKeygen(const boost::filesystem::path& outputFile) const {
@@ -188,7 +209,8 @@ void SshHook::generateAuthorizedKeys(const boost::filesystem::path& userKeyFile,
 }
 
 void SshHook::copyDropbearIntoContainer() const {
-    log("Copying Dropbear binaries into container", sarus::common::LogLevel::INFO);
+    log(boost::format("Copying Dropbear binaries into container under %s") % dropbearDirInContainer,
+        sarus::common::LogLevel::INFO);
 
     sarus::common::copyFile(dropbearDirInHost / "bin/dbclient", dropbearDirInContainer / "bin/dbclient");
     sarus::common::copyFile(dropbearDirInHost / "bin/dropbear", dropbearDirInContainer / "bin/dropbear");
@@ -197,6 +219,9 @@ void SshHook::copyDropbearIntoContainer() const {
 }
 
 void SshHook::setupSshKeysDirInContainer() const {
+    log(boost::format("Setting up directory for SSH keys into container under %s") % sshKeysDirInContainer,
+        sarus::common::LogLevel::INFO);
+
     auto rootIdentity = sarus::common::UserIdentity{};
     auto userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
 
@@ -216,6 +241,8 @@ void SshHook::setupSshKeysDirInContainer() const {
     sarus::common::createFoldersIfNecessary(upperDir, uidOfUser, gidOfUser);
     sarus::common::createFoldersIfNecessary(workDir);
     runtime::mountOverlayfs(lowerDir, upperDir, workDir, sshKeysDirInContainer);
+
+    log("Successfully set up directory for SSH keys into container", sarus::common::LogLevel::INFO);
 }
 
 void SshHook::copySshKeysIntoContainer() const {
@@ -245,7 +272,7 @@ void SshHook::createSshExecutableInContainer() const {
     // create file
     auto ofs = std::ofstream((rootfsDir / "usr/bin/ssh").c_str());
     ofs << "#!/bin/sh" << std::endl
-        << "/opt/sarus/dropbear/bin/dbclient -y -p " << serverPort << " $*" << std::endl;
+        << dropbearRelativeDirInContainer.string() << "/bin/dbclient -y -p " << serverPort << " $*" << std::endl;
     ofs.close();
 
     // set permissions
@@ -271,6 +298,49 @@ void SshHook::patchPasswdIfNecessary() const {
     passwd.write(rootfsDir / "etc/passwd");
 
     log("Successfully patched container's /etc/passwd", sarus::common::LogLevel::INFO);
+}
+
+void SshHook::createEnvironmentFile() const {
+    log(boost::format("Creating script to export container environment upon login in %s") %
+        (dropbearDirInContainer / "environment"),
+        sarus::common::LogLevel::INFO);
+
+    // create file
+    auto containerEnvironment = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
+    auto ofs = std::ofstream((dropbearDirInContainer / "environment").c_str());
+    ofs << "#!/bin/sh" << std::endl;
+    for (const auto& variable : containerEnvironment) {
+        ofs << "export " << variable.first << "=\"" << variable.second << "\"" << std::endl;
+    }
+    ofs.close();
+
+    // set permissions
+    boost::filesystem::permissions(dropbearDirInContainer / "environment",
+        boost::filesystem::owner_all |
+        boost::filesystem::group_read |
+        boost::filesystem::others_read );
+
+    log("Successfully created script to export container environment upon login", sarus::common::LogLevel::INFO);
+}
+
+void SshHook::createEtcProfileModule() const {
+    log("Creating module in container's /etc/profile.d", sarus::common::LogLevel::INFO);
+
+    // create file
+    auto ofs = std::ofstream((rootfsDir / "etc/profile.d/ssh-hook.sh").c_str());
+    ofs << "#!/bin/sh" << std::endl
+        << "if [ \"$SSH_CONNECTION\" ]; then" << std::endl
+        << "    . " << dropbearRelativeDirInContainer.string() << "/environment" << std::endl
+        << "fi" << std::endl;
+    ofs.close();
+
+    // set permissions
+    boost::filesystem::permissions(rootfsDir / "etc/profile.d/ssh-hook.sh",
+        boost::filesystem::owner_read | boost::filesystem::owner_write |
+        boost::filesystem::group_read |
+        boost::filesystem::others_read);
+
+    log("Successfully created module in container's /etc/profile.d", sarus::common::LogLevel::INFO);
 }
 
 void SshHook::startSshDaemonInContainer() const {
@@ -323,16 +393,19 @@ void SshHook::startSshDaemonInContainer() const {
             SARUS_THROW_ERROR(message.str());
         }
     };
+
+    auto sshKeysPathWithinContainer = "/" / boost::filesystem::relative(sshKeysDirInContainer, rootfsDir);
+
     auto dropbearCommand = sarus::common::CLIArguments{
-        "/opt/sarus/dropbear/bin/dropbear",
+        dropbearRelativeDirInContainer.string() + "/bin/dropbear",
         "-E",
-        "-r", "/home/" + username + "/.ssh/dropbear_ecdsa_host_key",
+        "-r", sshKeysPathWithinContainer.string() + "/dropbear_ecdsa_host_key",
         "-p", std::to_string(serverPort)
     };
     auto status = sarus::common::forkExecWait(dropbearCommand, preExecActions);
     if(status != 0) {
-        auto message = boost::format("/opt/sarus/dropbear/bin/dropbear exited with status %d")
-            % status;
+        auto message = boost::format("%s/bin/dropbear exited with status %d")
+            % dropbearRelativeDirInContainer % status;
         SARUS_THROW_ERROR(message.str());
     }
 

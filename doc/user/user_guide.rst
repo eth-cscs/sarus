@@ -759,6 +759,12 @@ default search ``PATH``. E.g.:
 The custom ``ssh`` binary will take care of using the proper keys and
 non-standard port in order to connect to the remote container.
 
+When the ``ssh`` program is called without a command argument, it will open
+a login shell into the remote container. In this situation, the SSH hook attempts
+to reproduce the environment variables which were defined upon the launch
+of the remote container. The aim is to replicate the experience of actually
+accessing a shell in the container as it was created.
+
 OpenMPI communication through SSH
 ---------------------------------
 
@@ -778,7 +784,13 @@ We can do so with the following commands:
         --mount=src=/users,dst=/users,type=bind \
         --mount=src=$SCRATCH,dst=$SCRATCH,type=bind \
         ethcscs/openmpi:3.1.3  \
-        bash -c 'if [ $SLURM_PROCID -eq 0 ]; then mpirun --hostfile $SCRATCH/hostfile -npernode 1 /openmpi-3.1.3/examples/hello_c; else sleep infinity; fi'
+        bash -c 'if [ $SLURM_PROCID -eq 0 ]; then mpirun --hostfile $SCRATCH/hostfile -npernode 1 /openmpi-3.1.3/examples/hello_c; else sleep 10; fi'
+
+Upon establishing a remote connection, the SSH hook provides a ``$PATH`` covering the
+most used default locations: ``/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin``.
+If your OpenMPI installation uses a custom location, consider using an absolute
+path to ``mpirun`` and the ``--prefix`` option as advised in the
+`official OpenMPI FAQ <https://www.open-mpi.org/faq/?category=running#mpirun-prefix>`_.
 
 Glibc replacement
 -----------------
