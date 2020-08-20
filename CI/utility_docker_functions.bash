@@ -205,7 +205,7 @@ sarus-cleanup-images() {
 
     docker rmi ${image_build}
     if [ ${image_run} != ${image_build} ]; then
-        docker rmi ${image_run}
+        docker rmi ${image_run} || true
     fi
 }
 

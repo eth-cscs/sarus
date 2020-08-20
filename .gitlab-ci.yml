@@ -4,6 +4,8 @@ stages:
   - build_sarus_and_test_only_master_and_develop
   - publish_sarus_images
   - cleanup_sarus_images
+  - deploy_to_dom
+  - reframe_on_dom
 
 build_sarus_images:
   stage: build_sarus_images
@@ -104,3 +106,28 @@ cleanup_sarus_images:
   script:
     - . ./CI/utility_docker_functions.bash
     - sarus-cleanup-images
+
+deploy_to_dom:
+  stage: deploy_to_dom
+  only:
+    - master
+    - develop
+    - tags
+    - /^.*-reframe$/
+  script:
+    - "echo PWD: ${PWD}"
+    - ARTIFACT=sarus-Release.tar.gz
+    - NAME=${CI_COMMIT_TAG:-${CI_COMMIT_BRANCH}}
+    - /home/gitlab-runner/sarus-ops/deploy_to_dom.sh ${ARTIFACT} ${NAME}
+
+reframe_on_dom:
+  stage: reframe_on_dom
+  only:
+    - master
+    - develop
+    - tags
+    - /^.*-reframe$/
+  script:
+    - "echo PWD: ${PWD}"
+    - NAME=${CI_COMMIT_TAG:-${CI_COMMIT_BRANCH}}
+    - /home/gitlab-runner/sarus-ops/request_reframe_on_dom.sh ${NAME}
