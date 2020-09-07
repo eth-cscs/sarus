@@ -5,6 +5,7 @@ stages:
   - publish_sarus_images
   - cleanup_sarus_images
   - deploy
+  - smoke_test
   - reframe
 
 build_sarus_images:
@@ -114,11 +115,25 @@ deploy:
     - develop
     - tags
     - /^.*-reframe$/
+    - /^.*-smoke$/
   script:
     - "echo PWD: ${PWD}"
     - ARTIFACT=sarus-Release.tar.gz
     - NAME=${CI_COMMIT_TAG:-${CI_COMMIT_BRANCH}}
     - /home/gitlab-runner/sarus-ops/deploy_to_${DEPLOY_TARGET}.sh ${ARTIFACT} ${NAME}
+
+smoke_test:
+  stage: smoke_test
+  only:
+    - master
+    - develop
+    - tags
+    - /^.*-reframe$/
+    - /^.*-smoke$/
+  script:
+    - "echo PWD: ${PWD}"
+    - NAME=${CI_COMMIT_TAG:-${CI_COMMIT_BRANCH}}
+    - /home/gitlab-runner/sarus-ops/request_smoke_test_on_${DEPLOY_TARGET}.sh ${NAME}
 
 reframe:
   stage: reframe
