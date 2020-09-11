@@ -301,26 +301,5 @@ Example configuration file
             "notAllowedPaths": [
                 "/opt"
             ]
-        },
-        "OCIHooks": {
-            "prestart": [
-                {
-                    "path": "/opt/sarus/1.0.0/bin/mpi_hook",
-                    "env": [
-                        "LDCONFIG_PATH=/sbin/ldconfig",
-                        "MPI_LIBS=/usr/lib64/mvapich2-2.2/lib/libmpi.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpicxx.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpifort.so.12.0.5",
-                        "MPI_DEPENDENCY_LIBS=",
-                        "BIND_MOUNTS="
-                    ]
-                },
-                {
-                    "path": "/opt/sarus/1.0.0/bin/nvidia-container-runtime-hook.amd64",
-                    "args": ["/opt/sarus/1.0.0/bin/nvidia-container-runtime-hook.amd64", "prestart"],
-                    "env": [
-                        "PATH=/usr/local/libnvidia-container_1.0.0-rc.2/bin",
-                        "LD_LIBRARY_PATH=/usr/local/libnvidia-container_1.0.0-rc.2/lib"
-                    ]
-                }
-            ]
         }
     }

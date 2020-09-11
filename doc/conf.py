@@ -168,3 +168,8 @@ texinfo_documents = [
 # http://www.sphinx-doc.org/en/master/usage/configuration.html?highlight=linkcheck#options-for-the-linkcheck-builder
 
 linkcheck_anchors = False
+
+# -- Generate hook configuration examples ------------------------------------
+
+subprocess.check_output(["/bin/bash", "./config/hook_examples/generate_examples.sh"])
+

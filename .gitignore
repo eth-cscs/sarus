@@ -5,6 +5,7 @@
 doc/_build
 doc/_static
 doc/_templates
+doc/config/hook_examples/*.json
 doc/venv
 build*/
 _build/

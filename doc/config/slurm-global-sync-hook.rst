@@ -56,25 +56,8 @@ The following is an example of `OCI hook JSON configuration file
 <https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
 enabling the Slurm global sync hook:
 
-.. code-block:: json
-
-    {
-        "version": "1.0.0",
-        "hook": {
-            "path": "/opt/sarus/bin/slurm_global_sync_hook",
-            "env": [
-                "HOOK_BASE_DIR=/home",
-                "PASSWD_FILE=/opt/sarus/etc/passwd"
-            ]
-        },
-        "when": {
-            "annotations": {
-                "^com.hooks.slurm-global-sync.enabled$": "^true$"
-            }
-        },
-        "stages": ["prestart"]
-    }
-
+.. literalinclude:: /config/hook_examples/09-slurm-global-sync-hook.json
+   :language: json
 
 Sarus support at runtime
 ------------------------

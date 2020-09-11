@@ -68,27 +68,8 @@ The following is an example of `OCI hook JSON configuration file
 <https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
 enabling the MPI hook:
 
-.. code-block:: json
-
-    {
-        "version": "1.0.0",
-        "hook": {
-            "path": "/opt/sarus/bin/mpi_hook",
-            "env": [
-                    "LDCONFIG_PATH=/sbin/ldconfig",
-                    "MPI_LIBS=/usr/lib64/mvapich2-2.2/lib/libmpi.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpicxx.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpifort.so.12.0.5",
-                    "MPI_DEPENDENCY_LIBS=",
-                    "BIND_MOUNTS="
-            ]
-        },
-        "when": {
-            "annotations": {
-                "^com.hooks.mpi.enabled$": "^true$"
-            }
-        },
-        "stages": ["prestart"]
-    }
-
+.. literalinclude:: /config/hook_examples/05-mpi-hook.json
+   :language: json
 
 Sarus support at runtime
 ========================

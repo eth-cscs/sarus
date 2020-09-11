@@ -14,7 +14,8 @@ Dependencies
 At least one NVIDIA GPU device and the NVIDIA CUDA Driver must be correctly
 installed and working in the host system.
 
-The hook depends on the library and utility provided by the libnvidia-container
+The Toolkit depends on the library and utility provided by the
+`libnvidia-container <https://github.com/NVIDIA/libnvidia-container>`_
 project to carry out the low-level actions of importing the GPU device and
 drivers inside the container. At the time of writing, the latest release of
 libnvidia-container is version 1.0.6. The easiest way to install libnvidia-container
@@ -51,7 +52,7 @@ the system where Sarus is installed:
     $ sudo mkdir /usr/local/libnvidia-container_1.0.6
     $ sudo cp -r * /usr/local/libnvidia-container_1.0.6
 
-Hook installation
+Installation
 -----------------
 
 At the time of writing, the latest revision of the NVIDIA Container Toolkit
@@ -77,13 +78,13 @@ You can now proceed to build the Toolkit from source:
     $ cd $GOPATH
     $ go build -ldflags "-s -w" -v github.com/NVIDIA/container-toolkit/nvidia-container-toolkit
 
-    # Copy the hook binary to an installation directory
-    $ sudo cp $GOPATH/nvidia-container-toolkit /opt/sarus/bin/nvidia-container-toolkit-60f165ad69
+    # Copy the toolkit binary to an installation directory
+    $ sudo cp $GOPATH/nvidia-container-toolkit /opt/sarus/bin/nvidia-container-toolkit
 
 To ensure correct functionality, the Toolkit also needs a TOML configuration file
 to be present on the system, and will look for it in the default path
 ``/etc/nvidia-container-runtime/config.toml``, unless instructed otherwise.
-The configuration file is platform specific (for example, it tells the hook
+The configuration file is platform specific (for example, it tells the Toolkit
 where to find the system's ``ldconfig``). NVIDIA provides basic flavors for
 Ubuntu, Debian, CentOS, OpenSUSE Leap and Amazon Linux:
 
@@ -96,59 +97,24 @@ Ubuntu, Debian, CentOS, OpenSUSE Leap and Amazon Linux:
 Sarus configuration
 ---------------------
 
-The NVIDIA Container Runtime hook is meant to run as a **prestart** hook. It
+The NVIDIA Container Toolkit is meant to run as a **prestart** hook. It
 also expects to receive its own name/location as the first program argument, and
 the string ``prestart`` as positional argument. Any other positional argument
-will cause the hook to return immediately without performing any action.
+will cause the Toolkit to return immediately without performing any action.
 
 The hook environment also needs to grant visibility to the library and utility
 of libnvidia-container.
 
-The following is an example of `OCI hook JSON configuration file
+Below is an example of `OCI hook JSON configuration file
 <https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
-enabling the GPU hook:
+enabling the NVIDIA Container Toolkit. Notice that in this example the 
+``-config=/path/to/config.toml`` flag is entered before the ``prestart``
+positional argument to point the Toolkit to a configuration file installed in a
+custom location. Such flag is not required if you installed the TOML configuration
+file in the custom location as described in the previous section.
 
-.. code-block:: json
-
-    {
-        "version": "1.0.0",
-        "hook": {
-            "path": "/opt/sarus/bin//nvidia-container-toolkit",
-            "args": ["/opt/sarus/bin/nvidia-container-toolkit-3.1.4", "prestart"],
-            "env": [
-                "PATH=/usr/local/libnvidia-container_1.0.6/bin",
-                "LD_LIBRARY_PATH=/usr/local/libnvidia-container_1.0.6/lib"
-            ]
-        },
-        "when": {
-            "always": true
-        },
-        "stages": ["prestart"]
-    }
-
-------------
-
-If you installed the configuration file in a custom location, you can
-enter the ``-config=/path/to/config.toml`` flag before the ``prestart``
-positional argument. For example:
-
-.. code-block:: json
-
-    {
-        "version": "1.0.0",
-        "hook": {
-            "path": "/opt/sarus/bin//nvidia-container-toolkit",
-            "args": ["/opt/sarus/bin/nvidia-container-toolkit-3.1.4", "-config=/opt/sarus/etc/nvidia-hook-config.toml", "prestart"],
-            "env": [
-                "PATH=/usr/local/libnvidia-container_1.0.6/bin",
-                "LD_LIBRARY_PATH=/usr/local/libnvidia-container_1.0.6/lib"
-            ]
-        },
-        "when": {
-            "always": true
-        },
-        "stages": ["prestart"]
-    }
+.. literalinclude:: /config/hook_examples/03-nvidia-container-toolkit.json
+   :language: json
 
 Sarus support at runtime
 ------------------------
@@ -159,7 +125,7 @@ set of specific `environment variables
 Most of these can (and should) come from the container images, or from the
 :ref:`user-environmental-transfer` performed by Sarus. Notably, the
 ``NVIDIA_VISIBLE_DEVICES`` variable defines which GPUs will be made accessible
-inside the container by the hook.
+inside the container by the Toolkit.
 
 However, in an HPC scenario, the hardware resources should be assigned from a
 supervisory entity, such as a workload manager. For example, the SLURM workload

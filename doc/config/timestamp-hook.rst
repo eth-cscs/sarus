@@ -49,52 +49,39 @@ The following is an example of `OCI hook JSON configuration file
 <https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
 enabling the Timestamp hook:
 
-.. code-block:: json
-
-    {
-        "version": "1.0.0",
-        "hook": {
-            "path": "/opt/sarus/bin/timestamp_hook",
-            "env": [
-                "TIMESTAMP_HOOK_MESSAGE=After-runtime"
-            ]
-        },
-        "when": {
-            "always": true
-        },
-        "stages": ["prestart"]
-    }
+.. literalinclude:: /config/hook_examples/00-timestamp-hook.json
+   :language: json
 
 As mentioned above, the real value of the Timestamp hook lies in interleaving it
 between other hooks in order to have a measurement of the elapsed time.
 For example, using other hooks described in this documentation and creating multiple
-Timestamp hook's JSON configuration files:
+Timestamp hook JSON configuration files:
 
 .. code-block:: bash
 
     $ ls /opt/sarus/etc/hooks.d
     00-timestamp-hook.json
     01-glibc-hook.json
-    01-timestamp-hook.json
-    02-nvidia-hook.json
     02-timestamp-hook.json
-    03-mpi-hook.json
-    03-timestamp-hook.json
-    04-ssh-hook.json
+    03-nvidia-container-toolkit.json
     04-timestamp-hook.json
-    05-slurm-global-sync-hook.json
-    05-timestamp-hook.json
+    05-mpi-hook.json
+    06-timestamp-hook.json
+    07-ssh-hook.json
+    08-timestamp-hook.json
+    09-slurm-global-sync-hook.json
+    10-timestamp-hook.json
 
 The previous example could produce an output in the logfile like the following:
 
 .. code-block:: bash
 
-    [775589.671527655] [dom101-12385] [hook] [INFO] Timestamp hook: After-runtime
-    [775589.675871678] [dom101-12386] [hook] [INFO] Timestamp hook: After-glibc-hook
-    [775589.682727735] [dom101-12392] [hook] [INFO] Timestamp hook: After-NVIDIA-hook
-    [775589.685961371] [dom101-12393] [hook] [INFO] Timestamp hook: After-MPI-hook
-    [775589.690460309] [dom101-12394] [hook] [INFO] Timestamp hook: After-SSH-hook
-    [775589.693946863] [dom101-12396] [hook] [INFO] Timestamp hook: After-SLURM-global-sync-hook
+    [775589.671527655] [hostname-12385] [hook] [INFO] Timestamp hook: After-runtime
+    [775589.675871678] [hostname-12386] [hook] [INFO] Timestamp hook: After-glibc-hook
+    [775589.682727735] [hostname-12392] [hook] [INFO] Timestamp hook: After-NVIDIA-hook
+    [775589.685961371] [hostname-12393] [hook] [INFO] Timestamp hook: After-MPI-hook
+    [775589.690460309] [hostname-12394] [hook] [INFO] Timestamp hook: After-SSH-hook
+    [775589.693946863] [hostname-12396] [hook] [INFO] Timestamp hook: After-SLURM-global-sync-hook
 
 
 Sarus support at runtime

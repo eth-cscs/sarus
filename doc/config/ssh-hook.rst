@@ -45,31 +45,8 @@ The following is an example of `OCI hook JSON configuration file
 <https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
 enabling the SSH hook:
 
-.. code-block:: json
-
-    {
-        "version": "1.0.0",
-        "hook": {
-            "path": "/opt/sarus/bin/ssh_hook",
-            "env": [
-                "HOOK_BASE_DIR=/home",
-                "PASSWD_FILE=/opt/sarus/etc/passwd",
-                "DROPBEAR_DIR=/opt/sarus/dropbear",
-                "SERVER_PORT=15263"
-            ],
-            "args": [
-                "ssh_hook",
-                "start-ssh-daemon"
-            ]
-        },
-        "when": {
-            "annotations": {
-                "^com.hooks.ssh.enabled$": "^true$"
-            }
-        },
-        "stages": ["prestart"]
-    }
-
+.. literalinclude:: /config/hook_examples/07-ssh-hook.json
+   :language: json
 
 Sarus support at runtime
 ------------------------

@@ -48,25 +48,8 @@ The following is an example of `OCI hook JSON configuration file
 <https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
 enabling the glibc hook:
 
-.. code-block:: json
-
-  {
-      "version": "1.0.0",
-      "hook": {
-          "path": "/apps/dom/SI/opt/sarus/libpod-oci-hooks/bin/glibc_hook",
-          "env": [
-                  "LDCONFIG_PATH=/sbin/ldconfig",
-                  "READELF_PATH=/usr/bin/readelf",
-                  "GLIBC_LIBS=/lib64/libSegFault.so:/lib64/librt.so.1:/lib64/libnss_dns.so.2:/lib64/libanl.so.1:/lib64/libresolv.so.2:/lib64/libnsl.so.1:/lib64/libBrokenLocale.so.1:/lib64/ld-linux-x86-64.so.2:/lib64/libnss_hesiod.so.2:/lib64/libutil.so.1:/lib64/libnss_files.so.2:/lib64/libnss_compat.so.2:/lib64/libnss_db.so.2:/lib64/libm.so.6:/lib64/libcrypt.so.1:/lib64/libc.so.6:/lib64/libpthread.so.0:/lib64/libdl.so.2:/lib64/libmvec.so.1:/lib64/libc.so.6:/lib64/libthread_db.so.1"
-          ]
-      },
-      "when": {
-          "annotations": {
-              "^com.hooks.glibc.enabled$": "^true$"
-          }
-      },
-      "stages": ["prestart"]
-  }
+.. literalinclude:: /config/hook_examples/01-glibc-hook.json
+   :language: json
 
 Sarus support at runtime
 ========================
