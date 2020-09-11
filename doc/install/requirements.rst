@@ -134,7 +134,7 @@ processes and allow container applications to receive signals.
 
 Here we will provide some indications to install `tini
 <https://github.com/krallin/tini>`_, a very lightweight init process which is
-also used by Docker. The recommended version is **v0.18.0**.
+also used by Docker. The recommended version is **v0.19.0**.
 
 The simplest solution is to download a pre-built binary release from the
 project's GitHub page:

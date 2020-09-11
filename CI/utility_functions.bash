@@ -114,6 +114,10 @@ build_sarus_archive() {
 
     rsync -arvL --chmod=go-w ${build_dir}/../standalone/ ${prefix_dir}/
 
+    # runc is statically linked with libseccomp, which is licensed under GNU LGPL-2.1.
+    # To comply with LGPL-2.1 (§6(a)), include the libseccomp source code in the licenses folder.
+    wget -O ${prefix_dir}/licenses/libseccomp-2.4.3.tar.gz https://github.com/opencontainers/runc/releases/download/v1.0.0-rc92/libseccomp-2.4.3.tar.gz
+
     mkdir -p ${prefix_dir}/var/OCIBundleDir
 
     # Bring cached binaries if available (see Dockerfile.build)

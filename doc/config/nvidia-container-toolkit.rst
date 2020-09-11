@@ -18,7 +18,7 @@ The Toolkit depends on the library and utility provided by the
 `libnvidia-container <https://github.com/NVIDIA/libnvidia-container>`_
 project to carry out the low-level actions of importing the GPU device and
 drivers inside the container. At the time of writing, the latest release of
-libnvidia-container is version 1.0.6. The easiest way to install libnvidia-container
+libnvidia-container is version 1.2.0. The easiest way to install libnvidia-container
 is to build from source on a Docker-enabled system and copy the binaries onto
 the system where Sarus is installed:
 
@@ -29,7 +29,7 @@ the system where Sarus is installed:
     # Clone the repository
     $ git clone https://github.com/NVIDIA/libnvidia-container.git
     $ cd libnvidia-container
-    $ git checkout v1.0.6
+    $ git checkout v1.2.0
 
     # Build with Docker
     # It is possible to build using containers based on Ubuntu (16.04/18.04),
@@ -41,22 +41,22 @@ the system where Sarus is installed:
     $ ls dist/ubuntu18.04/amd64
 
     # Copy tarfile to Sarus system
-    $ rsync -a dist/ubuntu18.04/amd64/libnvidia-container_1.0.6_amd64.tar.xz <user>@<target system with Sarus>
+    $ rsync -a dist/ubuntu18.04/amd64/libnvidia-container_1.2.0_amd64.tar.xz <user>@<target system with Sarus>
 
 
     ## ON TARGET SYSTEM ##
 
     # Extract the archive and install the files
-    $ tar -xf libnvidia-container_1.0.6_amd64.tar.xz
-    $ cd libnvidia-container_1.0.6/usr/local/
-    $ sudo mkdir /usr/local/libnvidia-container_1.0.6
-    $ sudo cp -r * /usr/local/libnvidia-container_1.0.6
+    $ tar -xf libnvidia-container_1.2.0_amd64.tar.xz
+    $ cd libnvidia-container_1.2.0/usr/local/
+    $ sudo mkdir /usr/local/libnvidia-container_1.2.0
+    $ sudo cp -r * /usr/local/libnvidia-container_1.2.0
 
 Installation
 -----------------
 
 At the time of writing, the latest revision of the NVIDIA Container Toolkit
-is commit 60f165ad69. NVIDIA no longer provides pre-built binaries for this
+is version 1.2.1. NVIDIA does not provide pre-built binaries for this
 software, so it is necessary to build from source.
 
 To do so, an installation of the `Go programming language
@@ -72,14 +72,13 @@ You can now proceed to build the Toolkit from source:
 
 .. code-block:: bash
     
-    $ go get github.com/NVIDIA/container-toolkit
-    $ cd $GOPATH/src/github.com/NVIDIA/container-toolkit/
-    $ git checkout 60f165ad69
-    $ cd $GOPATH
-    $ go build -ldflags "-s -w" -v github.com/NVIDIA/container-toolkit/nvidia-container-toolkit
+    $ git clone https://github.com/NVIDIA/nvidia-container-toolkit.git
+    $ cd nvidia-container-toolkit
+    $ git checkout v1.2.1
+    $ make binary
 
     # Copy the toolkit binary to an installation directory
-    $ sudo cp $GOPATH/nvidia-container-toolkit /opt/sarus/bin/nvidia-container-toolkit
+    $ sudo cp ./nvidia-container-toolkit /opt/sarus/bin/nvidia-container-toolkit-1.2.1
 
 To ensure correct functionality, the Toolkit also needs a TOML configuration file
 to be present on the system, and will look for it in the default path
@@ -92,7 +91,7 @@ Ubuntu, Debian, CentOS, OpenSUSE Leap and Amazon Linux:
 
     # Install hook config.toml (e.g. for CentOS)
     $ sudo mkdir /etc/nvidia-container-runtime/
-    $ sudo cp $GOPATH/src/github.com/NVIDIA/container-toolkit/config/config.toml.centos /etc/nvidia-container-runtime/config.toml
+    $ sudo cp <NVIDIA Container Toolkit git repo>/config/config.toml.centos /etc/nvidia-container-runtime/config.toml
 
 Sarus configuration
 ---------------------
