@@ -33,7 +33,7 @@ TEST(ImageMetadataTestGroup, write_read_from_file) {
 
     auto file = common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-imagemetadata");
     writtenMetadata.write(file);
-    auto readMetadata = common::ImageMetadata{file};
+    auto readMetadata = common::ImageMetadata{file, common::UserIdentity{}};
 
     CHECK(readMetadata == writtenMetadata);
 

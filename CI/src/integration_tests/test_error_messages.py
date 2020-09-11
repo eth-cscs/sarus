@@ -178,6 +178,10 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Invalid image ID '///'\nSee 'sarus help run'"
         self._check(command, expected_message)
 
+        command = ["sarus", "run", "not-available-image", "true"]
+        expected_message = "Specified image index.docker.io/library/not-available-image:latest is not available"
+        self._check(command, expected_message)
+
         command = ["sarus", "run", "--workdir=invalid", "alpine", "true"]
         expected_message = ("The working directory 'invalid' is invalid, it needs to be an absolute path.\n"
                             "See 'sarus help run'")

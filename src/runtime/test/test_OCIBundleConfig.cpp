@@ -56,8 +56,8 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     config->commandRun.cpuAffinity = {0, 1, 2, 3};
     config->commandRun.execArgs = common::CLIArguments{"/bin/bash"};
     config->commandRun.addInitProcess = true;
-    config->userIdentity.uid = 1000; // UID hardcoded in expected json file
-    config->userIdentity.gid = 1000; // GID hardcoded in expected json file
+    config->userIdentity.uid = getuid();
+    config->userIdentity.gid = getgid();
     config->userIdentity.supplementaryGids = std::vector<gid_t>{2000, 3000, 4000, 1000}; // GIDs hardcoded in expected json file
     setGidOfTtyInEtcGroup(config, 5); // gid hardcoded in expected json file
 
@@ -76,6 +76,8 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     CHECK_EQUAL(expectedPermissions, boost::filesystem::status(actualConfigFile).permissions())
 
     auto expectedJson = common::readJSON(expectedConfigFile);
+    expectedJson["process"]["user"]["uid"] = int(getuid());
+    expectedJson["process"]["user"]["gid"] = int(getgid());
     auto actualJson = common::readJSON(actualConfigFile);
 
     if(actualJson != expectedJson) {

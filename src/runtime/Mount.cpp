@@ -16,6 +16,7 @@
 
 #include <sys/stat.h>
 #include <sys/mount.h>
+#include <sys/fsuid.h>
 
 #include "common/Utility.hpp"
 #include "runtime/Utility.hpp"
@@ -68,8 +69,6 @@ void Mount::performMount() const {
         SARUS_THROW_ERROR(message.str());
     }
 
-    common::switchToPrivilegedUser(rootIdentity);
-
     if(boost::filesystem::is_directory(realpathOfSource.get())) {
         common::createFoldersIfNecessary(destinationReal, config->userIdentity.uid, config->userIdentity.gid);
     }
@@ -77,7 +76,20 @@ void Mount::performMount() const {
         common::createFileIfNecessary(destinationReal, config->userIdentity.uid, config->userIdentity.gid);
     }
 
-    bindMount(realpathOfSource.get(), destinationReal, mountFlags);
+    common::switchToPrivilegedUser(rootIdentity);
+
+    try {
+        // switch to user filesystem identity to make sure we can access paths as root even on root_squashed filesystems
+        common::setFilesystemUid(config->userIdentity);
+
+        bindMount(realpathOfSource.get(), destinationReal, mountFlags);
+
+        common::setFilesystemUid(rootIdentity);
+    }
+    catch (const common::Error& e) {
+            common::setFilesystemUid(rootIdentity);
+            SARUS_RETHROW_ERROR(e, std::string("Failed to perform custom mount"));
+    }
 
     runtime::utility::logMessage("Successfully performed bind mount", common::LogLevel::DEBUG);
 }

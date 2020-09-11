@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - CLI: fixed detection of option values separated by whitespace
 - CLI: 'sarus run' does not return an error anymore when passing an option (i.e. a token starting with "-") as the first argument to the container application.
   This allows to directly pass options to containers which feature an entrypoint.
+- Support for root_squashed filesystems as image storage and as bind mounts sources.
 
 
 ## [1.2.0] - 2020-06-17

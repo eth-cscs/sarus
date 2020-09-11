@@ -25,15 +25,23 @@ namespace sarus {
 namespace common {
 
 
-ImageMetadata::ImageMetadata(const boost::filesystem::path& path) {
+ImageMetadata::ImageMetadata(const boost::filesystem::path& path, const common::UserIdentity& identity) {
     auto message = boost::format("Creating image metadata from file %s") % path;
     logMessage(message, LogLevel::INFO);
 
+    auto rootIdentity = common::UserIdentity{};
     try {
+        // switch to user identity to make sure we can access files on root_squashed filesystems
+        common::setFilesystemUid(identity);
+
         auto json = common::readJSON(path);
+
+        common::setFilesystemUid(rootIdentity);
+
         parseJSON(json);
     }
     catch (const common::Error& e) {
+        common::setFilesystemUid(rootIdentity);
         auto message = boost::format("Error creating image metadata from file %s") % path;
         SARUS_RETHROW_ERROR(e, message.str());
     }

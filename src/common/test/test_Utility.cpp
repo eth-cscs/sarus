@@ -10,6 +10,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/fsuid.h>
 #include <unistd.h>
 
 #include <boost/filesystem.hpp>
@@ -19,6 +20,7 @@
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 #include "common/PathRAII.hpp"
+#include "test_utility/Misc.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
 using namespace sarus;
@@ -89,6 +91,34 @@ TEST(UtilityTestGroup, setEnvironmentVariable) {
         FAIL(message.str().c_str());
     }
     CHECK_EQUAL(std::string(envValue), testValue);
+}
+
+TEST(UtilityTestGroup, setFilesystemUid) {
+    // switch to unprivileged user
+    uid_t unprivilegedUid;
+    gid_t unprivilegedGid;
+    std::tie(unprivilegedUid, unprivilegedGid) = test_utility::misc::getNonRootUserIds();
+    auto unprivilegedIdentity = common::UserIdentity{unprivilegedUid, unprivilegedGid, {}};
+    auto rootIdentity = common::UserIdentity{};
+
+    common::setFilesystemUid(unprivilegedIdentity);
+
+    // check identity change
+    CHECK_EQUAL(getuid(), rootIdentity.uid);
+    CHECK_EQUAL(getgid(), rootIdentity.gid);
+    CHECK_EQUAL(geteuid(), rootIdentity.uid);
+    CHECK_EQUAL(getegid(), rootIdentity.gid);
+    CHECK_EQUAL(setfsuid(-1), unprivilegedIdentity.uid);
+
+    // switch back to privileged fsuid
+    common::setFilesystemUid(rootIdentity);
+
+    // check identity change
+    CHECK_EQUAL(getuid(), rootIdentity.uid);
+    CHECK_EQUAL(getgid(), rootIdentity.gid);
+    CHECK_EQUAL(geteuid(), rootIdentity.uid);
+    CHECK_EQUAL(getegid(), rootIdentity.gid);
+    CHECK_EQUAL(setfsuid(-1), rootIdentity.uid);
 }
 
 TEST(UtilityTestGroup, executeCommand) {

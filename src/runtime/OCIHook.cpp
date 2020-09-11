@@ -44,7 +44,7 @@ bool OCIHook::ConditionAnnotations::evaluate(std::shared_ptr<const common::Confi
     utility::logMessage(boost::format{"Evaluating OCI Hook's \"annotations\" condition"},
                         common::LogLevel::DEBUG);
 
-    auto configsMerger = ConfigsMerger{config, common::ImageMetadata{ config->getMetadataFileOfImage() }};
+    auto configsMerger = ConfigsMerger{config, common::ImageMetadata{ config->getMetadataFileOfImage(), config->userIdentity }};
     auto bundleAnnotations = configsMerger.getBundleAnnotations();
 
     for(const auto& annotation : annotations) {
@@ -96,7 +96,7 @@ bool OCIHook::ConditionCommands::evaluate(std::shared_ptr<const common::Config> 
     utility::logMessage(boost::format{"Evaluating OCI Hook's \"commands\" condition"},
                         common::LogLevel::DEBUG);
 
-    auto configsMerger = ConfigsMerger{config, common::ImageMetadata{ config->getMetadataFileOfImage() }};
+    auto configsMerger = ConfigsMerger{config, common::ImageMetadata{ config->getMetadataFileOfImage(), config->userIdentity }};
     auto arg0 = std::string(configsMerger.getCommandToExecuteInContainer().argv()[0]);
 
     for(const auto& command : commands) {

@@ -46,6 +46,8 @@ std::string replaceString(std::string &buf, const std::string& from, const std::
 std::string eraseFirstAndLastDoubleQuote(const std::string& buf);
 void switchToUnprivilegedUser(const common::UserIdentity&);
 void switchToPrivilegedUser(const common::UserIdentity&);
+void setFilesystemUid(const common::UserIdentity&);
+void logProcessUserAndGroupIdentifiers();
 std::string executeCommand(const std::string& command);
 int forkExecWait(const common::CLIArguments& args,
                  const boost::optional<std::function<void()>>& preExecActions = {});

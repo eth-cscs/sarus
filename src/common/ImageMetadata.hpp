@@ -18,6 +18,7 @@
 #include <rapidjson/document.h>
 
 #include "common/CLIArguments.hpp"
+#include "common/Utility.hpp"
 
 namespace sarus {
 namespace common {
@@ -25,7 +26,7 @@ namespace common {
 class ImageMetadata {
 public:
     ImageMetadata() = default;
-    ImageMetadata(const boost::filesystem::path& path);
+    ImageMetadata(const boost::filesystem::path& path, const common::UserIdentity& identity);
     ImageMetadata(const rapidjson::Value& metadata);
     boost::optional<common::CLIArguments> cmd;
     boost::optional<common::CLIArguments> entry;

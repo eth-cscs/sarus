@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/fsuid.h>
 #include <sched.h>
 #include <pwd.h>
 #include <grp.h>
@@ -146,7 +147,8 @@ void switchToUnprivilegedUser(const common::UserIdentity& identity) {
         SARUS_THROW_ERROR("Failed to assume end-user uid");
     }
 
-    logMessage("Successfully switched to uprivileged user", LogLevel::DEBUG);
+    logProcessUserAndGroupIdentifiers();
+    logMessage("Successfully switched to unprivileged user", LogLevel::DEBUG);
 }
 
 void switchToPrivilegedUser(const common::UserIdentity& identity) {
@@ -157,14 +159,59 @@ void switchToPrivilegedUser(const common::UserIdentity& identity) {
     if (seteuid(identity.uid) != 0) {
         SARUS_THROW_ERROR("Failed to re-assume original user effective uid");
     }
-    if (setegid(identity.uid) != 0) {
+    if (setegid(identity.gid) != 0) {
         SARUS_THROW_ERROR("Failed to re-assume original user effective gid");
     }
     if (setgroups(identity.supplementaryGids.size(), identity.supplementaryGids.data()) != 0) {
         SARUS_THROW_ERROR("Failed to re-assume original user auxiliary gids");
     }
 
+    logProcessUserAndGroupIdentifiers();
     logMessage("Successfully switched to privileged user", LogLevel::DEBUG);
+}
+
+/*
+ * Set the filesystem user ID to the uid in the provided UserIdentity
+ *
+ * Normally the filesystem user ID (or fsuid for short) coincides with the
+ * effective user ID (euid) and is changed by the kernel when the euid is set,
+ * as described in the Linux man pages:
+ * https://man7.org/linux/man-pages/man2/setfsuid.2.html
+ * https://man7.org/linux/man-pages/man7/credentials.7.html
+ *
+ * However, when having to bind-mount files which reside on root_squashed filesystems,
+ * a process needs to have both root privileges (to perform the mount) and normal
+ * user filesystem permissions (under root_squash, root is remapped to nobody and
+ * cannot access the user content unless said content is world-readable).
+ * The above is the main scenario in which this function is meant to be used.
+ * Other similar use cases where both root privileges and user permissions are
+ * required might occur.
+ */
+void setFilesystemUid(const common::UserIdentity& identity) {
+    logMessage(boost::format{"Setting filesystem uid to %d"} % identity.uid,
+               LogLevel::DEBUG);
+
+    setfsuid(identity.uid);
+    if (setfsuid(identity.uid) != int(identity.uid)){
+        SARUS_THROW_ERROR("Failed to set filesystem uid");
+    }
+
+    logMessage("Successfully set filesystem uid", LogLevel::DEBUG);
+}
+
+void logProcessUserAndGroupIdentifiers() {
+    uid_t ruid, euid, suid;
+    if (getresuid(&ruid, &euid, &suid) != 0){
+        SARUS_THROW_ERROR("getresuid failed");
+    }
+    gid_t rgid, egid, sgid;
+    if (getresgid(&rgid, &egid, &sgid) != 0){
+        SARUS_THROW_ERROR("getresgid failed");
+    }
+    logMessage(boost::format("Current uids (r/e/s/fs): %d %d %d %d")
+               % ruid % euid % suid % setfsuid(-1), common::LogLevel::DEBUG);
+    logMessage(boost::format("Current gids (r/e/s/fs): %d %d %d %d")
+               % rgid % egid % sgid % setfsgid(-1), common::LogLevel::DEBUG);
 }
 
 std::string executeCommand(const std::string& command) {

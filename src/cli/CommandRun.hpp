@@ -271,11 +271,22 @@ private:
     void verifyThatImageIsAvailable() const {
         cli::utility::printLog( boost::format("Verifying that image %s is available") % conf->getImageFile(),
                                 common::LogLevel::INFO);
-        if(!boost::filesystem::exists(conf->getImageFile())) {
-            auto message = boost::format("Specified image %s is not available") % conf->imageID;
-            cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
-            exit(EXIT_FAILURE);
+        // switch to user filesystem identity to make sure we can access images on root_squashed filesystems
+        auto rootIdentity = common::UserIdentity{};
+        common::setFilesystemUid(conf->userIdentity);
+
+        try {
+            if(!boost::filesystem::exists(conf->getImageFile())) {
+                auto message = boost::format("Specified image %s is not available") % conf->imageID;
+                cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
+                exit(EXIT_FAILURE);
+            }
+        } catch(const std::exception& e) {
+            SARUS_RETHROW_ERROR(e, "Failed to verify that image is available");
         }
+
+        common::setFilesystemUid(rootIdentity);
+
         cli::utility::printLog("Successfully verified that image is available", common::LogLevel::INFO);
     }
 

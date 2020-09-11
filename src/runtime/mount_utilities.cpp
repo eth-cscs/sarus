@@ -29,14 +29,17 @@ namespace sarus {
 namespace runtime {
 
 void validateMountSource(const boost::filesystem::path& source) {
+    utility::logMessage(boost::format("Validating mount source: %s") % source, common::LogLevel::DEBUG);
     // check that directory exists, i.e. is visible to user
     if (!boost::filesystem::exists(source)) {
         SARUS_THROW_ERROR("mount source doesn't exist");
     }
+    utility::logMessage(std::string("Mount source successfully validated"), common::LogLevel::DEBUG);
 }
 
 
 void validateMountDestination(const boost::filesystem::path& destination, const common::Config& config) {
+    utility::logMessage(boost::format("Validating mount destination: %s") % destination, common::LogLevel::DEBUG);
     /* If the destination does not exist, check its parents */
     if (!boost::filesystem::exists(destination)) {
         /* Search the first existing parent folder and check that it is on the device
@@ -66,6 +69,7 @@ void validateMountDestination(const boost::filesystem::path& destination, const 
     else if(!isPathOnBindMountableDevice(destination, config)) {
         SARUS_THROW_ERROR("mount destination is not on a device allowed for mounts");
     }
+    utility::logMessage(std::string("Mount destination successfully validated"), common::LogLevel::DEBUG);
 }
 
 

@@ -31,7 +31,7 @@ namespace runtime {
 
 OCIBundleConfig::OCIBundleConfig(std::shared_ptr<const common::Config> config)
     : config{config}
-    , configsMerger{config, common::ImageMetadata{config->getMetadataFileOfImage()}}
+    , configsMerger{config, common::ImageMetadata{config->getMetadataFileOfImage(), config->userIdentity}}
     , document{new rj::Document{}}
     , allocator{&document->GetAllocator()}
     , configFile{boost::filesystem::path{config->json["OCIBundleDir"].GetString()} / "config.json"}
