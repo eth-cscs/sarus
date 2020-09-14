@@ -447,6 +447,23 @@ The following example demonstrates the use of a custom read-only bind mount.
 
     $ exit
 
+.. note::
+
+    **Bind-mounting FUSE filesystems into Sarus containers**
+
+    By default, all FUSE filesystems are accessible only by the user who mounted them;
+    this restriction is enforced by the kernel itself. Sarus is a privileged application setting up
+    the container as the root user in order to perform some specific actions.
+
+    To allow Sarus to access a FUSE mount point on the host, in order to bind mount it into a container,
+    use the FUSE option ``allow_root`` when creating the mount point.
+    For example, when creating an `EncFS <https://vgough.github.io/encfs/>`_ filesystem:
+
+        ``$ encfs -o allow_root --nocache $PWD/encfs.enc/ /tmp/encfs.dec/``
+        ``$ sarus run -t --mount=type=bind,src=/tmp/encfs.dec,dst=/var/tmp/encfs ubuntu ls -l /var/tmp``
+
+    It is possible to pass ``allow_root`` if the option ``user_allow_other`` is defined in
+    ``/etc/fuse.conf``, as stated in the `FUSE manpage <https://man7.org/linux/man-pages/man8/fuse.8.html>`_.
 
 .. _user-entrypoint-default-args:
 
