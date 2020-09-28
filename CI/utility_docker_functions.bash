@@ -229,10 +229,12 @@ _run_cmd_in_container() {
         --mount=src=${cache_oci_hooks_dir},dst=/home/docker/.oci-hooks,type=bind \
         --mount=src=${cache_local_repo_dir},dst=/home/docker/.sarus,type=bind \
         --mount=src=${cache_centralized_repo_dir},dst=/var/sarus/centralized_repository,type=bind \
+        -e CI_COMMIT_TAG \
+        -e TRAVIS_TAG \
         ${image} bash -c "
         . /sarus-source/CI/utility_functions.bash \
         && change_uid_gid_of_docker_user ${host_uid} ${host_gid} \
-        && sudo -u ${user} bash -c \"${command}\""
+        && sudo -E -u ${user} bash -c \"${command}\""
     fail_on_error "${FUNCNAME}: failed to execute '${command}' in container"
 }
 

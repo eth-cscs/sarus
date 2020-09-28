@@ -20,4 +20,4 @@ cache/
 
 # Sarus Generated files
 src/common/ConfigBuildTime.cpp
-release-notes.md
+RELEASE_NOTES.md

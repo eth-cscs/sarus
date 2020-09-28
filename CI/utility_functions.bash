@@ -128,13 +128,18 @@ build_sarus_archive() {
     cd ${prefix_dir}/.. && tar cz --owner=root --group=root --file=../${archive_name} *
     cp  ${build_dir}/${archive_name} ${build_dir}/../${archive_name}
 
-    # Add standalone's README at the artifacts level
-    if [ "${CI}" ] || [ "${TRAVIS}" ]; then
-        # Standalone README goes to root directory to be used by CI as root-level deployment artifact
-        # This way users can read extracting instruction before actually extracting the standalone archive :)
-        cp  ${build_dir}/../standalone/README.md ${build_dir}/../README.md
-    fi
-    echo "Successfully built archive"
+    # Standalone README goes to root directory to be used by CI as root-level deployment artifact
+    # This way users can read extracting instruction before actually extracting the standalone archive :)
+    cp  ${build_dir}/../standalone/README.md ${build_dir}/../README.md
+    version=${CI_COMMIT_TAG-${TRAVIS_TAG-"1.0.0"}}
+    sed -i ${build_dir}/../README.md -e "s|@SARUS_VERSION@|${version}|g"
+    fail_on_error "Failed to prepare README.md for Sarus archive"
+
+    # Prepare RELEASE notes for CI to use
+    python3 ${build_dir}/../CI/create_release_notes.py
+    fail_on_error "Failed to prepare RELEASE_NOTES.md for Sarus archive"
+
+    echo "Successfully built Sarus sarchive"
 }
 
 install_sarus_from_archive() {

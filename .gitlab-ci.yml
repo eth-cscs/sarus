@@ -1,27 +1,27 @@
 stages:
-  - build_sarus_images
-  - build_sarus_and_test
-  - build_sarus_and_test_only_master_and_develop
-  - publish_sarus_images
-  - cleanup_sarus_images
+  - build_images
+  - build_and_test
+  - from_source
+  - publish_images
+  - cleanup
   - deploy
-  - smoke_test
-  - reframe
+  - check_deployment
+  - test_deployment
 
-build_sarus_images:
-  stage: build_sarus_images
+build_dependencies:
+  stage: build_images
   script:
     - . CI/utility_docker_functions.bash Debug gcc.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
     - sarus-build-images
 
-check_version_and_docs:
-  stage: build_sarus_and_test
+documentation:
+  stage: build_and_test
   script:
     - . CI/utility_docker_functions.bash Debug gcc.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
     - sarus-check-version-and-docs $(pwd)
 
-standalone_archive_debug:
-  stage: build_sarus_and_test
+standalone_debug:
+  stage: build_and_test
   script:
     - . ./CI/utility_docker_functions.bash Debug gcc.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
     - sarus-build-and-test
@@ -32,8 +32,8 @@ standalone_archive_debug:
       - sarus-Debug.tar.gz
       - README.md
 
-standalone_archive_release:
-  stage: build_sarus_and_test
+standalone_release:
+  stage: build_and_test
   script:
     - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
     - sarus-build-and-test
@@ -44,54 +44,54 @@ standalone_archive_release:
       - sarus-Release.tar.gz
       - README.md
 
-.only_master_and_develop:
-  stage: build_sarus_and_test_only_master_and_develop
+.from_source:
+  stage: from_source
   only:
     - master
     - develop
 
-standalone_archive_debug_coverage:
-  extends: .only_master_and_develop
+coverage:
+  extends: .from_source
   script:
     - . ./CI/utility_docker_functions.bash Debug gcc-gcov.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
     - sarus-build-and-test
 
-from_source_centos7:
-  extends: .only_master_and_develop
+centos7:
+  extends: .from_source
   script:
       - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus centos:7 centos:7
       - sarus-build-images
       - sarus-build-from-scratch-and-test
 
-from_source_ubuntu18.04:
-  extends: .only_master_and_develop
+ubuntu18.04:
+  extends: .from_source
   script:
     - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus ubuntu:18.04 ubuntu:18.04
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
-from_source_debian10:
-  extends: .only_master_and_develop
+debian10:
+  extends: .from_source
   script:
     - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus debian:10 debian:10
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
-from_source_debian10_asan:
-  extends: .only_master_and_develop
+address_sanitizer:
+  extends: .from_source
   script:
     - . ./CI/utility_docker_functions.bash Debug gcc-asan.cmake $(pwd) ~/cache/ids/sarus debian:10 debian:10
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
 spack_package:
-  extends: .only_master_and_develop
+  extends: .from_source
   script:
       - docker_image=ethcscs/sarus-spack:1.2.0-ubuntu16.04
       - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/run_spack_package_test.sh
 
-publish_sarus_images:
-  stage: publish_sarus_images
+publish_images:
+  stage: publish_images
   only:
     - master
     - develop
@@ -99,8 +99,8 @@ publish_sarus_images:
     - . ./CI/utility_docker_functions.bash
     - sarus-publish-images
 
-cleanup_sarus_images:
-  stage: cleanup_sarus_images
+cleanup_images:
+  stage: cleanup
   except:
     - master
     - develop
@@ -122,8 +122,8 @@ deploy:
     - NAME=${CI_COMMIT_TAG:-${CI_COMMIT_BRANCH}}
     - /home/gitlab-runner/sarus-ops/deploy_to_${DEPLOY_TARGET}.sh ${ARTIFACT} ${NAME}
 
-smoke_test:
-  stage: smoke_test
+smoke_tests:
+  stage: check_deployment
   only:
     - master
     - develop
@@ -136,7 +136,7 @@ smoke_test:
     - /home/gitlab-runner/sarus-ops/request_smoke_test_on_${DEPLOY_TARGET}.sh ${NAME}
 
 reframe:
-  stage: reframe
+  stage: test_deployment
   only:
     - master
     - develop

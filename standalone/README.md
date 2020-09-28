@@ -9,15 +9,15 @@ To get started with Sarus, follow these simple steps.
 
 1. Get the standalone archive from https://github.com/eth-cscs/sarus/releases and extract it in your installation directory:
 
-        sudo mkdir /opt/sarus && cd /opt/sarus        
-        # Pick your preferred version, this example is for Sarus 1.0.1
-        sudo wget https://github.com/eth-cscs/sarus/releases/download/1.0.1/sarus-Release.tar.gz
+        sudo mkdir /opt/sarus && cd /opt/sarus
+        # Pick your preferred version, this example is for Sarus @SARUS_VERSION@
+        sudo wget https://github.com/eth-cscs/sarus/releases/download/@SARUS_VERSION@/sarus-Release.tar.gz
         sudo tar xfv sarus-Release.tar.gz
 
 2. Run the configuration script to finalize the installation of Sarus:
 
         # adapt folder name to actual version of Sarus
-        cd /opt/sarus/1.0.1-Release
+        cd /opt/sarus/@SARUS_VERSION@-Release
         sudo ./configure_installation.sh
         # Follow the printed instructions to add Sarus to your PATH
 
@@ -27,5 +27,5 @@ To get started with Sarus, follow these simple steps.
         sarus pull alpine
         sarus run alpine cat /etc/os-release
 
-For more information on how to install, configure and use Sarus, 
+For more information on how to install, configure and use Sarus,
 please refer to the official documentation at https://sarus.readthedocs.io.

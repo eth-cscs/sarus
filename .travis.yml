@@ -23,19 +23,19 @@ jobs:
       - sarus-build-and-test
       deploy:
         provider: releases
-        name: ${TRAVIS_BRANCH}
+        edge: true
+        name: ${TRAVIS_TAG}
         api_key:
           secure: W0V8H0y153ZKnoPfMJppzBB7MjZW+82IYtv0jLr32PICLd13ZckL+0b4UkHjjs0HvcHGNzjE6hDwX6+l+qHwF1hDeNLqenJjRT8xcoTSVzAmQryrqjIK7Gqm5Tl29YfPbPUKHxuXqP6C32VZjNlaalhLtWiAGg9S/Xtc1m8+7P4qHskO0sVxQTHCL8jAAK4c1c7dq1bvRsO5XWXsAVSjTuNqBVYg9SsX5YWXL82ctm5SsoeFJbVVSpNAYb0JTAJMKQPF3xeeHjCFQVvJhTvF1mlV+pgG3fOHCNVf6ZyBhXeAXumTU2O5PMwCaRjO7JBmSUtYZkhuwaENLn1JkR9Vr1sRhyTTGklDBdAcPUIfVLtt4CTkRA0la3yWl79/Wv5iHUUnwuM3nP5xbnwhuwC2aXFvwL7YJYeNP2dWv4s7ppo+8HXz41ZEkebk+Z0Hel30dCdDw8t/6VHmZe37DePV0Df2XYcENrxFue/GAdeOx88hVbLj2ckQ6RcnkrKX2nEW+KPoL+F5X+Foac+ao5ikydQfSL7ZuZjMQFU+sLNE5eWIrShCanz9xetf/4X7tUEAIqtvy2ygCwY3IHom0KTLPVMZtD54O0frS9Xx4F4R++XXvSN2CHTfAKOOm4cBtpLn3hffFxDo8hCfc1GNljAewAdd9F027Ghr3De9iLOjGK0=
         file:
           - sarus-Release.tar.gz
           - README.md
+        release_notes_file: RELEASE_NOTES.md
         overwrite: true
-        skip_cleanup: true
         draft: true
-        edge: true
         on:
           repo: eth-cscs/sarus
-          branch: master
+          tags: true
 
     - name: "Test install from source CentOS 7"
       if: branch IN (master, develop, fix-travis)
@@ -68,5 +68,5 @@ notifications:
   email:
     recipients:
       - taliaga@cscs.ch
-      - mkean@cscs.ch
+      - amadonna@cscs.ch
     on_success: change
