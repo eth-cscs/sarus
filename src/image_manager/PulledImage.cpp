@@ -68,7 +68,16 @@ void PulledImage::initializeListOfLayersAndMetadata(web::json::value &manifest) 
 
         if( layerData.has_field(U("parent")) ) {
             parent = layerData.at(U("parent"));
-            layers[U(parent.serialize())] = layerData;
+            if (parent.is_null()) {
+                layerData[U("parent")] = web::json::value("");
+                baseLayer = layerData;
+            }
+            else if (parent.is_string() && parent.as_string().empty()) {
+                baseLayer = layerData;
+            }
+            else {
+                layers[U(parent.serialize())] = layerData;
+            }
         }
         else {
             layerData[U("parent")] = web::json::value("");

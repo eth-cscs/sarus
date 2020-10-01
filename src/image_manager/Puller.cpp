@@ -152,6 +152,8 @@ namespace image_manager {
         // multiple instances of this function could be running in parallel
         std::string authorizationToken = this->authorizationToken;
 
+        printLog( boost::format("> %-15.15s: %s") % "pulling" % digest, common::LogLevel::GENERAL);
+
         for(int retry = 0; retry < MAX_DOWNLOAD_RETRIES; ++retry) {
             if ( retry > 0 ) {
                 printLog( boost::format("> %-15.15s: %s") % "retry" % digest, common::LogLevel::GENERAL);
@@ -174,14 +176,23 @@ namespace image_manager {
                         % getServerUri(config->imageID.server) % path % authorizationHeader % digest, common::LogLevel::DEBUG);
 
             response = client.request(request).get();
-            printLog( boost::format("Received http_response status code (%s): %s, digest=%s")
+            printLog( boost::format("Received HTTP response status code (%s): %s, digest=%s")
                 % response.status_code() % response.reason_phrase() % digest, common::LogLevel::DEBUG);
 
+            // layer content is in the response body
             if ( response.status_code() == status_codes::OK ) {
-                break;
+                printLog( boost::format("Layer %s: blob content is directly available") % digest, common::LogLevel::DEBUG);
+                try {
+                    downloadStream(response, layerFileTemp);
+                }
+                catch(common::Error& e) {
+                    printLog( boost::format("> %-15.15s: %s") % "failed" % digest, common::LogLevel::GENERAL);
+                    common::Logger::getInstance().logErrorTrace(e, sysname);
+                    continue; // retry download
+                }
             }
             // when unauthorized response arrives, request new token
-            else if (response.status_code() == status_codes::Unauthorized) {
+            else if (response.status_code() == status_codes::Unauthorized || response.status_code() == status_codes::Forbidden) {
                 printLog( boost::format("> %-15.15s: %s") % "authorization token expired" % digest, common::LogLevel::GENERAL);
 
                 try {
@@ -198,40 +209,56 @@ namespace image_manager {
                 boost::cmatch matches;
                 boost::regex re("(https?)://(.*?)(/.*)");
                 if (!boost::regex_match(location.c_str(), matches, re)) {
-                    auto message = boost::format("Failed to parse image location: %s") % location;
+                    auto message = boost::format("Failed to parse redirected download location: %s") % location;
                     SARUS_THROW_ERROR(message.str());
                 }
                 std::string downloadUri = matches[1].str() + "://" + matches[2].str();
                 path = matches[3];
-    
-                printLog( boost::format("> %-15.15s: %s") % "pulling" % digest, common::LogLevel::GENERAL);
+
+                printLog( boost::format("Layer %s: download redirected to %s/%s") % digest % downloadUri % path, common::LogLevel::DEBUG);
 
                 try {
-                    downloadStream(downloadUri, path, layerFileTemp);
+                    web::http::client::http_client redirectClient( downloadUri );
+                    web::http::http_request        redirectRequest(methods::GET);
+                    web::http::http_response       redirectResponse;
+
+                    redirectRequest.set_request_uri(path);
+                    redirectResponse = redirectClient.request(redirectRequest).get();
+
+                    if ( redirectResponse.status_code() != status_codes::OK ) {
+                        auto message = boost::format("Received HTTP response status code (%s): %s, uri=%s, path=%s, digest=%s")
+                            % response.status_code() % response.reason_phrase() % downloadUri % path % digest;
+                        SARUS_THROW_ERROR(message.str());
+                    }
+                    downloadStream(redirectResponse, layerFileTemp);
                 }
                 catch(common::Error& e) {
                     printLog( boost::format("> %-15.15s: %s") % "failed" % digest, common::LogLevel::GENERAL);
                     common::Logger::getInstance().logErrorTrace(e, sysname);
                     continue; // retry download
                 }
-
-                if(!checkSum(digest, layerFileTemp)) {
-                    printLog( boost::format("> %-15.15s: %s") % "bad checksum" % digest, common::LogLevel::GENERAL);
-                    boost::filesystem::remove(layerFileTemp);
-                    continue; // retry download
-                }
-                // if checksum succeeded, finish download process
-                boost::filesystem::rename(layerFileTemp, layerFile); // atomically create/replace layer file
-                printLog( boost::format("> %-15.15s: %s") % "completed" % digest, common::LogLevel::GENERAL);
-                printLog( boost::format("Success to download : %s") % digest, common::LogLevel::DEBUG);
-                return;
             }
-            // other http response means irregal status
+            // other HTTP responses are not supported
             else {
-                printLog( boost::format("Unexpected http_response (%s): %s, digest=%s")
-                    % response.status_code() % response.reason_phrase() % digest, common::LogLevel::ERROR);
+                printLog( boost::format("> %-15.15s: %s") % "failed" % digest, common::LogLevel::GENERAL);
+                auto message =  boost::format("Unexpected HTTP response status code (%s): %s, uri=%s, path=%s, digest=%s")
+                                    % response.status_code() % response.reason_phrase() % getServerUri(config->imageID.server)
+                                    % path % digest;
+                printLog(message, common::LogLevel::INFO);
                 continue;
             }
+
+            // if we get here, layer has been downloaded into temporary file: proceed with verifying checksum
+            if(!checkSum(digest, layerFileTemp)) {
+                printLog( boost::format("> %-15.15s: %s") % "bad checksum" % digest, common::LogLevel::GENERAL);
+                boost::filesystem::remove(layerFileTemp);
+                continue; // retry download
+            }
+            // if checksum succeeded, finish download process
+            boost::filesystem::rename(layerFileTemp, layerFile); // atomically create/replace layer file
+            printLog( boost::format("> %-15.15s: %s") % "completed" % digest, common::LogLevel::GENERAL);
+            printLog( boost::format("Success to download : %s") % digest, common::LogLevel::DEBUG);
+            return;
         }
         auto message = boost::format("Failed to download image layer %s. Exceeded max number of retries (%s).")
             % digest % MAX_DOWNLOAD_RETRIES;
@@ -239,33 +266,22 @@ namespace image_manager {
     }
     
     /**
-     * Download the http response body
+     * Download the HTTP response body to a file
      * 
-     * @param uri       The base uri location of HTTP client
-     * @param path          The request uri of the download stream
-     * @param filename      The filename to save
+     * @param response      The HTTP response whose body will be saved
+     * @param filename      Path to the file where to save the response body
      */
-    void Puller::downloadStream(const std::string &uri, const std::string &path, const boost::filesystem::path &filename)
+    void Puller::downloadStream(const web::http::http_response &response, const boost::filesystem::path &filename)
     {
-        printLog( boost::format("Start downloadStream: uri=%s, path=%s, filename=%s") % uri % path % filename, common::LogLevel::DEBUG);
+        printLog( boost::format("Starting download stream to %s") % filename, common::LogLevel::DEBUG);
         auto fileStream = std::make_shared<ostream>();
-        
-        // Open stream
-        pplx::task<void> requestTask = fstream::open_ostream(U(filename.string())).then([=](ostream outFile) {
+        // open stream
+        pplx::task<void> downloadTask = fstream::open_ostream(U(filename.string())).then([=](ostream outFile) {
             *fileStream = outFile;
-            web::http::client::http_client client( uri );
-            web::http::http_request        request(methods::GET);
-
-            request.set_request_uri(path);
-            return client.request(request);
+            return;
         })
         // handle response
-        .then([=](http_response response) {
-            if ( response.status_code() != status_codes::OK ) {
-                auto message = boost::format("Received http_response status code (%s): %s, uri=%s, path=%s, filename=%s")
-                    % response.status_code() % response.reason_phrase() % uri % path % filename;
-                SARUS_THROW_ERROR(message.str());
-            }
+        .then([=]() {
             return response.body().read_to_end(fileStream->streambuf());
         })
         // close stream
@@ -274,14 +290,14 @@ namespace image_manager {
         });
 
         try {
-            requestTask.wait();
+            downloadTask.wait();
         }
         catch (const std::exception &e) {
             boost::filesystem::remove(filename);
             SARUS_RETHROW_ERROR(e, "Download stream error");
         }
 
-        printLog( boost::format("Finished download Stream: uri=%s, path=%s, filename=%s") % uri % path % filename, common::LogLevel::DEBUG);
+        printLog( boost::format("Finished download stream to %s") % filename, common::LogLevel::DEBUG);
     }
 
     /**
@@ -292,13 +308,13 @@ namespace image_manager {
                  common::LogLevel::INFO);
 
         // Attempt to retrieve manifest
-        std::unique_ptr<web::http::client::http_client> client = setupHttpClientWithCredential(getServerUri(config->imageID.server));
+        web::http::client::http_client client (getServerUri(config->imageID.server));
         web::http::http_request              request(methods::GET);
         pplx::task<web::http::http_response> responseTask;
         web::http::http_response             response;
 
         request.set_request_uri( makeImageManifestUri() );
-        responseTask = client->request(request);
+        responseTask = client.request(request);
 
         try {
             responseTask.wait();
@@ -327,10 +343,10 @@ namespace image_manager {
             printLog( boost::format("header      : %s") % U(authorizationString), common::LogLevel::DEBUG);
             printLog( boost::format("full request: %s") % authHeaderRequest.to_string(), common::LogLevel::DEBUG);
 
-            response = client->request(authHeaderRequest).get();
+            response = client.request(authHeaderRequest).get();
 
             // If an Unauthorized response is returned again, inform the user and suggest to use login credentials
-            if(response.status_code() == status_codes::Unauthorized) {
+            if(response.status_code() == status_codes::Unauthorized || response.status_code() == status_codes::Forbidden) {
                 auto message = boost::format{"Failed to pull image '%s'"
                     "\nThe image may be private or not present in the remote registry."
                     "\nDid you perform a login with the proper credentials?"
@@ -451,7 +467,7 @@ namespace image_manager {
                 printLog(message, common::LogLevel::GENERAL, std::cerr);
 
                 message = boost::format("Failed to get token. Received http_response status code(%s): %s")
-                    % response.status_code() % response.reason_phrase();
+                    % tokenResp.status_code() % tokenResp.reason_phrase();
                 SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
 
             }
