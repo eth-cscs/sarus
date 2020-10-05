@@ -227,9 +227,9 @@ void SshHook::setupSshKeysDirInContainer() const {
 
     // switch to unprivileged user to make sure that the user has the
     // permission to create a new folder ~/.ssh in the container
-    sarus::common::switchToUnprivilegedUser(userIdentity);
+    sarus::common::switchIdentity(userIdentity);
     sarus::common::createFoldersIfNecessary(sshKeysDirInContainer);
-    sarus::common::switchToPrivilegedUser(rootIdentity);
+    sarus::common::switchIdentity(rootIdentity);
 
     // mount overlayfs on top of the container's ~/.ssh, otherwise we
     // could mess up with the host's ~/.ssh directory. E.g. when the user

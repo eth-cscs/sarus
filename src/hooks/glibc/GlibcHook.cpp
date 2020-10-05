@@ -105,7 +105,7 @@ void GlibcHook::parseEnvironmentVariables() {
 bool GlibcHook::containerHasGlibc() const {
     // If the container has glibc (some systems such as Alpine Linux don't),
     // then we expect /etc/ld.so.cache to be in the container (it is generated
-    // by ldconfig, which is part of glibc) 
+    // by ldconfig, which is part of glibc)
     return boost::filesystem::is_regular_file(rootfsDir / "/etc/ld.so.cache");
 }
 

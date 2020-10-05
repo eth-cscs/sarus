@@ -61,19 +61,19 @@ void validateMountDestination(const boost::filesystem::path& destination, const 
             SARUS_THROW_ERROR(message.str());
         }
 
-        if(!isPathOnBindMountableDevice(*deepestExistingFolder, config)) {
+        if(!isPathOnAllowedDevice(*deepestExistingFolder, config)) {
             SARUS_THROW_ERROR("mount destination is not on a device allowed for mounts");
         }
     }
     /* If destination exists, check it is on an allowed device */
-    else if(!isPathOnBindMountableDevice(destination, config)) {
+    else if(!isPathOnAllowedDevice(destination, config)) {
         SARUS_THROW_ERROR("mount destination is not on a device allowed for mounts");
     }
     utility::logMessage(std::string("Mount destination successfully validated"), common::LogLevel::DEBUG);
 }
 
 
-bool isPathOnBindMountableDevice(const boost::filesystem::path& path, const common::Config& config) {
+bool isPathOnAllowedDevice(const boost::filesystem::path& path, const common::Config& config) {
     auto bundleDir = boost::filesystem::path(config.json["OCIBundleDir"].GetString());
     auto rootfsDir = bundleDir / config.json["rootfsFolder"].GetString();
 

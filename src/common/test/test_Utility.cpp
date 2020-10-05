@@ -93,6 +93,34 @@ TEST(UtilityTestGroup, setEnvironmentVariable) {
     CHECK_EQUAL(std::string(envValue), testValue);
 }
 
+TEST(UtilityTestGroup, switchIdentity) {
+    auto testDirRAII = common::PathRAII{ "./sarus-test-switchIdentity" };
+    common::createFileIfNecessary(testDirRAII.getPath() / "file", 0, 0);
+    boost::filesystem::permissions(testDirRAII.getPath(), boost::filesystem::owner_all);
+
+    uid_t unprivilegedUid;
+    gid_t unprivilegedGid;
+    std::tie(unprivilegedUid, unprivilegedGid) = test_utility::misc::getNonRootUserIds();
+    auto unprivilegedIdentity = common::UserIdentity{unprivilegedUid, unprivilegedGid, {}};
+
+    common::switchIdentity(unprivilegedIdentity);
+
+    // Check identity change
+    CHECK_EQUAL(geteuid(), unprivilegedIdentity.uid);
+    CHECK_EQUAL(getegid(), unprivilegedIdentity.gid);
+
+    // Check it's not possible to read root-owned files or write in root-owned dirs
+    CHECK_THROWS(std::exception, boost::filesystem::exists(testDirRAII.getPath() / "file"));
+    CHECK_THROWS(std::exception, common::createFileIfNecessary(testDirRAII.getPath() / "file_fail"));
+
+    auto rootIdentity = sarus::common::UserIdentity{};
+    common::switchIdentity(rootIdentity);
+
+    CHECK_EQUAL(geteuid(), 0);
+    CHECK_EQUAL(getegid(), 0);
+    CHECK(boost::filesystem::exists(testDirRAII.getPath() / "file"));
+}
+
 TEST(UtilityTestGroup, setFilesystemUid) {
     // switch to unprivileged user
     uid_t unprivilegedUid;

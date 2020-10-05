@@ -37,7 +37,7 @@ Hook::Hook() {
 }
 
 void Hook::loadConfigs() {
-    if(!isHookEnabled) {
+    if (!isHookEnabled) {
         log("Not loading configuration (hook disabled)", sarus::common::LogLevel::INFO);
         return;
     }
@@ -61,7 +61,7 @@ void Hook::loadConfigs() {
 }
 
 void Hook::performSynchronization() const {
-    if(!isHookEnabled) {
+    if (!isHookEnabled) {
         log("Not performing synchronization (hook disabled)", sarus::common::LogLevel::INFO);
         return;
     }
@@ -77,6 +77,7 @@ void Hook::performSynchronization() const {
 void Hook::synchronizeArrival() const {
     signalArrival();
     log("Waiting for arrival of all container instances", sarus::common::LogLevel::DEBUG);
+    // TODO: Implement a timeout
     while(!allInstancesArrived()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
@@ -85,8 +86,9 @@ void Hook::synchronizeArrival() const {
 
 void Hook::synchronizeDeparture() const {
     signalDeparture();
-    if(slurmProcID == "0") {
+    if (slurmProcID == "0") {
         log("Waiting for departure of all container instances", sarus::common::LogLevel::DEBUG);
+        // TODO: Implement a timeout
         while(!allInstancesDeparted()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
@@ -145,13 +147,16 @@ void Hook::parseConfigJSONOfBundle() {
 
     // get environment variables
     auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
-    if(env.find("SLURM_JOB_ID") == env.cend()
+
+    if (env.find("SLURM_JOB_ID") == env.cend()
         || env.find("SLURM_STEPID") == env.cend()
         || env.find("SLURM_NTASKS") == env.cend()
         || env.find("SLURM_PROCID") == env.cend()) {
         isHookEnabled = false;
+        log("Disabled hook because cannot find SLURM_* variables", sarus::common::LogLevel::DEBUG);
         return;
     }
+
     slurmJobID = env["SLURM_JOB_ID"];
     slurmStepID = env["SLURM_STEPID"];
     slurmNTasks = env["SLURM_NTASKS"];

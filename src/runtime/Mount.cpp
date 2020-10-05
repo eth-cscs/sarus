@@ -45,9 +45,8 @@ void Mount::performMount() const {
         SARUS_THROW_ERROR("Internal error: failed to lock std::weak_ptr");
     }
 
-    // switch to user identity to make sure that he has access to the mount source
-    auto rootIdentity = common::UserIdentity{};
-    common::switchToUnprivilegedUser(config->userIdentity);
+    // switch to user identity to make sure user has access to the mount source
+    common::switchIdentity(config->userIdentity);
 
     auto rootfsDir = boost::filesystem::path{ config->json["OCIBundleDir"].GetString() }
         / config->json["rootfsFolder"].GetString();
@@ -76,7 +75,8 @@ void Mount::performMount() const {
         common::createFileIfNecessary(destinationReal, config->userIdentity.uid, config->userIdentity.gid);
     }
 
-    common::switchToPrivilegedUser(rootIdentity);
+    auto rootIdentity = common::UserIdentity{};
+    common::switchIdentity(rootIdentity);
 
     try {
         // switch to user filesystem identity to make sure we can access paths as root even on root_squashed filesystems

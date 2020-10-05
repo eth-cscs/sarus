@@ -132,42 +132,36 @@ std::string eraseFirstAndLastDoubleQuote(const std::string& s) {
                         s.cbegin() + s.size() - 1);
 }
 
-void switchToUnprivilegedUser(const common::UserIdentity& identity) {
-    logMessage(boost::format{"Switching to uprivileged user (uid=%d gid=%d)"}
+void switchIdentity(const common::UserIdentity& identity) {
+    logProcessUserAndGroupIdentifiers();
+
+    logMessage(boost::format{"Switching to identity (uid=%d gid=%d)"}
                % identity.uid % identity.gid,
                LogLevel::DEBUG);
 
-    if (setgroups(identity.supplementaryGids.size(), identity.supplementaryGids.data()) != 0) {
-        SARUS_THROW_ERROR("Failed to assume end-user auxiliary gids");
+    uid_t euid = geteuid();
+    uid_t egid = getegid();
+
+    if (euid == 0){
+        // unprivileged processes cannot call setgroups
+        if (setgroups(identity.supplementaryGids.size(), identity.supplementaryGids.data()) != 0) {
+            SARUS_THROW_ERROR("Failed to setgroups");
+        }
     }
+
     if (setegid(identity.gid) != 0) {
-        SARUS_THROW_ERROR("Failed to assume end-user gid");
+        SARUS_THROW_ERROR("Failed to setegid");
     }
+
     if (seteuid(identity.uid) != 0) {
-        SARUS_THROW_ERROR("Failed to assume end-user uid");
+        if (setegid(egid) != 0) {
+            SARUS_THROW_ERROR("Failed to seteuid and Failed to restore egid");
+        }
+        SARUS_THROW_ERROR("Failed to seteuid");
     }
 
     logProcessUserAndGroupIdentifiers();
-    logMessage("Successfully switched to unprivileged user", LogLevel::DEBUG);
-}
-
-void switchToPrivilegedUser(const common::UserIdentity& identity) {
-    logMessage(boost::format{"Switching to privileged user (uid=%d gid=%d)"}
-               % identity.uid % identity.gid,
-               LogLevel::DEBUG);
-
-    if (seteuid(identity.uid) != 0) {
-        SARUS_THROW_ERROR("Failed to re-assume original user effective uid");
-    }
-    if (setegid(identity.gid) != 0) {
-        SARUS_THROW_ERROR("Failed to re-assume original user effective gid");
-    }
-    if (setgroups(identity.supplementaryGids.size(), identity.supplementaryGids.data()) != 0) {
-        SARUS_THROW_ERROR("Failed to re-assume original user auxiliary gids");
-    }
-
-    logProcessUserAndGroupIdentifiers();
-    logMessage("Successfully switched to privileged user", LogLevel::DEBUG);
+    logMessage("Successfully switched identity", LogLevel::DEBUG);
 }
 
 /*
