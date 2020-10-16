@@ -49,6 +49,8 @@ private:
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
     pid_t pidOfContainer;
+    uid_t uidOfUser;
+    gid_t gidOfUser;
     boost::filesystem::path ldconfigPath;
     boost::filesystem::path readelfPath;
     std::vector<boost::filesystem::path> hostLibraries;

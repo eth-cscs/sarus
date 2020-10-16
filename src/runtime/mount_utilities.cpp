@@ -39,16 +39,24 @@ void validateMountSource(const boost::filesystem::path& source) {
 
 
 void validateMountDestination(const boost::filesystem::path& destination, const common::Config& config) {
+    auto bundleDir = boost::filesystem::path(config.json["OCIBundleDir"].GetString());
+    auto rootfsDir = bundleDir / config.json["rootfsFolder"].GetString();
+    return validateMountDestination(destination, bundleDir, rootfsDir);
+}
+
+
+void validateMountDestination(const boost::filesystem::path& destination, const boost::filesystem::path& bundleDir, const boost::filesystem::path& rootfsDir) {
     utility::logMessage(boost::format("Validating mount destination: %s") % destination, common::LogLevel::DEBUG);
+
     /* If the destination does not exist, check its parents */
     if (!boost::filesystem::exists(destination)) {
         /* Search the first existing parent folder and check that it is on the device
            where we are authorized to create stuff */
         boost::optional<boost::filesystem::path> deepestExistingFolder;
         auto current = boost::filesystem::path("");
-        for(const auto& component : destination) {
+        for (const auto& component : destination) {
             current /= component;
-            if(boost::filesystem::exists(current)) {
+            if (boost::filesystem::exists(current)) {
                 deepestExistingFolder = current;
             }
             else {
@@ -56,46 +64,69 @@ void validateMountDestination(const boost::filesystem::path& destination, const 
             }
         }
 
-        if(!deepestExistingFolder) {
+        if (!deepestExistingFolder) {
             auto message = boost::format("internal error: failed to find existing parent folder of %s") % destination;
             SARUS_THROW_ERROR(message.str());
         }
+        utility::logMessage(boost::format("Deepest path for such path is %s") % *deepestExistingFolder, common::LogLevel::DEBUG);
 
-        if(!isPathOnAllowedDevice(*deepestExistingFolder, config)) {
-            SARUS_THROW_ERROR("mount destination is not on a device allowed for mounts");
+        if (!isPathOnAllowedDevice(*deepestExistingFolder, bundleDir, rootfsDir)) {
+            auto message = boost::format("mount destination (%s) is not on a device allowed for mounts") % (*deepestExistingFolder);
+            SARUS_THROW_ERROR(message.str());
         }
     }
     /* If destination exists, check it is on an allowed device */
-    else if(!isPathOnAllowedDevice(destination, config)) {
-        SARUS_THROW_ERROR("mount destination is not on a device allowed for mounts");
+    else {
+        bool allowed;
+        if (boost::filesystem::is_directory(destination)) {
+            allowed = isPathOnAllowedDevice(destination, bundleDir, rootfsDir);
+        }
+        else {
+            allowed = isPathOnAllowedDevice(destination.parent_path(), bundleDir, rootfsDir);
+        }
+        if (!allowed) {
+            auto message = boost::format("mount destination (%s) is not on a device allowed for mounts") % destination;
+            SARUS_THROW_ERROR(message.str());
+        }
     }
     utility::logMessage(std::string("Mount destination successfully validated"), common::LogLevel::DEBUG);
 }
 
 
-bool isPathOnAllowedDevice(const boost::filesystem::path& path, const common::Config& config) {
-    auto bundleDir = boost::filesystem::path(config.json["OCIBundleDir"].GetString());
-    auto rootfsDir = bundleDir / config.json["rootfsFolder"].GetString();
-
+bool isPathOnAllowedDevice(const boost::filesystem::path& path, const boost::filesystem::path& bundleDir, const boost::filesystem::path& rootfsDir) {
     auto pathDevice = getDevice(path);
-    utility::logMessage(boost::format("Target device: %d") % pathDevice, common::LogLevel::DEBUG);
+    utility::logMessage(boost::format("Target device for path %s is: %d") % path % pathDevice, common::LogLevel::DEBUG);
 
     auto allowedDevices = std::vector<dev_t>{};
     allowedDevices.reserve(4);
-    allowedDevices.push_back(getDevice("/tmp"));
-    allowedDevices.push_back(getDevice(rootfsDir));
-    if(boost::filesystem::exists(rootfsDir / "dev")) {
-        allowedDevices.push_back(getDevice(rootfsDir / "dev"));
-    }
-    auto lowerLayer = bundleDir / "overlay/rootfs-lower";
-    allowedDevices.push_back(getDevice(lowerLayer));
-    for(const auto& dev : allowedDevices) {
-        utility::logMessage(boost::format("Allowed device: %d") % dev, common::LogLevel::DEBUG);
+    utility::logMessage("Allowed devices are:", common::LogLevel::DEBUG);
+
+    auto dev = getDevice("/tmp");
+    allowedDevices.push_back(dev);
+    utility::logMessage(boost::format("%d: /tmp") % dev, common::LogLevel::DEBUG);
+
+    dev = getDevice(rootfsDir);
+    allowedDevices.push_back(dev);
+    utility::logMessage(boost::format("%d: rootfsDir (%s)") % dev % rootfsDir, common::LogLevel::DEBUG);
+
+    if (boost::filesystem::exists(rootfsDir / "dev")) {
+        dev = getDevice(rootfsDir / "dev");
+        allowedDevices.push_back(dev);
+        utility::logMessage(boost::format("%d: %s/dev") % dev % rootfsDir, common::LogLevel::DEBUG);
     }
 
-    bool isPathOnAllowedDevice = std::find( allowedDevices.cbegin(),
-                                            allowedDevices.cend(),
-                                            pathDevice)
+    auto lowerLayer = bundleDir / "overlay/rootfs-lower";
+    if (boost::filesystem::exists(lowerLayer)) {
+        // rootfs-lower will only be available during container preparation before overlay mount
+        // but this method could be used from within the container
+        dev = getDevice(lowerLayer);
+        allowedDevices.push_back(dev);
+        utility::logMessage(boost::format("%d: rootfs-lower (%s)") % dev % lowerLayer, common::LogLevel::DEBUG);
+    }
+
+    bool isPathOnAllowedDevice = std::find(allowedDevices.cbegin(),
+                                           allowedDevices.cend(),
+                                           pathDevice)
                                 != allowedDevices.cend();
     return isPathOnAllowedDevice;
 }

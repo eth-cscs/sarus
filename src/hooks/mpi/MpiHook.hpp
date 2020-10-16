@@ -47,10 +47,11 @@ private:
                              const HostToContainerLibsMap& hostToContainerLibs) const;
     void injectHostLibrary(const SharedLibrary& hostLib,
                            const HostToContainerLibsMap& hostToContainerLibs) const;
-    void performBindMounts() const;
     bool injectHostLibrary(
         const boost::filesystem::path& hostLib,
         const std::function<bool(const boost::filesystem::path&, const boost::filesystem::path&)>& abiCompatibilityCheck) const;
+    void performBindMounts() const;
+    void validatedBindMount(const boost::filesystem::path& from, const boost::filesystem::path& to, unsigned long flags=0) const;
     void createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesystem::path& target,
                                                         const boost::filesystem::path& linkFilename,
                                                         const bool preserveRootLink) const;
@@ -61,6 +62,8 @@ private:
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
     pid_t pidOfContainer;
+    uid_t uidOfUser;
+    gid_t gidOfUser;
     boost::filesystem::path ldconfig;
     std::vector<boost::filesystem::path> bindMounts;
     std::vector<SharedLibrary> containerLibs;

@@ -21,7 +21,7 @@ class TestCapabilities(unittest.TestCase):
 
     def test_linux_capabilities_inside_container(self):
         pex = pexpect.spawnu("sarus run %s cat /proc/self/status | grep Cap" % self._CONTAINER_IMAGE)
-        pex.expect(u'CapInh:\s+0+')
-        pex.expect(u'CapPrm:\s+0+')
-        pex.expect(u'CapEff:\s+0+')
-        pex.expect(u'CapBnd:\s+0+')
+        pex.expect(r'CapInh:\s+0+')
+        pex.expect(r'CapPrm:\s+0+')
+        pex.expect(r'CapEff:\s+0+')
+        pex.expect(r'CapBnd:\s+0+')

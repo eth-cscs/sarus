@@ -86,6 +86,10 @@ void GlibcHook::parseConfigJSONOfBundle() {
         rootfsDir = bundleDir / root;
     }
 
+    // get uid + gid of user
+    uidOfUser = json["process"]["user"]["uid"].GetInt();
+    gidOfUser = json["process"]["user"]["gid"].GetInt();
+
     logMessage("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);
 }
 
@@ -165,17 +169,33 @@ void GlibcHook::verifyThatHostAndContainerGlibcAreABICompatible(
 void GlibcHook::replaceGlibcLibrariesInContainer() const {
     bool wasInjectionPerformed = false;
 
-    for(const auto& hostLib : hostLibraries) {
+    // Validate Mount Source
+    auto rootIdentity = sarus::common::UserIdentity{};
+    auto userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
+    sarus::common::switchIdentity(userIdentity);
+    for (const auto& hostLib : hostLibraries) {
+        sarus::runtime::validateMountSource(hostLib);
+    }
+    sarus::common::switchIdentity(rootIdentity);
+
+    for (const auto& hostLib : hostLibraries) {
         auto soname = sarus::common::getSharedLibSoname(hostLib, readelfPath);
-        for(const auto& containerLib : containerLibraries) {
-            if(containerLib.filename().string() == soname) {
+
+        for (const auto& containerLib : containerLibraries) {
+            if (containerLib.filename().string() == soname) {
+                auto destination = rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, containerLib);
+
+                sarus::common::switchIdentity(userIdentity);
+                sarus::runtime::validateMountDestination(destination.parent_path(), bundleDir, rootfsDir);
+                sarus::common::switchIdentity(rootIdentity);
+
+                sarus::runtime::bindMount(hostLib, destination);
                 wasInjectionPerformed = true;
-                sarus::runtime::bindMount(hostLib, rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, containerLib));
             }
         }
     }
 
-    if(!wasInjectionPerformed) {
+    if (!wasInjectionPerformed) {
         SARUS_THROW_ERROR("Internal error: failed to inject glibc libraries.");
     }
 }

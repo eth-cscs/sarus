@@ -15,6 +15,7 @@
 #include <thread>
 #include <iterator>
 #include <boost/format.hpp>
+#include <sys/prctl.h>
 
 #include "common/Error.hpp"
 #include "common/Logger.hpp"
@@ -139,7 +140,6 @@ size_t Hook::countFilesInDirectory(const boost::filesystem::path& directory) con
     return std::distance(begin, end);
 }
 
-
 void Hook::parseConfigJSONOfBundle() {
     auto json = sarus::common::readJSON(bundleDir / "config.json");
 
@@ -165,6 +165,31 @@ void Hook::parseConfigJSONOfBundle() {
     // get uid + gid of user
     uidOfUser = json["process"]["user"]["uid"].GetInt();
     gidOfUser = json["process"]["user"]["gid"].GetInt();
+}
+
+void Hook::dropPrivileges() const {
+    uid_t ruid, euid, suid;
+    if (getresuid(&ruid, &euid, &suid) != 0) {
+        SARUS_THROW_ERROR("getresuid failed");
+    }
+    if (euid != 0) {
+        return;
+    }
+
+    if (setresgid(gidOfUser, gidOfUser, gidOfUser) != 0) {
+        auto message = boost::format("Failed to setresgid(%1%, %1%, %1%): %2%") % gidOfUser % strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    if (setresuid(uidOfUser, uidOfUser, uidOfUser) != 0) {
+        auto message = boost::format("Failed to setresuid(%1%, %1%, %1%): %2%") % uidOfUser % strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0) {
+        auto message = boost::format("Failed to set no_new_privs bit: %s") % strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
 }
 
 void Hook::log(const std::string& message, sarus::common::LogLevel level) const {

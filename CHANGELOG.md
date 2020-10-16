@@ -5,12 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
-## [Unreleased]
+## [1.3.1]
 
 ### Added
 
 - Support for pulling images from registries which do not use blob content redirect
 
+### Security
+
+- Slurm global sync hook drops privileges at startup
+- MPI and Glibc hooks now perform validations with user credentials for host mounts and writes
 
 ## [1.3.0]
 

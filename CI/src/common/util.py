@@ -32,8 +32,7 @@ def list_images(is_centralized_repository):
         command = ["sarus", "images", "--centralized-repository"]
     else:
         command = ["sarus", "images"]
-    out = subprocess.check_output(command).decode()
-    lines = command_output_without_trailing_new_lines(out)
+    lines = get_trimmed_output(command)
     lines_without_header = lines[1:]
     images = []
     for line in lines_without_header:
@@ -80,8 +79,8 @@ def run_image_and_get_prettyname(is_centralized_repository, image):
         command = ["sarus", "run", "--centralized-repository", image, "cat", "/etc/os-release"]
     else:
         command = ["sarus", "run", image, "cat", "/etc/os-release"]
-    out = subprocess.check_output(command).decode()
-    lines = command_output_without_trailing_new_lines(out)
+
+    lines = get_trimmed_output(command)
     return lines[0].split("=")[1][1:-1]
 
 
@@ -93,9 +92,7 @@ def run_command_in_container(is_centralized_repository, image, command, options_
         full_command += options_of_run_command
     full_command += [image] + command
 
-    out = subprocess.check_output(full_command, **subprocess_kwargs).decode()
-
-    return command_output_without_trailing_new_lines(out)
+    return get_trimmed_output(full_command, **subprocess_kwargs)
 
 
 def run_command_in_container_with_slurm(image, command, options_of_srun_command=None,
@@ -111,10 +108,7 @@ def run_command_in_container_with_slurm(image, command, options_of_srun_command=
         full_command += options_of_run_command
     full_command += [image] + command
 
-    # execute
-    out = subprocess.check_output(full_command, **subprocess_kwargs).decode()
-
-    return command_output_without_trailing_new_lines(out)
+    return get_trimmed_output(full_command, **subprocess_kwargs)
 
 
 def get_hashes_of_host_libs_in_container(is_centralized_repository, image, options_of_run_command=None):
@@ -141,3 +135,14 @@ def get_hashes_of_host_libs_in_container(is_centralized_repository, image, optio
         hashes.append(output[0].split()[0])
 
     return hashes
+
+
+def get_trimmed_output(full_command, **subprocess_kwargs):
+    try:
+        out = subprocess.check_output(full_command, **subprocess_kwargs).decode()
+    except subprocess.CalledProcessError as e:
+        out = e.output.decode()
+        print(out)
+        raise
+    trimmed_out = command_output_without_trailing_new_lines(out)
+    return trimmed_out

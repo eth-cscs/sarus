@@ -21,7 +21,7 @@ log() {
 }
 
 stop_and_remove_cluster() {
-    if [ -e $virtual_cluster_dir ]; then
+    if [ -d $virtual_cluster_dir ]; then
         log "stopping virtual cluster"
         cd $virtual_cluster_dir
         docker-compose down -v
@@ -80,7 +80,10 @@ run_tests() {
     local tests_dir_in_container=/sarus-source/CI/src
     cd $virtual_cluster_dir
     docker-compose exec --user=docker -T controller bash -c "cd $tests_dir_in_container/integration_tests_for_virtual_cluster && PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=$tests_dir_in_container:\$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/default pytest -v $test_files"
-    fail_on_error "failed to run integration tests in virtual cluster"
+    if [ $? -ne 0 ]; then
+        stop_and_remove_cluster
+        error "failed to run integration tests in virtual cluster"
+    fi
     log "successfully run integration tests in virtual cluster"
 }
 

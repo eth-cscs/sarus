@@ -25,6 +25,7 @@ namespace slurm_global_sync {
 class Hook {
 public:
     Hook();
+    void dropPrivileges() const;
     void loadConfigs();
     void performSynchronization() const;
 
