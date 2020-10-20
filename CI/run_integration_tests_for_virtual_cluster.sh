@@ -41,15 +41,17 @@ create_cluster_folder_with_unique_id() {
 }
 
 adapt_docker_compose_file() {
-    sed -i $virtual_cluster_dir/docker-compose.yml -e "s/@host_uid@/$(id -u)/g"
-    sed -i $virtual_cluster_dir/docker-compose.yml -e "s/@host_gid@/$(id -g)/g"
-    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@cached_oci_hooks_dir@#${cached_oci_hooks_dir}#g"
-    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@cached_local_repo_dir@#${cached_local_repo_dir}#g"
+    log "preparing docker-compose.yml for virtual cluster on $virtual_cluster_dir"
+    sed -i $virtual_cluster_dir/docker-compose.yml -e "s/@host_uid@/$(id -u)/g" && \
+    sed -i $virtual_cluster_dir/docker-compose.yml -e "s/@host_gid@/$(id -g)/g" && \
+    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@cached_oci_hooks_dir@#${cached_oci_hooks_dir}#g" && \
+    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@cached_local_repo_dir@#${cached_local_repo_dir}#g" && \
     sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@artifact_name@#${artifact_name}#g"
+    fail_on_error "failed to adapt docker-compose.yml"
 }
 
 start_cluster() {
-    log "starting virtual cluster"
+    log "starting virtual cluster on $virtual_cluster_dir"
     cd $virtual_cluster_dir
     mkdir -p sync
     docker-compose up -d
