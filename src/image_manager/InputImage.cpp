@@ -165,7 +165,8 @@ void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::pat
                 common::LogLevel::INFO);
         }
 
-        log(boost::format("archive: processing entry %s") % archive_entry_pathname(entry), common::LogLevel::DEBUG);
+        auto archiveEntryPath = boost::filesystem::path(archive_entry_pathname(entry));
+        log(boost::format("archive: processing entry %s") % archiveEntryPath, common::LogLevel::DEBUG);
 
         // if entry maches excluded pattern, memorize entry and skip extracting
         if ( archive_match_excluded(matchToExclude, entry) ) {
@@ -173,12 +174,19 @@ void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::pat
             continue;
         }
         
+        // Clobber file in extraction path to avoid errors, unless the file in
+        // the extraction path and the entry from the archive are both directories
+        if ( !(boost::filesystem::is_directory(expandDir / archiveEntryPath) && archive_entry_filetype(entry) == AE_IFDIR) ) {
+            boost::filesystem::remove_all(expandDir / archiveEntryPath);
+        }
+
+
         // write entry
         log(boost::format("archive: writing entry"), common::LogLevel::DEBUG);
         r = archive_write_header(ext, entry);
         if (r < ARCHIVE_OK) {
             auto message = boost::format("archive %s: error while writing header of entry %s (%s)")
-                % archivePath % archive_entry_pathname(entry) % archive_error_string(arc);
+                % archivePath % archiveEntryPath % archive_error_string(ext);
             SARUS_THROW_ERROR(message.str());
         }
         else if (archive_entry_size(entry) > 0) {
@@ -189,12 +197,12 @@ void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::pat
         r = archive_write_finish_entry(ext);
         if (r < ARCHIVE_WARN) {
             auto message = boost::format("archive %s: error while finishing to write entry %s (%s)")
-                        % archivePath % archive_entry_pathname(entry) % archive_error_string(arc);
+                        % archivePath % archiveEntryPath % archive_error_string(ext);
             SARUS_THROW_ERROR(message.str());
         }
         else if(r < ARCHIVE_OK) {
             log(   boost::format("archive %s: error while finishing to write entry %s (%s)")
-                        % archivePath % archive_entry_pathname(entry) % archive_error_string(arc),
+                        % archivePath % archiveEntryPath % archive_error_string(ext),
                         common::LogLevel::INFO);
         }
     }

@@ -14,7 +14,7 @@ import common.util as util
 
 class TestImageWithNonAsciiCharacters(unittest.TestCase):
     """
-    These tests simply pull, run and remove an image with a folder
+    These tests simply pull and run an image with a folder
     and a file whose names have non-ascii characters.
     """
 
@@ -27,5 +27,5 @@ class TestImageWithNonAsciiCharacters(unittest.TestCase):
                                                command=["ls", "/földèr".encode('utf-8')])
         # the command's output might also contain escape sequences (e.g. color codes), let's ignore
         # the escape characters and let's just check that the output contains the expected string
-        self.assertTrue(output[0].find("filé") != -1)
-        self.assertTrue(output[1].find("ファイル") != -1)
+        assert output[0].find("filé") != -1
+        assert output[1].find("ファイル") != -1

@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Support for pulling images from registries which do not use blob content redirect
 
+### Fixed
+
+- Fixed extraction of image layers when replacing directories with other file types
+
 ### Security
 
 - Slurm global sync hook drops privileges at startup
