@@ -41,9 +41,15 @@ MpiHook::MpiHook() {
     sarus::hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
     parseEnvironmentVariables();
-    // Load Container Libraries
+    log("Getting list of shared libs from the container's dynamic linker cache", sarus::common::LogLevel::DEBUG);
     auto containerLibPaths = sarus::common::getSharedLibsFromDynamicLinker(ldconfig, rootfsDir);
     for (const auto& p : containerLibPaths){
+        if (!boost::filesystem::exists(rootfsDir / p)) {
+            auto message = boost::format("Container library %s has an entry in the dynamic linker cache"
+                                         " but does not exist in the container's filesystem. Skipping...") % p;
+            log(message, sarus::common::LogLevel::DEBUG);
+            continue;
+        }
         containerLibs.push_back(SharedLibrary(p, rootfsDir));
     }
     // Map Libraries

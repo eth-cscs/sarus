@@ -62,6 +62,8 @@ class TestGlibcHook(unittest.TestCase):
         util.pull_image_if_necessary(is_centralized_repository=False, image="alpine:3.8") # no glibc
         util.pull_image_if_necessary(is_centralized_repository=False, image="centos:6") # glibc 2.12
         util.pull_image_if_necessary(is_centralized_repository=False, image="fedora:latest") # assumption: glibc >= host's glibc
+        # based on fedora - assumption: glibc >= host's glibc
+        util.pull_image_if_necessary(is_centralized_repository=False, image="ethcscs/sarus-integration-tests:nonexisting_ldcache_entry")
 
     @classmethod
     def _enable_hook(cls):
@@ -102,6 +104,12 @@ class TestGlibcHook(unittest.TestCase):
     def test_no_injection_in_container_with_recent_glibc(self):
         self._glibc_command_line_option = True
         self._container_image = "fedora:latest"
+        hashes = self._get_hashes_of_host_libs_in_container()
+        assert not hashes
+
+    def test_no_injection_in_container_with_recent_glibc_and_nonexisting_ldcache_entry(self):
+        self._glibc_command_line_option = True
+        self._container_image = "ethcscs/sarus-integration-tests:nonexisting_ldcache_entry"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert not hashes
 

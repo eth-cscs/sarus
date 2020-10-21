@@ -9,11 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Support for pulling images from registries which do not use blob content redirect
+- Support for pulling images from registries which do not use content redirect for blobs
 
 ### Fixed
 
 - Fixed extraction of image layers when replacing directories with other file types
+- MPI and Glibc hooks skip entries from the dynamic linker cache if such entries do not exist
+  in the container's filesystem
 
 ### Security
 

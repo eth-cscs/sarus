@@ -194,7 +194,7 @@ run_integration_tests() {
 
     echo "Running integration tests with user=docker"
     sudo -u docker --login bash -c "
-        PATH=/opt/sarus/default/bin:${PATH} PYTHONPATH=/sarus-source/CI/src:${PYTHONPATH} \
+        PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=/sarus-source/CI/src:\$PYTHONPATH \
         CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker \
         pytest -v -m 'not asroot' /sarus-source/CI/src/integration_tests/" # TIP: Add -s --last-failed to pytest to get more output from failed tests.
     fail_on_error "Python integration tests failed"
@@ -202,7 +202,7 @@ run_integration_tests() {
 
     echo "Running integration tests with user=root"
     sudo --login bash -c "
-        PATH=/opt/sarus/default/bin:${PATH} PYTHONPATH=/sarus-source/CI/src:${PYTHONPATH} \
+        PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=/sarus-source/CI/src:\$PYTHONPATH \
         CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker \
         pytest -v -s -m asroot /sarus-source/CI/src/integration_tests/"
     fail_on_error "Python integration tests as root failed"

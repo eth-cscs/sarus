@@ -51,6 +51,8 @@ class TestMPIHook(unittest.TestCase):
                                      image="ethcscs/dockerfiles:sarus_mpi_support_test-mpich_minor_incompatible")
         util.pull_image_if_necessary(is_centralized_repository=False,
                                      image="ethcscs/dockerfiles:sarus_mpi_support_test-no_mpi_libraries")
+        util.pull_image_if_necessary(is_centralized_repository=False,
+                                     image="ethcscs/sarus-integration-tests:nonexisting_ldcache_entry")
 
     @classmethod
     def _create_site_resources(cls):
@@ -132,6 +134,12 @@ class TestMPIHook(unittest.TestCase):
     def test_container_without_mpi_libraries(self):
         self._mpi_command_line_option = True
         self._container_image = "ethcscs/dockerfiles:sarus_mpi_support_test-no_mpi_libraries"
+        self._assert_sarus_raises_mpi_error_containing_text(
+            text = "No MPI libraries found in the container")
+
+    def test_container_without_mpi_libraries_and_nonexisting_ldcache_entry(self):
+        self._mpi_command_line_option = True
+        self._container_image = "ethcscs/sarus-integration-tests:nonexisting_ldcache_entry"
         self._assert_sarus_raises_mpi_error_containing_text(
             text = "No MPI libraries found in the container")
 
