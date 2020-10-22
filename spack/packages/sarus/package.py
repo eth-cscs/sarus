@@ -35,6 +35,7 @@ class Sarus(CMakePackage):
 
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('1.3.0',   tag='1.3.1')
     version('1.3.0',   tag='1.3.0')
     version('1.2.0',   tag='1.2.0')
     version('1.1.0',   tag='1.1.0')
