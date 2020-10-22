@@ -46,6 +46,8 @@ class TestMPIHook(unittest.TestCase):
         util.pull_image_if_necessary(is_centralized_repository=False,
                                      image="ethcscs/dockerfiles:sarus_mpi_support_test-mpich_compatible")
         util.pull_image_if_necessary(is_centralized_repository=False,
+                                     image="ethcscs/dockerfiles:sarus_mpi_support_test-mpich_compatible_symlink")
+        util.pull_image_if_necessary(is_centralized_repository=False,
                                      image="ethcscs/dockerfiles:sarus_mpi_support_test-mpich_major_incompatible")
         util.pull_image_if_necessary(is_centralized_repository=False,
                                      image="ethcscs/dockerfiles:sarus_mpi_support_test-mpich_minor_incompatible")
@@ -112,6 +114,13 @@ class TestMPIHook(unittest.TestCase):
     def test_mpich_compatible(self):
         self._mpi_command_line_option = True
         self._container_image = "ethcscs/dockerfiles:sarus_mpi_support_test-mpich_compatible"
+        hashes = self._get_hashes_of_host_libs_in_container()
+        number_of_expected_mounts = len(self._HOST_MPI_LIBS) + len(self._HOST_MPI_DEPENDENCY_LIBS)
+        assert hashes.count(self._HOST_LIB_HASH) == number_of_expected_mounts
+
+    def test_mpich_compatible_symlink(self):
+        self._mpi_command_line_option = True
+        self._container_image = "ethcscs/dockerfiles:sarus_mpi_support_test-mpich_compatible_symlink"
         hashes = self._get_hashes_of_host_libs_in_container()
         number_of_expected_mounts = len(self._HOST_MPI_LIBS) + len(self._HOST_MPI_DEPENDENCY_LIBS)
         assert hashes.count(self._HOST_LIB_HASH) == number_of_expected_mounts

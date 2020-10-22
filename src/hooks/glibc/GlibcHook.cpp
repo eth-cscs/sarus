@@ -118,7 +118,7 @@ std::vector<boost::filesystem::path> GlibcHook::get64bitContainerLibraries() con
         return !sarus::common::is64bitSharedLib(rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, lib), readelfPath);
     };
     auto doesNotExist = [this](const boost::filesystem::path& lib) {
-        return !boost::filesystem::exists(rootfsDir / lib);
+        return !boost::filesystem::exists(rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, lib));
     };
     auto libs = sarus::common::getSharedLibsFromDynamicLinker(ldconfigPath, rootfsDir);
     auto newEnd = std::remove_if(libs.begin(), libs.end(), doesNotExist);

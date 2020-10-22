@@ -44,9 +44,10 @@ MpiHook::MpiHook() {
     log("Getting list of shared libs from the container's dynamic linker cache", sarus::common::LogLevel::DEBUG);
     auto containerLibPaths = sarus::common::getSharedLibsFromDynamicLinker(ldconfig, rootfsDir);
     for (const auto& p : containerLibPaths){
-        if (!boost::filesystem::exists(rootfsDir / p)) {
+        if ( !boost::filesystem::exists(rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, p)) ) {
             auto message = boost::format("Container library %s has an entry in the dynamic linker cache"
-                                         " but does not exist in the container's filesystem. Skipping...") % p;
+                                         " but does not exist or is a broken symlink in the container's"
+                                         " filesystem. Skipping...") % p;
             log(message, sarus::common::LogLevel::DEBUG);
             continue;
         }
