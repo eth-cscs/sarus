@@ -31,7 +31,7 @@ TEST_GROUP(MountTestGroup) {
 };
 
 #ifdef NOTROOT
-IGNORE_TEST(UserMountsTestGroup, make_user_mount_test) {
+IGNORE_TEST(MountTestGroup, mount_test) {
 #else
 TEST(MountTestGroup, mount_test) {
 #endif

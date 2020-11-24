@@ -68,6 +68,13 @@ class TestUserMounts(unittest.TestCase):
         expected_files = [destination_dir+"/"+fname for fname in self.__class__.TEST_FILES]
         self.assertTrue(self._files_exist_in_container(expected_files, sarus_options))
 
+    def test_mount_in_dev(self):
+        destination_dir = "/dev/unit_test"
+        source_dir = self.__class__.source_dir
+        sarus_options = ["--mount=type=bind,source=" + source_dir + ",destination=" + destination_dir]
+        expected_files = [destination_dir+"/"+fname for fname in self.__class__.TEST_FILES]
+        self.assertTrue(self._files_exist_in_container(expected_files, sarus_options))
+
     def _files_exist_in_container(self, file_paths, sarus_options):
         check_script = self.__class__.CHECK_TEMPLATE.format(files=" ".join(['"{}"'.format(fpath) for fpath in file_paths]))
         command = ["bash", "-c"] + [check_script]

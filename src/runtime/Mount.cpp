@@ -68,15 +68,22 @@ void Mount::performMount() const {
         SARUS_THROW_ERROR(message.str());
     }
 
-    if(boost::filesystem::is_directory(realpathOfSource.get())) {
+    // Save predicate result in a variable. This is done before switching back to root identity to leverage
+    // the unprivileged user identity on root_squashed filesystems. The creation of the mount point later
+    // on has to be done as root to enable mounts to the root-owned /dev directory in the container.
+    // Using the Boost filesystem predicate function as root will be denied if the mount source is in a
+    // root_squashed filesystem.
+    auto mountSourceIsDirectory = boost::filesystem::is_directory(realpathOfSource.get());
+
+    auto rootIdentity = common::UserIdentity{};
+    common::switchIdentity(rootIdentity);
+
+    if(mountSourceIsDirectory) {
         common::createFoldersIfNecessary(destinationReal, config->userIdentity.uid, config->userIdentity.gid);
     }
     else {
         common::createFileIfNecessary(destinationReal, config->userIdentity.uid, config->userIdentity.gid);
     }
-
-    auto rootIdentity = common::UserIdentity{};
-    common::switchIdentity(rootIdentity);
 
     try {
         // switch to user filesystem identity to make sure we can access paths as root even on root_squashed filesystems

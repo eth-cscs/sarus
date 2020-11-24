@@ -23,7 +23,8 @@ class TestSiteMounts(unittest.TestCase):
 
     TEST_FILES = {"/test_sitefs/": ["a.txt", "b.md", "c.py", "subdir/d.cpp", "subdir/e.pdf"],
                   "/test_resources/": ["f.txt", "g.md", "h.py", "subdir/i.cpp", "subdir/j.pdf"],
-                  "/test_files/test_dir/": ["k.txt", "m.md", "l.py", "subdir/m.cpp", "subdir/n.pdf"]}
+                  "/test_files/test_dir/": ["k.txt", "m.md", "l.py", "subdir/m.cpp", "subdir/n.pdf"],
+                  "/dev/test_site_mount/": ["testdev0"]}
 
     CHECK_TEMPLATE = ("for fname in {files}; do"
                       "    if [ ! -f $fname ]; then"
@@ -67,9 +68,9 @@ class TestSiteMounts(unittest.TestCase):
 
         # Build site mounts
         sitemounts = []
-        for k in cls.TEST_FILES.keys():
-            path = os.getcwd() + k
-            sitemounts.append({"type": "bind", "source": path, "destination": path})
+        for destination_path in cls.TEST_FILES.keys():
+            source_path = os.getcwd() + destination_path
+            sitemounts.append({"type": "bind", "source": source_path, "destination": destination_path})
 
         # Modify config file
         with open(cls._sarusjson_filename, 'r') as f:
@@ -91,12 +92,12 @@ class TestSiteMounts(unittest.TestCase):
 
     def test_sitefs_mounts(self):
         expected_files = []
-        for d ,files in self.TEST_FILES.items():
-            expected_files.extend([d+f for f in files])
+        for dir,files in self.TEST_FILES.items():
+            expected_files.extend([dir+f for f in files])
         self.assertTrue(self._files_exist_in_container(expected_files, []))
 
     def _files_exist_in_container(self, file_paths, sarus_options):
-        file_names = ['"{}"'.format(os.getcwd()+fpath) for fpath in file_paths]
+        file_names = ['"{}"'.format(fpath) for fpath in file_paths]
         check_script = self.__class__.CHECK_TEMPLATE.format(files=" ".join(file_names))
         command = ["bash", "-c"] + [check_script]
         out = util.run_command_in_container(is_centralized_repository=False,
