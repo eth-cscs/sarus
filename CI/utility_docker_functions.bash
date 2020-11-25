@@ -23,14 +23,16 @@ sarus-build-images() {
     # Use develop as build cache source
     if [ "$(_git_branch)" == "develop" ]; then
         DOCKER_BUILDKIT=${BK} docker build --build-arg BUILDKIT_INLINE_CACHE=${BKIC} -t ${image_build} -f ${script_dir}/${dockerfile_build} ${script_dir}
-        fail_on_error "failed to build sarus build image"
+        fail_on_error "failed to build ${image_build} image"
         DOCKER_BUILDKIT=${BK} docker build --build-arg BUILDKIT_INLINE_CACHE=${BKIC} -t ${image_run} -f ${script_dir}/${dockerfile_run} ${script_dir}
-        fail_on_error "failed to build sarus run image"
+        fail_on_error "failed to build ${image_run} image"
     else
-        DOCKER_BUILDKIT=${BK} docker build --cache-from ethcscs/sarus-ci-build:develop -t ${image_build} -f ${script_dir}/${dockerfile_build} ${script_dir}
-        fail_on_error "failed to build sarus build image"
-        DOCKER_BUILDKIT=${BK} docker build --cache-from ethcscs/sarus-ci-run:develop -t ${image_run} -f ${script_dir}/${dockerfile_run} ${script_dir}
-        fail_on_error "failed to build sarus run image"
+        local image_build_repo=$(echo ${image_build} | cut -d':' -f1)
+        local image_run_repo=$(echo ${image_run} | cut -d':' -f1)
+        DOCKER_BUILDKIT=${BK} docker build --cache-from ${image_build_repo}:develop -t ${image_build} -f ${script_dir}/${dockerfile_build} ${script_dir}
+        fail_on_error "failed to build ${image_build} image"
+        DOCKER_BUILDKIT=${BK} docker build --cache-from ${image_run_repo}:develop -t ${image_run} -f ${script_dir}/${dockerfile_run} ${script_dir}
+        fail_on_error "failed to build ${image_run} image"
     fi
 }
 
@@ -180,6 +182,17 @@ sarus-run-gcov() {
     fail_on_error "${FUNCNAME}: failed"
 }
 
+sarus-spack-test() {
+    echo "${FUNCNAME^^} with:"
+    _print_parameters
+
+    docker run --tty --rm --privileged --user root \
+        --mount=src=${sarus_source_dir_host},dst=/sarus-source,type=bind \
+        ${image_run} \
+        /sarus-source/CI/run_spack_package_test.sh
+    fail_on_error "${FUNCNAME}: failed to execute 'run_spack_package_test.sh' in container"
+}
+
 sarus-publish-images() {
     # Publish to Dockehub
     local branch=$(_git_branch)
@@ -194,6 +207,10 @@ sarus-publish-images() {
         fi
         docker push ${image_build}
         docker push ${image_run}
+
+        for distro in "${spack_distros[@]}"; do
+            docker push ${spack_repo_base}-${distro}:${branch}
+        done
     fi
 }
 
@@ -206,6 +223,10 @@ sarus-cleanup-images() {
     docker rmi ${image_build}
     if [ ${image_run} != ${image_build} ]; then
         docker rmi ${image_run} || true
+
+        for distro in "${spack_distros[@]}"; do
+            docker rmi ${spack_repo_base}-${distro}:${branch} || true
+        done
     fi
 }
 
@@ -353,6 +374,8 @@ export dockerfile_build=Dockerfile.${1-"standalone-build"}
 export image_build=ethcscs/sarus-ci-$(_replace_invalid_chars ${1-"standalone-build"}):$(_git_branch); shift || true
 export dockerfile_run=Dockerfile.${1-"standalone-run"}
 export image_run=ethcscs/sarus-ci-$(_replace_invalid_chars ${1-"standalone-run"}):$(_git_branch); shift || true
+export spack_distros=(ubuntu18.04 debian10 centos7 fedora31 opensuseleap15.2)
+export spack_repo_base=ethcscs/sarus-ci-spack
 
 _setup_cache_dirs
 

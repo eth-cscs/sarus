@@ -50,11 +50,15 @@ class Sarus(CMakePackage):
                         'part of the installation phase. Running the script requires '
                         'super-user privileges.')
 
+    depends_on('wget', type='build')
     depends_on('squashfs', type=('build', 'run'))
     depends_on('boost@1.65.0 cxxstd=11')
     depends_on('cpprestsdk@2.10.0')
     depends_on('libarchive@3.4.1')
     depends_on('rapidjson@663f076', type='build')
+
+    # autoconf is required to build Dropbear for the SSH hook
+    depends_on('autoconf', type='build')
 
     # Python 3 is used to run integration tests
     depends_on('python@3:', type='run', when='@develop')

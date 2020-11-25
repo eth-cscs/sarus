@@ -1,0 +1,26 @@
+FROM spack/centos7
+
+# Install gcc 8.3.1 through devtoolset-8
+# glibc-static is required for building the SSH hook's custom OpenSSH software
+RUN yum install -y centos-release-scl-rh   \
+    && yum install -y devtoolset-8-gcc-c++ \
+                      glibc-static         \
+    && rm -rf /var/cache/yum               \
+    && yum clean all
+
+# Enable devtoolset-8 to set gcc 8.3.1 as default compiler
+RUN source /opt/rh/devtoolset-8/enable \
+    && spack compiler find
+
+# Install builtin dependencies for Sarus
+RUN spack install wget
+RUN spack install cmake
+RUN spack install openssl
+RUN spack install squashfs
+RUN spack install boost@1.65.0 cxxstd=11
+RUN spack install --no-checksum libarchive@3.4.1
+RUN spack install python@3:
+
+ENTRYPOINT []
+CMD []
+

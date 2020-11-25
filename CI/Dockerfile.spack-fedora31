@@ -1,0 +1,30 @@
+FROM fedora:31
+
+# Install packages required by Spack
+# glibc-static is required for building the SSH hook's custom OpenSSH software
+RUN dnf install -y                                        \
+        curl           findutils gcc-c++      gcc         \
+        gcc-gfortran   git       gnupg2       hostname    \
+        iproute        Lmod      make         patch       \
+        openssh-server python    python-pip   tcl         \
+        unzip          which     glibc-static xz          \
+        lbzip2                                            \
+    && pip install boto3                                  \
+    && rm -rf /var/cache/yum                              \
+    && yum clean all
+
+# Install and configure Spack
+ENV SPACK_ROOT=/opt/spack
+ENV PATH=${PATH}:${SPACK_ROOT}/bin
+RUN git clone https://github.com/spack/spack.git ${SPACK_ROOT} \
+    && . ${SPACK_ROOT}/share/spack/setup-env.sh
+
+# Install builtin dependencies for Sarus
+ENV FORCE_UNSAFE_CONFIGURE=1
+RUN spack install wget
+RUN spack install cmake
+RUN spack install openssl
+RUN spack install squashfs
+RUN spack install boost@1.65.0 cxxstd=11
+RUN spack install --no-checksum libarchive@3.4.1
+RUN spack install python@3:

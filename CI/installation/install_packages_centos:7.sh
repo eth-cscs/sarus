@@ -15,7 +15,7 @@ sudo rm -rf /var/cache/yum
 sudo ln -s /usr/bin/cmake3 /usr/bin/cmake
 sudo ln -s /usr/bin/ctest3 /usr/bin/ctest
 
-# Enable devtoolset-3 to use GCC 4.9.2
+# Enable devtoolset-8 to use GCC 8.3.1
 source /opt/rh/devtoolset-8/enable
 
 # DOCS: END

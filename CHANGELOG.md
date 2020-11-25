@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## [Unreleased]
+
+### Added
+
+- Added CI tests for the Spack package on Ubuntu 18.04, Debian 10, CentOS 7, Fedora 31, OpenSUSE Leap 15.2
+- Added `wget` and `autoconf` as buildtime dependencies in the Spack package
+- Added a documentation note about compiler selection when installing on CentOS 7 using the Spack package
+- Added a documentation note about installing the static version of the glibc libraries when installing using the Spack package
+
+### Removed
+
+- Removed the CI test for the Spack package on Ubuntu 16.04
+
 ## [1.3.1]
 
 ### Added

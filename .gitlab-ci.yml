@@ -84,11 +84,49 @@ address_sanitizer:
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
-spack_package:
+.spack_package:
   extends: .from_source
+  timeout: 2h
   script:
-      - docker_image=ethcscs/sarus-spack:1.2.0-ubuntu16.04
-      - docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/run_spack_package_test.sh
+    - sarus-build-images
+    - sarus-spack-test
+
+spack_ubuntu18.04:
+  extends: .spack_package
+  before_script:
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus spack-ubuntu18.04 spack-ubuntu18.04
+
+spack_debian10:
+  extends: .spack_package
+  only:
+    - web
+    - schedules
+  before_script:
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus spack-debian10 spack-debian10
+
+spack_centos7:
+  extends: .spack_package
+  only:
+    - web
+    - schedules
+  before_script:
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus spack-centos7 spack-centos7
+
+spack_fedora31:
+  extends: .spack_package
+  only:
+    - web
+    - schedules
+  before_script:
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus spack-fedora31 spack-fedora31
+
+spack_opensuseleap15.2:
+  extends: .spack_package
+  only:
+    - web
+    - schedules
+  before_script:
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus spack-opensuseleap15.2 spack-opensuseleap15.2
 
 publish_images:
   stage: publish_images
