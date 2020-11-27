@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [1.3.2]
 
 ### Added
 
@@ -14,9 +14,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added a documentation note about compiler selection when installing on CentOS 7 using the Spack package
 - Added a documentation note about installing the static version of the glibc libraries when installing using the Spack package
 
+### Fixed
+
+- Fixed a bug preventing bind mounts to `/dev` in the container
+
 ### Removed
 
 - Removed the CI test for the Spack package on Ubuntu 16.04
+
 
 ## [1.3.1]
 
@@ -34,6 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Slurm global sync hook drops privileges at startup
 - MPI and Glibc hooks now perform validations with user credentials for host mounts and writes
+
 
 ## [1.3.0]
 
