@@ -55,6 +55,12 @@ This is the business address of the core Sarus maintainer.
 To report bugs and request new features, you can use GitHub [issues](https://github.com/eth-cscs/sarus/issues).
 
 
+## Contributing
+
+Contributions to Sarus are welcome and greatly appreciated. Please refer to the `CONTRIBUTING.md` file for more detailed
+information about contributing.
+
+
 ## Publications
 
 * Benedicic, L., Cruz, F.A., Madonna, A. and Mariotti, K., 2019, June. Sarus: Highly Scalable Docker Containers for HPC Systems. In *International Conference on High Performance Computing* (pp. 46-60). Springer, Cham.
