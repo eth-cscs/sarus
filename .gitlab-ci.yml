@@ -1,4 +1,5 @@
 stages:
+  - prepare_pipeline
   - build_images
   - build_and_test
   - from_source
@@ -7,6 +8,11 @@ stages:
   - deploy
   - check_deployment
   - test_deployment
+
+prepare_pipeline:
+  stage: prepare_pipeline
+  script:
+    - /home/gitlab-runner/sarus-ops/update.sh
 
 build_dependencies:
   stage: build_images
