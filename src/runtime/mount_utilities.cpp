@@ -32,7 +32,8 @@ void validateMountSource(const boost::filesystem::path& source) {
     utility::logMessage(boost::format("Validating mount source: %s") % source, common::LogLevel::DEBUG);
     // check that directory exists, i.e. is visible to user
     if (!boost::filesystem::exists(source)) {
-        SARUS_THROW_ERROR("mount source doesn't exist");
+        auto msg = boost::format("mount source %s does not exist") % source;
+        SARUS_THROW_ERROR(msg.str());
     }
     utility::logMessage(std::string("Mount source successfully validated"), common::LogLevel::DEBUG);
 }
