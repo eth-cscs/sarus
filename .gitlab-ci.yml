@@ -1,12 +1,18 @@
 stages:
+  - prepare_pipeline
   - build_images
   - build_and_test
   - from_source
   - publish_images
   - cleanup
   - deploy
-  - check_deployment
-  - test_deployment
+  - fast_test
+  - full_test
+
+prepare_pipeline:
+  stage: prepare_pipeline
+  script:
+    - /home/gitlab-runner/sarus-ops/update.sh
 
 build_dependencies:
   stage: build_images
@@ -157,11 +163,13 @@ deploy:
   script:
     - "echo PWD: ${PWD}"
     - ARTIFACT=sarus-Release.tar.gz
+    - TARGET_MACHINE=${TARGET_MACHINE:-undefined}
+    - DEPLOYMENT_TYPE=${DEPLOYMENT_TYPE:-development}
     - NAME=${CI_COMMIT_TAG:-${CI_COMMIT_BRANCH}}
-    - /home/gitlab-runner/sarus-ops/deploy_to_${DEPLOY_TARGET}.sh ${ARTIFACT} ${NAME} ${DEPLOYMENT_TYPE}
+    - /home/gitlab-runner/sarus-ops/deploy.sh ${ARTIFACT} ${TARGET_MACHINE} ${NAME} ${DEPLOYMENT_TYPE}
 
-smoke_tests:
-  stage: check_deployment
+fast_test:
+  stage: fast_test
   only:
     - master
     - develop
@@ -170,11 +178,13 @@ smoke_tests:
     - /^.*_smoke$/
   script:
     - "echo PWD: ${PWD}"
+    - TARGET_MACHINE=${TARGET_MACHINE:-undefined}
     - NAME=${CI_COMMIT_TAG:-${CI_COMMIT_BRANCH}}
-    - /home/gitlab-runner/sarus-ops/request_smoke_test_on_${DEPLOY_TARGET}.sh ${NAME} ${DEPLOYMENT_TYPE}
+    - DEPLOYMENT_TYPE=${DEPLOYMENT_TYPE:-development}
+    - /home/gitlab-runner/sarus-ops/fast_test.sh ${TARGET_MACHINE} ${NAME} ${DEPLOYMENT_TYPE}
 
-reframe:
-  stage: test_deployment
+full_test:
+  stage: full_test
   only:
     - master
     - develop
@@ -182,5 +192,7 @@ reframe:
     - /^.*_reframe$/
   script:
     - "echo PWD: ${PWD}"
+    - TARGET_MACHINE=${TARGET_MACHINE:-undefined}
     - NAME=${CI_COMMIT_TAG:-${CI_COMMIT_BRANCH}}
-    - /home/gitlab-runner/sarus-ops/request_reframe_on_${DEPLOY_TARGET}.sh ${NAME} ${DEPLOYMENT_TYPE}
+    - DEPLOYMENT_TYPE=${DEPLOYMENT_TYPE:-development}
+    - /home/gitlab-runner/sarus-ops/full_test.sh ${TARGET_MACHINE} ${NAME} ${DEPLOYMENT_TYPE}
