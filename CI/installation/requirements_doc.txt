@@ -1,2 +1,3 @@
 sphinx == 2.3.*
 sphinx-rtd-theme == 0.4.*
+sphinx-markdown-builder

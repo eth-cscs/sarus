@@ -48,6 +48,7 @@ version = full_version.split('-')[0]
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx_markdown_builder'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

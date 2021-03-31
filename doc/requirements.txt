@@ -1,1 +1,1 @@
-../CI/doc_requirements.txt
+../CI/installation/requirements_doc.txt
