@@ -10,6 +10,7 @@
 #include "common/Utility.hpp"
 #include "hooks/mpi/SharedLibrary.hpp"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <unordered_map>
 #include <vector>

@@ -10,6 +10,7 @@
 
 #include <memory>
 
+#include <boost/algorithm/string.hpp>
 #include <sys/types.h>
 #include <sys/mount.h>
 #include <sys/signal.h>

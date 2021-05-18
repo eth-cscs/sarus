@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <chrono>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 
