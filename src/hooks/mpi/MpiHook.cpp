@@ -25,6 +25,7 @@
 #include <rapidjson/istreamwrapper.h>
 
 #include "common/Logger.hpp"
+#include "common/Error.hpp"
 #include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
 #include "runtime/mount_utilities.hpp"
@@ -288,7 +289,8 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
     else {
         // inject with warning
         // NOTE: This branch is only for MPI dependency libraries. MPI libraries compatibility was already checked before at checkHostContainerAbiCompatibility. Hint for future refactoring.
-        log(boost::format{"WARNING: container lib (%s) is NOT abi-compatible => bind mount host lib (%s) into /lib "} % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::WARN);
+        log(boost::format{"WARNING: could not find ABI-compatible counterpart for host lib (%s) inside container (best candidate found: %s) => adding host lib (%s) into container's /lib via bind mount "}
+            % hostLib.getPath() % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::WARN);
         auto containerLibReal = sarus::common::realpathWithinRootfs(rootfsDir, "/lib" / hostLib.getPath().filename());
         validatedBindMount(hostLib.getPath(), rootfsDir / containerLibReal);
         createSymlinksInDynamicLinkerDefaultSearchDirs("/lib" / hostLib.getPath().filename(), hostLib.getPath().filename(), true);
@@ -405,8 +407,13 @@ void MpiHook::validatedBindMount(const boost::filesystem::path& from, const boos
 
     // Validate mount source is visible for user and destination is on allowed device
     sarus::common::switchIdentity(userIdentity);
-    sarus::runtime::validateMountSource(from);
-    sarus::runtime::validateMountDestination(to, bundleDir, rootfsDir);
+    try {
+        sarus::runtime::validateMountSource(from);
+        sarus::runtime::validateMountDestination(to, bundleDir, rootfsDir);
+    } catch(sarus::common::Error& e) {
+        auto message = boost::format("Failed to bind mount %s on container's %s") % from.string() % to.string();
+        SARUS_RETHROW_ERROR(e, message.str());
+    }
     sarus::common::switchIdentity(rootIdentity);
 
     // Create file or folder if necessary, after validation
