@@ -9,6 +9,19 @@ stages:
   - fast_test
   - full_test
 
+variables:
+  HOST_CACHES_PATH: "~/cache/ids/sarus"
+
+clean_caches:
+  stage: prepare_pipeline
+  only:
+    - schedules
+    - clean-caches
+  script:
+    - rm -rf $HOST_CACHES_PATH
+    # Sarus known to be the only project running on this runner and not through a docker executor.
+    - docker system prune -f
+
 prepare_pipeline:
   stage: prepare_pipeline
   script:
@@ -17,19 +30,19 @@ prepare_pipeline:
 build_dependencies:
   stage: build_images
   script:
-    - . CI/utility_docker_functions.bash Debug gcc.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
+    - . CI/utility_docker_functions.bash Debug gcc.cmake $(pwd) $HOST_CACHES_PATH standalone-build standalone-run
     - sarus-build-images
 
 documentation:
   stage: build_and_test
   script:
-    - . CI/utility_docker_functions.bash Debug gcc.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
+    - . CI/utility_docker_functions.bash Debug gcc.cmake $(pwd) $HOST_CACHES_PATH standalone-build standalone-run
     - sarus-check-version-and-docs $(pwd)
 
 standalone_debug:
   stage: build_and_test
   script:
-    - . ./CI/utility_docker_functions.bash Debug gcc.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
+    - . ./CI/utility_docker_functions.bash Debug gcc.cmake $(pwd) $HOST_CACHES_PATH standalone-build standalone-run
     - sarus-build-and-test
 
   artifacts:
@@ -41,7 +54,7 @@ standalone_debug:
 standalone_release:
   stage: build_and_test
   script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH standalone-build standalone-run
     - sarus-build-and-test
 
   artifacts:
@@ -59,34 +72,34 @@ standalone_release:
 coverage:
   extends: .from_source
   script:
-    - . ./CI/utility_docker_functions.bash Debug gcc-gcov.cmake $(pwd) ~/cache/ids/sarus standalone-build standalone-run
+    - . ./CI/utility_docker_functions.bash Debug gcc-gcov.cmake $(pwd) $HOST_CACHES_PATH standalone-build standalone-run
     - sarus-build-and-test
 
 centos7:
   extends: .from_source
   script:
-      - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus centos:7 centos:7
+      - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH centos:7 centos:7
       - sarus-build-images
       - sarus-build-from-scratch-and-test
 
 ubuntu18.04:
   extends: .from_source
   script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus ubuntu:18.04 ubuntu:18.04
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH ubuntu:18.04 ubuntu:18.04
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
 debian10:
   extends: .from_source
   script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus debian:10 debian:10
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH debian:10 debian:10
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
 address_sanitizer:
   extends: .from_source
   script:
-    - . ./CI/utility_docker_functions.bash Debug gcc-asan.cmake $(pwd) ~/cache/ids/sarus debian:10 debian:10
+    - . ./CI/utility_docker_functions.bash Debug gcc-asan.cmake $(pwd) $HOST_CACHES_PATH debian:10 debian:10
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
@@ -100,7 +113,7 @@ address_sanitizer:
 spack_ubuntu18.04:
   extends: .spack_package
   before_script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus spack-ubuntu18.04 spack-ubuntu18.04
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-ubuntu18.04 spack-ubuntu18.04
 
 spack_debian10:
   extends: .spack_package
@@ -108,7 +121,7 @@ spack_debian10:
     - web
     - schedules
   before_script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus spack-debian10 spack-debian10
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-debian10 spack-debian10
 
 spack_centos7:
   extends: .spack_package
@@ -116,7 +129,7 @@ spack_centos7:
     - web
     - schedules
   before_script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus spack-centos7 spack-centos7
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-centos7 spack-centos7
 
 spack_fedora31:
   extends: .spack_package
@@ -124,7 +137,7 @@ spack_fedora31:
     - web
     - schedules
   before_script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus spack-fedora31 spack-fedora31
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-fedora31 spack-fedora31
 
 spack_opensuseleap15.2:
   extends: .spack_package
@@ -132,7 +145,7 @@ spack_opensuseleap15.2:
     - web
     - schedules
   before_script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus spack-opensuseleap15.2 spack-opensuseleap15.2
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-opensuseleap15.2 spack-opensuseleap15.2
 
 publish_images:
   stage: publish_images
