@@ -280,6 +280,11 @@ _setup_cache_dirs() {
         _copy_cached_build_artifacts_if_available ${cache_dir_host} ${new_cache_dir_host}
 
         export cache_dir_host=${new_cache_dir_host}
+
+    elif [ ! -d ${cache_dir_host} ]; then
+        mkdir -pv $(_cache_oci_hooks_dir ${cache_dir_host})
+        mkdir -pv $(_cache_local_repo_dir ${cache_dir_host})
+        mkdir -pv $(_cache_centralized_repo_dir ${cache_dir_host})
     fi
 }
 
@@ -288,8 +293,8 @@ _copy_cache_dir() {
     local to=${1}; shift || error "${FUNCNAME}: missing to argument"
 
     echo "Setting up cache dir at ${to} (rsync from ${from})"
-    mkdir -p ${from}
-    mkdir -p ${to}
+    mkdir -pv ${from}
+    mkdir -pv ${to}
     rsync -ar ${from}/ ${to}
     fail_on_error "failed to rsync cache directory"
 }
@@ -377,7 +382,7 @@ export image_run=ethcscs/sarus-ci-$(_replace_invalid_chars ${1-"standalone-run"}
 export spack_distros=(ubuntu18.04 debian10 centos7 fedora31 opensuseleap15.2)
 export spack_repo_base=ethcscs/sarus-ci-spack
 
-_setup_cache_dirs
-
 echo "INITIALIZED $(basename "${BASH_SOURCE[0]}") with:"
 _print_parameters
+
+_setup_cache_dirs
