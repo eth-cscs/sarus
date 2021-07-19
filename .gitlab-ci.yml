@@ -10,7 +10,8 @@ stages:
   - full_test
 
 variables:
-  HOST_CACHES_PATH: ~/cache/ids/sarus
+  # https://confluence.cscs.ch/x/Y4DtCw
+  HOST_CACHES_PATH: /var/lib/gitlab-runner/cache/ids/sarus
 
 clean_caches:
   stage: prepare_pipeline
@@ -18,8 +19,9 @@ clean_caches:
     - schedules
     - clean-caches
   script:
+    # Sarus known to be the only project running on this runner
+    # https://confluence.cscs.ch/x/Y4DtCw
     - rm -rf $HOST_CACHES_PATH
-    # Sarus known to be the only project running on this runner and not through a docker executor.
     - docker system prune -f
 
 prepare_pipeline:

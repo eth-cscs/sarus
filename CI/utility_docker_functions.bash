@@ -295,7 +295,7 @@ _copy_cache_dir() {
     echo "Setting up cache dir at ${to} (rsync from ${from})"
     mkdir -pv ${from}
     mkdir -pv ${to}
-    rsync -ar ${from}/ ${to}
+    rsync -var ${from}/ ${to}
     fail_on_error "failed to rsync cache directory"
 }
 
