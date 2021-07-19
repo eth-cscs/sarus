@@ -10,7 +10,7 @@ stages:
   - full_test
 
 variables:
-  HOST_CACHES_PATH: "~/cache/ids/sarus"
+  HOST_CACHES_PATH: ~/cache/ids/sarus
 
 clean_caches:
   stage: prepare_pipeline
