@@ -206,6 +206,7 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
         CHECK_EQUAL(conf->commandRun.addInitProcess, false);
         CHECK_EQUAL(conf->commandRun.mounts.size(), 1); // 1 site mount + 0 user mount
         CHECK_EQUAL(conf->commandRun.useMPI, false);
+        CHECK_EQUAL(conf->commandRun.enableAmdGpu, false);
         CHECK_EQUAL(conf->commandRun.enableGlibcReplacement, 0);
         CHECK_EQUAL(conf->commandRun.enableSSH, false);
         CHECK_EQUAL(conf->commandRun.allocatePseudoTTY, false);
@@ -246,6 +247,11 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
 
         conf = generateConfig({"run", "-m", "image"});
         CHECK_EQUAL(conf->commandRun.useMPI, true);
+    }
+    // amdgpu
+    {
+        auto conf = generateConfig({"run", "--amdgpu", "image"});
+        CHECK_EQUAL(conf->commandRun.enableAmdGpu, true);
     }
     // ssh
     {

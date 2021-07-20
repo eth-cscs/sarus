@@ -6,3 +6,4 @@ install(DIRECTORY templates DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)
 
 install(FILES templates/hooks.d/07-ssh-hook.json.in DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/hooks.d)
 install(FILES templates/hooks.d/09-slurm-global-sync-hook.json.in DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/hooks.d)
+install(FILES templates/hooks.d/11-amdgpu-hook.json.in DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/hooks.d)

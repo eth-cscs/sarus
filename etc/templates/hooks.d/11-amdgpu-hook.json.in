@@ -1,0 +1,12 @@
+{
+    "version": "1.0.0",
+    "hook": {
+        "path": "@INSTALL_PATH@/bin/amdgpu_hook"
+    },
+    "when": {
+        "annotations": {
+            "^com.hooks.amdgpu.enabled$": "^true$"
+        }
+    },
+    "stages": ["prestart"]
+}
