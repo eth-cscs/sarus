@@ -48,6 +48,7 @@ protected:
                                 ::archive* in,
                                 ::archive* out,
                                 ::archive_entry *entry) const;
+    void convertAbsoluteHardlinkToRelative(archive_entry * const entry) const;
     void log(   const boost::format &message, common::LogLevel,
                 std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
     void log(   const std::string& message, common::LogLevel,

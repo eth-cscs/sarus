@@ -70,7 +70,7 @@ void InputImage::expandLayers(  const std::vector<boost::filesystem::path>& laye
             it != boost::filesystem::recursive_directory_iterator{};
             ++it) {
             if(boost::filesystem::is_symlink(it->path())) {
-                continue; // skip symbolik links
+                continue; // skip symbolic links
             }
 
             boost::filesystem::permissions(it->path(), boost::filesystem::add_perms
@@ -156,7 +156,7 @@ void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::pat
             SARUS_THROW_ERROR(message.str());
         }
         else if (r < ARCHIVE_OK) {
-            // appearently, even if something goes wrong while reading the entry's header,
+            // apparently, even if something goes wrong while reading the entry's header,
             // it might still be possible to write / copy data of the entry. So let's just
             // issue an INFO log message at this stage. If a failure happens later while
             // copying the data, then we will issue an error.
@@ -168,7 +168,7 @@ void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::pat
         auto archiveEntryPath = boost::filesystem::path(archive_entry_pathname(entry));
         log(boost::format("archive: processing entry %s") % archiveEntryPath, common::LogLevel::DEBUG);
 
-        // if entry maches excluded pattern, memorize entry and skip extracting
+        // if entry matches excluded pattern, memorize entry and skip extracting
         if ( archive_match_excluded(matchToExclude, entry) ) {
             log(boost::format("archive: skipping (excluded) entry"), common::LogLevel::DEBUG);
             continue;
@@ -180,6 +180,7 @@ void InputImage::extractArchiveWithExcludePatterns( const boost::filesystem::pat
             boost::filesystem::remove_all(expandDir / archiveEntryPath);
         }
 
+        convertAbsoluteHardlinkToRelative(entry);
 
         // write entry
         log(boost::format("archive: writing entry"), common::LogLevel::DEBUG);
@@ -251,7 +252,7 @@ std::vector<boost::filesystem::path> InputImage::readWhiteoutsInLayer(const boos
             SARUS_THROW_ERROR(message.str());
         }
         else if (r < ARCHIVE_OK) {
-            // appearently, even if something goes wrong while reading the entry's header,
+            // apparently, even if something goes wrong while reading the entry's header,
             // it might still be possible to write / copy data of the entry. So let's just
             // issue an INFO log message at this stage. If a failure happens later while
             // copying the data, then we will issue an error.
@@ -349,6 +350,19 @@ void InputImage::copyDataOfArchiveEntry(const boost::filesystem::path& archivePa
         auto message = boost::format("Failed to copy data from archive %s. Error while copying entry %s: %s")
             % archivePath % archive_entry_pathname(entry) % archive_error_string(in);
         log(message, common::LogLevel::INFO);
+    }
+}
+
+void InputImage::convertAbsoluteHardlinkToRelative(archive_entry * const entry) const {
+    if (archive_entry_hardlink(entry)) {
+        auto hardlinkTarget = boost::filesystem::path(archive_entry_hardlink(entry));
+        if (hardlinkTarget.is_absolute()) {
+            auto relativeTarget = hardlinkTarget.relative_path();
+            auto message = boost::format("Entry refers to a hardlink pointing to absolute path '%s'. "
+                    "Converting link to relative path '%s'") % hardlinkTarget % relativeTarget;
+            log(message, common::LogLevel::DEBUG);
+            archive_entry_set_hardlink(entry, relativeTarget.c_str());
+        }
     }
 }
 
