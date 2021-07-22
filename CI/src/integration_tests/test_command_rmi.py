@@ -22,7 +22,7 @@ class TestCommandRmi(unittest.TestCase):
         self._test_command_rmi(is_centralized_repository=True)
 
     def _test_command_rmi(self, is_centralized_repository):
-        image = "alpine:latest"
+        image = "quay.io/ethcscs/alpine:latest"
 
         util.pull_image_if_necessary(is_centralized_repository, image)
         actual_images = set(util.list_images(is_centralized_repository))

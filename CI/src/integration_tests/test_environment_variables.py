@@ -17,7 +17,7 @@ class TestEnvironmentVariables(unittest.TestCase):
     properly set inside the container by Sarus.
     """
 
-    _IMAGE_NAME = "ethcscs/sarus-integration-tests:environment-variables"
+    _IMAGE_NAME = "quay.io/ethcscs/sarus-integration-tests:environment-variables"
 
     def test_environment_variables(self):
         util.pull_image_if_necessary(is_centralized_repository=False, image=self._IMAGE_NAME)

@@ -19,8 +19,8 @@ class TestSshHook(unittest.TestCase):
     # sure that the custom OpenSSH injected into the container is standalone (as expected)
     # and doesn't have any dependency on musl or glibc. It happened in the past that the
     # custom sshd depended on the NSS dynamic libraries of glibc.
-    image_with_musl = "alpine:3.8"
-    image_with_glibc = "debian:stretch"
+    image_with_musl = "quay.io/ethcscs/alpine:3.14"
+    image_with_glibc = "quay.io/ethcscs/debian:buster"
 
     def test_ssh_hook(self):
         util.pull_image_if_necessary(is_centralized_repository=False, image=self.image_with_musl)
@@ -48,9 +48,9 @@ class TestSshHook(unittest.TestCase):
 
         # check SSH goes into container (not host)
         prettyname = self._get_prettyname_of_node1_through_ssh(self.image_with_musl, hostname_node1)
-        self.assertEqual(prettyname, "Alpine Linux v3.8")
+        self.assertEqual(prettyname, "Alpine Linux v3.14")
         prettyname = self._get_prettyname_of_node1_through_ssh(self.image_with_glibc, hostname_node1)
-        self.assertEqual(prettyname, "Debian GNU/Linux 9 (stretch)")
+        self.assertEqual(prettyname, "Debian GNU/Linux 10 (buster)")
 
     def _check_ssh_keys_generation(self):
         ssh_dir = os.environ['HOME'] + "/.oci-hooks/ssh"

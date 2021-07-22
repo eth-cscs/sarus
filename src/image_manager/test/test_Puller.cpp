@@ -23,7 +23,7 @@ TEST_GROUP(PullerTestGroup) {
 TEST(PullerTestGroup, testGetManifest) {
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
-    config->imageID = common::ImageID{"index.docker.io", "library", "hello-world", "latest"};
+    config->imageID = common::ImageID{"quay.io", "ethcscs", "alpine", "3.14"};
 
     auto puller = image_manager::Puller{config};
 

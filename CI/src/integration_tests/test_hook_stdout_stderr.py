@@ -23,7 +23,7 @@ class TestHookStdoutStderr(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        util.pull_image_if_necessary(is_centralized_repository=False, image="alpine:latest")
+        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/alpine:latest")
         cls._enable_hook()
 
     @classmethod
@@ -86,14 +86,14 @@ class TestHookStdoutStderr(unittest.TestCase):
         self._check_output_matches(stderr, expected)
 
     def _get_sarus_stdout(self, verbose_option=None):
-        command = ["sarus", "run", "alpine:latest", "true"]
+        command = ["sarus", "run", "quay.io/ethcscs/alpine:latest", "true"]
         if verbose_option is not None:
             command = command[0:1] + [verbose_option] + command[1:]
         stdout = subprocess.check_output(command).decode()
         return stdout.rstrip().split('\n') # remove trailing whitespaces
 
     def _get_sarus_stderr(self):
-        command = ["sarus", "run", "alpine:latest", "true"]
+        command = ["sarus", "run", "quay.io/ethcscs/alpine:latest", "true"]
         with open(os.devnull, 'wb') as devnull:
             proc = subprocess.run(command,
                                   stdout=devnull,

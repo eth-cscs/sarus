@@ -16,6 +16,8 @@ class TestCommandRun(unittest.TestCase):
     i.e. the Linux's pretty name inside the container is correct.
     """
 
+    default_image = "quay.io/ethcscs/alpine:3.14"
+
     def test_command_run_with_local_repository(self):
         self._test_command_run(is_centralized_repository=False)
 
@@ -23,32 +25,32 @@ class TestCommandRun(unittest.TestCase):
         self._test_command_run(is_centralized_repository=True)
 
     def test_workdir(self):
-        util.pull_image_if_necessary(is_centralized_repository=True, image="alpine:3.8")
+        util.pull_image_if_necessary(is_centralized_repository=True, image=self.default_image)
 
         # default workdir
         out = util.run_command_in_container(is_centralized_repository=False,
-                                    image="alpine:3.8",
+                                    image=self.default_image,
                                     command=["pwd"],
                                     options_of_run_command=None)
         self.assertEqual(out, ["/"])
         # custom workdir
         out = util.run_command_in_container(is_centralized_repository=False,
-                                    image="alpine:3.8",
+                                    image=self.default_image,
                                     command=["pwd"],
                                     options_of_run_command=["--workdir=/etc"])
         self.assertEqual(out, ["/etc"])
         # custom non-exising workdir (sarus automatically creates it)
         out = util.run_command_in_container(is_centralized_repository=False,
-                                    image="alpine:3.8",
+                                    image=self.default_image,
                                     command=["pwd"],
                                     options_of_run_command=["--workdir=/non-exising-dir-2931"])
         self.assertEqual(out, ["/non-exising-dir-2931"])
 
     def test_entrypoint_with_option_arguments(self):
-        util.pull_image_if_necessary(is_centralized_repository=True, image="alpine:3.8")
+        util.pull_image_if_necessary(is_centralized_repository=True, image=self.default_image)
 
         out = util.run_command_in_container(is_centralized_repository=False,
-                                    image="alpine:3.8",
+                                    image=self.default_image,
                                     command=["--option", "arg"],
                                     options_of_run_command=["--entrypoint=echo"])
         self.assertEqual(out, ["--option arg"])
@@ -66,28 +68,25 @@ class TestCommandRun(unittest.TestCase):
         self.assertEqual(processes[1]["comm"], "ps")
 
     def _test_command_run(self, is_centralized_repository):
-        util.pull_image_if_necessary(is_centralized_repository, "alpine:3.8")
-        util.pull_image_if_necessary(is_centralized_repository, "debian:jessie")
-        util.pull_image_if_necessary(is_centralized_repository, "debian:stretch")
-        util.pull_image_if_necessary(is_centralized_repository, "centos:7")
+        util.pull_image_if_necessary(is_centralized_repository, "quay.io/ethcscs/alpine:3.14")
+        util.pull_image_if_necessary(is_centralized_repository, "quay.io/ethcscs/debian:buster")
+        util.pull_image_if_necessary(is_centralized_repository, "quay.io/ethcscs/centos:7")
 
-        self.assertEqual(util.run_image_and_get_prettyname(is_centralized_repository, "alpine:3.8"),
+        self.assertEqual(util.run_image_and_get_prettyname(is_centralized_repository, "quay.io/ethcscs/alpine:3.14"),
             "Alpine Linux")
-        self.assertEqual(util.run_image_and_get_prettyname(is_centralized_repository, "debian:jessie"),
-            "Debian GNU/Linux 8 (jessie)")
-        self.assertEqual(util.run_image_and_get_prettyname(is_centralized_repository, "debian:stretch"),
-            "Debian GNU/Linux 9 (stretch)")
-        self.assertEqual(util.run_image_and_get_prettyname(is_centralized_repository, "centos:7"),
+        self.assertEqual(util.run_image_and_get_prettyname(is_centralized_repository, "quay.io/ethcscs/debian:buster"),
+            "Debian GNU/Linux 10 (buster)")
+        self.assertEqual(util.run_image_and_get_prettyname(is_centralized_repository, "quay.io/ethcscs/centos:7"),
             "CentOS Linux")
 
     def _run_ps_in_container(self, with_init_process):
-        util.pull_image_if_necessary(is_centralized_repository=False, image="alpine:3.8")
+        util.pull_image_if_necessary(is_centralized_repository=False, image=self.default_image)
         if with_init_process:
             options = ["--init"]
         else:
             options = []
         out = util.run_command_in_container(is_centralized_repository=False,
-                                            image="alpine:3.8",
+                                            image=self.default_image,
                                             command=["ps", "-o", "pid,comm"],
                                             options_of_run_command=options)
         processes = []

@@ -18,7 +18,7 @@ class TestImageWithMaxPathLength(unittest.TestCase):
     However, in practice it is shorter because it gets trunkated at container build time.
     """
 
-    _IMAGE_NAME = "ethcscs/dockerfiles:image-with-max-path-length"
+    _IMAGE_NAME = "quay.io/ethcscs/sarus-integration-tests:image-with-max-path-length"
 
     def test_image_with_max_path_length(self):
         util.pull_image_if_necessary(is_centralized_repository=False, image=self._IMAGE_NAME)

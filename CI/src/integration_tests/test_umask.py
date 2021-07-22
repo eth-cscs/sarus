@@ -16,7 +16,7 @@ class TestUmask(unittest.TestCase):
     This test verifies that Sarus is able to run under different umask configurations.
     """
 
-    _IMAGE_NAME = "alpine:latest"
+    _IMAGE_NAME = "quay.io/ethcscs/alpine:latest"
     _umask_backup = None
 
     @classmethod

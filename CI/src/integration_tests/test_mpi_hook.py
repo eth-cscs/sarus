@@ -44,17 +44,17 @@ class TestMPIHook(unittest.TestCase):
     @classmethod
     def _pull_docker_images(cls):
         util.pull_image_if_necessary(is_centralized_repository=False,
-                                     image="ethcscs/dockerfiles:sarus_mpi_support_test-mpich_compatible")
+                                     image="quay.io/ethcscs/sarus-integration-tests:mpich_compatible")
         util.pull_image_if_necessary(is_centralized_repository=False,
-                                     image="ethcscs/dockerfiles:sarus_mpi_support_test-mpich_compatible_symlink")
+                                     image="quay.io/ethcscs/sarus-integration-tests:mpich_compatible_symlink")
         util.pull_image_if_necessary(is_centralized_repository=False,
-                                     image="ethcscs/dockerfiles:sarus_mpi_support_test-mpich_major_incompatible")
+                                     image="quay.io/ethcscs/sarus-integration-tests:mpich_major_incompatible")
         util.pull_image_if_necessary(is_centralized_repository=False,
-                                     image="ethcscs/dockerfiles:sarus_mpi_support_test-mpich_minor_incompatible")
+                                     image="quay.io/ethcscs/sarus-integration-tests:mpich_minor_incompatible")
         util.pull_image_if_necessary(is_centralized_repository=False,
-                                     image="ethcscs/dockerfiles:sarus_mpi_support_test-no_mpi_libraries")
+                                     image="quay.io/ethcscs/sarus-integration-tests:no_mpi_libraries")
         util.pull_image_if_necessary(is_centralized_repository=False,
-                                     image="ethcscs/sarus-integration-tests:nonexisting_ldcache_entry")
+                                     image="quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry")
 
     @classmethod
     def _create_site_resources(cls):
@@ -107,27 +107,27 @@ class TestMPIHook(unittest.TestCase):
 
     def test_no_mpi_support(self):
         self._mpi_command_line_option = False
-        self._container_image = "ethcscs/dockerfiles:sarus_mpi_support_test-mpich_compatible"
+        self._container_image = "quay.io/ethcscs/sarus-integration-tests:mpich_compatible"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert not hashes
 
     def test_mpich_compatible(self):
         self._mpi_command_line_option = True
-        self._container_image = "ethcscs/dockerfiles:sarus_mpi_support_test-mpich_compatible"
+        self._container_image = "quay.io/ethcscs/sarus-integration-tests:mpich_compatible"
         hashes = self._get_hashes_of_host_libs_in_container()
         number_of_expected_mounts = len(self._HOST_MPI_LIBS) + len(self._HOST_MPI_DEPENDENCY_LIBS)
         assert hashes.count(self._HOST_LIB_HASH) == number_of_expected_mounts
 
     def test_mpich_compatible_symlink(self):
         self._mpi_command_line_option = True
-        self._container_image = "ethcscs/dockerfiles:sarus_mpi_support_test-mpich_compatible_symlink"
+        self._container_image = "quay.io/ethcscs/sarus-integration-tests:mpich_compatible_symlink"
         hashes = self._get_hashes_of_host_libs_in_container()
         number_of_expected_mounts = len(self._HOST_MPI_LIBS) + len(self._HOST_MPI_DEPENDENCY_LIBS)
         assert hashes.count(self._HOST_LIB_HASH) == number_of_expected_mounts
 
     def test_mpich_minor_incompatible(self):
         self._mpi_command_line_option = True
-        self._container_image = "ethcscs/dockerfiles:sarus_mpi_support_test-mpich_minor_incompatible"
+        self._container_image = "quay.io/ethcscs/sarus-integration-tests:mpich_minor_incompatible"
         self._assert_sarus_raises_mpi_warning_containing_text(
             text = "Partial ABI compatibility detected", expected_occurrences=2)
         hashes = self._get_hashes_of_host_libs_in_container()
@@ -136,19 +136,19 @@ class TestMPIHook(unittest.TestCase):
 
     def test_mpich_major_incompatible(self):
         self._mpi_command_line_option = True
-        self._container_image = "ethcscs/dockerfiles:sarus_mpi_support_test-mpich_major_incompatible"
+        self._container_image = "quay.io/ethcscs/sarus-integration-tests:mpich_major_incompatible"
         self._assert_sarus_raises_mpi_error_containing_text(
             text = "not ABI compatible with container's MPI library")
 
     def test_container_without_mpi_libraries(self):
         self._mpi_command_line_option = True
-        self._container_image = "ethcscs/dockerfiles:sarus_mpi_support_test-no_mpi_libraries"
+        self._container_image = "quay.io/ethcscs/sarus-integration-tests:no_mpi_libraries"
         self._assert_sarus_raises_mpi_error_containing_text(
             text = "No MPI libraries found in the container")
 
     def test_container_without_mpi_libraries_and_nonexisting_ldcache_entry(self):
         self._mpi_command_line_option = True
-        self._container_image = "ethcscs/sarus-integration-tests:nonexisting_ldcache_entry"
+        self._container_image = "quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry"
         self._assert_sarus_raises_mpi_error_containing_text(
             text = "No MPI libraries found in the container")
 

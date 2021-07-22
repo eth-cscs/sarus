@@ -18,7 +18,7 @@ class TestProcessIdentity(unittest.TestCase):
     Notice that here we refer specifically to the ids of the *process*, not those found inside /etc/groups.
     """
 
-    _IMAGE_NAME = "alpine"
+    _IMAGE_NAME = "quay.io/ethcscs/alpine"
 
     def test_process_identity(self):
         host_uid = os.getuid()

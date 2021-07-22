@@ -59,11 +59,11 @@ class TestGlibcHook(unittest.TestCase):
 
     @classmethod
     def _pull_docker_images(cls):
-        util.pull_image_if_necessary(is_centralized_repository=False, image="alpine:3.8") # no glibc
-        util.pull_image_if_necessary(is_centralized_repository=False, image="centos:6") # glibc 2.12
-        util.pull_image_if_necessary(is_centralized_repository=False, image="fedora:latest") # assumption: glibc >= host's glibc
+        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/alpine:3.14") # no glibc
+        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/centos:6") # glibc 2.12
+        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/fedora:34") # assumption: glibc >= host's glibc
         # based on fedora - assumption: glibc >= host's glibc
-        util.pull_image_if_necessary(is_centralized_repository=False, image="ethcscs/sarus-integration-tests:nonexisting_ldcache_entry")
+        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry")
 
     @classmethod
     def _enable_hook(cls):
@@ -98,24 +98,24 @@ class TestGlibcHook(unittest.TestCase):
 
     def test_container_without_glibc(self):
         self.assertEqual(
-            util.run_image_and_get_prettyname(is_centralized_repository=False, image="alpine:3.8"),
+            util.run_image_and_get_prettyname(is_centralized_repository=False, image="quay.io/ethcscs/alpine:3.14"),
             "Alpine Linux")
 
     def test_no_injection_in_container_with_recent_glibc(self):
         self._glibc_command_line_option = True
-        self._container_image = "fedora:latest"
+        self._container_image = "quay.io/ethcscs/fedora:34"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert not hashes
 
     def test_no_injection_in_container_with_recent_glibc_and_nonexisting_ldcache_entry(self):
         self._glibc_command_line_option = True
-        self._container_image = "ethcscs/sarus-integration-tests:nonexisting_ldcache_entry"
+        self._container_image = "quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert not hashes
 
     def test_injection_in_container_with_old_glibc(self):
         self._glibc_command_line_option = True
-        self._container_image = "centos:6"
+        self._container_image = "quay.io/ethcscs/centos:6"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert hashes
         assert hashes.issuperset(self._HOST_GLIBC_LIBS_HASHES)
@@ -123,7 +123,7 @@ class TestGlibcHook(unittest.TestCase):
     def test_injection_in_container_with_old_glibc_using_mpi_option(self):
         self._glibc_command_line_option = False
         self._mpi_command_line_option = True
-        self._container_image = "centos:6"
+        self._container_image = "quay.io/ethcscs/centos:6"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert hashes
         assert hashes.issuperset(self._HOST_GLIBC_LIBS_HASHES)
@@ -131,7 +131,7 @@ class TestGlibcHook(unittest.TestCase):
     def test_no_hook_activation(self):
         self._glibc_command_line_option = False
         self._mpi_command_line_option = False
-        self._container_image = "centos:6"
+        self._container_image = "quay.io/ethcscs/centos:6"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert not hashes
 

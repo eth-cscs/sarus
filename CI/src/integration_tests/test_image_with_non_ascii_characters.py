@@ -18,7 +18,7 @@ class TestImageWithNonAsciiCharacters(unittest.TestCase):
     and a file whose names have non-ascii characters.
     """
 
-    _IMAGE_NAME = "ethcscs/dockerfiles:image-with-non-ascii-characters"
+    _IMAGE_NAME = "quay.io/ethcscs/sarus-integration-tests:image-with-non-ascii-characters"
 
     def test_image_with_non_ascii_characters(self):
         util.pull_image_if_necessary(is_centralized_repository=False, image=self._IMAGE_NAME)

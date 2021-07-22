@@ -20,7 +20,7 @@ class TestCpuAffinity(unittest.TestCase):
     """
 
     def test_cpu_affinity(self):
-        image = "alpine:3.8"
+        image = "quay.io/ethcscs/alpine:3.14"
         util.pull_image_if_necessary(is_centralized_repository=False, image=image)
 
         command = ["cat", "/proc/self/status"]

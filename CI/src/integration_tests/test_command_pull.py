@@ -17,24 +17,24 @@ class TestCommandPull(unittest.TestCase):
     """
 
     def test_command_pull_with_local_repository(self):
-        self._test_command_pull("alpine:3.11", is_centralized_repository=False)
+        self._test_command_pull("quay.io/ethcscs/alpine:3.14", is_centralized_repository=False)
 
     def test_command_pull_with_centralized_repository(self):
-        self._test_command_pull("alpine:3.11", is_centralized_repository=True)
+        self._test_command_pull("quay.io/ethcscs/alpine:3.14", is_centralized_repository=True)
 
     def test_command_pull_with_nvcr(self):
         self._test_command_pull("nvcr.io/nvidia/k8s-device-plugin:1.0.0-beta4",
                                 is_centralized_repository=False)
 
-    def test_command_pull_with_quay(self):
-        self._test_command_pull("quay.io/prometheus/prometheus:v2.18.0",
+    def test_command_pull_with_dockerhub(self):
+        self._test_command_pull("ubuntu:20.04",
                                 is_centralized_repository=False)
 
     def test_multiple_pulls_with_local_repository(self):
-        self._test_multiple_pulls("alpine:3.11", is_centralized_repository=False)
+        self._test_multiple_pulls("quay.io/ethcscs/alpine:3.14", is_centralized_repository=False)
 
     def test_multiple_pulls_with_centralized_repository(self):
-        self._test_multiple_pulls("alpine:3.11", is_centralized_repository=True)
+        self._test_multiple_pulls("quay.io/ethcscs/alpine:3.14", is_centralized_repository=True)
 
     def _test_command_pull(self, image, is_centralized_repository):
         util.remove_image_if_necessary(is_centralized_repository, image)

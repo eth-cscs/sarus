@@ -16,7 +16,7 @@ class TestImageWithSymlinkOverDirectory(unittest.TestCase):
     created in a layer and then replaced with a symlink in a later layer.
     """
 
-    _IMAGE_NAME = "ethcscs/sarus-integration-tests:symlink-over-directory"
+    _IMAGE_NAME = "quay.io/ethcscs/sarus-integration-tests:symlink-over-directory"
 
     def test_image_with_symlink_over_directory(self):
         util.remove_image_if_necessary(is_centralized_repository=False, image=self._IMAGE_NAME)

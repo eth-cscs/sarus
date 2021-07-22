@@ -13,7 +13,7 @@ import common.util as util
 
 class TestCapabilities(unittest.TestCase):
 
-    _CONTAINER_IMAGE = "alpine:3.8"
+    _CONTAINER_IMAGE = "quay.io/ethcscs/alpine:3.14"
 
     @classmethod
     def setUpClass(cls):

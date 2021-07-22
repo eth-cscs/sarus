@@ -37,7 +37,7 @@ class TestSiteMounts(unittest.TestCase):
     def setUpClass(cls):
         cls._create_source_directories()
         cls._modify_sarusjson_file()
-        cls.container_image = "ubuntu:16.04"
+        cls.container_image = "quay.io/ethcscs/ubuntu:20.04"
         util.pull_image_if_necessary(is_centralized_repository=False, image=cls.container_image)
 
     @classmethod
