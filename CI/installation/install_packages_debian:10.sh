@@ -1,1 +1,1 @@
-install_packages_ubuntu:18.04.sh
+install_packages_ubuntu:20.04.sh

@@ -24,9 +24,9 @@ Software
 System packages
 ---------------
 
-For Debian-based systems (tested on Debian 10 and Ubuntu 18.04):
+For Debian-based systems (tested on Debian 10, Ubuntu 18.04 and Ubuntu 20.04):
 
-.. literalinclude:: ../../CI/installation/install_packages_ubuntu:18.04.sh
+.. literalinclude:: ../../CI/installation/install_packages_ubuntu:20.04.sh
    :language: bash
    :start-after: set -ex
    :end-before: # DOCS: END

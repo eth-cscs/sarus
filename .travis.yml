@@ -51,6 +51,13 @@ jobs:
       - sarus-build-images
       - sarus-build-from-scratch-and-test
 
+    - name: "Test install from source Ubuntu 20.04"
+      if: branch IN (master, develop, fix-travis)
+      script:
+      - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $(pwd)/cache ubuntu:20.04 ubuntu:20.04
+      - sarus-build-images
+      - sarus-build-from-scratch-and-test
+
     - name: "Test install from source Debian 10 with AddressSanitizer"
       if: branch IN (master, develop, fix-travis)
       script:

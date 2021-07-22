@@ -91,6 +91,13 @@ ubuntu18.04:
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
+ubuntu20.04:
+  extends: .from_source
+  script:
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus ubuntu:20.04 ubuntu:20.04
+    - sarus-build-images
+    - sarus-build-from-scratch-and-test
+
 debian10:
   extends: .from_source
   script:
