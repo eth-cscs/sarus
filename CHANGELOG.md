@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.3.3]
+
+### Added
+
+- Added CI unit and integration tests from source on Ubuntu 20.04
+- Added regular cleanups of CI caches on GitLab
+- Added diagrams representing CI/CD workflows to developer documentation
+- Added Markdown builder for Sphinx documentation
+
+### Changed
+
+- Updated minimum required CMake version to 2.8.12
+- Improved clarity of some messages from the MPI hook
+- Updated copyright notice and license formatting
+- Migrated container images used by unit and integration tests to Quay.io
+
+### Fixed
+
+- Fixed bug preventing extraction of image layers with hardlinks pointing to absolute paths
+- Small fix to RapidJSON installation documentation
+
+
 ## [1.3.2]
 
 ### Added
