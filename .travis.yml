@@ -10,7 +10,7 @@ jobs:
   include:
     - stage: "Build Sarus and Test"
       name: "Version and Docs"
-      if: branch IN (master, develop, fix-travis)
+      if: branch IN (master, fix-travis)
       script:
       - . CI/utility_docker_functions.bash
       - sarus-build-images
@@ -36,40 +36,6 @@ jobs:
         on:
           repo: eth-cscs/sarus
           tags: true
-
-    - name: "Test install from source CentOS 7"
-      if: branch IN (master, develop, fix-travis)
-      script:
-      - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $(pwd)/cache centos:7 centos:7
-      - sarus-build-images
-      - travis_wait 60 sarus-build-from-scratch-and-test
-
-    - name: "Test install from source Ubuntu 18.04"
-      if: branch IN (master, develop, fix-travis)
-      script:
-      - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $(pwd)/cache ubuntu:18.04 ubuntu:18.04
-      - sarus-build-images
-      - sarus-build-from-scratch-and-test
-
-    - name: "Test install from source Ubuntu 20.04"
-      if: branch IN (master, develop, fix-travis)
-      script:
-      - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $(pwd)/cache ubuntu:20.04 ubuntu:20.04
-      - sarus-build-images
-      - sarus-build-from-scratch-and-test
-
-    - name: "Test install from source Debian 10 with AddressSanitizer"
-      if: branch IN (master, develop, fix-travis)
-      script:
-      - . ./CI/utility_docker_functions.bash Debug gcc-asan.cmake $(pwd) $(pwd)/cache debian:10 debian:10
-      - sarus-build-images
-      - travis_wait 60 sarus-build-from-scratch-and-test
-
-    - name: "Test Spack"
-      if: branch IN (master, develop, fix-travis)
-      script:
-      - docker_image=ethcscs/sarus-spack:1.2.0-ubuntu16.04
-      - travis_wait 60 docker run --tty --rm --privileged --user root -v $(pwd):/sarus-source ${docker_image} /sarus-source/CI/run_spack_package_test.sh
 
 notifications:
   email:
