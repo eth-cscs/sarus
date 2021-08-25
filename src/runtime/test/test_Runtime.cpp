@@ -15,6 +15,7 @@
 #include "test_utility/config.hpp"
 #include "common/Logger.hpp"
 #include "common/Config.hpp"
+#include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 #include "runtime/Runtime.hpp"
 #include "test_utility/unittest_main_function.hpp"
@@ -72,9 +73,9 @@ TEST(RuntimeTestGroup, setupOCIBundle) {
     common::createFileIfNecessary(prefixDir / "etc/group");
 
     // create dummy metadata file in image repo
-    auto metadataFile = boost::filesystem::path(config->directories.images / (config->imageID.getUniqueKey() + ".meta"));
-    common::createFileIfNecessary(metadataFile);
-    std::ofstream metadataStream(metadataFile.c_str());
+    auto metadataFileRAII = common::PathRAII{boost::filesystem::path(config->directories.images / (config->imageID.getUniqueKey() + ".meta"))};
+    common::createFileIfNecessary(metadataFileRAII.getPath());
+    std::ofstream metadataStream(metadataFileRAII.getPath().c_str());
     metadataStream << "{}";
     metadataStream.close();
 
@@ -109,7 +110,6 @@ TEST(RuntimeTestGroup, setupOCIBundle) {
     CHECK_EQUAL(umount(rootfsDir.c_str()), 0);
     CHECK_EQUAL(umount(overlayfsLowerDir.c_str()), 0);
     CHECK_EQUAL(umount(bundleDir.c_str()), 0);
-    boost::filesystem::remove(metadataFile);
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();

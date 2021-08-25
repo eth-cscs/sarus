@@ -28,6 +28,7 @@ prepare_pipeline:
   stage: prepare_pipeline
   script:
     - /home/gitlab-runner/sarus-ops/update.sh
+    - CI/check_host.sh
 
 build_dependencies:
   stage: build_images

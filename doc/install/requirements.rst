@@ -10,11 +10,11 @@ Operating System
 * `util-linux <https://github.com/karelzak/util-linux>`_ >= 2.20 (these utilities are usually bundled with the Linux distribution itself;
   v2.20 was released in August 2011)
 * The following kernel modules loaded:
-
   * loop
   * squashfs
   * overlayfs
 
+These requirements are tracked by the `CI/check_host.sh <https://github.com/eth-cscs/sarus/blob/master/CI/check_host.sh>` script.
 
 Software
 ========
