@@ -15,12 +15,16 @@ cached_local_repo_dir=$1; shift || error "missing cached_local_repo_dir argument
 
 virtual_cluster_dir=
 
+trap stop_and_remove_cluster EXIT
+
 log() {
     local message=$1
     echo "[ LOG ]  $message"
 }
 
 stop_and_remove_cluster() {
+    log "Trapped EXIT"
+    log "virtual_cluster dir is $virtual_cluster_dir"
     if [ -d $virtual_cluster_dir ]; then
         log "stopping virtual cluster"
         cd $virtual_cluster_dir
@@ -95,4 +99,4 @@ start_cluster
 wait_for_controller_node_to_finish_startup
 wait_for_idle_state_of_server_nodes
 run_tests
-stop_and_remove_cluster
+# ends with stop_and_remove_cluster. See EXIT trap above
