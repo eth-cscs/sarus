@@ -118,7 +118,7 @@ build_sarus_archive() {
     # To comply with LGPL-2.1 (§6(a)), include the libseccomp source code in the licenses folder.
     wget -O ${prefix_dir}/licenses/libseccomp-2.4.3.tar.gz https://github.com/opencontainers/runc/releases/download/v1.0.0-rc92/libseccomp-2.4.3.tar.gz
 
-    mkdir -p ${prefix_dir}/var/OCIBundleDir
+    mkdir -pv ${prefix_dir}/var/OCIBundleDir
 
     # Bring cached binaries if available (see Dockerfile.build)
     cp /usr/local/bin/tini-static-amd64 ${prefix_dir}/bin || true
@@ -128,11 +128,10 @@ build_sarus_archive() {
     cd ${prefix_dir}/.. && tar cz --owner=root --group=root --file=../${archive_name} *
     cp  ${build_dir}/${archive_name} ${build_dir}/../${archive_name}
 
-    # Standalone README goes to root directory to be used by CI as root-level deployment artifact
-    # This way users can read extracting instruction before actually extracting the standalone archive :)
-    cp  ${build_dir}/../standalone/README.md ${build_dir}/../README.md
+    # Adjust standalone README instructions
+    cp -v ${build_dir}/../standalone/README.md ${build_dir}/README.md
     version=${CI_COMMIT_TAG-${TRAVIS_TAG-"1.0.0"}}
-    sed -i ${build_dir}/../README.md -e "s|@SARUS_VERSION@|${version}|g"
+    sed -i ${build_dir}/README.md -e "s|@SARUS_VERSION@|${version}|g"
     fail_on_error "Failed to prepare README.md for Sarus archive"
 
     # Prepare RELEASE notes for CI to use
