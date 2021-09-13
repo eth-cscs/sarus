@@ -56,21 +56,21 @@
             "type": "object",
             "properties": {
                 "set": {
-                    "type": "array",
-                    "items": {
-                        "type": "object"
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
                     }
                 },
                 "prepend": {
-                    "type": "array",
-                    "items": {
-                        "type": "object"
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
                     }
                 },
                 "append": {
-                    "type": "array",
-                    "items": {
-                        "type": "object"
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
                     }
                 },
                 "unset": {

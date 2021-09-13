@@ -53,7 +53,7 @@ the system where Sarus is installed:
     $ sudo cp -r * /usr/local/libnvidia-container_1.2.0
 
 Installation
------------------
+------------
 
 At the time of writing, the latest revision of the NVIDIA Container Toolkit
 is version 1.2.1. NVIDIA does not provide pre-built binaries for this
@@ -94,7 +94,7 @@ Ubuntu, Debian, CentOS, OpenSUSE Leap and Amazon Linux:
     $ sudo cp <NVIDIA Container Toolkit git repo>/config/config.toml.centos /etc/nvidia-container-runtime/config.toml
 
 Sarus configuration
----------------------
+-------------------
 
 The NVIDIA Container Toolkit is meant to run as a **prestart** hook. It
 also expects to receive its own name/location as the first program argument, and
@@ -115,16 +115,19 @@ file in the custom location as described in the previous section.
 .. literalinclude:: /config/hook_examples/03-nvidia-container-toolkit.json
    :language: json
 
+.. _config-hooks-nvidia-support:
+
 Sarus support at runtime
 ------------------------
 
 The actions performed by the NVIDIA Container Toolkit hook are controlled via a
 set of specific `environment variables
 <https://github.com/NVIDIA/nvidia-container-runtime#environment-variables-oci-spec>`_.
-Most of these can (and should) come from the container images, or from the
-:ref:`user-environmental-transfer` performed by Sarus. Notably, the
-``NVIDIA_VISIBLE_DEVICES`` variable defines which GPUs will be made accessible
-inside the container by the Toolkit.
+Most of these can (and should) come from container images or from the
+host environment (see :ref:`here <user-environment>` for more about environments
+in Sarus containers).
+Notably, the ``NVIDIA_VISIBLE_DEVICES`` variable defines which GPUs will be made
+accessible inside the container by the Toolkit.
 
 However, in an HPC scenario, the hardware resources should be assigned from a
 supervisory entity, such as a workload manager. For example, the SLURM workload

@@ -18,15 +18,15 @@
         }
     ],
     "environment": {
-        "set": [
-            {"VAR_TO_SET_IN_CONTAINER": "value"}
-        ],
-        "prepend": [
-            {"VAR_WITH_LIST_OF_PATHS_IN_CONTAINER": "/path/to/prepend"}
-        ],
-        "append": [
-            {"VAR_WITH_LIST_OF_PATHS_IN_CONTAINER": "/path/to/append"}
-        ],
+        "set": {
+            "VAR_TO_SET_IN_CONTAINER": "value"
+        },
+        "prepend": {
+            "VAR_WITH_LIST_OF_PATHS_IN_CONTAINER": "/path/to/prepend"
+        },
+        "append": {
+            "VAR_WITH_LIST_OF_PATHS_IN_CONTAINER": "/path/to/append"
+        },
         "unset": [
             "VAR_TO_UNSET_IN_CONTAINER_0",
             "VAR_TO_UNSET_IN_CONTAINER_1"

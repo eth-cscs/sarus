@@ -4,12 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-
 ## [1.4.0]
 
 ### Added
 
 - script to check for host requirements in CI, linked in documentation.
+
+### Changed
+
+- Changed format of the `environment` parameter in the `sarus.json` configuration file
+- Updated documentation about how the initial environment variables are set in containers
 
 ### Fixed
 

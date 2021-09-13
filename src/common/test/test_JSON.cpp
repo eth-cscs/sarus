@@ -43,12 +43,12 @@ TEST(JSONTestGroup, validFile) {
     CHECK(site_mounts[0]["flags"].ObjectEmpty());
 
     const rapidjson::Value& environment = config->json["environment"];
-    CHECK_EQUAL(environment["set"].Size(), 1);
-    CHECK_EQUAL(environment["set"][0]["VAR_TO_SET_IN_CONTAINER"].GetString(), std::string("value"));
-    CHECK_EQUAL(environment["prepend"].Size(), 1);
-    CHECK_EQUAL(environment["prepend"][0]["VAR_WITH_LIST_OF_PATHS_IN_CONTAINER"].GetString(), std::string("/path/to/prepend"));
-    CHECK_EQUAL(environment["append"].Size(), 1);
-    CHECK_EQUAL(environment["append"][0]["VAR_WITH_LIST_OF_PATHS_IN_CONTAINER"].GetString(), std::string("/path/to/append"));
+    CHECK(environment["set"].HasMember("VAR_TO_SET_IN_CONTAINER"));
+    CHECK_EQUAL(environment["set"]["VAR_TO_SET_IN_CONTAINER"].GetString(), std::string("value"));
+    CHECK(environment["prepend"].HasMember("VAR_WITH_LIST_OF_PATHS_IN_CONTAINER"));
+    CHECK_EQUAL(environment["prepend"]["VAR_WITH_LIST_OF_PATHS_IN_CONTAINER"].GetString(), std::string("/path/to/prepend"));
+    CHECK(environment["append"].HasMember("VAR_WITH_LIST_OF_PATHS_IN_CONTAINER"));
+    CHECK_EQUAL(environment["append"]["VAR_WITH_LIST_OF_PATHS_IN_CONTAINER"].GetString(), std::string("/path/to/append"));
     CHECK_EQUAL(environment["unset"].Size(), 2);
     CHECK_EQUAL(environment["unset"][0].GetString(), std::string("VAR_TO_UNSET_IN_CONTAINER_0"));
     CHECK_EQUAL(environment["unset"][1].GetString(), std::string("VAR_TO_UNSET_IN_CONTAINER_1"));

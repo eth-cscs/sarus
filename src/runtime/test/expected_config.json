@@ -9,6 +9,8 @@
 		},
 		"args": ["/dev/init", "--", "/bin/bash"],
 		"env": [
+            "SARUS_CONFIG_PREPEND_APPEND=config_prepend_value:config_append_value",
+            "SARUS_CONFIG_SET=config_set_value",
 			"key=value"
 		],
 		"cwd": "/",

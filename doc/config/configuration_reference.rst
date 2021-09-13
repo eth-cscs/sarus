@@ -203,29 +203,29 @@ paths within containers.
 It is OK to perform this under ``/var`` or ``/opt`` or a novel path that your
 site maintains (e.g. ``/scratch``).
 
+.. _config-reference-environment:
+
 environment (object, OPTIONAL)
 ------------------------------
 JSON object defining operations to be performed on the environment of the
 container process. Can have four optional fields:
 
-* ``set`` (array): List of JSON objects containing a single field, meant to
-  represent the key-value pair of an environment variable. The variables defined
+* ``set`` (object): JSON object with fields having string values. The fields
+  represent the key-value pairs of environment variables. The variables defined
   here will be set in the container environment, possibly replacing any
   previously existing variables with the same names.
-  Example::
-
-      {"CONTAINER_ENVIRONMENT_VARIABLE": "1"}
-
   This can be useful to inform users applications and scripts that they are
   running inside a Sarus container.
-* ``prepend`` (array): List of JSON objects containing a single field, meant to
-  represent the key-value pair of an environment variable. The values will be
-  prepended to the corresponding variables in the container. For example, this
-  can be used to prepend site-specific locations to PATH.
-* ``append`` (array): List of JSON objects containing a single field, meant to
-  represent the key-value pair of an environment variable. The values will be
-  appended to the corresponding variables in the container. For example, this
-  can be used to append site-specific locations to PATH.
+* ``prepend`` (object): JSON object with fields having string values. The fields
+  represent the key-value pairs of environment variables. The values will be
+  prepended to the corresponding variables in the container, using a colon as
+  separator. This can be used, for example, to prepend site-specific locations
+  to PATH.
+* ``append`` (object): JSON object with fields having string values. The fields
+  represent the key-value pairs of environment variables. The values will be
+  appended to the corresponding variables in the container, using a colon as
+  separator. This can be used, for example, to append site-specific locations
+  to PATH.
 * ``unset`` (array): List of strings representing environment variable names.
   Variables with the corresponding names will be unset in the container.
 
@@ -278,15 +278,15 @@ Example configuration file
             }
         ],
         "environment": {
-            "set": [
-                {"VAR_TO_SET_IN_CONTAINER": "value"}
-            ],
-            "prepend": [
-                {"VAR_WITH_LIST_OF_PATHS_IN_CONTAINER": "/path/to/prepend"}
-            ],
-            "append": [
-                {"VAR_WITH_LIST_OF_PATHS_IN_CONTAINER": "/path/to/append"}
-            ],
+            "set": {
+                "VAR_TO_SET_IN_CONTAINER": "value"
+            },
+            "prepend": {
+                "VAR_WITH_LIST_OF_PATHS_IN_CONTAINER": "/path/to/prepend"
+            },
+            "append": {
+                "VAR_WITH_LIST_OF_PATHS_IN_CONTAINER": "/path/to/append"
+            },
             "unset": [
                 "VAR_TO_UNSET_IN_CONTAINER_0",
                 "VAR_TO_UNSET_IN_CONTAINER_1"

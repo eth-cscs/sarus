@@ -42,6 +42,47 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getEnvironmentInCont
         env[kv.first] = kv.second;
     }
     setNvidiaEnvironmentVariables(config->commandRun.hostEnvironment, env);
+
+    const auto environmentIterator = config->json.FindMember("environment");
+    if(environmentIterator != config->json.MemberEnd()) {
+        if(environmentIterator->value.HasMember("set")) {
+            for(const auto& variable : environmentIterator->value["set"].GetObject()) {
+                env[variable.name.GetString()] = variable.value.GetString();
+            }
+        }
+        if(environmentIterator->value.HasMember("prepend")) {
+            for(const auto& variable : environmentIterator->value["prepend"].GetObject()) {
+                const auto variableName = variable.name.GetString();
+                auto variableItr = env.find(variableName);
+                if (variableItr != env.end()) {
+                    const auto existingValue = variableItr->second;
+                    env[variableName] = std::string{variable.value.GetString()} + ":" + existingValue;
+                }
+                else {
+                    env[variableName] = std::string{variable.value.GetString()};
+                }
+            }
+        }
+        if(environmentIterator->value.HasMember("append")) {
+            for(const auto& variable : environmentIterator->value["append"].GetObject()) {
+                const auto variableName = variable.name.GetString();
+                auto existingValue = std::string{};
+                auto variableItr = env.find(variableName);
+                if (variableItr != env.end()) {
+                    const auto existingValue = variableItr->second;
+                    env[variableName] = existingValue + ":" + variable.value.GetString();
+                }
+                else {
+                    env[variableName] = std::string{variable.value.GetString()};
+                }
+            }
+        }
+        if(environmentIterator->value.HasMember("unset")) {
+            for(const auto& variable : environmentIterator->value["unset"].GetArray()) {
+                env.erase(variable.GetString());
+            }
+        }
+    }
     return env;
 }
 

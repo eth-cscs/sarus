@@ -118,7 +118,7 @@ Workload Manager.
     echo "END_TIME=`date +%s`"
 
 The Timestamp hook does not require any direct support from the Sarus container
-engine, although it relies on the :ref:`environmental transfer
-<user-environmental-transfer>` performed by Sarus to propagate the
-``TIMESTAMP_HOOK_LOGFILE`` variable from the host into the container
-environment, allowing the hook to work as intended by the user.
+engine, although it relies on the way Sarus creates the container
+:ref:`environment <user-environment>` to propagate the ``TIMESTAMP_HOOK_LOGFILE``
+variable from the host into the container environment, allowing the hook to
+work as intended by the user.

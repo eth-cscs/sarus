@@ -362,15 +362,21 @@ like parallel filesystems into every container. Refer to your site documentation
 or system administrator to know which resources have been enabled on a specific
 system.
 
-.. _user-environmental-transfer:
+.. _user-environment:
 
-Environmental Transfer
-----------------------
+Environment
+-----------
 
-All the environment variables defined in the host process environment
-will be transferred into the container; however, any environment variables
-defined in the container image, e.g., Docker ENV-defined variables,
-will be sourced and override those.
+Environment variables within containers are set by combining several sources,
+in the following order of precedence (later entries override earlier entries):
+
+1. Host environment of the process calling Sarus
+2. Environment variables defined in the container image, e.g., Docker ENV-defined variables
+3. Modification of variables related to the :ref:`NVIDIA Container Toolkit
+   <config-hooks-nvidia-support>`
+4. Modifications (set/prepend/append/unset) specified by the system administrator
+   in the Sarus configuration file.
+   See :ref:`here <config-reference-environment>` for details.
 
 .. _user-custom-mounts:
 
@@ -717,12 +723,14 @@ MPI support can be launched by passing the ``--mpi`` option to the
 
     $ srun -N 16 -n 16 sarus run --mpi <repo name>/<image name> <mpi_application>
 
+.. _user-nvidia-hook:
+
 NVIDIA GPU support
 ------------------
 
 NVIDIA provides access to GPU devices and their driver stacks inside OCI
-containers through the NVIDIA Container Toolkit (part of the `NVIDIA Container
-Runtime <https://github.com/NVIDIA/nvidia-container-runtime>`_ project).
+containers through the `NVIDIA Container Toolkit hook
+<https://github.com/NVIDIA/nvidia-container-toolkit>`_ .
 
 When Sarus is configured to use this hook, the GPU devices to be made
 available inside the container can be selected by setting the
