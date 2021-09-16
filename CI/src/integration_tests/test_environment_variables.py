@@ -74,9 +74,8 @@ class TestEnvironmentVariables(unittest.TestCase):
         subprocess.check_output(["sudo", "cp", cls._sarusjson_filename+'.bak', cls._sarusjson_filename])
 
     def test_environment_variables(self):
-        util.pull_image_if_necessary(is_centralized_repository=False, image=self._IMAGE_NAME)
-
         host_environment = os.environ.copy()
+        host_environment["IMAGE_ENV_VARIABLE"] = "image_env_variable_value_from_host"
         host_environment["HOST_ENV_VARIABLE"] = "host_env_variable_value"
         host_environment["HOST_ENV_VAR"] = "host_env_var_value"
         host_environment["SARUS_CONFIG_UNSET"] = "config_unset_value"
@@ -97,3 +96,27 @@ class TestEnvironmentVariables(unittest.TestCase):
         self.assertEqual(output[5], "config_prepend_value2")
         self.assertEqual(output[6], "config_append_value2")
         self.assertEqual(len(output), 7)
+
+    def test_env_cli_option(self):
+        host_environment = os.environ.copy()
+        host_environment["SARUS_CONFIG_UNSET"] = "config_unset_value"
+        host_environment["IMAGE_ENV_VAR"] = "image_env_var_value_from_host"
+
+        sarus_options = ["-e", "IMAGE_ENV_VARIABLE=cli_value",
+                         "--env", "IMAGE_ENV_VAR",
+                         "--env", "EMPTY_VAR=",
+                         "--env=SARUS_CONFIG_UNSET=cli_value_reset"]
+
+        command=["bash", "-c", "echo $IMAGE_ENV_VARIABLE; echo $IMAGE_ENV_VAR; echo $EMPTY_VAR; echo $SARUS_CONFIG_UNSET"]
+
+        output = util.run_command_in_container( is_centralized_repository=False,
+                                                image=self._IMAGE_NAME,
+                                                command=command,
+                                                options_of_run_command=sarus_options,
+                                                env=host_environment)
+
+        self.assertEqual(output[0], "cli_value")
+        self.assertEqual(output[1], "image_env_var_value_from_host")
+        self.assertEqual(output[2], "")
+        self.assertEqual(output[3], "cli_value_reset")
+        self.assertEqual(len(output), 4)

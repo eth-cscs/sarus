@@ -101,6 +101,9 @@ private:
             ("entrypoint",
                 boost::program_options::value<std::string>(&entrypoint),
                 "Overwrite the default ENTRYPOINT of the image")
+            ("env,e",
+                boost::program_options::value<std::vector<std::string>>(&env),
+                "Set environment variables in the container")
             ("glibc", "Enable replacement of the container's GNU C libraries")
             ("init", "Run an init process inside the container that forwards signals and reaps processes")
             ("mount",
@@ -180,10 +183,57 @@ private:
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
+        makeUserEnvironment();
         makeSiteMountObjects();
         makeUserMountObjects();
 
         cli::utility::printLog("successfully parsed CLI arguments", common::LogLevel::DEBUG);
+    }
+
+    void makeUserEnvironment() {
+        for(const auto& variable : env) {
+            auto message = boost::format("Parsing environment variable requested from CLI '%s'") % variable;
+            cli::utility::printLog(message, common::LogLevel::DEBUG);
+
+            if(variable.empty()) {
+                auto message = boost::format("Invalid environment variable requested from CLI: empty option value");
+                utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            }
+
+            std::string name, value;
+            try {
+                std::tie(name, value) = common::parseEnvironmentVariable(variable);
+            } catch(common::Error& e) {
+                auto message = boost::format("Environment variable requested from CLI '%s' does not feature '=' separator. "
+                                             "Treating string as variable name and attempting to source value from host "
+                                             "environment") % variable;
+                cli::utility::printLog(message, common::LogLevel::INFO);
+
+                auto& hostEnvironment = conf->commandRun.hostEnvironment;
+                auto hostVariable = hostEnvironment.find(variable);
+                if (hostVariable != hostEnvironment.cend()) {
+                    name = hostVariable->first;
+                    value = hostVariable->second;
+                }
+                else {
+                    auto message = boost::format("Environment variable requested from CLI '%s' does not correspond to a variable "
+                                                 "present in the host environment. Skipping request.") % variable;
+                    cli::utility::printLog(message, common::LogLevel::INFO);
+                    continue;
+                }
+            } catch(std::exception& e) {
+                auto message = boost::format("Error parsing environment variable requested from CLI '%s': %s")
+                               % variable % e.what();
+                cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            }
+
+            conf->commandRun.userEnvironment[name] = value;
+            message = boost::format("Successfully parsed environment variable from CLI: Name: '%s' - Value: '%s'")
+                      % name % value;
+            cli::utility::printLog(message, common::LogLevel::DEBUG);
+        }
     }
 
     void makeSiteMountObjects() {
@@ -293,6 +343,7 @@ private:
 
 private:
     boost::program_options::options_description optionsDescription{"Options"};
+    std::vector<std::string> env;
     std::shared_ptr<common::Config> conf;
     std::string entrypoint;
     std::string workdir;

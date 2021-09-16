@@ -62,6 +62,7 @@ class Config {
 
         struct CommandRun {
             std::unordered_map<std::string, std::string> hostEnvironment;
+            std::unordered_map<std::string, std::string> userEnvironment;
             std::unordered_map<std::string, std::string> bundleAnnotations;
             std::vector<int> cpuAffinity;
             std::vector<std::string> userMounts;

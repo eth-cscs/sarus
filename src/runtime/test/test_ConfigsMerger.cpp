@@ -46,8 +46,6 @@ TEST(ConfigsMergerTestGroup, environment) {
     auto& allocator = config->json.GetAllocator();
     auto metadata = common::ImageMetadata{};
 
-    rj::Value environmentValue(rj::kObjectType);
-
     // empty environment
     {
         config->commandRun.hostEnvironment = {};
@@ -77,6 +75,7 @@ TEST(ConfigsMergerTestGroup, environment) {
     }
     // config file set environment overrides both host and image metadata
     {
+        rj::Value environmentValue(rj::kObjectType);
         rj::Value setValue(rj::kObjectType);
         setValue.AddMember("SARUS_CONFIG_SET",
                            rj::Value{"config_set_value", allocator},
@@ -88,6 +87,8 @@ TEST(ConfigsMergerTestGroup, environment) {
         metadata.env = {{"SARUS_CONFIG_SET", "IMAGE_VALUE"}};
         auto expectedEnvironment = std::unordered_map<std::string, std::string>{{"SARUS_CONFIG_SET", "config_set_value"}};
         CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
+
+        config->json["environment"].RemoveMember("set");
     }
     // config file prepend/append
     {
@@ -105,8 +106,11 @@ TEST(ConfigsMergerTestGroup, environment) {
         config->commandRun.hostEnvironment = {};
         metadata.env = {{"SARUS_CONFIG_PREPEND_APPEND", "IMAGE_VALUE"}};
         auto expectedEnvironment = std::unordered_map<std::string, std::string>{
-            {"SARUS_CONFIG_SET", "config_set_value"}, {"SARUS_CONFIG_PREPEND_APPEND", "config_prepend_value:IMAGE_VALUE:config_append_value"}};
+            {"SARUS_CONFIG_PREPEND_APPEND", "config_prepend_value:IMAGE_VALUE:config_append_value"}};
         CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
+
+        config->json["environment"].RemoveMember("prepend");
+        config->json["environment"].RemoveMember("append");
     }
     // config file unset
     {
@@ -116,9 +120,57 @@ TEST(ConfigsMergerTestGroup, environment) {
 
         config->commandRun.hostEnvironment = {};
         metadata.env = {{"SARUS_CONFIG_UNSET", "IMAGE_VALUE"}};
-        auto expectedEnvironment = std::unordered_map<std::string, std::string>{
-            {"SARUS_CONFIG_SET", "config_set_value"}, {"SARUS_CONFIG_PREPEND_APPEND", "config_prepend_value:config_append_value"}};
+        auto expectedEnvironment = std::unordered_map<std::string, std::string>{};
         CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
+
+        config->json["environment"].RemoveMember("unset");
+    }
+    // cli sets variable
+    {
+        config->commandRun.hostEnvironment = {};
+        config->commandRun.userEnvironment = {{"CLI_VAR", "cli_value"}};
+        metadata.env = {};
+        auto expectedEnvironment = std::unordered_map<std::string, std::string>{{"CLI_VAR", "cli_value"}};
+        CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
+    }
+    // cli overrides all
+    {
+        rj::Value setValue(rj::kObjectType);
+        setValue.AddMember("SARUS_CONFIG_SET",
+                           rj::Value{"config_set_value", allocator},
+                           allocator);
+        config->json["environment"].AddMember("set", setValue, allocator);
+
+        config->commandRun.hostEnvironment = {{"SARUS_CONFIG_SET", "HOST_VALUE"}};
+        config->commandRun.userEnvironment = {{"SARUS_CONFIG_SET", "cli_value"}};
+        metadata.env = {{"SARUS_CONFIG_SET", "IMAGE_VALUE"}};
+        auto expectedEnvironment = std::unordered_map<std::string, std::string>{{"SARUS_CONFIG_SET", "cli_value"}};
+        CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
+    }
+    // cli empties values (Docker --env has this behavior)
+    // reuses config->json["environment"]["set"] values from previous test
+    {
+        config->commandRun.hostEnvironment = {};
+        config->commandRun.userEnvironment = {{"SARUS_CONFIG_SET", ""}};
+        metadata.env = {{"SARUS_CONFIG_SET", "IMAGE_VALUE"}};
+        auto expectedEnvironment = std::unordered_map<std::string, std::string>{{"SARUS_CONFIG_SET", ""}};
+        CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
+
+        config->json["environment"].RemoveMember("set");
+    }
+    // cli re-sets unset variables
+    {
+        rj::Value unsetValue(rj::kArrayType);
+        unsetValue.PushBack("SARUS_CONFIG_UNSET", allocator);
+        config->json["environment"].AddMember("unset", unsetValue, allocator);
+
+        config->commandRun.hostEnvironment = {};
+        config->commandRun.userEnvironment = {{"SARUS_CONFIG_UNSET", "cli_value"}};
+        metadata.env = {{"SARUS_CONFIG_UNSET", "IMAGE_VALUE"}};
+        auto expectedEnvironment = std::unordered_map<std::string, std::string>{{"SARUS_CONFIG_UNSET", "cli_value"}};
+        CHECK((ConfigsMerger{config, metadata}.getEnvironmentInContainer() == expectedEnvironment));
+
+        config->json["environment"].RemoveMember("unset");
     }
 }
 

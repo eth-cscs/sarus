@@ -69,7 +69,7 @@ std::unordered_map<std::string, std::string> parseEnvironmentVariables(char** en
 std::tuple<std::string, std::string> parseEnvironmentVariable(const std::string& variable) {
     auto keyEnd = std::find(variable.cbegin(), variable.cend(), '=');
     if(keyEnd == variable.cend()) {
-        auto message = boost::format("Failed to parse environment variable \"%s\". Expected symbol '='.")
+        auto message = boost::format("Failed to parse environment variable \"%s\". Expected '=' separator.")
             % variable;
         SARUS_THROW_ERROR(message.str());
     }

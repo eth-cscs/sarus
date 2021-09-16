@@ -204,6 +204,7 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
         CHECK_EQUAL(conf->imageID.tag, std::string{"latest"});
         CHECK_EQUAL(conf->useCentralizedRepository, false);
         CHECK_EQUAL(conf->commandRun.addInitProcess, false);
+        CHECK_EQUAL(conf->commandRun.userEnvironment.size(), 0);
         CHECK_EQUAL(conf->commandRun.mounts.size(), 1); // 1 site mount + 0 user mount
         CHECK_EQUAL(conf->commandRun.useMPI, false);
         CHECK_EQUAL(conf->commandRun.enableGlibcReplacement, 0);
@@ -226,6 +227,32 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
         CHECK_EQUAL(conf->commandRun.entrypoint->argc(), 2);
         CHECK_EQUAL(conf->commandRun.entrypoint->argv()[0], std::string{"myprogram"});
         CHECK_EQUAL(conf->commandRun.entrypoint->argv()[1], std::string{"--option"});
+    }
+    // env
+    {
+        auto conf = generateConfig({"run", "--env=NAME=value", "image"});
+        CHECK_EQUAL(conf->commandRun.userEnvironment.size(), 1);
+        CHECK_EQUAL(conf->commandRun.userEnvironment["NAME"], std::string{"value"});
+
+        conf = generateConfig({"run",
+                               "-e", "NAME=value", "--env", "NESTED=innerKey=innerValue",
+                               "-e", "CONTAINER=sarus",
+                               "image"});
+        CHECK_EQUAL(conf->commandRun.userEnvironment.size(), 3);
+        CHECK_EQUAL(conf->commandRun.userEnvironment["NAME"], std::string{"value"});
+        CHECK_EQUAL(conf->commandRun.userEnvironment["NESTED"], std::string{"innerKey=innerValue"});
+        CHECK_EQUAL(conf->commandRun.userEnvironment["CONTAINER"], std::string{"sarus"});
+
+        conf = generateConfig({"run", "--env=EMPTY=", "image"});
+        CHECK_EQUAL(conf->commandRun.userEnvironment.size(), 1);
+        CHECK_EQUAL(conf->commandRun.userEnvironment["EMPTY"], std::string{""});
+
+        conf = generateConfig({"run", "--env=key", "image"});
+        CHECK_EQUAL(conf->commandRun.userEnvironment.size(), 1);
+        CHECK_EQUAL(conf->commandRun.userEnvironment["key"], std::string{"value"});
+
+        conf = generateConfig({"run", "--env=INEXISTENT", "image"});
+        CHECK_TRUE(conf->commandRun.userEnvironment.empty());
     }
     // init
     {
@@ -286,6 +313,7 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
     // combined test
     {
         auto conf = generateConfig({"run",
+                                    "-e", "CONTAINER=sarus",
                                     "--workdir=/workdir",
                                     "--mpi",
                                     "--glibc",
@@ -294,6 +322,8 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
         CHECK_EQUAL(conf->commandRun.workdir->string(), std::string{"/workdir"});
         CHECK_EQUAL(conf->commandRun.useMPI, true);
         CHECK_EQUAL(conf->commandRun.enableGlibcReplacement, true);
+        CHECK_EQUAL(conf->commandRun.userEnvironment.size(), 1);
+        CHECK_EQUAL(conf->commandRun.userEnvironment["CONTAINER"], std::string{"sarus"});
         CHECK_EQUAL(conf->commandRun.mounts.size(), 2); // 1 site mount + 1 user mount
         CHECK_EQUAL(conf->imageID.server, std::string{"index.docker.io"});
         CHECK_EQUAL(conf->imageID.repositoryNamespace, std::string{"library"});

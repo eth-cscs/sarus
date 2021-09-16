@@ -83,6 +83,11 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getEnvironmentInCont
             }
         }
     }
+
+    for(const auto& variable : config->commandRun.userEnvironment) {
+        env[variable.first] = variable.second;
+    }
+
     return env;
 }
 

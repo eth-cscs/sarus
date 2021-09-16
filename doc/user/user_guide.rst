@@ -368,7 +368,7 @@ Environment
 -----------
 
 Environment variables within containers are set by combining several sources,
-in the following order of precedence (later entries override earlier entries):
+in the following order (later entries override earlier entries):
 
 1. Host environment of the process calling Sarus
 2. Environment variables defined in the container image, e.g., Docker ENV-defined variables
@@ -377,6 +377,28 @@ in the following order of precedence (later entries override earlier entries):
 4. Modifications (set/prepend/append/unset) specified by the system administrator
    in the Sarus configuration file.
    See :ref:`here <config-reference-environment>` for details.
+5. Environment variables defined using the ``-e/--env`` option of :program:`sarus run`.
+   The option can be passed multiple times, defining one variable per option.
+   The first occurring ``=`` (equals sign) character in the option value is
+   treated as the separator between the variable name and its value:
+
+   .. code-block:: bash
+
+       $ srun sarus run -e SARUS_CONTAINER=true debian bash -c 'echo $SARUS_CONTAINER'
+       SARUS_CONTAINER=true
+
+       $ srun sarus run --env=CLI_VAR=cli_value debian bash -c 'echo $CLI_VAR'
+       CLI_VAR=cli_value
+
+       $ srun sarus run --env NESTED=innerName=innerValue debian bash -c 'echo $NESTED'
+       NESTED=innerName=innerValue
+
+   If an ``=`` is not provided in the option value, Sarus considers the string
+   as the variable name, and takes the value from the corresponding variable
+   in the host environment. This can be used to override a variable set in the
+   image with the value from the host.
+   If no ``=`` is provided and a matching variable is not found in the host
+   environment, the option is ignored and the variable is not set in the container.
 
 .. _user-custom-mounts:
 
