@@ -89,6 +89,9 @@
                 }
             },
             "required":[ "notAllowedPrefixesOfPath", "notAllowedPaths" ]
+        },
+        "insecureRegistries": {
+            "$ref": "definitions.schema.json#/ArrayOfStrings"
         }
     },
     "required": [
