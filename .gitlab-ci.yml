@@ -141,13 +141,13 @@ spack_centos7:
   before_script:
     - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-centos7 spack-centos7
 
-spack_fedora31:
+spack_fedora34:
   extends: .spack_package
   only:
     - web
     - schedules
   before_script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-fedora31 spack-fedora31
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-fedora34 spack-fedora34
 
 spack_opensuseleap15.2:
   extends: .spack_package

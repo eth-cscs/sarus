@@ -1,4 +1,4 @@
-FROM spack/centos7
+FROM spack/centos7:0.16.2
 
 # Install gcc 8.3.1 through devtoolset-8
 # glibc-static is required for building the SSH hook's custom OpenSSH software
@@ -17,8 +17,8 @@ RUN spack install wget
 RUN spack install cmake
 RUN spack install openssl
 RUN spack install squashfs
-RUN spack install boost@1.65.0 cxxstd=11
-RUN spack install --no-checksum libarchive@3.4.1
+RUN spack install cpprestsdk@2.10.0: ^boost@1.65.0: cxxstd=11
+RUN spack install libarchive@3.4.1:
 RUN spack install python@3:
 
 ENTRYPOINT []

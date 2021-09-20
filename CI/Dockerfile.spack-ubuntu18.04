@@ -1,12 +1,12 @@
-FROM spack/ubuntu-bionic
+FROM spack/ubuntu-bionic:0.16.2
 
 # Install builtin dependencies for Sarus
 RUN spack install wget
 RUN spack install cmake
 RUN spack install openssl
 RUN spack install squashfs
-RUN spack install boost@1.65.0 cxxstd=11
-RUN spack install --no-checksum libarchive@3.4.1
+RUN spack install cpprestsdk@2.10.0: ^boost@1.65.0: cxxstd=11
+RUN spack install libarchive@3.4.1:
 RUN spack install python@3:
 
 ENTRYPOINT []

@@ -8,6 +8,13 @@ class Rapidjson(CMakePackage):
     url      = "https://github.com/Tencent/rapidjson/archive/v1.1.0.tar.gz"
     git      = 'https://github.com/Tencent/rapidjson.git',
 
-    version('663f076',
+    version('00dbcf2',
             git = 'https://github.com/Tencent/rapidjson.git',
-            commit = '663f076')
+            commit = '00dbcf2')
+
+    # Suppress compiler warning about string overflow
+    # This warning has been observed only on Fedora 34 (could be due to a more recent compiler)
+    # For reference see https://github.com/Tencent/rapidjson/issues/1924#issuecomment-907073451
+    def cmake_args(self):
+        args = ['-DCMAKE_CXX_FLAGS=-Wno-error=stringop-overflow']
+        return args
