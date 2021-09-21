@@ -37,7 +37,6 @@ private:
         std::vector<std::string> destinationDisallowedExact;
         std::vector<std::string> sourceDisallowedWithPrefix;
         std::vector<std::string> sourceDisallowedExact;
-        std::unordered_map<std::string, bool> allowedFlags;
     };
 
 private:

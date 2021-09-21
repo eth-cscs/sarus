@@ -26,38 +26,19 @@ namespace cli {
 MountParser::MountParser(bool isUserMount, std::shared_ptr<const common::Config> conf)
     : conf{std::move(conf)}
 {
-    if(isUserMount) {
+    if (isUserMount && this->conf->json.HasMember("userMounts")) {
         // Retrieve settings from Config struct
-        if (this->conf->json.HasMember("userMounts")) {
-            const rapidjson::Value& userMounts = this->conf->json["userMounts"];
-            for (const auto& value : userMounts["notAllowedPrefixesOfPath"].GetArray()) {
-                validationSettings.destinationDisallowedWithPrefix.push_back(value.GetString());
-            }
-            for (const auto& value : userMounts["notAllowedPaths"].GetArray()) {
-                validationSettings.destinationDisallowedExact.push_back(value.GetString());
-            }
+        const rapidjson::Value& userMounts = this->conf->json["userMounts"];
+        for (const auto& value : userMounts["notAllowedPrefixesOfPath"].GetArray()) {
+            validationSettings.destinationDisallowedWithPrefix.push_back(value.GetString());
         }
-        else {
-            validationSettings.destinationDisallowedWithPrefix = {};
-            validationSettings.destinationDisallowedExact = {};
+        for (const auto& value : userMounts["notAllowedPaths"].GetArray()) {
+            validationSettings.destinationDisallowedExact.push_back(value.GetString());
         }
-
-        validationSettings.allowedFlags.emplace("readonly",  true);
-        validationSettings.allowedFlags.emplace("recursive", true);
-        validationSettings.allowedFlags.emplace("private",   false);
-        validationSettings.allowedFlags.emplace("rprivate",  false);
-        validationSettings.allowedFlags.emplace("slave",     false);
-        validationSettings.allowedFlags.emplace("rslave",    false);
     }
-    else { // is site mount
+    else {
         validationSettings.destinationDisallowedWithPrefix = {};
         validationSettings.destinationDisallowedExact = {};
-        validationSettings.allowedFlags.emplace("readonly",  true);
-        validationSettings.allowedFlags.emplace("recursive", true);
-        validationSettings.allowedFlags.emplace("private",   true);
-        validationSettings.allowedFlags.emplace("rprivate",  true);
-        validationSettings.allowedFlags.emplace("slave",     true);
-        validationSettings.allowedFlags.emplace("rslave",    true);
     }
 }
 
@@ -100,9 +81,7 @@ std::unique_ptr<runtime::Mount> MountParser::parseBindMountRequest(const std::un
  */
 unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::string, std::string>& requestMap) {
     // Default to "recursive private" mount
-    unsigned long flags = 0;
-    flags |= MS_REC;
-    flags |= MS_PRIVATE;
+    unsigned long flags = MS_REC | MS_PRIVATE;
 
     // Create local copy of map and remove sub-options not expected as mount flags
     auto flagsMap = requestMap;
@@ -115,75 +94,7 @@ unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::s
 
     for (auto const& opt : flagsMap) {
         if (opt.first == std::string{"readonly"}) {
-            if (validationSettings.allowedFlags.at("readonly") == false) {
-                auto message = boost::format("Invalid mount request '%s': option 'readonly' is not allowed")
-                    % convertRequestMapToString(requestMap);
-                utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-            }
             flags |= MS_RDONLY;
-        }
-        else if (opt.first == std::string{"bind-propagation"}) {
-            utility::printLog(boost::format("WARNING: bind-propagation will be removed from mount options in a future Sarus release. "
-                                            "In the future, all bind-mounts will be performed as rprivate."),
-                                            common::LogLevel::WARN, std::cerr);
-            // Allow option to override default propagation
-            flags ^= MS_REC;
-            flags ^= MS_PRIVATE;
-
-            if (opt.second == std::string{"recursive"}) {
-                if (validationSettings.allowedFlags.at("recursive") == false) {
-                    auto message = boost::format("Invalid mount request '%s': option 'bind-propagation=recursive' is not allowed")
-                        % convertRequestMapToString(requestMap);
-                    utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                    SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-                }
-                flags |= MS_REC;
-            }
-            else if (opt.second == std::string{"slave"}) {
-                if (validationSettings.allowedFlags.at("slave") == false) {
-                    auto message = boost::format("Invalid mount request '%s': option 'bind-propagation=slave' is not allowed")
-                        % convertRequestMapToString(requestMap);
-                    utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                    SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-                }
-                flags |= MS_SLAVE;
-            }
-            else if (opt.second == std::string{"rslave"}) {
-                if (validationSettings.allowedFlags.at("rslave") == false) {
-                    auto message = boost::format("Invalid mount request '%s': option 'bind-propagation=rslave' is not allowed")
-                        % convertRequestMapToString(requestMap);
-                    utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                    SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-                }
-                flags |= MS_SLAVE;
-                flags |= MS_REC;
-            }
-            else if (opt.second == std::string{"private"}) {
-                if (validationSettings.allowedFlags.at("private") == false) {
-                    auto message = boost::format("Invalid mount request '%s': option 'bind-propagation=private' is not allowed")
-                        % convertRequestMapToString(requestMap);
-                    utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                    SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-                }
-                flags |= MS_PRIVATE;
-            }
-            else if (opt.second == std::string{"rprivate"}) {
-                if (validationSettings.allowedFlags.at("rprivate") == false) {
-                    auto message = boost::format("Invalid mount request '%s': option 'bind-propagation=rprivate' is not allowed")
-                        % convertRequestMapToString(requestMap);
-                    utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                    SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-                }
-                flags |= MS_PRIVATE;
-                flags |= MS_REC;
-            }
-            else {
-                auto message = boost::format("Invalid mount request '%s': '%s' is not a valid bind-propagation value")
-                    % convertRequestMapToString(requestMap) % opt.second;
-                utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-            }
         }
         else {
             auto message = boost::format("Invalid mount request '%s': '%s' is not a valid bind mount option")

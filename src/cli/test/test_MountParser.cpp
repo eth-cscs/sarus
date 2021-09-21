@@ -25,8 +25,10 @@ TEST_GROUP(MountParserTestGroup) {
 TEST(MountParserTestGroup, mount_type) {
     // bind
     Checker{"type=bind,source=/src,destination=/dest"};
+
     // invalid mount type
     Checker{"type=invalid,source=/src,destination=/dest"}.expectParseError();
+
     // invalid mount keys
     Checker{"type=invalid,spicysouce=/src,destination=/dest"}.expectParseError();
     Checker{"type=invalid,source=/src,nation=/dest"}.expectParseError();
@@ -79,12 +81,9 @@ TEST(MountParserTestGroup, user_flags_of_bind_mount) {
     Checker{"type=bind,source=/src,destination=/dest,readonly"}
         .expectFlags(MS_REC | MS_RDONLY | MS_PRIVATE);
 
-    // checks for deprecated "bind-propagation" flag
-    Checker{"type=bind,source=/src,destination=/dest,bind-propagation=recursive"}.expectFlags(MS_REC);
-    Checker{"type=bind,source=/src,destination=/dest,bind-propagation=private"}.expectParseError();
-    Checker{"type=bind,source=/src,destination=/dest,bind-propagation=rprivate"}.expectParseError();
-    Checker{"type=bind,source=/src,destination=/dest,bind-propagation=slave"}.expectParseError();
-    Checker{"type=bind,source=/src,destination=/dest,bind-propagation=rslave"}.expectParseError();
+    // Since Sarus 1.4.0, bind-propagation is no longer a valid option
+    Checker{"type=bind,source=/src,destination=dest,bind-propagation=slave"}.expectParseError();
+    Checker{"type=bind,source=/src,destination=dest,bind-propagation=recursive"}.expectParseError();
 }
 
 TEST(MountParserTestGroup, site_flags_of_bind_mount) {
@@ -95,18 +94,6 @@ TEST(MountParserTestGroup, site_flags_of_bind_mount) {
     // readonly mount
     Checker{"type=bind,source=/src,destination=/dest,readonly"}
         .parseAsSiteMount().expectFlags(MS_REC | MS_RDONLY | MS_PRIVATE);
-
-    // checks for deprecated "bind-propagation" flag
-    Checker{"type=bind,source=/src,destination=/dest,bind-propagation=recursive"}
-        .parseAsSiteMount().expectFlags(MS_REC);
-    Checker{"type=bind,source=/src,destination=/dest,bind-propagation=private"}
-        .parseAsSiteMount().expectFlags(MS_PRIVATE);
-    Checker{"type=bind,source=/src,destination=/dest,bind-propagation=slave"}
-        .parseAsSiteMount().expectFlags(MS_SLAVE);
-    Checker{"type=bind,source=/src,destination=/dest,bind-propagation=rprivate"}
-        .parseAsSiteMount().expectFlags(MS_REC | MS_PRIVATE);
-    Checker{"type=bind,source=/src,destination=/dest,bind-propagation=rslave"}
-        .parseAsSiteMount().expectFlags(MS_REC | MS_SLAVE);
 }
 
 } // namespace

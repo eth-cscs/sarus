@@ -128,30 +128,6 @@
                             "type": "string",
                             "pattern": ""
                         },
-                        "bind-propagation": {
-                            "oneOf": [
-                                {
-                                    "type": "string",
-                                    "pattern": "^private$"
-                                },
-                                {
-                                    "type": "string",
-                                    "pattern": "^rprivate$"
-                                },
-                                {
-                                    "type": "string",
-                                    "pattern": "^slave$"
-                                },
-                                {
-                                    "type": "string",
-                                    "pattern": "^rslave$"
-                                },
-                                {
-                                    "type": "string",
-                                    "pattern": "^recursive$"
-                                }
-                            ]
-                        },
                         "size": {
                             "type": "string",
                             "pattern": "^[0-9]+[BKMGTPE]$"

@@ -195,6 +195,10 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Failed to bind mount /invalid-s87dfs9 on container\'s /dst: mount source doesn\'t exist"
         self._check(command, expected_message)
 
+        command = ["sarus", "run", "--mount=src=/src,dst=/dst,type=bind,bind-propagation=slave", "alpine", "true"]
+        expected_message = "'bind-propagation' is not a valid bind mount option"
+        self._check(command, expected_message)
+
         sarus_ssh_dir = os.getenv("HOME") + "/.oci-hooks/ssh"
         shutil.rmtree(sarus_ssh_dir, ignore_errors=True) # remove ssh keys
         command = ["sarus", "run", "--ssh", "quay.io/ethcscs/alpine", "true"]
@@ -232,7 +236,7 @@ class TestErrorMessages(unittest.TestCase):
 
     def _check(self, command, expected_message):
         actual_message = self._get_sarus_error_output(command)
-        self.assertEqual(actual_message, expected_message)
+        assert expected_message in actual_message
 
     def _get_sarus_error_output(self, command):
         with open(os.devnull, 'wb') as devnull:

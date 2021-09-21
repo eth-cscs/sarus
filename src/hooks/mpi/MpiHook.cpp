@@ -315,7 +315,7 @@ void MpiHook::performBindMounts() const {
         sarus::common::LogLevel::INFO);
 
     for(const auto& mount : bindMounts) {
-        validatedBindMount(mount, rootfsDir / mount, MS_REC);
+        validatedBindMount(mount, rootfsDir / mount);
     }
 
     log("Successfully performed bind mounts", sarus::common::LogLevel::INFO);
@@ -401,7 +401,7 @@ void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesy
     }
 }
 
-void MpiHook::validatedBindMount(const boost::filesystem::path& from, const boost::filesystem::path& to, unsigned long flags) const {
+void MpiHook::validatedBindMount(const boost::filesystem::path& from, const boost::filesystem::path& to) const {
     auto rootIdentity = sarus::common::UserIdentity{};
     auto userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
 
@@ -423,7 +423,7 @@ void MpiHook::validatedBindMount(const boost::filesystem::path& from, const boos
     else {
         sarus::common::createFileIfNecessary(to);
     }
-    sarus::runtime::bindMount(from, to, flags);
+    sarus::runtime::bindMount(from, to);
 }
 
 void MpiHook::log(const std::string& message, sarus::common::LogLevel level) const {
