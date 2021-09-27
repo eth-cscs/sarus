@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Added script to check for host requirements in CI, linked in documentation.
 - Added the `-e/--env` option to `sarus run` for setting the environment variables inside the container. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#environment)
+- Added CI unit and integration tests from source on OpenSUSE Leap 15.3
 
 ### Changed
 

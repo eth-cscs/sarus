@@ -61,15 +61,28 @@ exit_on_error "failed to set INSTALL_PATH in etc/sarus.json"
 # configure MKSQUASHFS_PATH
 mksquashfs_path=$(which mksquashfs)
 exit_on_error "failed to find mksquashfs binary. Is squashfs-tools installed?"
+echo "Found mksquashfs: ${mksquashfs_path}"
 sed -i etc/sarus.json -e "s|@MKSQUASHFS_PATH@|${mksquashfs_path}|g"
 exit_on_error "failed to set MKSQUASHFS_PATH in etc/sarus.json"
 
 # configure INIT_PATH
 init_path=${prefix_dir}/bin/tini-static-amd64
 if [ ! -e ${init_path} ]; then
-    init_path=$(which tini)
-    exit_on_error "failed to find tini binary. Is tini installed and available in \${PATH}?"
+    # some distributions install tini at filesystem root
+    if [ -e "/tini" ]; then
+        init_path="/tini"
+    elif [ -e "/tini-static" ]; then
+        init_path="/tini-static"
+    elif [ ! -z "$(which tini)" ]; then
+        init_path=$(which tini)
+    elif [ ! -z "$(which tini-static)" ]; then
+        init_path=$(which tini-static)
+    else
+        false
+        exit_on_error "failed to find tini or tini-static binary. Is tini installed and available in \${PATH}?"
+    fi
 fi
+echo "Found init program: ${init_path}"
 sed -i etc/sarus.json -e "s|@INIT_PATH@|${init_path}|g"
 exit_on_error "failed to set INIT_PATH in etc/sarus.json"
 
@@ -79,6 +92,7 @@ if [ ! -e ${runc_path} ]; then
     runc_path=$(which runc)
     exit_on_error "failed to find runc binary. Is runc installed and available in \${PATH}?"
 fi
+echo "Found runc: ${runc_path}"
 sed -i etc/sarus.json -e "s|@RUNC_PATH@|${runc_path}|g"
 exit_on_error "failed to set RUNC_PATH in etc/sarus.json"
 

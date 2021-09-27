@@ -22,12 +22,20 @@ def _get_glibc_path():
         raise Exception("Could not find glibc on the system. Hint: update this"
                         " test code with the glibc's path on this system")
 
-class TestGlibcHook(unittest.TestCase):
-    """
-    These tests verify that the host Glibc libraries are properly brought into the container.
-    """
-    _OCIHOOK_CONFIG_FILE = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/hooks.d/glibc_hook.json"
-    _HOST_GLIBC_LIBS = [
+def _get_distro_id():
+    with open('/etc/os-release') as f:
+        for line in f.readlines():
+            if line.startswith("ID"):
+                return line.split("=")[1].strip('"\n')
+
+def _get_distro_version_id():
+    with open('/etc/os-release') as f:
+        for line in f.readlines():
+            if line.startswith("VERSION_ID"):
+                return line.split("=")[1].strip('"\n')
+
+def _get_host_glibc_libs():
+    libs = [
         os.path.join(_get_glibc_path(), lib) for lib in (
             "ld-linux-x86-64.so.2",
             "libBrokenLocale.so.1",
@@ -46,6 +54,22 @@ class TestGlibcHook(unittest.TestCase):
             "librt.so.1",
             "libthread_db.so.1",
             "libutil.so.1")]
+    # patch distro-specific lib paths
+    if _get_distro_id() == "opensuse-leap" and _get_distro_version_id() == "15.3":
+        # OpenSUSE Leap 15.3 provides libcrypt through its own package, installing
+        # files in /usr/lib64:
+        # https://opensuse.pkgs.org/15.3/opensuse-oss-x86_64/libcrypt1-4.4.15-2.51.x86_64.rpm.html
+        # Leap 15.2 still bundles libcrypt with glibc
+        libs.remove(os.path.join(_get_glibc_path(), "libcrypt.so.1"))
+        libs.append("/usr/lib64/libcrypt.so.1")
+    return libs
+
+class TestGlibcHook(unittest.TestCase):
+    """
+    These tests verify that the host Glibc libraries are properly brought into the container.
+    """
+    _OCIHOOK_CONFIG_FILE = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/hooks.d/glibc_hook.json"
+    _HOST_GLIBC_LIBS = _get_host_glibc_libs()
     _HOST_GLIBC_LIBS_HASHES = [subprocess.check_output(["md5sum", lib]).decode().split()[0] for lib in _HOST_GLIBC_LIBS]
 
     @classmethod
