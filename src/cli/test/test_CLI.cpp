@@ -144,6 +144,7 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
         auto conf = generateConfig({"pull", "ubuntu"});
         CHECK(conf->directories.tempFromCLI.empty() == true);
         CHECK(conf->useCentralizedRepository == false);
+        CHECK(conf->enforceSecureServer == true);
         CHECK(conf->imageID.server == "index.docker.io");
         CHECK(conf->imageID.repositoryNamespace == "library");
         CHECK(conf->imageID.image == "ubuntu");
@@ -154,6 +155,7 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
         auto conf = generateConfig({"pull", "--centralized-repository", "ubuntu"});
         CHECK(conf->directories.tempFromCLI.empty() == true);
         CHECK(conf->useCentralizedRepository == true);
+        CHECK(conf->enforceSecureServer == true);
         CHECK(conf->imageID.server == "index.docker.io");
         CHECK(conf->imageID.repositoryNamespace == "library");
         CHECK(conf->imageID.image == "ubuntu");
@@ -166,7 +168,19 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
             "--temp-dir=/custom-temp-dir",
             "my.own.server:5000/user/image:tag"});
         CHECK(conf->directories.temp.string() == "/custom-temp-dir");
+        CHECK(conf->enforceSecureServer == true);
         CHECK(conf->imageID.server == "my.own.server:5000");
+        CHECK(conf->imageID.repositoryNamespace == "user");
+        CHECK(conf->imageID.image == "image");
+        CHECK(conf->imageID.tag == "tag");
+    }
+    // insecure registry
+    {
+        auto conf = generateConfig({"pull", "insecure.registry:5000/user/image:tag"});
+        CHECK(conf->directories.tempFromCLI.empty() == true);
+        CHECK(conf->useCentralizedRepository == false);
+        CHECK(conf->enforceSecureServer == false);
+        CHECK(conf->imageID.server == "insecure.registry:5000");
         CHECK(conf->imageID.repositoryNamespace == "user");
         CHECK(conf->imageID.image == "image");
         CHECK(conf->imageID.tag == "tag");
