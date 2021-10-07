@@ -13,13 +13,14 @@
 #include <iostream>
 #include <cstring>
 #include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <fcntl.h>
 #include <boost/format.hpp>
+#include <boost/algorithm/string.hpp>
 #include <rapidjson/istreamwrapper.h>
 
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
-#include "common/Logger.hpp"
 
 namespace rj = rapidjson;
 
@@ -109,6 +110,177 @@ void enterNamespacesOfProcess(pid_t pid) {
         auto file = boost::format("/proc/%s/ns/pid") % pid;
         enterNamespace(file.str());
     }
+}
+
+/**
+ * Find the mount root and mount point of a cgroup subsystem by parsing the [procPrefixDir]/proc/[pid]/mountinfo file.
+ * For details about the syntax of such file, please refer to the proc(5) man page.
+ * For details about cgroup subsystems belonging to different namespaces, please refer to the cgroup_namespaces(7) man page.
+ */
+std::tuple<boost::filesystem::path, boost::filesystem::path> findSubsystemMountPaths(const std::string& subsystemName,
+        const boost::filesystem::path& procPrefixDir, const pid_t pid) {
+    auto mountinfoPath = boost::filesystem::path(procPrefixDir / "proc" / std::to_string(pid) / "mountinfo");
+    utility::logMessage(boost::format("Parsing %s for \"%s\" cgroup subsystem mount paths") % mountinfoPath % subsystemName,
+                        sarus::common::LogLevel::DEBUG);
+
+    auto mountinfoText = sarus::common::readFile(mountinfoPath);
+    auto mountinfoLines = std::vector<std::string>{};
+    boost::split(mountinfoLines, mountinfoText, boost::is_any_of("\n"));
+
+    for (const auto& line : mountinfoLines) {
+        auto tokens = std::vector<std::string>{};
+        boost::split(tokens, line, boost::is_any_of(" "));
+
+        if (tokens.size() < 10 ) {
+            continue;
+        }
+
+        auto mountRoot      = tokens[3];
+        auto mountPoint     = tokens[4];
+        auto filesystemType = tokens.cend()[-3];
+        auto superOptions   = tokens.cend()[-1];
+
+        if (mountRoot.empty() || mountPoint.empty() || filesystemType.empty() || superOptions.empty()) {
+            continue;
+        }
+        if (filesystemType != "cgroup") {
+            continue;
+        }
+        if (superOptions.find(subsystemName) == std::string::npos) {
+            continue;
+        }
+        if (boost::starts_with(mountRoot, "/..")) {
+            auto message = boost::format("\"%s\" cgroup subsystem mount at %s belongs to a parent cgroup namespace")
+                                         % subsystemName % mountPoint;
+            SARUS_THROW_ERROR(message.str());
+        }
+
+        utility::logMessage(boost::format("Found \"%s\" cgroup subsystem mount root: %s") % subsystemName % mountRoot,
+                            sarus::common::LogLevel::DEBUG);
+        utility::logMessage(boost::format("Found \"%s\" cgroup subsystem mount point: %s") % subsystemName % mountPoint,
+                            sarus::common::LogLevel::DEBUG);
+        return std::tuple<boost::filesystem::path, boost::filesystem::path>{mountRoot, mountPoint};
+    }
+
+    auto message = boost::format("Could not find \"%s\" cgroup subsystem mount point within %s") % subsystemName % mountinfoPath;
+    SARUS_THROW_ERROR(message.str());
+}
+
+/**
+ * Find the pathname of a given control group to which a process belongs by parsing the [procPrefixDir]/proc/[pid]/cgroup file.
+ * For details about the syntax of such file, please refer to the cgroups(7) man page.
+ * For details about cgroup hierarchies rooted in different namespaces, please refer to the cgroup_namespaces(7) man page.
+ * The returned path is relative to the mount point of the requested subsystem hierarchy.
+ */
+boost::filesystem::path findCgroupPathInHierarchy(const std::string& subsystemName, const boost::filesystem::path& procPrefixDir,
+        const boost::filesystem::path& subsystemMountRoot, const pid_t pid) {
+    auto procFilePath = boost::filesystem::path(procPrefixDir / "proc" / std::to_string(pid) / "cgroup");
+    utility::logMessage(boost::format("Parsing %s for \"%s\" cgroup path relative to hierarchy mount point") % procFilePath % subsystemName,
+                        sarus::common::LogLevel::DEBUG);
+
+    auto cgroupPath = boost::filesystem::path("/");
+    auto procFileText = sarus::common::readFile(procFilePath);
+    auto procFileLines = std::vector<std::string>{};
+    boost::split(procFileLines, procFileText, boost::is_any_of("\n"));
+
+    for (const auto& line : procFileLines) {
+        auto tokens = std::vector<std::string>{};
+        boost::split(tokens, line, boost::is_any_of(":"));
+
+        auto controllers   = tokens[1];
+        auto cgroupPathStr = tokens[2];
+
+        if (controllers.empty() || cgroupPathStr.empty()) {
+            continue;
+        }
+        if (controllers.find(subsystemName) == std::string::npos) {
+            continue;
+        }
+        if (boost::starts_with(cgroupPathStr, "/..")) {
+            auto message = boost::format("\"%s\" cgroup hierarchy for process %d is rooted in another cgroup namespace")
+                                         % subsystemName % pid;
+            SARUS_THROW_ERROR(message.str());
+        }
+        if (subsystemMountRoot.string() != "/" && boost::starts_with(cgroupPathStr, subsystemMountRoot.string())) {
+            cgroupPath /= boost::filesystem::relative(cgroupPathStr, subsystemMountRoot);
+        }
+        else {
+            cgroupPath = boost::filesystem::path(cgroupPathStr);
+        }
+
+        utility::logMessage(boost::format("Found \"%s\" cgroup relative path for process %d: %s")
+                                          % subsystemName % pid % cgroupPath,
+                            sarus::common::LogLevel::DEBUG);
+        return boost::filesystem::path(cgroupPath);
+    }
+
+    auto message = boost::format("Could not find \"%s\" cgroup relative path for process %d within %s")
+                                 % subsystemName % pid % procFilePath;
+    SARUS_THROW_ERROR(message.str());
+}
+
+// Find the absolute path of a cgroup given a subsystem name, a prefix path for the location of a /proc filesystem and a pid
+boost::filesystem::path findCgroupPath(const std::string& subsystemName, const boost::filesystem::path& procPrefixDir, const pid_t pid) {
+    utility::logMessage(boost::format("Searching for cgroup \"%s\" subsystem under %s for process %d")
+                        % subsystemName % procPrefixDir % pid, sarus::common::LogLevel::DEBUG);
+
+    boost::filesystem::path subsystemMountRoot;
+    boost::filesystem::path subsystemMountPoint;
+    std::tie(subsystemMountRoot, subsystemMountPoint) = findSubsystemMountPaths(subsystemName, procPrefixDir, pid);
+    auto cgroupRelativePath = findCgroupPathInHierarchy(subsystemName, procPrefixDir, subsystemMountRoot, pid);
+
+    auto cgroupPath = subsystemMountPoint / cgroupRelativePath;
+
+    if (!boost::filesystem::exists(cgroupPath)) {
+        auto message = boost::format("Found cgroups \"%s\" subsystem for process %d in %s, but directory doesn't exist")
+            % subsystemName % pid % cgroupPath;
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    utility::logMessage(boost::format("Found cgroups \"%s\" subsystem for process %d in %s") % subsystemName  % pid % cgroupPath,
+            sarus::common::LogLevel::DEBUG);
+    return cgroupPath;
+}
+
+/*
+ * Whitelist a device for read/write access within a given cgroup
+ * For reference about the involved files and syntax, check the following resource:
+ * - https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/devices.html
+ */
+void whitelistDeviceInCgroup(const boost::filesystem::path& cgroupPath, const boost::filesystem::path& deviceFile) {
+    utility::logMessage(boost::format("Whitelisting device %s for rw access in cgroup %s") % deviceFile % cgroupPath,
+            sarus::common::LogLevel::DEBUG);
+
+    char deviceType;
+    if (sarus::common::isCharacterDevice(deviceFile)) {
+        deviceType = 'c';
+    }
+    else if (sarus::common::isBlockDevice(deviceFile)) {
+        deviceType = 'b';
+    }
+    else {
+        auto message = boost::format("Failed to whitelist %s: not a device file") % deviceFile;
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    auto deviceID = sarus::common::getDeviceID(deviceFile);
+    auto entry = boost::format("%c %u:%u rw") % deviceType % major(deviceID) % minor(deviceID);
+    utility::logMessage(boost::format("Whitelist entry: %s") % entry.str(), sarus::common::LogLevel::DEBUG);
+
+    auto allowFile = cgroupPath / "devices.allow";
+    sarus::common::writeTextFile(entry.str(), allowFile, std::ios_base::app);
+
+    utility::logMessage(boost::format("Successfully whitelisted device %s for rw access") % deviceFile,
+            sarus::common::LogLevel::DEBUG);
+}
+
+void logMessage(const boost::format& message, sarus::common::LogLevel level, std::ostream& out, std::ostream& err) {
+    utility::logMessage(message.str(), level, out, err);
+}
+
+void logMessage(const std::string& message, sarus::common::LogLevel level, std::ostream& out, std::ostream& err) {
+    auto subsystemName = "HooksUtility";
+    sarus::common::Logger::getInstance().log(message, subsystemName, level, out, err);
 }
 
 }}}} // namespace

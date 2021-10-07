@@ -11,6 +11,7 @@ import os
 import shutil
 import tempfile
 import json
+import pytest
 
 import common.util as util
 
@@ -181,3 +182,54 @@ class TestMPIHook(unittest.TestCase):
         command = ["sarus", "run", "--mpi", self._container_image, "true"]
         out = subprocess.check_output(command, stderr=subprocess.STDOUT).decode()
         return util.command_output_without_trailing_new_lines(out)
+
+
+@pytest.mark.asroot
+class TestMPIHookDevices(unittest.TestCase):
+    """
+    These tests verify that the MPI hook is able to mount and whitelist devices
+    for rw access in the container devices cgroup.
+    """
+    DEVICE_FILENAME = "/dev/test0"
+
+    @classmethod
+    def setUpClass(cls):
+        TestMPIHook.setUpClass()
+        cls._create_device_file()
+        cls._add_device_to_hook_config()
+
+    @classmethod
+    def tearDownClass(cls):
+        TestMPIHook.tearDownClass()
+        os.remove(cls.DEVICE_FILENAME)
+
+    @classmethod
+    def _create_device_file(cls):
+        import stat
+        device_mode = 0o666 | stat.S_IFCHR
+        device_id = os.makedev(511, 511)
+        os.mknod(cls.DEVICE_FILENAME, device_mode, device_id)
+
+    @classmethod
+    def _add_device_to_hook_config(cls):
+        with open(TestMPIHook._OCIHOOK_CONFIG_FILE) as json_file:
+            hook = json.load(json_file)
+
+        hook["hook"]["env"].append("BIND_MOUNTS=/dev/test0")
+
+        with open("hook_config.json.tmp", 'w') as f:
+            f.write(json.dumps(hook))
+
+        subprocess.check_output(["sudo", "mv", "hook_config.json.tmp", TestMPIHook._OCIHOOK_CONFIG_FILE])
+        subprocess.check_output(["sudo", "chown", "root:root", TestMPIHook._OCIHOOK_CONFIG_FILE])
+        subprocess.check_output(["sudo", "chmod", "644", TestMPIHook._OCIHOOK_CONFIG_FILE])
+
+    def test_whitelist_device(self):
+        devices_list = self._get_devices_list_from_cgroup_in_container()
+        assert "c 511:511 rw" in devices_list
+
+    def _get_devices_list_from_cgroup_in_container(self):
+        return util.run_command_in_container(is_centralized_repository=False,
+                                             image="quay.io/ethcscs/sarus-integration-tests:mpich_compatible",
+                                             command=["cat", "/sys/fs/cgroup/devices/devices.list"],
+                                             options_of_run_command=["--mpi"])

@@ -313,9 +313,18 @@ bool MpiHook::containerHasIncompatibleLibraryVersion(const SharedLibrary& hostLi
 void MpiHook::performBindMounts() const {
     log("Performing bind mounts (configured through hook's environment variable BIND_MOUNTS)",
         sarus::common::LogLevel::INFO);
+    auto devicesCgroupPath = boost::filesystem::path{};
 
     for(const auto& mount : bindMounts) {
         validatedBindMount(mount, rootfsDir / mount);
+
+        if (sarus::common::isDeviceFile(mount)) {
+            if (devicesCgroupPath.empty()) {
+                devicesCgroupPath = common::utility::findCgroupPath("devices", "/", pidOfContainer);
+            }
+
+            common::utility::whitelistDeviceInCgroup(devicesCgroupPath, mount);
+        }
     }
 
     log("Successfully performed bind mounts", sarus::common::LogLevel::INFO);

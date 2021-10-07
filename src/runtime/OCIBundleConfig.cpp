@@ -228,6 +228,23 @@ rj::Value OCIBundleConfig::makeMemberMounts() const {
 
         mounts.PushBack(element, *allocator);
     }
+    // sys/fs/cgroup
+    {
+        auto element = rj::Value{rj::kObjectType};
+        element.AddMember("destination", rj::Value{"/sys/fs/cgroup"}, *allocator);
+        element.AddMember("type", rj::Value{"cgroup"}, *allocator);
+        element.AddMember("source", rj::Value{"cgroup"}, *allocator);
+
+        auto options = rj::Value{rj::kArrayType};
+        options.PushBack(rj::Value{"nosuid"}, *allocator);
+        options.PushBack(rj::Value{"noexec"}, *allocator);
+        options.PushBack(rj::Value{"nodev"}, *allocator);
+        options.PushBack(rj::Value{"relatime"}, *allocator);
+        options.PushBack(rj::Value{"ro"}, *allocator);
+        element.AddMember("options", options, *allocator);
+
+        mounts.PushBack(element, *allocator);
+    }
 
     return mounts;
 }
@@ -255,9 +272,16 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
         auto intToString = boost::adaptors::transformed([](int i) { return std::to_string(i); });
         auto cpus = boost::join(config->commandRun.cpuAffinity |intToString, ",");
         auto cpuAffinity = rj::Value{cpus.c_str(), *allocator};
-
         cpu.AddMember("cpus", cpuAffinity, *allocator);
+
+        auto devices = rj::Value{rj::kArrayType};
+        auto denyAllRule = rj::Value{rj::kObjectType};
+        denyAllRule.AddMember("allow", rj::Value{false}, *allocator);
+        denyAllRule.AddMember("access", rj::Value{"rwm"}, *allocator);
+        devices.PushBack(denyAllRule, *allocator);
+
         resources.AddMember("cpu", cpu, *allocator);
+        resources.AddMember("devices", devices, *allocator);
         linux.AddMember("resources", resources, *allocator);
     }
     // namespaces

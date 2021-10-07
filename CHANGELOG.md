@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Added script to check for host requirements in CI, linked in documentation.
 - Added the `-e/--env` option to `sarus run` for setting the environment variables inside the container. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#environment)
+- MPI hook whitelists access to devices bind mounted inside containers
+- cgroup filesystems are mounted inside containers
 - Added CI unit and integration tests from source on OpenSUSE Leap 15.3
 
 ### Changed
@@ -20,6 +22,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Removed
 
 - The use of the `bind-propagation` property for bind mounts (deprecated in Sarus 1.1.) has now been removed. All bind mounts will be done with recursive private (`rprivate`) propagation.
+
+### Security
+
+- Access to device files within containers is not allowed by default
+
 
 ## [1.3.3]
 
@@ -41,6 +48,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Fixed bug preventing extraction of image layers with hardlinks pointing to absolute paths
 - Small fix to RapidJSON installation documentation
+
 
 ## [1.3.2]
 

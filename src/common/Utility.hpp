@@ -53,6 +53,7 @@ int forkExecWait(const common::CLIArguments& args,
 void SetStdinEcho(bool);
 std::string getHostname();
 size_t getFileSize(const boost::filesystem::path& filename);
+dev_t getDeviceID(const boost::filesystem::path& path);
 std::tuple<uid_t, gid_t> getOwner(const boost::filesystem::path&);
 void setOwner(const boost::filesystem::path&, uid_t, gid_t);
 bool isCentralizedRepositoryEnabled(const common::Config& config);
@@ -66,6 +67,9 @@ void copyFile(const boost::filesystem::path& src, const boost::filesystem::path&
 void copyFolder(const boost::filesystem::path& src, const boost::filesystem::path& dst, uid_t uid=-1, gid_t gid=-1);
 void changeDirectory(const boost::filesystem::path& path);
 int countFilesInDirectory(const boost::filesystem::path& path);
+bool isDeviceFile(const boost::filesystem::path& path);
+bool isBlockDevice(const boost::filesystem::path& path);
+bool isCharacterDevice(const boost::filesystem::path& path);
 boost::filesystem::path realpathWithinRootfs(const boost::filesystem::path& rootfs, const boost::filesystem::path& path);
 std::unordered_map<std::string, std::string> parseMap(const std::string& input,
                                                       const std::string& pairSeparators = ",",
@@ -85,8 +89,10 @@ std::tuple<unsigned int, unsigned int> parseLibcVersion(const boost::filesystem:
 bool is64bitSharedLib(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath);
 std::vector<int> getCpuAffinity();
 void setCpuAffinity(const std::vector<int>&);
-
 std::string readFile(const boost::filesystem::path& path);
+void writeTextFile(const std::string& text,
+                   const boost::filesystem::path& filename,
+                   const std::ios_base::openmode mode = std::ios_base::out);
 rapidjson::SchemaDocument readJSONSchema(const boost::filesystem::path& schemaFile);
 rapidjson::Document readJSON(const boost::filesystem::path& filename);
 rapidjson::Document readAndValidateJSON(const boost::filesystem::path& jsonFile,

@@ -73,13 +73,31 @@
 				"nodev",
 				"ro"
 			]
+		},
+		{
+			"destination": "/sys/fs/cgroup",
+			"type": "cgroup",
+			"source": "cgroup",
+			"options": [
+				"nosuid",
+				"noexec",
+				"nodev",
+				"relatime",
+				"ro"
+			]
 		}
 	],
 	"linux": {
 		"resources": {
 			"cpu": {
 				"cpus": "0,1,2,3"
-			}
+			},
+			"devices": [
+				{
+					"allow": false,
+					"access": "rwm"
+				}
+			]
 		},
 		"namespaces": [
 			{
