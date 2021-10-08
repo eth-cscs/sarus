@@ -338,8 +338,25 @@ dev_t getDeviceID(const boost::filesystem::path& path) {
             % path % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
-    logMessage(boost::format("Got Device ID for %s: %d") % path % sb.st_rdev, LogLevel::DEBUG);
+    logMessage(boost::format("Got device ID for %s: %d") % path % sb.st_rdev, LogLevel::DEBUG);
     return sb.st_rdev;
+}
+
+char getDeviceType(const boost::filesystem::path& path) {
+    char deviceType;
+    if (sarus::common::isCharacterDevice(path)) {
+        deviceType = 'c';
+    }
+    else if (sarus::common::isBlockDevice(path)) {
+        deviceType = 'b';
+    }
+    else {
+        auto message = boost::format("Failed to recognize device type of file %s."
+                                     " File is not a device or has unknown device type.") % path;
+        SARUS_THROW_ERROR(message.str());
+    }
+    logMessage(boost::format("Got device type for %s: '%c'") % path % deviceType, LogLevel::DEBUG);
+    return deviceType;
 }
 
 std::tuple<uid_t, gid_t> getOwner(const boost::filesystem::path& path) {

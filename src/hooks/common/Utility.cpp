@@ -252,15 +252,12 @@ void whitelistDeviceInCgroup(const boost::filesystem::path& cgroupPath, const bo
             sarus::common::LogLevel::DEBUG);
 
     char deviceType;
-    if (sarus::common::isCharacterDevice(deviceFile)) {
-        deviceType = 'c';
+    try {
+        deviceType = sarus::common::getDeviceType(deviceFile);
     }
-    else if (sarus::common::isBlockDevice(deviceFile)) {
-        deviceType = 'b';
-    }
-    else {
-        auto message = boost::format("Failed to whitelist %s: not a device file") % deviceFile;
-        SARUS_THROW_ERROR(message.str());
+    catch(const sarus::common::Error& e) {
+        auto message = boost::format("Failed to whitelist %s: not a valid device file") % deviceFile;
+        SARUS_RETHROW_ERROR(e, message.str());
     }
 
     auto deviceID = sarus::common::getDeviceID(deviceFile);

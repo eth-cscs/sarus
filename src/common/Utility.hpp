@@ -54,6 +54,7 @@ void SetStdinEcho(bool);
 std::string getHostname();
 size_t getFileSize(const boost::filesystem::path& filename);
 dev_t getDeviceID(const boost::filesystem::path& path);
+char getDeviceType(const boost::filesystem::path& path);
 std::tuple<uid_t, gid_t> getOwner(const boost::filesystem::path&);
 void setOwner(const boost::filesystem::path&, uid_t, gid_t);
 bool isCentralizedRepositoryEnabled(const common::Config& config);
