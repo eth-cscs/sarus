@@ -215,7 +215,7 @@ class TestMPIHookDevices(unittest.TestCase):
         with open(TestMPIHook._OCIHOOK_CONFIG_FILE) as json_file:
             hook = json.load(json_file)
 
-        hook["hook"]["env"].append("BIND_MOUNTS=/dev/test0")
+        hook["hook"]["env"].append("BIND_MOUNTS=/dev/test0:/var/opt:/var/lib")
 
         with open("hook_config.json.tmp", 'w') as f:
             f.write(json.dumps(hook))

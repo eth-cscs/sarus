@@ -558,7 +558,7 @@ bool isDeviceFile(const boost::filesystem::path& path) {
             % path % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
-    return (sb.st_mode & S_IFMT) & (S_IFBLK | S_IFCHR);
+    return S_ISBLK(sb.st_mode) || S_ISCHR(sb.st_mode);
 }
 
 bool isBlockDevice(const boost::filesystem::path& path) {
