@@ -25,12 +25,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Updated recommended Cpprestsdk version to 2.10.18
 - Updated recommended libarchive version to 3.5.2
 - Updated recommended RapidJSON version to commit 00dbcf2
+- Updated recommended runc version to 1.0.2
 - Updated Dropbear software used by the SSH hook to version 2020.81
 - Miscellaneous updates to Dockerfiles used for CI stages; in particular, the Sarus static standalone package is now built on Alpine Linux 3.14 with a GCC 10.3.1 toolchain
 
 ### Removed
 
-- The use of the `bind-propagation` property for bind mounts (deprecated in Sarus 1.1.) has now been removed. All bind mounts will be done with recursive private (`rprivate`) propagation.
+- The use of the `bind-propagation` property for bind mounts (deprecated in Sarus 1.1.0) has now been removed. All bind mounts will be done with recursive private (`rprivate`) propagation.
 
 ### Security
 
