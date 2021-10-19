@@ -25,8 +25,10 @@
 #include "cli/Utility.hpp"
 #include "cli/Command.hpp"
 #include "cli/MountParser.hpp"
+#include "cli/DeviceParser.hpp"
 #include "cli/HelpMessage.hpp"
 #include "runtime/Runtime.hpp"
+#include "runtime/DeviceMount.hpp"
 
 
 namespace sarus {
@@ -98,6 +100,9 @@ private:
     void initializeOptionsDescription() {
         optionsDescription.add_options()
             ("centralized-repository", "Use centralized repository instead of the local one")
+            ("device",
+                boost::program_options::value<std::vector<std::string>>(&deviceMounts),
+                "Mount custom devices into the container")
             ("entrypoint",
                 boost::program_options::value<std::string>(&entrypoint),
                 "Overwrite the default ENTRYPOINT of the image")
@@ -108,7 +113,7 @@ private:
             ("init", "Run an init process inside the container that forwards signals and reaps processes")
             ("mount",
                 boost::program_options::value<std::vector<std::string>>(&conf->commandRun.userMounts),
-                "Mount custom directories into the container")
+                "Mount custom files and directories into the container")
             ("mpi,m", "Enable MPI support. Implies '--glibc'")
             ("ssh", "Enable SSH in the container")
             ("tty,t", "Allocate a pseudo-TTY in the container")
@@ -186,6 +191,8 @@ private:
         makeUserEnvironment();
         makeSiteMountObjects();
         makeUserMountObjects();
+        makeSiteDeviceMountObjects();
+        makeUserDeviceMountObjects();
 
         cli::utility::printLog("successfully parsed CLI arguments", common::LogLevel::DEBUG);
     }
@@ -282,6 +289,81 @@ private:
         return maps;
     }
 
+    void makeSiteDeviceMountObjects() {
+        auto parser = cli::DeviceParser{conf};
+        for (const auto& requestString : convertJSONSiteDevicesToStrings()) {
+            try {
+                conf->commandRun.deviceMounts.push_back(parser.parseDeviceRequest(requestString));
+            }
+            catch (const common::Error& e) {
+                auto message = boost::format("Error while processing the 'siteDevices' parameter in the configuration file. "
+                    "Please contact your system administrator");
+                cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+                SARUS_RETHROW_ERROR(e, message.str(), common::LogLevel::INFO);
+            }
+        }
+    }
+
+    void makeUserDeviceMountObjects() {
+        auto parser = cli::DeviceParser{conf};
+        auto siteDevices = conf->commandRun.deviceMounts;
+        for (const auto& requestString : deviceMounts) {
+            auto deviceMount = std::move(parser.parseDeviceRequest(requestString));
+            auto previousSiteDevice = findMatchingSiteDevice(deviceMount, siteDevices);
+            if (previousSiteDevice) {
+                auto message = boost::format("Device %s already added by the system administrator at container path %s with access %s. "
+                                             "Skipping request from the command line")
+                    % deviceMount->source % previousSiteDevice->destination % previousSiteDevice->getAccess().string();
+                utility::printLog(message, common::LogLevel::WARN, std::cerr);
+                continue;
+            }
+            conf->commandRun.deviceMounts.push_back(std::move(deviceMount));
+        }
+    }
+
+    std::vector<std::string> convertJSONSiteDevicesToStrings() {
+        auto vector = std::vector<std::string>{};
+
+        try {
+            if(!conf->json.HasMember("siteDevices")) {
+                return vector;
+            }
+
+            for(const auto& device : conf->json["siteDevices"].GetArray()) {
+                auto source = std::string{};
+                auto destination = std::string{};
+                auto access = std::string{};
+                for(const auto& field : device.GetObject()) {
+                    if(field.name.GetString() == std::string{"source"}) {
+                        source = field.value.GetString();
+                    }
+                    else if (field.name.GetString() == std::string{"destination"}) {
+                        destination = std::string{":"} + field.value.GetString();
+                    }
+                    else if (field.name.GetString() == std::string{"access"}) {
+                        access = std::string{":"} + field.value.GetString();
+                    }
+                }
+                vector.emplace_back(source + destination + access);
+            }
+        }
+        catch(const std::exception& e) {
+            SARUS_RETHROW_ERROR(e, "Failed to convert JSON device entry to string");
+        }
+
+        return vector;
+    }
+
+    std::shared_ptr<runtime::DeviceMount> findMatchingSiteDevice(const std::unique_ptr<runtime::DeviceMount>& deviceMount,
+                                                                 const std::vector<std::shared_ptr<runtime::DeviceMount>> siteDevices) const {
+        for (const auto& siteDevice : siteDevices) {
+            if (deviceMount->source == siteDevice->source) {
+                return siteDevice;
+            }
+        }
+        return std::shared_ptr<runtime::DeviceMount>{};
+    }
+
     bool checkUserHasSshKeys() const {
         cli::utility::printLog( "Checking that the user has SSH keys",
                                 common::LogLevel::INFO);
@@ -345,6 +427,7 @@ private:
     boost::program_options::options_description optionsDescription{"Options"};
     std::vector<std::string> env;
     std::shared_ptr<common::Config> conf;
+    std::vector<std::string> deviceMounts;
     std::string entrypoint;
     std::string workdir;
 };

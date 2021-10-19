@@ -22,7 +22,7 @@ DeviceAccess::DeviceAccess(const std::string& input) {
 
 void DeviceAccess::parseInput(const std::string& input) {
     if (input.empty()) {
-        SARUS_THROW_ERROR("Input string for device access is empty.");
+        SARUS_THROW_ERROR("Input string for device access is empty");
     }
 
     if (input.size() > 3) {

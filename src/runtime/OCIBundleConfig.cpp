@@ -253,6 +253,10 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
     auto linux = rj::Value{rj::kObjectType};
     // resources
     {
+        auto resources = rj::Value{rj::kObjectType};
+
+        // cpu
+        //
         // Slurm performs the CPU pinning of the host process through sched_setaffinity(2),
         // instead of modifying the cpuset cgroup. See Slurm's code and explanation here:
         // https://github.com/SchedMD/slurm/blob/44e651a5d1f688ec012d0bc5c0c9dd4a0df8ee94/src/plugins/task/cgroup/task_cgroup_cpuset.c#L1227
@@ -267,18 +271,28 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
         // To fix the issue and make sure that we preserve the Slurm's CPU pinning inside the
         // container, we explicitely specify the cpuset cgroup in the OCI bundle's config file
         // with the values obtained from sched_getaffinity(2).
-        auto resources = rj::Value{rj::kObjectType};
         auto cpu = rj::Value{rj::kObjectType};
         auto intToString = boost::adaptors::transformed([](int i) { return std::to_string(i); });
         auto cpus = boost::join(config->commandRun.cpuAffinity |intToString, ",");
         auto cpuAffinity = rj::Value{cpus.c_str(), *allocator};
         cpu.AddMember("cpus", cpuAffinity, *allocator);
 
+        // devices
         auto devices = rj::Value{rj::kArrayType};
         auto denyAllRule = rj::Value{rj::kObjectType};
         denyAllRule.AddMember("allow", rj::Value{false}, *allocator);
         denyAllRule.AddMember("access", rj::Value{"rwm"}, *allocator);
         devices.PushBack(denyAllRule, *allocator);
+        for (const auto& device : config->commandRun.deviceMounts) {
+            auto deviceRule = rj::Value{rj::kObjectType};
+            const auto type = std::string{device->getType()};
+            deviceRule.AddMember("allow",  rj::Value{true}, *allocator);
+            deviceRule.AddMember("type",   rj::Value{type.c_str(), *allocator}, *allocator);
+            deviceRule.AddMember("major",  rj::Value{device->getMajorID()}, *allocator);
+            deviceRule.AddMember("minor",  rj::Value{device->getMinorID()}, *allocator);
+            deviceRule.AddMember("access", rj::Value{device->getAccess().string().c_str(), *allocator}, *allocator);
+            devices.PushBack(deviceRule, *allocator);
+        }
 
         resources.AddMember("cpu", cpu, *allocator);
         resources.AddMember("devices", devices, *allocator);

@@ -10,12 +10,8 @@
 
 #include <string>
 
-
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <sys/mount.h>
+#include <sys/sysmacros.h>
 
 #include "test_utility/config.hpp"
 #include "test_utility/filesystem.hpp"
@@ -23,6 +19,7 @@
 #include "common/DeviceAccess.hpp"
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
+#include "test_utility/filesystem.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
 namespace sarus {
@@ -32,13 +29,14 @@ namespace test{
 TEST_GROUP(DeviceMountTestGroup) {
 };
 
-#ifdef NOTROOT
-IGNORE_TEST(DeviceMountTestGroup, constructor) {
-#else
+#ifdef ASROOT
 TEST(DeviceMountTestGroup, constructor) {
+#else
+IGNORE_TEST(DeviceMountTestGroup, constructor) {
 #endif
     auto testDir = sarus::common::PathRAII(
         sarus::common::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "deviceMount-test-constructor"));
+    common::createFoldersIfNecessary(testDir.getPath());
 
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
@@ -48,14 +46,10 @@ TEST(DeviceMountTestGroup, constructor) {
 
     // regular usage
     {
-        // Create source file as a character device file with 666 file mode
         auto testDeviceFile = testDir.getPath() / "testDevice";
-        auto fileMode = S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-        auto deviceID = makedev(511, 511);
-        if (mknod(testDeviceFile.c_str(), fileMode, deviceID) != 0) {
-            auto message = boost::format("Failed to mknod test device file: %s") % strerror(errno);
-            FAIL(message.str().c_str());
-        }
+        auto majorID = 511u;
+        auto minorID = 511u;
+        test_utility::filesystem::createCharacterDeviceFile(testDeviceFile, majorID, minorID);
 
         DeviceMount(testDeviceFile, testDeviceFile, mount_flags, devAccess, config);
     }
@@ -68,13 +62,14 @@ TEST(DeviceMountTestGroup, constructor) {
     }
 }
 
-#ifdef NOTROOT
-IGNORE_TEST(DeviceMountTestGroup, getters) {
-#else
+#ifdef ASROOT
 TEST(DeviceMountTestGroup, getters) {
+#else
+IGNORE_TEST(DeviceMountTestGroup, getters) {
 #endif
     auto testDir = sarus::common::PathRAII(
         sarus::common::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "deviceMount-test-getters"));
+    common::createFoldersIfNecessary(testDir.getPath());
 
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
@@ -84,48 +79,42 @@ TEST(DeviceMountTestGroup, getters) {
     {
         // Create source file as a character device file with 666 file mode
         auto testDeviceFile = testDir.getPath() / "testDevice0";
-        auto fileMode = S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-        auto deviceID = makedev(511, 511);
-        if (mknod(testDeviceFile.c_str(), fileMode, deviceID) != 0) {
-            auto message = boost::format("Failed to mknod test device file: %s") % strerror(errno);
-            FAIL(message.str().c_str());
-        }
+        auto majorID = 511u;
+        auto minorID = 511u;
+        test_utility::filesystem::createCharacterDeviceFile(testDeviceFile, majorID, minorID);
 
         auto devAccess = common::DeviceAccess("rwm");
 
         auto devMount = DeviceMount(testDeviceFile, testDeviceFile, mount_flags, devAccess, config);
         CHECK(devMount.getType() == 'c');
-        CHECK(devMount.getMajorID() == 511);
-        CHECK(devMount.getMinorID() == 511);
+        CHECK(devMount.getMajorID() == majorID);
+        CHECK(devMount.getMinorID() == minorID);
         CHECK(devMount.getAccess().string() == std::string{"rwm"});
     }
     {
-        // Create source file as a block device file with 666 file mode
-        auto testDeviceFile = testDir.getPath() / "testDevice0";
-        auto fileMode = S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-        auto deviceID = makedev(477, 488);
-        if (mknod(testDeviceFile.c_str(), fileMode, deviceID) != 0) {
-            auto message = boost::format("Failed to mknod test device file: %s") % strerror(errno);
-            FAIL(message.str().c_str());
-        }
+        auto testDeviceFile = testDir.getPath() / "testDevice1";
+        auto majorID = 477u;
+        auto minorID = 488u;
+        test_utility::filesystem::createBlockDeviceFile(testDeviceFile, majorID, minorID);
 
         auto devAccess = common::DeviceAccess("rw");
 
         auto devMount = DeviceMount(testDeviceFile, testDeviceFile, mount_flags, devAccess, config);
         CHECK(devMount.getType() == 'b');
-        CHECK(devMount.getMajorID() == 477);
-        CHECK(devMount.getMinorID() == 488);
+        CHECK_EQUAL(devMount.getMajorID(),  majorID);
+        CHECK(devMount.getMinorID() == minorID);
         CHECK(devMount.getAccess().string() == std::string{"rw"});
     }
 }
 
-#ifdef NOTROOT
-IGNORE_TEST(DeviceMountTestGroup, performMount) {
-#else
+#ifdef ASROOT
 TEST(DeviceMountTestGroup, performMount) {
+#else
+IGNORE_TEST(DeviceMountTestGroup, performMount) {
 #endif
     auto testDir = sarus::common::PathRAII(
         sarus::common::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "deviceMount-test-performMount"));
+    common::createFoldersIfNecessary(testDir.getPath());
 
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
@@ -134,19 +123,13 @@ TEST(DeviceMountTestGroup, performMount) {
     const auto& bundleDir = bundleDirRAII.getPath();
     auto rootfsDir = bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()};
     common::createFoldersIfNecessary(rootfsDir);
-    auto overlayfsLowerDir = bundleDir / "overlay/rootfs-lower"; // hardcoded so in production code being tested
-    common::createFoldersIfNecessary(overlayfsLowerDir);
 
     auto sourceFile = testDir.getPath() / "testDevice0";
     auto destinationFile = boost::filesystem::path{"/dev/testDevice0"};
 
-    // Create source file as a character device file with 666 file mode
-    auto fileMode = S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-    auto deviceID = makedev(511, 511);
-    if (mknod(sourceFile.c_str(), fileMode, deviceID) != 0) {
-        auto message = boost::format("Failed to mknod test device file: %s") % strerror(errno);
-        FAIL(message.str().c_str());
-    }
+    auto majorID = 511u;
+    auto minorID = 511u;
+    test_utility::filesystem::createCharacterDeviceFile(sourceFile, majorID, minorID);
 
     size_t mount_flags = 0;
     auto devAccess = common::DeviceAccess("rwm");
@@ -154,7 +137,7 @@ TEST(DeviceMountTestGroup, performMount) {
     // perform the mount
     runtime::DeviceMount{sourceFile, destinationFile, mount_flags, devAccess, config}.performMount();
     CHECK(test_utility::filesystem::isSameBindMountedFile(sourceFile, rootfsDir / destinationFile));
-    CHECK(common::getDeviceID(rootfsDir / destinationFile) == deviceID);
+    CHECK(common::getDeviceID(rootfsDir / destinationFile) == makedev(majorID, minorID));
     CHECK(common::getDeviceType(rootfsDir / destinationFile) == 'c');
 
     // cleanup

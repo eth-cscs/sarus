@@ -52,6 +52,9 @@
         "siteMounts": {
             "$ref": "#/definitions/ArrayOfMounts"
         },
+        "siteDevices": {
+            "$ref": "#/definitions/ArrayOfDevices"
+        },
         "environment": {
             "type": "object",
             "properties": {
@@ -144,10 +147,34 @@
                 "destination"
             ]
         },
+        "Device": {
+            "type": "object",
+            "properties": {
+                "source": {
+                    "$ref": "definitions.schema.json#/AbsolutePath"
+                },
+                "destination": {
+                    "$ref": "definitions.schema.json#/AbsolutePath"
+                },
+                "access": {
+                    "type": "string",
+                    "pattern": "^[rwm]{,3}$"
+                }
+            },
+            "required": [
+                "source"
+            ]
+        },
         "ArrayOfMounts": {
             "type": "array",
             "items": {
                 "$ref": "#/definitions/Mount"
+            }
+        },
+        "ArrayOfDevices": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/Device"
             }
         }
     }

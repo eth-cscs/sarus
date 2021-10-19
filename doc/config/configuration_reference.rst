@@ -203,6 +203,29 @@ paths within containers.
 It is OK to perform this under ``/var`` or ``/opt`` or a novel path that your
 site maintains (e.g. ``/scratch``).
 
+siteDevices (array, OPTIONAL)
+-----------------------------
+List of JSON object defining device files which will be automatically mounted
+from the host filesystem into the container bundle. The devices will also be
+whitelisted in the container's device cgroup (Sarus disables access to
+custom device files by default).
+
+Each object in the list supports the following fields:
+
+* ``source`` (string, REQUIRED): Absolute path to the device file on the host.
+* ``destination`` (string, OPTIONAL): Absolute path to the desired path for the
+  device in the container. In the absence of this field, the device will be bind
+  mounted at the same path within the container.
+* ``access`` (string, OPTIONAL): Flags defining the the type of access the device will
+  be whitelisted for. Must be a combination of the characters ``rwm``, standing
+  for *read*, *write* and *mknod* access respectively; the characters may come
+  in any order, but must not be repeated. Permissions default to ``rwm`` if this
+  field is not present.
+
+  As highlighted in the related :ref:`section of the User Guide <user-device-mounts>`,
+  Sarus cannot grant more access permissions than those allowed in the host
+  device cgroup.
+
 .. _config-reference-environment:
 
 environment (object, OPTIONAL)
@@ -275,6 +298,12 @@ Example configuration file
                 "source": "/home",
                 "destination": "/home",
                 "flags": {}
+            }
+        ],
+        "siteDevices": [
+            {
+                "source": "/dev/fuse",
+                "access": "rw"
             }
         ],
         "environment": {

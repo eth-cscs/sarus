@@ -162,14 +162,6 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
     def test_command_run(self):
-        command = ["sarus", "run", "--invalid-option", "quay.io/ethcscs/alpine", "true"]
-        expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help run'"
-        self._check(command, expected_message)
-
-        command = ["sarus", "run", "--workdir=/usr", "--workdir", "/tmp", "quay.io/ethcscs/alpine", "true"]
-        expected_message = "option '--workdir' cannot be specified more than once\nSee 'sarus help run'"
-        self._check(command, expected_message)
-
         command = ["sarus", "run"]
         expected_message = "Too few arguments for command 'run'\nSee 'sarus help run'"
         self._check(command, expected_message)
@@ -180,6 +172,14 @@ class TestErrorMessages(unittest.TestCase):
 
         command = ["sarus", "run", "not-available-image", "true"]
         expected_message = "Specified image index.docker.io/library/not-available-image:latest is not available"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--invalid-option", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help run'"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--workdir=/usr", "--workdir", "/tmp", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "option '--workdir' cannot be specified more than once\nSee 'sarus help run'"
         self._check(command, expected_message)
 
         command = ["sarus", "run", "--workdir=invalid", "quay.io/ethcscs/alpine", "true"]
@@ -195,9 +195,8 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Failed to bind mount /invalid-s87dfs9 on container\'s /dst: mount source doesn\'t exist"
         self._check(command, expected_message)
 
-        command = ["sarus", "run", "--mount=src=/src,dst=/dst,type=bind,bind-propagation=slave", "alpine", "true"]
+        command = ["sarus", "run", "--mount=src=/src,dst=/dst,type=bind,bind-propagation=slave", "quay.io/ethcscs/alpine", "true"]
         expected_message = "'bind-propagation' is not a valid bind mount option"
-        self._check(command, expected_message)
 
         sarus_ssh_dir = os.getenv("HOME") + "/.oci-hooks/ssh"
         shutil.rmtree(sarus_ssh_dir, ignore_errors=True) # remove ssh keys
@@ -214,6 +213,67 @@ class TestErrorMessages(unittest.TestCase):
 
         command = ["sarus", "run", "quay.io/ethcscs/alpine", "ls", "invalid-directory-2lk32ldk2"]
         expected_message = "ls: invalid-directory-2lk32ldk2: No such file or directory"
+        self._check(command, expected_message)
+
+    def test_command_run_device_option(self):
+        command = ["sarus", "run", "--device", "", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "Invalid device request: no values provided"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--device=:rw", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "Invalid device request ':rw': detected empty host device path"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--device=/dev/fuse::rw", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "Invalid device request '/dev/fuse::rw': detected empty container device path"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--device=dev/fuse", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "Invalid device request 'dev/fuse': host device path 'dev/fuse' must be absolute"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--device=/dev/fuse:dev/cont_fuse:rw", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "Invalid device request '/dev/fuse:dev/cont_fuse:rw': container device path 'dev/cont_fuse' must be absolute"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--device=/dev/non-existing-device", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "Invalid device request '/dev/non-existing-device': " \
+                           "Failed to check if file \"/dev/non-existing-device\" is a device file. " \
+                           "Stat failed: No such file or directory"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--device=/home", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "Invalid device request '/home': Source path \"/home\" is not a device file"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--device=/dev/fuse:/dev/kvm:/dev/nvme0:rw", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "Invalid device request '/dev/fuse:/dev/kvm:/dev/nvme0:rw': too many tokens provided. " \
+                           "The format of the option value must be at most '<host device>:<container device>:<access>'"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--device=/dev/fuse:", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "Invalid device request '/dev/fuse:': Input string for device access is empty. " \
+                           "Device access must be entered as a combination of 'rwm' characters, with no repetitions"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--device=/dev/fuse:/dev/cont_fuse:", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "Invalid device request '/dev/fuse:/dev/cont_fuse:': Input string for device access is empty. " \
+                           "Device access must be entered as a combination of 'rwm' characters, with no repetitions"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--device=/dev/fuse:rwmm", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "Invalid device request '/dev/fuse:rwmm': Input string for device access 'rwmm' is longer than 3 characters. " \
+                           "Device access must be entered as a combination of 'rwm' characters, with no repetitions"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--device=/dev/fuse:rrw", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "Invalid device request '/dev/fuse:rrw': Input string for device access 'rrw' has repeated characters. " \
+                           "Device access must be entered as a combination of 'rwm' characters, with no repetitions"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--device=/dev/fuse:ra", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "Invalid device request '/dev/fuse:ra': Input string for device access 'ra' contains an invalid character. " \
+                           "Device access must be entered as a combination of 'rwm' characters, with no repetitions"
         self._check(command, expected_message)
 
     def test_command_sshkeygen(self):

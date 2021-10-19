@@ -26,6 +26,7 @@
 #include "common/UserIdentity.hpp"
 #include "common/Logger.hpp"
 #include "runtime/Mount.hpp"
+#include "runtime/DeviceMount.hpp"
 
 
 namespace sarus {
@@ -67,6 +68,7 @@ class Config {
             std::vector<int> cpuAffinity;
             std::vector<std::string> userMounts;
             std::vector<std::shared_ptr<runtime::Mount>> mounts;
+            std::vector<std::shared_ptr<runtime::DeviceMount>> deviceMounts;
             boost::optional<boost::filesystem::path> workdir;
             boost::optional<CLIArguments> entrypoint;
             CLIArguments execArgs;

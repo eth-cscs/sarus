@@ -10,7 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Added script to check for host requirements in CI, linked in documentation.
 - Added the `-e/--env` option to `sarus run` for setting the environment variables inside the container. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#environment)
-- MPI hook whitelists access to devices bind mounted inside containers
+- Added the `--device` option to `sarus run` for mounting and whitelisting devices inside containers
+- Added support for the optional `siteDevices` parameter in the `sarus.json` configuration file.
+  This parameter can be used by administrators for defining devices to be automatically mounted and whitelisted inside containers.
+- The MPI hook whitelists access to devices bind mounted inside containers
 - cgroup filesystems are mounted inside containers
 - Added CI unit and integration tests from source on OpenSUSE Leap 15.3
 
@@ -31,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-- Access to device files within containers is not allowed by default
+- Access to custom devices within containers is not allowed by default
 
 
 ## [1.3.3]

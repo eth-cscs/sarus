@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef sarus_cli_CustomMounts_hpp
-#define sarus_cli_CustomMounts_hpp
+#ifndef sarus_cli_MountParser_hpp
+#define sarus_cli_MountParser_hpp
 
 #include <memory>
 #include <string>

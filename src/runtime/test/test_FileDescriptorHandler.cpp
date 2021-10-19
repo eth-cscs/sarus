@@ -42,10 +42,10 @@ void closeFiles(std::vector<int>& fds) {
     }
 }
 
-#ifdef NOTROOT
-IGNORE_TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariablesAndBundleAnnotations) {
-#else
+#ifdef ASROOT
 TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariablesAndBundleAnnotations) {
+#else
+IGNORE_TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariablesAndBundleAnnotations) {
 #endif
     // configure
     auto configRAII = test_utility::config::makeConfig();

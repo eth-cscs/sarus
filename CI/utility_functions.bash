@@ -203,7 +203,7 @@ run_integration_tests() {
     sudo --login bash -c "
         PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=/sarus-source/CI/src:\$PYTHONPATH \
         CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker \
-        pytest -v -s -m asroot /sarus-source/CI/src/integration_tests/"
+        pytest -v -m asroot /sarus-source/CI/src/integration_tests/"
     fail_on_error "Python integration tests as root failed"
     echo "Successfully run integration tests with user=root"
 }

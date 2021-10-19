@@ -33,7 +33,7 @@ DeviceMount::DeviceMount(const boost::filesystem::path& source,
             % source.string() % destination.string() % mountFlags % access.string(), common::LogLevel::DEBUG);
 
     if (!common::isDeviceFile(source)) {
-        auto message = boost::format("Source path '%s' is not a device file")
+        auto message = boost::format("Source path %s is not a device file")
             % source;
         SARUS_THROW_ERROR(message.str());
     }
