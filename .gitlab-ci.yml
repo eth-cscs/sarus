@@ -71,6 +71,7 @@ standalone_release:
   only:
     - master
     - develop
+    - web
 
 coverage:
   extends: .from_source
@@ -81,9 +82,9 @@ coverage:
 centos7:
   extends: .from_source
   script:
-      - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH centos:7 centos:7
-      - sarus-build-images
-      - sarus-build-from-scratch-and-test
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH centos:7 centos:7
+    - sarus-build-images
+    - sarus-build-from-scratch-and-test
 
 ubuntu18.04:
   extends: .from_source

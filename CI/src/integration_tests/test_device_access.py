@@ -84,20 +84,20 @@ class TestDeviceDefaultAccess(TestDeviceBaseClass):
     These tests verify that within Sarus containers read/write access to device
     files is not permitted by default (denied by cgroup settings).
     """
-    DEVICES = [Device("/dev/test0",511)]
+    DEVICES = [Device("/dev/sarus-test0",511)]
 
     def test_mounted_device_read_access(self):
         device_path = self.__class__.DEVICES[0].path
         sarus_options = ["--mount=type=bind,source=" + device_path
                          + ",destination=" + device_path]
-        container_args = ["bash", "-c", "exec 3< /dev/test0"]
+        container_args = ["bash", "-c", "exec 3< /dev/sarus-test0"]
         self._assert_sarus_raises_error_containing_text(sarus_options, container_args, "Operation not permitted")
 
     def test_mounted_device_write_access(self):
         device_path = self.__class__.DEVICES[0].path
         sarus_options = ["--mount=type=bind,source=" + device_path
                          + ",destination=" + device_path]
-        container_args = ["bash", "-c", "exec 3> /dev/test0"]
+        container_args = ["bash", "-c", "exec 3> /dev/sarus-test0"]
         self._assert_sarus_raises_error_containing_text(sarus_options, container_args, "Operation not permitted")
 
 
@@ -112,7 +112,7 @@ class TestDeviceOption(TestDeviceBaseClass):
     For additional reference to the interface of the devices cgroup and how to
     allow/deny devices see https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/devices.html
     """
-    DEVICES = [Device("/dev/test0",505)]
+    DEVICES = [Device("/dev/sarus-test0",505)]
 
     def test_device_mount(self):
         # only source path
@@ -153,7 +153,7 @@ class TestDeviceOption(TestDeviceBaseClass):
     def test_no_additional_permissions(self):
         # Restrict device access in host cgroup to read-only
         device_id = self.__class__.DEVICES[0].id
-        subprocess.check_output(["sudo", "bash", "-c", f"echo 'c {device_id}:{device_id} w' > /sys/fs/cgroup/devices/devices.deny"])
+        subprocess.check_output(["bash", "-c", f"echo 'c {device_id}:{device_id} w' > /sys/fs/cgroup/devices/devices.deny"])
 
         # Check device mount with default 'rwm' access fails
         device_path = self.__class__.DEVICES[0].path
@@ -171,7 +171,7 @@ class TestDeviceOption(TestDeviceBaseClass):
         assert out[0] == device_path
 
         # Restore full device access in host cgroup
-        subprocess.check_output(["sudo", "bash", "-c", f"echo 'c {device_id}:{device_id} w' > /sys/fs/cgroup/devices/devices.allow"])
+        subprocess.check_output(["bash", "-c", f"echo 'c {device_id}:{device_id} w' > /sys/fs/cgroup/devices/devices.allow"])
 
         # Check device mount with default access works again
         sarus_options = ["--device=" + device_path]
@@ -192,8 +192,9 @@ class TestSiteDevices(TestDeviceBaseClass):
         - such file is whitelisted in the devices cgroup
         - the --device CLI option can co-operate with the config file setting
     """
-    DEVICES = [Device("/dev/test0",500), Device("/dev/test1",501), Device("/dev/test2",502),
-               Device("/dev/test3", 503), Device("/dev/test4", 504)]
+    DEVICES = [Device("/dev/sarus-test0",500), Device("/dev/sarus-test1",501),
+               Device("/dev/sarus-test2",502), Device("/dev/sarus-test3", 503),
+               Device("/dev/sarus-test4", 504)]
 
     @classmethod
     def setUpClass(cls):
@@ -212,7 +213,7 @@ class TestSiteDevices(TestDeviceBaseClass):
         cls._sarusjson_filename = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/sarus.json"
 
         # Create backup
-        subprocess.check_output(["sudo", "cp", cls._sarusjson_filename, cls._sarusjson_filename+'.bak'])
+        subprocess.check_output(["cp", cls._sarusjson_filename, cls._sarusjson_filename+'.bak'])
 
         # Build site devices
         site_devices = [{"source": cls.DEVICES[0].path},
@@ -228,12 +229,12 @@ class TestSiteDevices(TestDeviceBaseClass):
         data = json.dumps(config)
         with open("sarus.json.dummy", 'w') as f:
             f.write(data)
-        subprocess.check_output(["sudo", "cp", "sarus.json.dummy", cls._sarusjson_filename])
+        subprocess.check_output(["cp", "sarus.json.dummy", cls._sarusjson_filename])
         os.remove("sarus.json.dummy")
 
     @classmethod
     def _restore_sarusjson_file(cls):
-        subprocess.check_output(["sudo", "cp", cls._sarusjson_filename+'.bak', cls._sarusjson_filename])
+        subprocess.check_output(["cp", cls._sarusjson_filename+'.bak', cls._sarusjson_filename])
 
     def test_site_device_mount(self):
         expected_paths = [self.__class__.DEVICES[0].path,
