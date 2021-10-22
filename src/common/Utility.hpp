@@ -91,6 +91,7 @@ bool is64bitSharedLib(const boost::filesystem::path& path, const boost::filesyst
 std::vector<int> getCpuAffinity();
 void setCpuAffinity(const std::vector<int>&);
 std::string readFile(const boost::filesystem::path& path);
+std::vector<std::string> readLines(const boost::filesystem::path& path);
 void writeTextFile(const std::string& text,
                    const boost::filesystem::path& filename,
                    const std::ios_base::openmode mode = std::ios_base::out);

@@ -274,6 +274,40 @@ any restriction.
 These limitations apply only to mounts requested through the command line;
 Mounts entered through ``siteMounts`` are not affected by them.
 
+seccompProfile (string, OPTIONAL)
+---------------------------------
+Absolute path to a file defining a seccomp profile in accordance with the
+`JSON format specified by the OCI Runtime Specification
+<https://github.com/opencontainers/runtime-spec/blob/master/config-linux.md#seccomp>`_.
+This profile will be applied to the container process by the OCI runtime.
+
+`Seccomp <https://www.kernel.org/doc/Documentation/prctl/seccomp_filter.txt>`_
+(short for "SECure COMPuting mode") is a Linux kernel feature allowing
+to filter the system calls which are performed by a given process.
+It is intended to minimize the kernel surface exposed to an application.
+
+For reference, you may refer to the default seccomp profiles used by
+`Docker <https://github.com/moby/moby/blob/master/profiles/seccomp/default.json>`_,
+`Singularity CE <https://github.com/hpcng/singularity/blob/master/etc/seccomp-profiles/default.json>`_
+or `Podman <https://github.com/containers/common/blob/main/pkg/seccomp/seccomp.json>`_.
+
+apparmorProfile (string, OPTIONAL)
+----------------------------------
+Name of the `AppArmor <https://wiki.ubuntu.com/AppArmor>`_ profile which will be
+applied to the container process by the OCI runtime.
+The profile must already be loaded in the kernel and listed under
+``/sys/kernel/security/apparmor/profiles``.
+
+selinuxLabel (string, OPTIONAL)
+-------------------------------
+`SELinux <http://selinuxproject.org/page/Main_Page>`_ label which will be
+applied to the container process by the OCI runtime.
+
+selinuxMountLabel (string, OPTIONAL)
+------------------------------------
+`SELinux <http://selinuxproject.org/page/Main_Page>`_ label which will be
+applied to the mounts performed by the OCI runtime into the container.
+
 
 Example configuration file
 ==========================
@@ -330,5 +364,9 @@ Example configuration file
             "notAllowedPaths": [
                 "/opt"
             ]
-        }
+        },
+        "seccompProfile": "/opt/sarus/1.0.0/etc/seccomp/default.json",
+        "apparmorProfile": "sarus-default",
+        "selinuxLabel": "system_u:system_r:svirt_sarus_t:s0:c124,c675",
+        "selinuxMountLabel": "system_u:object_r:svirt_sarus_file_t:s0:c715,c811"
     }

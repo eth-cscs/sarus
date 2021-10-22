@@ -78,6 +78,21 @@ static void setEnvironmentInJSONConfig(rj::Document& config) {
     config.AddMember("environment", environmentValue, allocator);
 }
 
+static void setSecurityTechInJSONConfig(rj::Document& config) {
+    auto& allocator = config.GetAllocator();
+
+    auto seccompProfilePath = boost::filesystem::path{__FILE__}.parent_path() / "seccomp_test.json";
+    config.AddMember("seccompProfile",
+                     rj::Value{seccompProfilePath.c_str(), allocator},
+                     allocator);
+    config.AddMember("selinuxLabel",
+                     rj::Value{"system_u:system_r:svirt_sarus_t:s0:c124,c675", allocator},
+                     allocator);
+    config.AddMember("selinuxMountLabel",
+                     rj::Value{"system_u:object_r:svirt_sarus_file_t:s0:c715,c811", allocator},
+                     allocator);
+}
+
 static void setupTestConfig(std::shared_ptr<common::Config>& config) {
     config->commandRun.cpuAffinity = {0, 1, 2, 3};
     config->commandRun.execArgs = common::CLIArguments{"/bin/bash"};
@@ -87,6 +102,7 @@ static void setupTestConfig(std::shared_ptr<common::Config>& config) {
     config->userIdentity.supplementaryGids = std::vector<gid_t>{2000, 3000, 4000, 1000}; // GIDs hardcoded in expected json file
     setGidOfTtyInEtcGroup(config, 5); // gid hardcoded in expected json file
     setEnvironmentInJSONConfig(config->json);
+    setSecurityTechInJSONConfig(config->json);
 }
 
 static common::PathRAII createTestBundle(const std::shared_ptr<common::Config>& config) {
@@ -105,7 +121,7 @@ static void checkExistenceAndPermissions(const boost::filesystem::path& file) {
 /* Sort environment arrays in both JSON objects to avoid test failures due to how the elements
 /* are ordered in the Sarus-generated JSON: inside Sarus the container environment is stored
 /* as an unordered map, so the order of the elements when converted to a linear JSON array
-/* is compiler-dependant.
+/* is compiler-dependent.
 /* The sorting does not compromise the test since what is important here is if the individual
 /* elements are all there and they match, not which order they are in.
  */

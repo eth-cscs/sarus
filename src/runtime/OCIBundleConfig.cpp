@@ -12,6 +12,7 @@
 
 #include <fstream>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/writer.h>
@@ -118,6 +119,27 @@ rj::Value OCIBundleConfig::makeMemberProcess() const {
                         *allocator);
     process.AddMember("capabilities", rj::Value{rj::kObjectType}, *allocator);
     process.AddMember("noNewPrivileges", rj::Value{true}, *allocator);
+
+    // apparmorProfile
+    if(config->json.HasMember("apparmorProfile")) {
+        auto profile = std::string{config->json["apparmorProfile"].GetString()};
+        if(!isAppArmorProfileLoaded(profile)) {
+            auto message = boost::format("AppArmor profile '%s' was configured for use but it's not "
+                                         "loaded into the kernel. "
+                                         "Please contact your system administrator.");
+            SARUS_THROW_ERROR(message.str());
+        }
+        process.AddMember("apparmorProfile",
+                          rj::Value{profile.c_str(), *allocator},
+                          *allocator);
+    }
+
+    // selinuxLabel
+    if(config->json.HasMember("selinuxLabel")) {
+        process.AddMember("selinuxLabel",
+                          rj::Value{config->json["selinuxLabel"].GetString(), *allocator},
+                          *allocator);
+    }
 
     return process;
 }
@@ -337,6 +359,41 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
         paths.PushBack("/proc/sysrq-trigger", *allocator);
         linux.AddMember("readonlyPaths", paths, *allocator);
     }
+    // seccomp
+    {
+        if(config->json.HasMember("seccompProfile")) {
+            auto seccompProfilePath = boost::filesystem::path{ config->json["seccompProfile"].GetString() };
+            if(!boost::filesystem::is_regular_file(seccompProfilePath)) {
+                auto message = boost::format("The path configured for the container's seccomp profile does "
+                                             "not correspond to a regular file: %s . "
+                                             "The seccomp profile must be a JSON file defining an OCI-compliant "
+                                             "seccomp object. "
+                                             "Please contact your system administrator.") % seccompProfilePath;
+                SARUS_THROW_ERROR(message.str());
+            }
+
+            auto seccompProfile = rj::Document{};
+            try {
+                seccompProfile.CopyFrom(common::readJSON(seccompProfilePath), *allocator);
+            }
+            catch(common::Error& e) {
+                auto message = boost::format("Error reading seccomp profile: %s\n"
+                                             "The seccomp profile must be a JSON file defining an OCI-compliant "
+                                             "'seccomp' object. "
+                                             "Please contact your system administrator.") % e.what();
+                SARUS_RETHROW_ERROR(e, message.str());
+            }
+            linux.AddMember("seccomp", seccompProfile, *allocator);
+        }
+    }
+    // mountLabel
+    {
+        if(config->json.HasMember("selinuxMountLabel")) {
+            linux.AddMember("mountLabel",
+                            rj::Value{config->json["selinuxMountLabel"].GetString(), *allocator},
+                            *allocator);
+        }
+    }
     return linux;
 }
 
@@ -393,6 +450,25 @@ boost::optional<gid_t> OCIBundleConfig::findGidOfTtyGroup() const {
     }
 
     return {};
+}
+
+bool OCIBundleConfig::isAppArmorProfileLoaded(const std::string& profile) const {
+    auto loadedProfilesPath = boost::filesystem::path("/sys/kernel/security/apparmor/profiles");
+    if(!boost::filesystem::exists(loadedProfilesPath)) {
+      auto message = boost::format("Use of an AppArmor profile was configured but Sarus could not"
+                                   "find the loaded profiles list at %s .\n"
+                                   "Please ensure that AppArmor is enabled and that the Linux "
+                                   "kernel's securityfs filesystem is mounted.") % loadedProfilesPath;
+      SARUS_THROW_ERROR(message.str());
+    }
+
+    boost::filesystem::ifstream loadedProfiles{loadedProfilesPath};
+    for(std::string loaded; std::getline(loadedProfiles, loaded); ) {
+        if(profile == loaded) {
+            return true;
+        }
+    }
+    return false;
 }
 
 }

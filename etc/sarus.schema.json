@@ -92,6 +92,18 @@
                 }
             },
             "required":[ "notAllowedPrefixesOfPath", "notAllowedPaths" ]
+        },
+        "seccompProfile": {
+            "$ref": "definitions.schema.json#/AbsolutePath"
+        },
+        "apparmorProfile": {
+            "type": "string"
+        },
+        "selinuxLabel": {
+            "type": "string"
+        },
+        "selinuxMountLabel": {
+            "type": "string"
         }
     },
     "required": [

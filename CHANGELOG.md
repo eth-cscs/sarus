@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added the `--device` option to `sarus run` for mounting and whitelisting devices inside containers
 - Added support for the optional `siteDevices` parameter in the `sarus.json` configuration file.
   This parameter can be used by administrators for defining devices to be automatically mounted and whitelisted inside containers.
+- Added support for applying seccomp profiles to containers
+- Added support for applying AppArmor profiles to containers
+- Added support for applying SELinux labels to container processes and to mounts performed by the OCI runtime
 - The MPI hook whitelists access to devices bind mounted inside containers
 - cgroup filesystems are mounted inside containers
 - Added CI unit and integration tests from source on OpenSUSE Leap 15.3

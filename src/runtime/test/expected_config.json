@@ -15,7 +15,8 @@
 		],
 		"cwd": "/",
 		"capabilities": {},
-		"noNewPrivileges": true
+		"noNewPrivileges": true,
+        "selinuxLabel": "system_u:system_r:svirt_sarus_t:s0:c124,c675"
 	},
 	"root": {
 		"path": "rootfs",
@@ -124,7 +125,24 @@
 			"/proc/irq",
 			"/proc/sys",
 			"/proc/sysrq-trigger"
-		]
+		],
+        "seccomp": {
+            "defaultAction": "SCMP_ACT_ALLOW",
+            "architectures": [
+                "SCMP_ARCH_X86",
+                "SCMP_ARCH_X32"
+            ],
+            "syscalls": [
+                {
+                    "names": [
+                        "getcwd",
+                        "chmod"
+                    ],
+                    "action": "SCMP_ACT_ERRNO"
+                }
+            ]
+        },
+        "mountLabel": "system_u:object_r:svirt_sarus_file_t:s0:c715,c811"
 	},
 	"hooks": {
 		"prestart" : [
