@@ -77,6 +77,7 @@ class Config {
             bool useMPI = false;
             bool enableGlibcReplacement = false;
             bool enableSSH = false;
+            bool enableAmdGpu = false;
         };
 
         boost::filesystem::path getImageFile() const;

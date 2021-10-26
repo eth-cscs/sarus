@@ -108,6 +108,10 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getBundleAnnotations
         annotations["com.hooks.ssh.enabled"] = "true";
     }
 
+    if(config->commandRun.enableAmdGpu) {
+        annotations["com.hooks.amdgpu.enabled"] = "true";
+    }
+
     using IntType = typename std::underlying_type<common::LogLevel>::type;
     auto level = static_cast<IntType>(common::Logger::getInstance().getLevel());
     annotations["com.hooks.logging.level"] = std::to_string(level);

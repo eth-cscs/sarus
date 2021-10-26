@@ -115,6 +115,7 @@ private:
                 boost::program_options::value<std::vector<std::string>>(&conf->commandRun.userMounts),
                 "Mount custom files and directories into the container")
             ("mpi,m", "Enable MPI support. Implies '--glibc'")
+            ("amdgpu", "Enable AMD GPU support.")
             ("ssh", "Enable SSH in the container")
             ("tty,t", "Allocate a pseudo-TTY in the container")
             ("workdir,w",
@@ -166,6 +167,9 @@ private:
             }
             if(values.count("mpi")) {
                 conf->commandRun.useMPI = true;
+            }
+            if(values.count("amdgpu")) {
+                conf->commandRun.enableAmdGpu = true;
             }
             if(values.count("ssh")) {
                 conf->commandRun.enableSSH = true;
