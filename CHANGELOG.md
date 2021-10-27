@@ -9,10 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Added script to check for host requirements in CI, linked in documentation.
-- Added the `-e/--env` option to `sarus run` for setting the environment variables inside the container. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#environment)
-- Added the `--device` option to `sarus run` for mounting and whitelisting devices inside containers
+- Added the `-e/--env` option to `sarus run` for setting environment variables inside the container. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#environment)
+- Added the `--device` option to `sarus run` for mounting and whitelisting devices inside containers. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#mounting-custom-devices-into-the-container)
 - Added support for the optional `siteDevices` parameter in the `sarus.json` configuration file.
   This parameter can be used by administrators for defining devices to be automatically mounted and whitelisted inside containers.
+- Added the `--pid` option to `sarus run` for setting the container PID namespace. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#pid-namespace)
 - Added support for applying seccomp profiles to containers
 - Added support for applying AppArmor profiles to containers
 - Added support for applying SELinux labels to container processes and to mounts performed by the OCI runtime
@@ -22,6 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Containers now use the host's PID namespace by default. A private PID namespace can be requested through the CLI
+- The `--ssh` option of `sarus run` now implies `--pid=private`
 - Changed format of the `environment` parameter in the `sarus.json` configuration file
 - Updated documentation about how the initial environment variables are set in containers
 - Updated recommended Boost version to 1.77.0
@@ -34,7 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
-- The use of the `bind-propagation` property for bind mounts (deprecated in Sarus 1.1.0) has now been removed. All bind mounts will be done with recursive private (`rprivate`) propagation.
+- The use of the `bind-propagation` property for bind mounts (deprecated in Sarus 1.1.) has now been removed. All bind mounts are done with recursive private (`rprivate`) propagation.
 
 ### Security
 

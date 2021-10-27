@@ -72,6 +72,7 @@ class Config {
             boost::optional<boost::filesystem::path> workdir;
             boost::optional<CLIArguments> entrypoint;
             CLIArguments execArgs;
+            bool createNewPIDNamespace = false;
             bool allocatePseudoTTY = false;
             bool addInitProcess = false;
             bool useMPI = false;

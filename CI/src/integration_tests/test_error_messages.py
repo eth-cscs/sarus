@@ -204,6 +204,20 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Failed to check the SSH keys. Hint: try to generate the SSH keys with 'sarus ssh-keygen'."
         self._check(command, expected_message)
 
+        command = ["sarus", "run", "--ssh", "--pid=host", "quay.io/ethcscs/alpine", "true"]
+        expected_message = ("The use of '--ssh' is incompatible with '--pid=host'. "
+                            "The SSH hook requires the use of a private PID namespace")
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--pid=private", "--pid", "host", "quay.io/ethcscs/alpine", "true"]
+        expected_message = "option '--pid' cannot be specified more than once\nSee 'sarus help run'"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--pid", "quay.io/ethcscs/alpine", "true"]
+        expected_message = ("Incorrect value provided for --pid option: 'quay.io/ethcscs/alpine'. "
+                            "Supported values: 'host', 'private'.\nSee 'sarus help run'")
+        self._check(command, expected_message)
+
         command = ["sarus", "run", "quay.io/ethcscs/alpine", "invalid-command-2lk32ldk2"]
         actual_message = self._get_sarus_error_output(command)
         self.assertTrue("container_linux.go" in actual_message)

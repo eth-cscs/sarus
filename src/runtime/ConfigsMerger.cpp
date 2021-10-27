@@ -43,6 +43,10 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getEnvironmentInCont
     }
     setNvidiaEnvironmentVariables(config->commandRun.hostEnvironment, env);
 
+    if(config->commandRun.addInitProcess) {
+        env["TINI_SUBREAPER"] = "1";
+    }
+
     const auto environmentIterator = config->json.FindMember("environment");
     if(environmentIterator != config->json.MemberEnd()) {
         if(environmentIterator->value.HasMember("set")) {

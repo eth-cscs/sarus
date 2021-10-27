@@ -324,13 +324,15 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
     {
         auto namespaces = rj::Value{rj::kArrayType};
 
-        auto pid = rj::Value{rj::kObjectType};
-        pid.AddMember("type", rj::Value{"pid"}, *allocator);
-        namespaces.PushBack(pid, *allocator);
-
         auto mount = rj::Value{rj::kObjectType};
         mount.AddMember("type", rj::Value{"mount"}, *allocator);
         namespaces.PushBack(mount, *allocator);
+
+        if(config->commandRun.createNewPIDNamespace) {
+            auto pid = rj::Value{rj::kObjectType};
+            pid.AddMember("type", rj::Value{"pid"}, *allocator);
+            namespaces.PushBack(pid, *allocator);
+        }
 
         linux.AddMember("namespaces", namespaces, *allocator);
     }

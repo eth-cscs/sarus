@@ -207,6 +207,7 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
         CHECK_EQUAL(conf->imageID.image, std::string{"image"});
         CHECK_EQUAL(conf->imageID.tag, std::string{"latest"});
         CHECK_EQUAL(conf->useCentralizedRepository, false);
+        CHECK_EQUAL(conf->commandRun.createNewPIDNamespace, false);
         CHECK_EQUAL(conf->commandRun.addInitProcess, false);
         CHECK_EQUAL(conf->commandRun.userEnvironment.size(), 0);
         CHECK_EQUAL(conf->commandRun.mounts.size(), 1); // 1 site mount + 0 user mount
@@ -278,10 +279,19 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
         conf = generateConfig({"run", "-m", "image"});
         CHECK_EQUAL(conf->commandRun.useMPI, true);
     }
+    // pid
+    {
+        auto conf = generateConfig({"run", "--pid", "host", "image"});
+        CHECK_EQUAL(conf->commandRun.createNewPIDNamespace, false);
+
+        conf = generateConfig({"run", "--pid", "private", "image"});
+        CHECK_EQUAL(conf->commandRun.createNewPIDNamespace, true);
+    }
     // ssh
     {
         auto conf = generateConfig({"run", "--ssh", "image"});
         CHECK_EQUAL(conf->commandRun.enableSSH, true);
+        CHECK_EQUAL(conf->commandRun.createNewPIDNamespace, true);
     }
     // tty
     {
@@ -324,8 +334,10 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
                                     "--mount=type=bind,source=/source,destination=/destination",
                                     "ubuntu", "bash", "-c", "ls /dev |grep nvidia"});
         CHECK_EQUAL(conf->commandRun.workdir->string(), std::string{"/workdir"});
+        CHECK_EQUAL(conf->commandRun.createNewPIDNamespace, false);
         CHECK_EQUAL(conf->commandRun.useMPI, true);
         CHECK_EQUAL(conf->commandRun.enableGlibcReplacement, true);
+        CHECK_EQUAL(conf->commandRun.enableSSH, false);
         CHECK_EQUAL(conf->commandRun.userEnvironment.size(), 1);
         CHECK_EQUAL(conf->commandRun.userEnvironment["CONTAINER"], std::string{"sarus"});
         CHECK_EQUAL(conf->commandRun.mounts.size(), 2); // 1 site mount + 1 user mount

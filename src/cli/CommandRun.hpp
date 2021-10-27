@@ -110,12 +110,17 @@ private:
                 boost::program_options::value<std::vector<std::string>>(&env),
                 "Set environment variables in the container")
             ("glibc", "Enable replacement of the container's GNU C libraries")
-            ("init", "Run an init process inside the container that forwards signals and reaps processes")
+            ("init", "Run an init process inside the container that forwards signals and reaps processes. "
+                     "Mostly useful in conjunction with '--pid=private'")
             ("mount",
                 boost::program_options::value<std::vector<std::string>>(&conf->commandRun.userMounts),
                 "Mount custom files and directories into the container")
             ("mpi,m", "Enable MPI support. Implies '--glibc'")
-            ("ssh", "Enable SSH in the container")
+            ("pid",
+                boost::program_options::value<std::string>(&pid),
+                "Set the PID namespace mode for the container. Supported values: 'host', 'private'. "
+                "Default: use the host’s PID namespace for the container")
+            ("ssh", "Enable SSH in the container. Implies '--pid=private'")
             ("tty,t", "Allocate a pseudo-TTY in the container")
             ("workdir,w",
                 boost::program_options::value<std::string>(&workdir),
@@ -158,21 +163,62 @@ private:
                     conf->commandRun.entrypoint = common::CLIArguments{entrypointArgs.cbegin(), entrypointArgs.cend()};
                 }
             }
+
             if(values.count("glibc")) {
                 conf->commandRun.enableGlibcReplacement = true;
             }
+            else {
+                conf->commandRun.enableGlibcReplacement = false;
+            }
+
             if(values.count("init")) {
                 conf->commandRun.addInitProcess = true;
             }
+            else {
+                conf->commandRun.addInitProcess = false;
+            }
+
             if(values.count("mpi")) {
                 conf->commandRun.useMPI = true;
             }
+            else {
+                conf->commandRun.useMPI = false;
+            }
+
+            if(values.count("pid")) {
+                if(pid == std::string{"private"}) {
+                    conf->commandRun.createNewPIDNamespace = true;
+                }
+                else if(pid != std::string{"host"})  {
+                    auto message = boost::format("Incorrect value provided for --pid option: '%s'. "
+                                                 "Supported values: 'host', 'private'.") % pid;
+                    SARUS_THROW_ERROR(message.str());
+                }
+            }
+            else {
+                conf->commandRun.createNewPIDNamespace = false;
+            }
+
             if(values.count("ssh")) {
                 conf->commandRun.enableSSH = true;
+                conf->commandRun.createNewPIDNamespace = true;
+                if(pid == std::string{"host"}) {
+                    auto message = boost::format("The use of '--ssh' is incompatible with '--pid=host'. "
+                                                 "The SSH hook requires the use of a private PID namespace");
+                    SARUS_THROW_ERROR(message.str());
+                }
             }
+            else {
+                conf->commandRun.enableSSH = false;
+            }
+
             if(values.count("tty")) {
                 conf->commandRun.allocatePseudoTTY = true;
             }
+            else {
+                conf->commandRun.allocatePseudoTTY = false;
+            }
+
             if(values.count("workdir")) {
                 conf->commandRun.workdir = workdir;
                 if(!conf->commandRun.workdir->is_absolute()) {
@@ -429,6 +475,7 @@ private:
     std::shared_ptr<common::Config> conf;
     std::vector<std::string> deviceMounts;
     std::string entrypoint;
+    std::string pid;
     std::string workdir;
 };
 

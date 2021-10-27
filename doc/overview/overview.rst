@@ -228,19 +228,25 @@ coming from the image. We hereby highlight the most important details:
 * If the image specified an entrypoint or default arguments, these are honored,
   unless the user specifies an override through Sarus's command line. For more details,
   please refer to :ref:`this section <user-entrypoint-default-args>` of the User Guide.
-* The container environment variables are created by uniting the variables from
-  the host environment and the variables from the image. If a variable exists in both
-  the host and the image, the value from the image is taken. This ensures the
-  container behaves as expected by its creators (e.g. in the case of ``PATH``). Selected variables
-  are also adapted by Sarus to suit system-specific extensions, like NVIDIA GPU support,
-  native MPI support or container SSH connections.
-* If the image specifies a working directory, the container process is started
-  there. Otherwise, the process is started in the container's root directory.
+* The container environment variables are created by uniting variables from
+  different sources: the host environment, the image, the Sarus configuration
+  file and the command line.
+  Unless explicitly re-defined in the Sarus configuration file or command line,
+  variable values from the image have precendence. This ensures the
+  container behaves as expected by its creators (e.g. in the case of ``PATH``).
+  Selected variables are also adapted by Sarus to suit system-specific
+  extensions, like NVIDIA GPU support, native MPI support or container SSH connections.
+* If a working directory is specified either in the image or from the Sarus CLI,
+  the container process is started there. Otherwise, the process is started in
+  the container's root directory.
   In this regard, Sarus shows the same behavior as Docker.
 * The container process is configured to run with all Linux capabilities disabled [#f2]_,
   thus preventing it from acquiring new privileges by any means. This is done in the
   interest of security.
-* New PID and mount namespaces are setup for the container process.
+* A new mount namespace is setup for the container process.
+* The container process runs in the PID namespace of the calling host process
+  by default. A separate PID namespace for the container can be created if requested
+  from the command line.
 * Settings for OCI hooks are generated from the `OCI hook JSON configuration files
   <https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
   which are :doc:`configured</config/configure_hooks>` by the sysadmin.

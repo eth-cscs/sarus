@@ -353,15 +353,6 @@ displayed by the :program:`sarus images` command:
     $ sarus rmi load/library/my_debian
     removed load/library/my_debian/latest
 
-
-Accessing host directories from the container
----------------------------------------------
-
-System administrators can configure Sarus to automatically mount facilities
-like parallel filesystems into every container. Refer to your site documentation
-or system administrator to know which resources have been enabled on a specific
-system.
-
 .. _user-environment:
 
 Environment
@@ -399,6 +390,15 @@ in the following order (later entries override earlier entries):
    image with the value from the host.
    If no ``=`` is provided and a matching variable is not found in the host
    environment, the option is ignored and the variable is not set in the container.
+
+
+Accessing host directories from the container
+---------------------------------------------
+
+System administrators can configure Sarus to automatically mount facilities
+like parallel filesystems into every container. Refer to your site documentation
+or system administrator to know which resources have been enabled on a specific
+system.
 
 .. _user-custom-mounts:
 
@@ -651,13 +651,45 @@ When creating images with Docker, the working directory is set using the
 `WORKDIR <https://docs.docker.com/engine/reference/builder/#workdir>`_
 instruction in the Dockerfile.
 
+.. _user-private-pid:
+
+PID namespace
+-------------
+
+The PID namespace for the container can be controlled through the ``--pid``
+option of :program:`sarus run`. Currently, the supported values for the option
+are:
+
+* ``host``: use the host's PID namespace for the container. This allows to
+  transparently support MPI implementations relying on the ranks having
+  different PIDs when running on the same physical host, or using shared memory
+  technologies like Cross Memory Attach (CMA); (**default**)
+* ``private``: create a new PID namespace for the container. Having a private
+  PID namespace can be also referred as "using PID namespace isolation" or
+  simply "using PID isolation".
+
+  .. code-block::
+
+      $ sarus run --pid=private alpine:3.14 ps -o pid,comm
+      PID   COMMAND
+          1 ps
+
+
+.. note::
+   Consider using an :ref:`init process <user-init-process>` when running with
+   a private PID namespace if you need to handle signals or run many processes
+   into the container.
+
+.. _user-init-process:
+
 Adding an init process to the container
 ---------------------------------------
 
-By default, within the container Sarus only executes the user-specified application,
-which is assigned PID 1 in the container's PID namespace. The PID 1 process has unique
-features in Linux: most notably, the process will ignore signals by default and zombie
-processes will not be reaped inside the container (see
+By default, Sarus only executes the user-specified application within the container.
+When using a :ref:`private PID namespace <user-private-pid>`, the container
+process is assigned PID 1 in the new namespace. The PID 1 process has unique
+features in Linux: most notably, the process will ignore signals by default and
+zombie processes will not be reaped inside the container (see
 `[1] <https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/>`_ ,
 `[2] <https://hackernoon.com/the-curious-case-of-pid-namespaces-1ce86b6bc900>`_ for further reference).
 
@@ -667,10 +699,10 @@ executing several different processes in long-running containers), you can use t
 
 .. code-block:: bash
 
-    $ srun -N 1 sarus run --init alpine:3.8 ps -o pid,comm
+    $ srun -N 1 sarus run --pid=private --init alpine:3.14 ps -o pid,comm
     PID   COMMAND
         1 init
-        8 ps
+        7 ps
 
 Sarus uses `tini <https://github.com/krallin/tini>`_ as its default init process.
 
@@ -865,6 +897,13 @@ a login shell into the remote container. In this situation, the SSH hook attempt
 to reproduce the environment variables which were defined upon the launch
 of the remote container. The aim is to replicate the experience of actually
 accessing a shell in the container as it was created.
+
+.. warning::
+   The SSH hook currently does not implement a poststop functionality and
+   requires the use of a private PID namespace to cleanup the Dropbear daemon.
+   Thus, the hook currently requires the use of a :ref:`private PID namespace <user-private-pid>`
+   for the container. Thus, the ``--ssh`` option of :program:`sarus run` implies
+   ``--pid=private``, and is incompatible with the use of ``--pid=host``.
 
 OpenMPI communication through SSH
 ---------------------------------
