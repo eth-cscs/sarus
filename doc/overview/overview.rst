@@ -26,7 +26,6 @@ Sarus architecture
 ==================
 
 .. figure:: architecture.*
-   :scale: 100 %
    :alt: Sarus architecture
 
    Sarus architecture diagram
