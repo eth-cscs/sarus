@@ -125,9 +125,12 @@ sarus-itest-standalone() {
 
     local sarus_archive=$(_build_dir_container)/sarus-${build_type}.tar.gz
 
+    _setup_local_registry_cache
+
     _run_cmd_in_container ${image_run} root \
         ". /sarus-source/CI/utility_functions.bash && \
         install_sarus_from_archive /opt/sarus ${sarus_archive} && \
+        run_sarus_registry && \
         run_integration_tests $(_build_dir_container)"
 
     fail_on_error "${FUNCNAME}: failed"
@@ -142,9 +145,12 @@ sarus-itest-from-scratch() {
         return
     fi
 
+    _setup_local_registry_cache
+
     _run_cmd_in_container ${image_run} root \
         ". /sarus-source/CI/utility_functions.bash && \
         install_sarus $(_build_dir_container) /opt/sarus/default && \
+        run_sarus_registry && \
         run_integration_tests $(_build_dir_container)"
 
     fail_on_error "${FUNCNAME}: failed"
@@ -241,15 +247,18 @@ _run_cmd_in_container() {
     local cache_oci_hooks_dir=$(_cache_oci_hooks_dir ${cache_dir_host})
     local cache_local_repo_dir=$(_cache_local_repo_dir ${cache_dir_host})
     local cache_centralized_repo_dir=$(_cache_centralized_repo_dir ${cache_dir_host})
+    local cache_local_registry_dir=$(_cache_local_registry_dir ${cache_dir_host})
     mkdir -p ${cache_oci_hooks_dir}
     mkdir -p ${cache_local_repo_dir}
     mkdir -p ${cache_centralized_repo_dir}
+    mkdir -p ${cache_local_registry_dir}
 
     docker run --rm --tty --privileged --user root \
         --mount=src=${sarus_source_dir_host},dst=/sarus-source,type=bind \
         --mount=src=${cache_oci_hooks_dir},dst=/home/docker/.oci-hooks,type=bind \
         --mount=src=${cache_local_repo_dir},dst=/home/docker/.sarus,type=bind \
         --mount=src=${cache_centralized_repo_dir},dst=/var/sarus/centralized_repository,type=bind \
+        --mount=src=${cache_local_registry_dir},dst=/var/local_registry,type=bind \
         -e CI_COMMIT_TAG \
         -e TRAVIS_TAG \
         ${image} bash -c "
@@ -270,6 +279,27 @@ _print_parameters() {
     echo "image_run = ${image_run}"
 }
 
+_setup_local_registry_cache() {
+    local host_uid=$(id -u)
+    local host_gid=$(id -g)
+
+    local cache_local_registry_dir=$(_cache_local_registry_dir ${cache_dir_host})
+    mkdir -p ${cache_local_registry_dir}
+
+    registry_image_id=$(docker run --rm -d=true -p=127.0.0.1:5000:5000 --user=${host_uid}:${host_gid} \
+        --mount=src=${cache_local_registry_dir},dst=/var/lib/registry,type=bind \
+        registry:2
+    )
+
+    docker pull alpine:latest
+    docker tag alpine:latest localhost:5000/library/alpine:latest
+    docker push localhost:5000/library/alpine:latest
+    
+    docker rmi alpine:latest localhost:5000/library/alpine:latest
+
+    docker stop ${registry_image_id}
+}
+
 _setup_cache_dirs() {
     if [ $(_git_branch) != "develop" ]; then
         local new_cache_dir_host=${sarus_source_dir_host}/cache/$(_job_id_string)
@@ -277,6 +307,7 @@ _setup_cache_dirs() {
         _copy_cache_dir $(_cache_oci_hooks_dir ${cache_dir_host}) $(_cache_oci_hooks_dir ${new_cache_dir_host})
         _copy_cache_dir $(_cache_local_repo_dir ${cache_dir_host}) $(_cache_local_repo_dir ${new_cache_dir_host})
         _copy_cache_dir $(_cache_centralized_repo_dir ${cache_dir_host}) $(_cache_centralized_repo_dir ${new_cache_dir_host})
+        _copy_cache_dir $(_cache_local_registry_dir ${cache_dir_host}) $(_cache_local_registry_dir ${new_cache_dir_host})
         _copy_cached_build_artifacts_if_available ${cache_dir_host} ${new_cache_dir_host}
 
         export cache_dir_host=${new_cache_dir_host}
@@ -285,6 +316,7 @@ _setup_cache_dirs() {
         mkdir -pv $(_cache_oci_hooks_dir ${cache_dir_host})
         mkdir -pv $(_cache_local_repo_dir ${cache_dir_host})
         mkdir -pv $(_cache_centralized_repo_dir ${cache_dir_host})
+        mkdir -pv $(_cache_local_registry_dir ${cache_dir_host})
     fi
 }
 
@@ -329,6 +361,11 @@ _cache_local_repo_dir() {
 _cache_centralized_repo_dir() {
     local cache_dir=${1}; shift || error "${FUNCNAME}: missing cache_dir argument"
     echo "${cache_dir}/centralized_repository--$(_job_id_string)"
+}
+
+_cache_local_registry_dir() {
+    local cache_dir=${1}; shift || error "${FUNCNAME}: missing cache_dir argument"
+    echo "${cache_dir}/local_registry--$(_job_id_string)"
 }
 
 _build_dir_host() {

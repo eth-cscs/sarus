@@ -168,6 +168,15 @@ install_sarus_from_archive() {
     cd ${pwd_backup}
 }
 
+run_sarus_registry() {
+    # copy mounted directory to get around needing write permission and prevent writing to host machine as root
+    sarus pull registry:2
+    sarus run --mount=type=bind,src=/var/local_registry,dst=/var/local_registry,readonly \
+    registry:2 sh -c "cp -r /var/local_registry /var/lib/registry && \
+    registry serve /etc/docker/registry/config.yml" \
+    > /dev/null 2>&1 &
+}
+
 run_unit_tests() {
     local build_dir=$1; shift
     cd ${build_dir}
