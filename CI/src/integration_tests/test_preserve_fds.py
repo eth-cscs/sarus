@@ -6,7 +6,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import os
-import re
 import unittest
 
 import common.util as util

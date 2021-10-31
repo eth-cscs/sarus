@@ -30,11 +30,12 @@ class Sarus(CMakePackage):
     """Sarus is an OCI-compliant container engine for HPC systems."""
 
     homepage = "https://github.com/eth-cscs/sarus"
-    url      = "https://github.com/eth-cscs/sarus/archive/1.3.2.tar.gz"
+    url      = "https://github.com/eth-cscs/sarus/archive/1.3.3.tar.gz"
     git      = "https://github.com/eth-cscs/sarus.git"
 
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('1.3.3',   tag='1.3.3')
     version('1.3.2',   tag='1.3.2')
     version('1.3.1',   tag='1.3.1')
     version('1.3.0',   tag='1.3.0')
@@ -52,11 +53,12 @@ class Sarus(CMakePackage):
                         'super-user privileges.')
 
     depends_on('wget', type='build')
+    depends_on('expat', type='build')
     depends_on('squashfs', type=('build', 'run'))
-    depends_on('boost@1.65.0 cxxstd=11')
-    depends_on('cpprestsdk@2.10.0')
-    depends_on('libarchive@3.4.1')
-    depends_on('rapidjson@663f076', type='build')
+    depends_on('boost@1.65.0: cxxstd=11')
+    depends_on('cpprestsdk@2.10.0:')
+    depends_on('libarchive@3.4.1:')
+    depends_on('rapidjson@00dbcf2', type='build')
 
     # autoconf is required to build Dropbear for the SSH hook
     depends_on('autoconf', type='build')
@@ -81,7 +83,7 @@ class Sarus(CMakePackage):
 
     def install_runc(self, spec, prefix):
         wget = which('wget')
-        runc_url = 'https://github.com/opencontainers/runc/releases/download/v1.0.0-rc10/runc.amd64'
+        runc_url = 'https://github.com/opencontainers/runc/releases/download/v1.0.2/runc.amd64'
         runc_install_path = prefix.bin + '/runc.amd64'
         wget('-O', runc_install_path, runc_url)
         set_executable(runc_install_path)

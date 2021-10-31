@@ -71,7 +71,7 @@ The hook performs the following operations:
    One key (``dropbear_ecdsa_host_key``) will be used by the SSH daemon,
    the other key (``id_dropbear``) will be used by the SSH client.
 
-How the existance of the SSH keys is checked
+How the existence of the SSH keys is checked
 --------------------------------------------
 
 When the command ``sarus run --ssh <image> <command>`` is issued, the command object ``cli::CommandRun`` gets

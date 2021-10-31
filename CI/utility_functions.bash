@@ -116,7 +116,7 @@ build_sarus_archive() {
 
     # runc is statically linked with libseccomp, which is licensed under GNU LGPL-2.1.
     # To comply with LGPL-2.1 (§6(a)), include the libseccomp source code in the licenses folder.
-    wget -O ${prefix_dir}/licenses/libseccomp-2.4.3.tar.gz https://github.com/opencontainers/runc/releases/download/v1.0.0-rc92/libseccomp-2.4.3.tar.gz
+    wget -O ${prefix_dir}/licenses/libseccomp-2.5.1.tar.gz https://github.com/opencontainers/runc/releases/download/v1.0.2/libseccomp-2.5.1.tar.gz
 
     mkdir -pv ${prefix_dir}/var/OCIBundleDir
 
@@ -202,7 +202,7 @@ run_integration_tests() {
 
     echo "Running integration tests with user=docker"
     sudo -u docker --login bash -c "
-        PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=/sarus-source/CI/src:\$PYTHONPATH \
+        PATH=/opt/sarus/default/bin:\${PATH} PYTHONPATH=/sarus-source/CI/src:\${PYTHONPATH} \
         CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker \
         pytest -v -m 'not asroot' /sarus-source/CI/src/integration_tests/" # TIP: Add -s --last-failed to pytest to get more output from failed tests.
     fail_on_error "Python integration tests failed"
@@ -212,7 +212,7 @@ run_integration_tests() {
     sudo --login bash -c "
         PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=/sarus-source/CI/src:\$PYTHONPATH \
         CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker \
-        pytest -v -s -m asroot /sarus-source/CI/src/integration_tests/"
+        pytest -v -m asroot /sarus-source/CI/src/integration_tests/"
     fail_on_error "Python integration tests as root failed"
     echo "Successfully run integration tests with user=root"
 }

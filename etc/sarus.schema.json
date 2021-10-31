@@ -52,6 +52,9 @@
         "siteMounts": {
             "$ref": "#/definitions/ArrayOfMounts"
         },
+        "siteDevices": {
+            "$ref": "#/definitions/ArrayOfDevices"
+        },
         "environment": {
             "type": "object",
             "properties": {
@@ -92,6 +95,18 @@
         },
         "insecureRegistries": {
             "$ref": "definitions.schema.json#/ArrayOfStrings"
+        },
+        "seccompProfile": {
+            "$ref": "definitions.schema.json#/AbsolutePath"
+        },
+        "apparmorProfile": {
+            "type": "string"
+        },
+        "selinuxLabel": {
+            "type": "string"
+        },
+        "selinuxMountLabel": {
+            "type": "string"
         }
     },
     "required": [
@@ -131,30 +146,6 @@
                             "type": "string",
                             "pattern": ""
                         },
-                        "bind-propagation": {
-                            "oneOf": [
-                                {
-                                    "type": "string",
-                                    "pattern": "^private$"
-                                },
-                                {
-                                    "type": "string",
-                                    "pattern": "^rprivate$"
-                                },
-                                {
-                                    "type": "string",
-                                    "pattern": "^slave$"
-                                },
-                                {
-                                    "type": "string",
-                                    "pattern": "^rslave$"
-                                },
-                                {
-                                    "type": "string",
-                                    "pattern": "^recursive$"
-                                }
-                            ]
-                        },
                         "size": {
                             "type": "string",
                             "pattern": "^[0-9]+[BKMGTPE]$"
@@ -171,10 +162,34 @@
                 "destination"
             ]
         },
+        "Device": {
+            "type": "object",
+            "properties": {
+                "source": {
+                    "$ref": "definitions.schema.json#/AbsolutePath"
+                },
+                "destination": {
+                    "$ref": "definitions.schema.json#/AbsolutePath"
+                },
+                "access": {
+                    "type": "string",
+                    "pattern": "^[rwm]{,3}$"
+                }
+            },
+            "required": [
+                "source"
+            ]
+        },
         "ArrayOfMounts": {
             "type": "array",
             "items": {
                 "$ref": "#/definitions/Mount"
+            }
+        },
+        "ArrayOfDevices": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/Device"
             }
         }
     }

@@ -10,16 +10,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Added the ability to pull from insecure registries via `insecureRegistries` parameter in `sarus.json`
 - Added script to check for host requirements in CI, linked in documentation.
-- Added the `-e/--env` option to `sarus run` for setting the environment variables inside the container. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#environment)
+- Added the `-e/--env` option to `sarus run` for setting environment variables inside the container. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#environment)
+- Added the `--device` option to `sarus run` for mounting and whitelisting devices inside containers. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#mounting-custom-devices-into-the-container)
+- Added support for the optional `siteDevices` parameter in the `sarus.json` configuration file.
+  This parameter can be used by administrators for defining devices to be automatically mounted and whitelisted inside containers.
+- Added the `--pid` option to `sarus run` for setting the container PID namespace. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#pid-namespace)
+- Added support for applying seccomp profiles to containers
+- Added support for applying AppArmor profiles to containers
+- Added support for applying SELinux labels to container processes and to mounts performed by the OCI runtime
+- The MPI hook whitelists access to devices bind mounted inside containers
+- cgroup filesystems are mounted inside containers
+- Added CI unit and integration tests from source on OpenSUSE Leap 15.3
 
 ### Changed
 
+- Containers now use the host's PID namespace by default. A private PID namespace can be requested through the CLI
+- The `--ssh` option of `sarus run` now implies `--pid=private`
 - Changed format of the `environment` parameter in the `sarus.json` configuration file
 - Updated documentation about how the initial environment variables are set in containers
-
-### Fixed
+- Updated recommended Boost version to 1.77.0
+- Updated recommended Cpprestsdk version to 2.10.18
+- Updated recommended libarchive version to 3.5.2
+- Updated recommended RapidJSON version to commit 00dbcf2
+- Updated recommended runc version to 1.0.2
+- Updated recommended libnvidia-container version to 1.5.1
+- Updated recommended NVIDIA Container Toolkit version to 1.5.1
+- Updated Dropbear software used by the SSH hook to version 2020.81
+- Miscellaneous updates to Dockerfiles used for CI stages; in particular, the Sarus static standalone package is now built on Alpine Linux 3.14 with a GCC 10.3.1 toolchain
 
 ### Removed
+
+- The use of the `bind-propagation` property for bind mounts (deprecated in Sarus 1.1.) has now been removed. All bind mounts are done with recursive private (`rprivate`) propagation.
+
+### Security
+
+- Access to custom devices within containers is not allowed by default
 
 
 ## [1.3.3]

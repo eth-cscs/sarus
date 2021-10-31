@@ -51,7 +51,7 @@ private:
         const boost::filesystem::path& hostLib,
         const std::function<bool(const boost::filesystem::path&, const boost::filesystem::path&)>& abiCompatibilityCheck) const;
     void performBindMounts() const;
-    void validatedBindMount(const boost::filesystem::path& from, const boost::filesystem::path& to, unsigned long flags=0) const;
+    void validatedBindMount(const boost::filesystem::path& from, const boost::filesystem::path& to) const;
     void createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesystem::path& target,
                                                         const boost::filesystem::path& linkFilename,
                                                         const bool preserveRootLink) const;

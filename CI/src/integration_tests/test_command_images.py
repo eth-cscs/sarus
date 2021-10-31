@@ -8,6 +8,7 @@
 import unittest
 import subprocess
 import os
+import re
 
 
 import common.util as util
@@ -45,8 +46,8 @@ class TestCommandImages(unittest.TestCase):
         self.assertEqual(image_output[0], "load/library/loaded_image")
         self.assertEqual(image_output[1], "latest")
         self.assertEqual(image_output[2], "e21c333399e0")
-        self.assertEqual(image_output[4], "1.91MB")
         self.assertEqual(image_output[5], "load")
+        self.assertTrue(re.match(r"1\.[89]\dMB", image_output[4]))
 
     def _header_in_output_of_images_command(self, is_centralized_repository):
         return self._images_command_output(is_centralized_repository)[0]

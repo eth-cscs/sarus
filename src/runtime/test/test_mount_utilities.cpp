@@ -142,9 +142,9 @@ TEST(MountUtilitiesTestGroup, bindMountRecursive) {
     runtime::bindMount(c, b);
     CHECK(boost::filesystem::exists(b / "d.txt"));
 
-    // check that mounts are recursive
+    // check that mounts are recursive by default
     CHECK(!boost::filesystem::exists(a / "d.txt"));
-    runtime::bindMount(b, a, MS_REC);
+    runtime::bindMount(b, a);
     CHECK(boost::filesystem::exists(a / "d.txt"));
 
     // cleanup

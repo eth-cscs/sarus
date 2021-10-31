@@ -384,7 +384,7 @@ TEST(MPIHookTestGroup, test_bind_mounts) {
     Checker{}
         .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
         .setPreHookContainerLibraries({"/lib/libmpi.so.12.5.5"})
-        .setMpiBindMounts({"/dev/null", "/dev/zero"})
+        .setMpiBindMounts({"/dev/null", "/dev/zero", "/var/opt"})
         .checkSuccessful();
 }
 

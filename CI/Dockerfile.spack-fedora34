@@ -1,0 +1,36 @@
+FROM fedora:34
+
+# Install packages required by Spack
+# - glibc-static is required for building the SSH hook's custom OpenSSH software
+# - libstdc++-static is required to build clingo-bootstrap spack package; see https://github.com/spack/spack/issues/24450
+#   might not be needed anymore with spack 0.17
+# - python3-devel needed for building clingo-bootstrap; this is not needed by v0.16.2 images,
+#    verify if it changes with v0.17
+RUN dnf install -y                                                  \
+        curl           findutils         gcc-c++        gcc         \
+        gcc-gfortran   git               gnupg2         hostname    \
+        iproute        Lmod              make           patch       \
+        openssh-server python            python-pip     tcl         \
+        unzip          which             glibc-static   xz          \
+        lbzip2         libstdc++-static  python3-devel              \
+    && pip install boto3                                            \
+    && rm -rf /var/cache/yum                                        \
+    && yum clean all
+
+# Install and configure Spack
+# v0.16.2 on Fedora cannot install libiconv (gives missing package URL error),
+# so exceptionally we resort to develop branch without explicit tag checkout
+ENV SPACK_ROOT=/opt/spack
+ENV PATH=${PATH}:${SPACK_ROOT}/bin
+RUN git clone https://github.com/spack/spack.git ${SPACK_ROOT} \
+    && . ${SPACK_ROOT}/share/spack/setup-env.sh
+
+# Install builtin dependencies for Sarus
+ENV FORCE_UNSAFE_CONFIGURE=1
+RUN spack install wget
+RUN spack install cmake
+RUN spack install openssl
+RUN spack install squashfs
+RUN spack install cpprestsdk@2.10.0: ^boost@1.65.0: cxxstd=11
+RUN spack install libarchive@3.4.1:
+RUN spack install python@3:

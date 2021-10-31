@@ -48,10 +48,10 @@ unsigned long getExpectedFilesystemTypeOfBundle(const common::Config& config) {
     }
 }
 
-#ifdef NOTROOT
-IGNORE_TEST(RuntimeTestGroup, setupOCIBundle) {
-#else
+#ifdef ASROOT
 TEST(RuntimeTestGroup, setupOCIBundle) {
+#else
+IGNORE_TEST(RuntimeTestGroup, setupOCIBundle) {
 #endif
     // configure
     auto configRAII = test_utility::config::makeConfig();

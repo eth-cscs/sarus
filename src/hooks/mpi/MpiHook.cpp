@@ -313,9 +313,18 @@ bool MpiHook::containerHasIncompatibleLibraryVersion(const SharedLibrary& hostLi
 void MpiHook::performBindMounts() const {
     log("Performing bind mounts (configured through hook's environment variable BIND_MOUNTS)",
         sarus::common::LogLevel::INFO);
+    auto devicesCgroupPath = boost::filesystem::path{};
 
     for(const auto& mount : bindMounts) {
-        validatedBindMount(mount, rootfsDir / mount, MS_REC);
+        validatedBindMount(mount, rootfsDir / mount);
+
+        if (sarus::common::isDeviceFile(mount)) {
+            if (devicesCgroupPath.empty()) {
+                devicesCgroupPath = common::utility::findCgroupPath("devices", "/", pidOfContainer);
+            }
+
+            common::utility::whitelistDeviceInCgroup(devicesCgroupPath, mount);
+        }
     }
 
     log("Successfully performed bind mounts", sarus::common::LogLevel::INFO);
@@ -401,7 +410,7 @@ void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesy
     }
 }
 
-void MpiHook::validatedBindMount(const boost::filesystem::path& from, const boost::filesystem::path& to, unsigned long flags) const {
+void MpiHook::validatedBindMount(const boost::filesystem::path& from, const boost::filesystem::path& to) const {
     auto rootIdentity = sarus::common::UserIdentity{};
     auto userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
 
@@ -423,7 +432,7 @@ void MpiHook::validatedBindMount(const boost::filesystem::path& from, const boos
     else {
         sarus::common::createFileIfNecessary(to);
     }
-    sarus::runtime::bindMount(from, to, flags);
+    sarus::runtime::bindMount(from, to);
 }
 
 void MpiHook::log(const std::string& message, sarus::common::LogLevel level) const {

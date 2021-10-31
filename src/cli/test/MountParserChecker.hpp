@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef sarus_cli_test_Checker_hpp
-#define sarus_cli_test_Checker_hpp
+#ifndef sarus_cli_test_MountParserChecker_hpp
+#define sarus_cli_test_MountParserChecker_hpp
 
 #include <memory>
 #include <algorithm>
@@ -33,38 +33,38 @@ namespace cli {
 namespace custom_mounts {
 namespace test {
 
-class Checker {
+class MountParserChecker {
 public:
-    Checker(const std::string& mountRequest)
+    MountParserChecker(const std::string& mountRequest)
         : mountRequest(mountRequest)
     {}
 
-    Checker& parseAsSiteMount() {
+    MountParserChecker& parseAsSiteMount() {
         this->isSiteMount = true;
         return *this;
     }
 
-    Checker& expectSource(const std::string& expectedSource) {
+    MountParserChecker& expectSource(const std::string& expectedSource) {
         this->expectedSource = expectedSource;
         return *this;
     }
 
-    Checker& expectDestination(const std::string& expectedDestination) {
+    MountParserChecker& expectDestination(const std::string& expectedDestination) {
         this->expectedDestination = expectedDestination;
         return *this;
     }
 
-    Checker& expectFlags(const size_t flags) {
+    MountParserChecker& expectFlags(const size_t flags) {
         this->expectedFlags = flags;
         return *this;
     }
 
-    Checker& expectParseError() {
+    MountParserChecker& expectParseError() {
         isParseErrorExpected = true;
         return *this;
     }
 
-    ~Checker() {
+    ~MountParserChecker() {
         auto configRAII = test_utility::config::makeConfig();
         auto mountObject = std::unique_ptr<runtime::Mount>{};
 

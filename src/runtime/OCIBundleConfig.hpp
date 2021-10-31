@@ -39,6 +39,7 @@ private:
     rapidjson::Value makeMemberAnnotations() const;
 
     boost::optional<gid_t> findGidOfTtyGroup() const;
+    bool isAppArmorProfileLoaded(const std::string& profile) const;
 
 private:
     std::shared_ptr<const common::Config> config;

@@ -11,11 +11,13 @@
 		"env": [
             "SARUS_CONFIG_PREPEND_APPEND=config_prepend_value:config_append_value",
             "SARUS_CONFIG_SET=config_set_value",
+            "TINI_SUBREAPER=1",
 			"key=value"
 		],
 		"cwd": "/",
 		"capabilities": {},
-		"noNewPrivileges": true
+		"noNewPrivileges": true,
+        "selinuxLabel": "system_u:system_r:svirt_sarus_t:s0:c124,c675"
 	},
 	"root": {
 		"path": "rootfs",
@@ -73,18 +75,33 @@
 				"nodev",
 				"ro"
 			]
+		},
+		{
+			"destination": "/sys/fs/cgroup",
+			"type": "cgroup",
+			"source": "cgroup",
+			"options": [
+				"nosuid",
+				"noexec",
+				"nodev",
+				"relatime",
+				"ro"
+			]
 		}
 	],
 	"linux": {
 		"resources": {
 			"cpu": {
 				"cpus": "0,1,2,3"
-			}
+			},
+			"devices": [
+				{
+					"allow": false,
+					"access": "rwm"
+				}
+			]
 		},
 		"namespaces": [
-			{
-				"type": "pid"
-			},
 			{
 				"type": "mount"
 			}
@@ -106,7 +123,24 @@
 			"/proc/irq",
 			"/proc/sys",
 			"/proc/sysrq-trigger"
-		]
+		],
+        "seccomp": {
+            "defaultAction": "SCMP_ACT_ALLOW",
+            "architectures": [
+                "SCMP_ARCH_X86",
+                "SCMP_ARCH_X32"
+            ],
+            "syscalls": [
+                {
+                    "names": [
+                        "getcwd",
+                        "chmod"
+                    ],
+                    "action": "SCMP_ACT_ERRNO"
+                }
+            ]
+        },
+        "mountLabel": "system_u:object_r:svirt_sarus_file_t:s0:c715,c811"
 	},
 	"hooks": {
 		"prestart" : [

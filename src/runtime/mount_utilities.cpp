@@ -145,29 +145,12 @@ dev_t getDevice(const boost::filesystem::path& path) {
 void bindMount(const boost::filesystem::path& from, const boost::filesystem::path& to, unsigned long flags) {
     utility::logMessage(boost::format{"Bind mounting %s -> %s"} % from % to, common::LogLevel::DEBUG);
 
-    unsigned long flagsForBindMount = MS_BIND;
-    unsigned long flagsForRemount = MS_REMOUNT | MS_BIND | MS_NOSUID;
-    unsigned long flagsForPropagationRemount = 0;
+    unsigned long flagsForBindMount = MS_BIND | MS_REC;
+    unsigned long flagsForRemount = MS_REMOUNT | MS_BIND | MS_NOSUID | MS_REC;
+    unsigned long flagsForPropagationRemount = MS_PRIVATE | MS_REC;
 
     if(flags & MS_RDONLY) {
         flagsForRemount |= MS_RDONLY;
-    }
-
-    // allow only MS_PRIVATE and MS_SLAVE propagation flags and default to MS_PRIVATE
-    if(flags & MS_PRIVATE) {
-        flagsForPropagationRemount = MS_PRIVATE;
-    }
-    else if(flags & MS_SLAVE) {
-        flagsForPropagationRemount = MS_SLAVE;
-    }
-    else {
-        flagsForPropagationRemount = MS_PRIVATE;
-    }
-
-    if (flags & MS_REC) {
-        flagsForBindMount |= MS_REC;
-        flagsForRemount |= MS_REC;
-        flagsForPropagationRemount |= MS_REC;
     }
 
     // bind mount
@@ -189,6 +172,7 @@ void bindMount(const boost::filesystem::path& from, const boost::filesystem::pat
     }
 }
 
+
 void loopMountSquashfs(const boost::filesystem::path& image, const boost::filesystem::path& mountPoint) {
     auto command = std::string{"mount"};
     command += " -n";
@@ -208,6 +192,7 @@ void loopMountSquashfs(const boost::filesystem::path& image, const boost::filesy
         SARUS_RETHROW_ERROR(e, message.str());
     }
 }
+
 
 void mountOverlayfs(const boost::filesystem::path& lowerDir,
                     const boost::filesystem::path& upperDir,

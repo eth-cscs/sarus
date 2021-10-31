@@ -12,11 +12,12 @@
 # but with cached dependencies already in this build image.
 # See utility_docker_functions.bash.
 #
-FROM alpine:3.9
+FROM alpine:3.14
 
 RUN apk update \
     && apk add bash sudo shadow tar rsync git cmake make gcc g++ autoconf \
-               perl python3 linux-headers expat-dev openssl-dev zlib-dev squashfs-tools
+               perl python3 linux-headers expat-dev expat-static squashfs-tools \
+               openssl-dev openssl-libs-static zlib-dev zlib-static
 
 # Install dependencies
 COPY ./installation/install_dep_boost.bash /tmp/

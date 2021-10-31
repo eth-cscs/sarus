@@ -156,7 +156,7 @@ You can use :program:`sarus images` to list the images available on the system:
     <repo name>/hello-python   1.0       6bc9d2cd1831   2018-01-19T09:43:04   40.16MB      index.docker.io
 
 4. Run the image at scale with Sarus
---------------------------------------
+------------------------------------
 
 Once the image is available to Sarus we can run it at scale using the workload
 manager. For example, if using SLURM:
@@ -353,15 +353,6 @@ displayed by the :program:`sarus images` command:
     $ sarus rmi load/library/my_debian
     removed load/library/my_debian/latest
 
-
-Accessing host directories from the container
----------------------------------------------
-
-System administrators can configure Sarus to automatically mount facilities
-like parallel filesystems into every container. Refer to your site documentation
-or system administrator to know which resources have been enabled on a specific
-system.
-
 .. _user-environment:
 
 Environment
@@ -400,10 +391,19 @@ in the following order (later entries override earlier entries):
    If no ``=`` is provided and a matching variable is not found in the host
    environment, the option is ignored and the variable is not set in the container.
 
+
+Accessing host directories from the container
+---------------------------------------------
+
+System administrators can configure Sarus to automatically mount facilities
+like parallel filesystems into every container. Refer to your site documentation
+or system administrator to know which resources have been enabled on a specific
+system.
+
 .. _user-custom-mounts:
 
-Mounting custom directories into the container
-----------------------------------------------
+Mounting custom files and directories into the container
+--------------------------------------------------------
 
 By default, Sarus creates the container filesystem environment from the image
 and host system as specified by the system administrator.
@@ -436,7 +436,7 @@ Mandatory flags
   inside the container. If the directory does not exist, it will be created.
   It is possible to overwrite other bind mounts already present in the
   container, however, the system administrator retains the power to disallow
-  user-requested mounts to any location at his/her discretion.
+  user-requested mounts to any location at their discretion.
   May alternatively be specified as ``dst`` or ``target``.
 
 Bind mounts
@@ -492,6 +492,61 @@ The following example demonstrates the use of a custom read-only bind mount.
 
     It is possible to pass ``allow_root`` if the option ``user_allow_other`` is defined in
     ``/etc/fuse.conf``, as stated in the `FUSE manpage <https://man7.org/linux/man-pages/man8/fuse.8.html>`_.
+
+.. _user-device-mounts:
+
+Mounting custom devices into the container
+------------------------------------------
+
+Devices can be made available inside containers through the ``--device`` option
+of :program:`sarus run`. The option can be entered multiple times, specifying
+one device per option. By default, device files will be mounted into the
+container at the same path they have on the host. A different destination path
+can be entered using a colon (``:``) as separator from the host path.
+All paths used in the option value must be absolute:
+
+.. code-block:: bash
+
+    $ srun sarus run --device=/dev/fuse debian ls -l /dev/fuse
+    crw-rw-rw-. 1 root root 10, 229 Aug 17 17:54 /dev/fuse
+
+    $ srun sarus run --device=/dev/fuse:/dev/container_fuse debian ls -l /dev/container_fuse
+    crw-rw-rw-. 1 root root 10, 229 Aug 17 17:54 /dev/container_fuse
+
+When working with device files, the ``--mount`` option should not be used since
+access to custom devices is disabled by default through the container's device
+cgroup. The ``--device`` option, on the other hand, will also whitelist the
+requested devices in the cgroup, making them accessible within the container.
+By default, the option will grant read, write and mknod permissions to devices;
+this behavior can be controlled by adding a set of flags at the end of an option
+value, still using a colon as separator. The flags must be a combination of the
+characters ``rwm``, standing for *read*, *write* and *mknod* access respectively;
+the characters may come in any order, but must not be repeated. The access flags
+can be entered independently from the presence of a custom destination path.
+
+The full syntax of the option is thus ``--device=host-device[:container-device][:permissions]``
+
+The following example shows how to mount a device with read-only access:
+
+.. code-block:: bash
+
+    $ srun --pty sarus run -t --device=/dev/example:r debian bash
+
+    $ echo "hello" > /dev/example
+    bash: /dev/example: Operation not permitted
+
+    $ exit
+
+.. important::
+
+    Sarus and the ``--device`` option cannot grant more permissions to a device
+    than those which have been allowed on the host.
+    For example, if in the host a device is set for read-only access, then Sarus
+    cannot enable write or mknod access.
+
+    This is enforced by the implementation of device cgroups in the Linux kernel.
+    For more details, please refer to the `kernel documentation
+    <https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/devices.html>`_.
 
 .. _user-entrypoint-default-args:
 
@@ -596,13 +651,45 @@ When creating images with Docker, the working directory is set using the
 `WORKDIR <https://docs.docker.com/engine/reference/builder/#workdir>`_
 instruction in the Dockerfile.
 
+.. _user-private-pid:
+
+PID namespace
+-------------
+
+The PID namespace for the container can be controlled through the ``--pid``
+option of :program:`sarus run`. Currently, the supported values for the option
+are:
+
+* ``host``: use the host's PID namespace for the container. This allows to
+  transparently support MPI implementations relying on the ranks having
+  different PIDs when running on the same physical host, or using shared memory
+  technologies like Cross Memory Attach (CMA); (**default**)
+* ``private``: create a new PID namespace for the container. Having a private
+  PID namespace can be also referred as "using PID namespace isolation" or
+  simply "using PID isolation".
+
+  .. code-block::
+
+      $ sarus run --pid=private alpine:3.14 ps -o pid,comm
+      PID   COMMAND
+          1 ps
+
+
+.. note::
+   Consider using an :ref:`init process <user-init-process>` when running with
+   a private PID namespace if you need to handle signals or run many processes
+   into the container.
+
+.. _user-init-process:
+
 Adding an init process to the container
 ---------------------------------------
 
-By default, within the container Sarus only executes the user-specified application,
-which is assigned PID 1 in the container's PID namespace. The PID 1 process has unique
-features in Linux: most notably, the process will ignore signals by default and zombie
-processes will not be reaped inside the container (see
+By default, Sarus only executes the user-specified application within the container.
+When using a :ref:`private PID namespace <user-private-pid>`, the container
+process is assigned PID 1 in the new namespace. The PID 1 process has unique
+features in Linux: most notably, the process will ignore signals by default and
+zombie processes will not be reaped inside the container (see
 `[1] <https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/>`_ ,
 `[2] <https://hackernoon.com/the-curious-case-of-pid-namespaces-1ce86b6bc900>`_ for further reference).
 
@@ -612,10 +699,10 @@ executing several different processes in long-running containers), you can use t
 
 .. code-block:: bash
 
-    $ srun -N 1 sarus run --init alpine:3.8 ps -o pid,comm
+    $ srun -N 1 sarus run --pid=private --init alpine:3.14 ps -o pid,comm
     PID   COMMAND
         1 init
-        8 ps
+        7 ps
 
 Sarus uses `tini <https://github.com/krallin/tini>`_ as its default init process.
 
@@ -647,7 +734,6 @@ To print a general help message about Sarus, use ``sarus --help``.
 To print information about a command (e.g. command-specific options), use
 ``sarus help <command>``:
 
-
 .. code-block:: bash
 
     $ sarus help run
@@ -675,8 +761,8 @@ leveraging the interface defined by the Open Container Initiative Runtime
 Specification for POSIX-platform hooks (OCI hooks for short). These
 customizations are especially amenable to HPC use cases, where the dedicated
 hardware and highly-tuned software adopted by high-performance systems are in
-contrast with the platform-agnostic nature of software containers. OCI hooks
-provide a solution to open access to these resources inside containers.
+contrast with the infrastructure-agnostic nature of software containers.
+OCI hooks provide a solution to open access to these resources inside containers.
 
 The hooks that will be enabled on a given Sarus installation are configured
 by the system administrators. Please refer to your site documentation or your
@@ -811,6 +897,13 @@ a login shell into the remote container. In this situation, the SSH hook attempt
 to reproduce the environment variables which were defined upon the launch
 of the remote container. The aim is to replicate the experience of actually
 accessing a shell in the container as it was created.
+
+.. warning::
+   The SSH hook currently does not implement a poststop functionality and
+   requires the use of a private PID namespace to cleanup the Dropbear daemon.
+   Thus, the hook currently requires the use of a :ref:`private PID namespace <user-private-pid>`
+   for the container. Thus, the ``--ssh`` option of :program:`sarus run` implies
+   ``--pid=private``, and is incompatible with the use of ``--pid=host``.
 
 OpenMPI communication through SSH
 ---------------------------------

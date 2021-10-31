@@ -5,15 +5,20 @@
 # Required
 version: 2
 
-# Build documentation in the docs/ directory with Sphinx
+# Build using specified Docker image and tools
+build:
+  os: ubuntu-20.04
+  tools:
+    python: "3.10"
+
+# Build documentation in the doc/ directory with Sphinx
 sphinx:
   configuration: doc/conf.py
 
-# Optionally build your docs in additional formats such as PDF and ePub
+# Build docs in additional formats such as PDF and ePub
 formats: all
 
-# Optionally set the version of Python and requirements required to build your docs
+# Set requirements to build the docs
 python:
-  version: 3.6
   install:
     - requirements: CI/installation/requirements_doc.txt

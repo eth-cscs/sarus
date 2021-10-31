@@ -59,6 +59,10 @@ TEST(JSONTestGroup, validFile) {
     CHECK_EQUAL(user_mounts["notAllowedPrefixesOfPath"][1].GetString(), std::string("/var"));
     CHECK_EQUAL(user_mounts["notAllowedPaths"].Size(), 1);
     CHECK_EQUAL(user_mounts["notAllowedPaths"][0].GetString(), std::string("/opt"));
+
+    CHECK_EQUAL(config->json["seccompProfile"].GetString(), std::string("/opt/sarus/etc/seccomp/default.json"));
+    CHECK_EQUAL(config->json["apparmorProfile"].GetString(), std::string("sarus-default"));
+    CHECK_EQUAL(config->json["selinuxLabel"].GetString(), std::string("system_u:system_r:svirt_sarus_t:s0:c124,c675"));
 }
 
 TEST(JSONTestGroup, minimumRequirementsFile) {

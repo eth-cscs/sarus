@@ -11,6 +11,7 @@
 #include <memory>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <sys/types.h>
 #include <sys/mount.h>
 #include <sys/signal.h>
@@ -233,17 +234,17 @@ public:
             expectedMap[key] = value;
         }
 
-        auto actualScript = sarus::common::readFile(targetFile);
-        auto actualLines = std::vector<std::string>{};
-        boost::split(actualLines, actualScript, boost::is_any_of("\n"));
-        CHECK_EQUAL(actualLines[0], std::string{"#!/bin/sh"});
+        boost::filesystem::ifstream actualLines{targetFile};
+        std::string actualLine;
+        std::getline(actualLines, actualLine);
+        CHECK_EQUAL(actualLine, std::string{"#!/bin/sh"});
 
         auto actualMap = std::unordered_map<std::string, std::string>{};
         // first line is the shebang, last line is empty, so to parse the variable definitions
         // we iterate from begin+1 to end-1
-        for (auto it=actualLines.cbegin()+1; it != actualLines.cend()-1; ++it) {
+        while (std::getline(actualLines, actualLine)) {
             auto tokens = std::vector<std::string>{};
-            boost::split(tokens, *it, boost::is_any_of(" "));
+            boost::split(tokens, actualLine, boost::is_any_of(" "));
             CHECK_EQUAL(tokens[0], std::string{"export"});
             auto keyValue = std::vector<std::string>{};
             boost::split(keyValue, tokens[1], boost::is_any_of("="));

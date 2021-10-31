@@ -79,6 +79,7 @@ is the following:
 
 .. literalinclude:: /cookbook/dockerfiles/tensorflow_horovod/Dockerfile_horovod_0_15_1
     :language: docker
+    :linenos:
 
 Used OCI hooks
 --------------
@@ -165,6 +166,7 @@ is the following:
 
 .. literalinclude:: /cookbook/dockerfiles/tensorflow_horovod/Dockerfile_horovod_0_16_1
     :language: docker
+    :linenos:
 
 Used OCI hooks
 --------------

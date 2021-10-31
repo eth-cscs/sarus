@@ -71,6 +71,7 @@ standalone_release:
   only:
     - master
     - develop
+    - web
 
 coverage:
   extends: .from_source
@@ -81,9 +82,9 @@ coverage:
 centos7:
   extends: .from_source
   script:
-      - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH centos:7 centos:7
-      - sarus-build-images
-      - sarus-build-from-scratch-and-test
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH centos:7 centos:7
+    - sarus-build-images
+    - sarus-build-from-scratch-and-test
 
 ubuntu18.04:
   extends: .from_source
@@ -95,7 +96,7 @@ ubuntu18.04:
 ubuntu20.04:
   extends: .from_source
   script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) ~/cache/ids/sarus ubuntu:20.04 ubuntu:20.04
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH ubuntu:20.04 ubuntu:20.04
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
@@ -103,6 +104,13 @@ debian10:
   extends: .from_source
   script:
     - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH debian:10 debian:10
+    - sarus-build-images
+    - sarus-build-from-scratch-and-test
+
+opensuseleap15.3:
+  extends: .from_source
+  script:
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH opensuseleap:15.3 opensuseleap:15.3
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
@@ -141,13 +149,13 @@ spack_centos7:
   before_script:
     - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-centos7 spack-centos7
 
-spack_fedora31:
+spack_fedora34:
   extends: .spack_package
   only:
     - web
     - schedules
   before_script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-fedora31 spack-fedora31
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-fedora34 spack-fedora34
 
 spack_opensuseleap15.2:
   extends: .spack_package
