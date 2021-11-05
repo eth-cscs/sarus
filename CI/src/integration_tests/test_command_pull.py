@@ -99,13 +99,12 @@ class TestCommandPull(unittest.TestCase):
 
     def _add_insecure_registries_entry(self, registry_address):
         with open(self._sarusjson_filename, 'r') as f:
-            data = f.read().replace('\n', '')
+            config = json.load(f)
 
-        config = json.loads(data)
         config["insecureRegistries"] = [ registry_address ]
-        data = json.dumps(config)
 
-        with open("sarus.json.dummy", 'w') as f:
-            f.write(data)
+        with open("sarus.json.dummy", "w") as f:
+            json.dump(config, f)
+
         subprocess.check_output(["sudo", "cp", "sarus.json.dummy", self._sarusjson_filename])
         os.remove("sarus.json.dummy")

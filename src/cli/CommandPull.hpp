@@ -99,7 +99,7 @@ private:
 
             conf->imageID = cli::utility::parseImageID(positionalArgs.argv()[0]);
             conf->useCentralizedRepository = values.count("centralized-repository");
-            conf->enforceSecureServer = !serverIsInsecure(conf->imageID.server);
+            conf->enforceSecureServer = !serverIsAllowedInsecure(conf->imageID.server);
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch (std::exception& e) {
@@ -111,7 +111,7 @@ private:
         cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
     }
 
-    bool serverIsInsecure(std::string server) {
+    bool serverIsAllowedInsecure(std::string server) {
         if (!conf->json.HasMember("insecureRegistries")) {
             return false;
         }
