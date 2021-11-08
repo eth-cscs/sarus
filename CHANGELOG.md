@@ -38,6 +38,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Updated Dropbear software used by the SSH hook to version 2020.81
 - Miscellaneous updates to Dockerfiles used for CI stages; in particular, the Sarus static standalone package is now built on Alpine Linux 3.14 with a GCC 10.3.1 toolchain
 
+### Fixed
+
+- Corrected the error message when attempting to pull an image by digest
+
 ### Removed
 
 - The use of the `bind-propagation` property for bind mounts (deprecated in Sarus 1.1.) has now been removed. All bind mounts are done with recursive private (`rprivate`) propagation.
