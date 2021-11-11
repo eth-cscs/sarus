@@ -11,6 +11,8 @@ elif [ "$os" == "debian:10" ]; then
     apt-get update && apt-get install -y sudo
 elif [ "$os" == "centos:7" ]; then
     yum install -y sudo
+elif [ "$os" == "fedora:34" ]; then
+    dnf install -y sudo
 elif [ "$os" == "opensuseleap:15.3" ]; then
     zypper install -y sudo
 else

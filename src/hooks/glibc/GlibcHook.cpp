@@ -25,7 +25,6 @@
 
 #include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
-#include "runtime/mount_utilities.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -86,9 +85,9 @@ void GlibcHook::parseConfigJSONOfBundle() {
         rootfsDir = bundleDir / root;
     }
 
-    // get uid + gid of user
-    uidOfUser = json["process"]["user"]["uid"].GetInt();
-    gidOfUser = json["process"]["user"]["gid"].GetInt();
+    uid_t uidOfUser = json["process"]["user"]["uid"].GetInt();
+    gid_t gidOfUser = json["process"]["user"]["gid"].GetInt();
+    userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
 
     logMessage("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);
 }
@@ -171,36 +170,27 @@ void GlibcHook::verifyThatHostAndContainerGlibcAreABICompatible(
 }
 
 void GlibcHook::replaceGlibcLibrariesInContainer() const {
-    bool wasInjectionPerformed = false;
-
-    // Validate Mount Source
-    auto rootIdentity = sarus::common::UserIdentity{};
-    auto userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
-    sarus::common::switchIdentity(userIdentity);
     for (const auto& hostLib : hostLibraries) {
-        sarus::runtime::validateMountSource(hostLib);
-    }
-    sarus::common::switchIdentity(rootIdentity);
-
-    for (const auto& hostLib : hostLibraries) {
+        auto wasLibraryReplaced = false;
         auto soname = sarus::common::getSharedLibSoname(hostLib, readelfPath);
+        logMessage(boost::format("Injecting host lib %s with soname %s in the container")
+                   % hostLib % soname, sarus::common::LogLevel::DEBUG);
 
         for (const auto& containerLib : containerLibraries) {
             if (containerLib.filename().string() == soname) {
                 auto destination = rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, containerLib);
-
-                sarus::common::switchIdentity(userIdentity);
-                sarus::runtime::validateMountDestination(destination.parent_path(), bundleDir, rootfsDir);
-                sarus::common::switchIdentity(rootIdentity);
-
-                sarus::runtime::bindMount(hostLib, destination);
-                wasInjectionPerformed = true;
+                common::utility::validatedBindMount(hostLib, destination, userIdentity, bundleDir, rootfsDir);
+                wasLibraryReplaced = true;
             }
         }
-    }
 
-    if (!wasInjectionPerformed) {
-        SARUS_THROW_ERROR("Internal error: failed to inject glibc libraries.");
+        if (!wasLibraryReplaced) {
+            logMessage(boost::format("Could not find ABI-compatible counterpart for host lib (%s) inside container "
+                                     "=> adding host lib (%s) into container's /lib64 via bind mount ")
+                       % hostLib % hostLib, sarus::common::LogLevel::WARN);
+            auto destination = rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, "/lib64" / hostLib.filename());
+            common::utility::validatedBindMount(hostLib, destination, userIdentity, bundleDir, rootfsDir);
+        }
     }
 }
 

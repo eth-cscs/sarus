@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added support for applying SELinux labels to container processes and to mounts performed by the OCI runtime
 - The MPI hook whitelists access to devices bind mounted inside containers
 - cgroup filesystems are mounted inside containers
+- Added CI unit and integration tests from source on Fedora 34
 - Added CI unit and integration tests from source on OpenSUSE Leap 15.3
 
 ### Changed

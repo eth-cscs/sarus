@@ -21,6 +21,7 @@
 
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
+#include "runtime/mount_utilities.hpp"
 
 namespace rj = rapidjson;
 
@@ -110,6 +111,34 @@ void enterNamespacesOfProcess(pid_t pid) {
         auto file = boost::format("/proc/%s/ns/pid") % pid;
         enterNamespace(file.str());
     }
+}
+
+void validatedBindMount(const boost::filesystem::path& from,
+                        const boost::filesystem::path& to,
+                        const sarus::common::UserIdentity& userIdentity,
+                        const boost::filesystem::path& bundleDir,
+                        const boost::filesystem::path& rootfsDir) {
+    auto rootIdentity = sarus::common::UserIdentity{};
+
+    // Validate mount source is visible for user and destination is on allowed device
+    sarus::common::switchIdentity(userIdentity);
+    try {
+        sarus::runtime::validateMountSource(from);
+        sarus::runtime::validateMountDestination(to, bundleDir, rootfsDir);
+    } catch(sarus::common::Error& e) {
+        auto message = boost::format("Failed to bind mount %s on container's %s") % from.string() % to.string();
+        SARUS_RETHROW_ERROR(e, message.str());
+    }
+    sarus::common::switchIdentity(rootIdentity);
+
+    // Create file or folder if necessary, after validation
+    if (boost::filesystem::is_directory(from)){
+        sarus::common::createFoldersIfNecessary(to);
+    }
+    else {
+        sarus::common::createFileIfNecessary(to);
+    }
+    sarus::runtime::bindMount(from, to);
 }
 
 /**

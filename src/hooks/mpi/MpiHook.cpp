@@ -97,9 +97,9 @@ void MpiHook::parseConfigJSONOfBundle() {
         rootfsDir = bundleDir / root;
     }
 
-    // get uid + gid of user
-    uidOfUser = json["process"]["user"]["uid"].GetInt();
-    gidOfUser = json["process"]["user"]["gid"].GetInt();
+    uid_t uidOfUser = json["process"]["user"]["uid"].GetInt();
+    gid_t gidOfUser = json["process"]["user"]["gid"].GetInt();
+    userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
 
     log("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);
 }
@@ -262,7 +262,7 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
     if (it == hostToContainerLibs.cend()) {
         log(boost::format{"no corresponding libs in container => bind mount (%s) into /lib"} % hostLib.getPath(), sarus::common::LogLevel::DEBUG);
         auto containerLibReal = sarus::common::realpathWithinRootfs(rootfsDir, "/lib" / hostLib.getPath().filename());
-        validatedBindMount(hostLib.getPath(), rootfsDir / containerLibReal);
+        common::utility::validatedBindMount(hostLib.getPath(), rootfsDir / containerLibReal, userIdentity, bundleDir, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs("/lib" / hostLib.getPath().filename(), hostLib.getPath().filename(), false);
         return;
     }
@@ -276,14 +276,14 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
         // safe replacement, all good.
         log(boost::format{"abi-compatible => bind mount host lib (%s) on top of container lib (%s) (i.e. override)"} % hostLib.getPath() % bestCandidateLib.getPath(), sarus::common::LogLevel::DEBUG);
         auto containerLibReal = sarus::common::realpathWithinRootfs(rootfsDir, bestCandidateLib.getPath());
-        validatedBindMount(hostLib.getPath(), rootfsDir / containerLibReal);
+        common::utility::validatedBindMount(hostLib.getPath(), rootfsDir / containerLibReal, userIdentity, bundleDir, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs(containerLibReal, hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
     }
     else if (bestCandidateLib.isMajorAbiCompatible(hostLib)){
         // risky replacement, issue warning.
         log(boost::format{"WARNING: container lib (%s) is major-only-abi-compatible => bind mount host lib (%s) into /lib"} % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::DEBUG);
         auto containerLibReal = sarus::common::realpathWithinRootfs(rootfsDir, "/lib" / hostLib.getPath().filename());
-        validatedBindMount(hostLib.getPath(), rootfsDir / containerLibReal);
+        common::utility::validatedBindMount(hostLib.getPath(), rootfsDir / containerLibReal, userIdentity, bundleDir, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs("/lib" / hostLib.getPath().filename(), hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
     }
     else {
@@ -292,7 +292,7 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
         log(boost::format{"WARNING: could not find ABI-compatible counterpart for host lib (%s) inside container (best candidate found: %s) => adding host lib (%s) into container's /lib via bind mount "}
             % hostLib.getPath() % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::WARN);
         auto containerLibReal = sarus::common::realpathWithinRootfs(rootfsDir, "/lib" / hostLib.getPath().filename());
-        validatedBindMount(hostLib.getPath(), rootfsDir / containerLibReal);
+        common::utility::validatedBindMount(hostLib.getPath(), rootfsDir / containerLibReal, userIdentity, bundleDir, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs("/lib" / hostLib.getPath().filename(), hostLib.getPath().filename(), true);
     }
 
@@ -316,7 +316,7 @@ void MpiHook::performBindMounts() const {
     auto devicesCgroupPath = boost::filesystem::path{};
 
     for(const auto& mount : bindMounts) {
-        validatedBindMount(mount, rootfsDir / mount);
+        common::utility::validatedBindMount(mount, rootfsDir / mount, userIdentity, bundleDir, rootfsDir);
 
         if (sarus::common::isDeviceFile(mount)) {
             if (devicesCgroupPath.empty()) {
@@ -408,31 +408,6 @@ void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesy
             log(message, sarus::common::LogLevel::DEBUG);
         }
     }
-}
-
-void MpiHook::validatedBindMount(const boost::filesystem::path& from, const boost::filesystem::path& to) const {
-    auto rootIdentity = sarus::common::UserIdentity{};
-    auto userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
-
-    // Validate mount source is visible for user and destination is on allowed device
-    sarus::common::switchIdentity(userIdentity);
-    try {
-        sarus::runtime::validateMountSource(from);
-        sarus::runtime::validateMountDestination(to, bundleDir, rootfsDir);
-    } catch(sarus::common::Error& e) {
-        auto message = boost::format("Failed to bind mount %s on container's %s") % from.string() % to.string();
-        SARUS_RETHROW_ERROR(e, message.str());
-    }
-    sarus::common::switchIdentity(rootIdentity);
-
-    // Create file or folder if necessary, after validation
-    if (boost::filesystem::is_directory(from)){
-        sarus::common::createFoldersIfNecessary(to);
-    }
-    else {
-        sarus::common::createFileIfNecessary(to);
-    }
-    sarus::runtime::bindMount(from, to);
 }
 
 void MpiHook::log(const std::string& message, sarus::common::LogLevel level) const {
