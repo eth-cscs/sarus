@@ -86,6 +86,13 @@ centos7:
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
+fedora34:
+  extends: .from_source
+  script:
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH fedora:34 fedora:34
+    - sarus-build-images
+    - sarus-build-from-scratch-and-test
+
 ubuntu18.04:
   extends: .from_source
   script:

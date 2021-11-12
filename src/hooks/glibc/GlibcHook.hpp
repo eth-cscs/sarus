@@ -17,6 +17,7 @@
 #include <sys/types.h>
 
 #include "common/Logger.hpp"
+#include "common/UserIdentity.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -49,8 +50,7 @@ private:
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
     pid_t pidOfContainer;
-    uid_t uidOfUser;
-    gid_t gidOfUser;
+    sarus::common::UserIdentity userIdentity;
     boost::filesystem::path ldconfigPath;
     boost::filesystem::path readelfPath;
     std::vector<boost::filesystem::path> hostLibraries;

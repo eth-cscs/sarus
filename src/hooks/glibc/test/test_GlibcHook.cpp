@@ -76,22 +76,23 @@ TEST(GlibcHookTestGroup, test) {
         .runLdconfigInContainer()
         .checkSuccess();
 
-    // glibc injection of single library
+    // glibc replacement of single library
     Checker{}
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addContainerLibcAndSymlink("libc.so.6-container", "/lib64/libc-2.25.so", "/lib64/libc.so.6", "libc.so.6-host")
         .runLdconfigInContainer()
         .checkSuccess();
 
-    // glibc injection of single library (some libraries missing in container)
+    // glibc replacement and addition of libraries
     Checker{}
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addHostLib("ld-linux-x86-64.so.2-host", "/lib64/ld-linux-x86-64.so.2")
         .addContainerLibcAndSymlink("libc.so.6-container", "/lib64/libc-2.25.so", "/lib64/libc.so.6", "libc.so.6-host")
+        .expectContainerLib("/lib64/ld-linux-x86-64.so.2", "ld-linux-x86-64.so.2-host")
         .runLdconfigInContainer()
         .checkSuccess();
 
-    // glibc injection of multiple libraries
+    // glibc replacement of multiple libraries
     Checker{}
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addHostLib("ld-linux-x86-64.so.2-host", "/lib64/ld-linux-x86-64.so.2")
@@ -106,6 +107,7 @@ TEST(GlibcHookTestGroup, test) {
         .addHostLib("ld-linux-x86-64.so.2-host", "/lib64/ld-linux-x86-64.so.2")
         .addContainerLibcAndSymlink("libc.so.6-32bit-container", "/lib/libc-2.25.so", "/lib/libc.so.6", "libc.so.6-32bit-container")
         .addContainerLibcAndSymlink("libc.so.6-container", "/lib64/libc-2.25.so", "/lib64/libc.so.6", "libc.so.6-host")
+        .expectContainerLib("/lib64/ld-linux-x86-64.so.2", "ld-linux-x86-64.so.2-host")
         .runLdconfigInContainer()
         .checkSuccess();
 }

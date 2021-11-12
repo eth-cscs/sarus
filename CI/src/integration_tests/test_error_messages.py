@@ -127,6 +127,21 @@ class TestErrorMessages(unittest.TestCase):
                             "\nSee 'sarus help pull' (--login option)")
         self._check(command, expected_message)
 
+        command = ["sarus", "pull", "fedora@sha256:e69b5a62ce23c673885bddc94e6679c9b2af683059637ceddb9cff458537a326"]
+        expected_message = ("Pulling images by digest is currently not supported. "
+                            "The feature will be introduced in a future release")
+        self._check(command, expected_message)
+
+        command = ["sarus", "pull", "fedora:32@sha256:e69b5a62ce23c673885bddc94e6679c9b2af683059637ceddb9cff458537a326"]
+        expected_message = ("Pulling images by digest is currently not supported. "
+                            "The feature will be introduced in a future release")
+        self._check(command, expected_message)
+
+        command = ["sarus", "pull", "quay.io/ethcscs/ubuntu@sha256:778fdd9f62a6d7c0e53a97489ab3db17738bc5c1acf09a18738a2a674025eae6"]
+        expected_message = ("Pulling images by digest is currently not supported. "
+                            "The feature will be introduced in a future release")
+        self._check(command, expected_message)
+
         command = ["bash", "-c", "printf 'invalid-username\ninvalid-password' |sarus pull --login quay.io/ethcscs/private-example"]
         expected_message = ("Authorization failed when retrieving token for image 'quay.io/ethcscs/private-example:latest'"
                             "\nPlease check the entered credentials.")

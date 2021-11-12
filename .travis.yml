@@ -1,4 +1,4 @@
-dist: bionic
+dist: focal
 
 services:
   - docker
@@ -18,6 +18,10 @@ jobs:
 
     - name: "Standalone + Unit and Integration tests"
       script:
+      - modprobe loop
+      - modprobe squashfs
+      - modprobe overlay
+      - CI/check_host.sh
       - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $(pwd)/cache standalone-build standalone-run
       - sarus-build-images
       - sarus-build-and-test

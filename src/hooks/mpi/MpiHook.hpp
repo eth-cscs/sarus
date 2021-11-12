@@ -19,6 +19,7 @@
 
 #include "common/LogLevel.hpp"
 #include "common/PathHash.hpp"
+#include "common/UserIdentity.hpp"
 #include "SharedLibrary.hpp"
 
 namespace sarus {
@@ -51,7 +52,6 @@ private:
         const boost::filesystem::path& hostLib,
         const std::function<bool(const boost::filesystem::path&, const boost::filesystem::path&)>& abiCompatibilityCheck) const;
     void performBindMounts() const;
-    void validatedBindMount(const boost::filesystem::path& from, const boost::filesystem::path& to) const;
     void createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesystem::path& target,
                                                         const boost::filesystem::path& linkFilename,
                                                         const bool preserveRootLink) const;
@@ -62,8 +62,7 @@ private:
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
     pid_t pidOfContainer;
-    uid_t uidOfUser;
-    gid_t gidOfUser;
+    sarus::common::UserIdentity userIdentity;
     boost::filesystem::path ldconfig;
     std::vector<boost::filesystem::path> bindMounts;
     std::vector<SharedLibrary> containerLibs;

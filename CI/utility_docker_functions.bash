@@ -156,6 +156,23 @@ sarus-itest-from-scratch() {
     fail_on_error "${FUNCNAME}: failed"
 }
 
+sarus-itest-from-scratch-debug() {
+    echo "${FUNCNAME^^} with:"
+    _print_parameters
+
+    if [ ${toolchain_file} = "gcc-asan.cmake" ]; then
+        echo "${FUNCNAME}: skipping integration tests (Sarus doesn't work when built with ASan)"
+        return
+    fi
+
+    _run_cmd_in_interactive_container ${image_run} root \
+        ". /sarus-source/CI/utility_functions.bash && \
+        install_sarus $(_build_dir_container) /opt/sarus/default && \
+        bash"
+
+    fail_on_error "${FUNCNAME}: failed"
+}
+
 sarus-dtest() {
     echo "${FUNCNAME^^} with:"
     _print_parameters
@@ -240,6 +257,7 @@ _run_cmd_in_container() {
     local image=${1}; shift || error "${FUNCNAME}: missing image argument"
     local user=${1}; shift || error "${FUNCNAME}: missing user argument"
     local command=${1}; shift || error "${FUNCNAME}: missing command argument"
+    local additional_docker_opts=${1}; shift || additional_docker_opts=""
 
     local host_uid=$(id -u)
     local host_gid=$(id -g)
@@ -253,20 +271,31 @@ _run_cmd_in_container() {
     mkdir -p ${cache_centralized_repo_dir}
     mkdir -p ${cache_local_registry_dir}
 
-    docker run --rm --tty --privileged --user root \
-        --mount=src=${sarus_source_dir_host},dst=/sarus-source,type=bind \
-        --mount=src=${cache_oci_hooks_dir},dst=/home/docker/.oci-hooks,type=bind \
-        --mount=src=${cache_local_repo_dir},dst=/home/docker/.sarus,type=bind \
-        --mount=src=${cache_centralized_repo_dir},dst=/var/sarus/centralized_repository,type=bind \
-        --mount=src=${cache_local_registry_dir},dst=/var/local_registry,type=bind \
-        -e CI_COMMIT_TAG \
-        -e TRAVIS_TAG \
+    local docker_options="--rm --tty --privileged --user root \
+                          --mount=src=${sarus_source_dir_host},dst=/sarus-source,type=bind \
+                          --mount=src=${cache_oci_hooks_dir},dst=/home/docker/.oci-hooks,type=bind \
+                          --mount=src=${cache_local_repo_dir},dst=/home/docker/.sarus,type=bind \
+                          --mount=src=${cache_centralized_repo_dir},dst=/var/sarus/centralized_repository,type=bind \
+                          --mount=src=${cache_local_registry_dir},dst=/var/local_registry,type=bind \
+                          -e CI_COMMIT_TAG \
+                          -e TRAVIS_TAG ${additional_docker_opts}"
+
+    docker run ${docker_options} \
         ${image} bash -c "
         . /sarus-source/CI/utility_functions.bash \
         && change_uid_gid_of_docker_user ${host_uid} ${host_gid} \
         && sudo -E -u ${user} bash -c \"${command}\""
     fail_on_error "${FUNCNAME}: failed to execute '${command}' in container"
 }
+
+_run_cmd_in_interactive_container() {
+    local image=${1}; shift || error "${FUNCNAME}: missing image argument"
+    local user=${1}; shift || error "${FUNCNAME}: missing user argument"
+    local command=${1}; shift || error "${FUNCNAME}: missing command argument"
+
+    _run_cmd_in_container "${image}" "${user}" "${command}" "--interactive"
+}
+
 
 _print_parameters() {
     echo "build_type = ${build_type}"

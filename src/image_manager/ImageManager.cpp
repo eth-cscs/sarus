@@ -14,6 +14,7 @@
 #include <chrono> // for timer
 
 #include <cpprest/json.h>
+#include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
@@ -37,6 +38,7 @@ namespace image_manager {
      * Pull the container image and add to the repository
      */
     void ImageManager::pullImage() {
+        issueErrorIfPullingByDigest();
         issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled();
         issueWarningIfIsCentralizedRepositoryAndIsNotRootUser();
 
@@ -131,8 +133,21 @@ namespace image_manager {
         }
     }
 
-    void ImageManager::printLog(const boost::format& message, common::LogLevel LogLevel) const {
-        common::Logger::getInstance().log(message.str(), sysname, LogLevel);
+    void ImageManager::issueErrorIfPullingByDigest() const {
+        // Build regexp for catching digests with "@" + first part of the digest regexp (before colon separator)
+        // from https://github.com/opencontainers/go-digest/blob/master/digest.go
+        boost::regex digestRegexp("@[a-z0-9]+(?:[.+_-][a-z0-9]+)*");
+        boost::smatch matches;
+        if(boost::regex_search(config->imageID.image, matches, digestRegexp, boost::regex_constants::match_partial)) {
+            auto message = boost::format("Pulling images by digest is currently not supported. "
+                                         "The feature will be introduced in a future release");
+            printLog(message, common::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+        }
+    }
+
+    void ImageManager::printLog(const boost::format& message, common::LogLevel LogLevel, std::ostream& outStream, std::ostream& errStream) const {
+        common::Logger::getInstance().log(message.str(), sysname, LogLevel, outStream, errStream);
     }
 
 } // namespace

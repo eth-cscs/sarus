@@ -63,8 +63,7 @@ public:
         sarus::common::createFoldersIfNecessary((rootfsDir / containerSymlink).parent_path());
         boost::filesystem::copy_file(dummyLibsDir / dummyLib, rootfsDir / containerLib);
         boost::filesystem::create_symlink(rootfsDir / containerLib, rootfsDir / containerSymlink);
-        containerLibs.push_back(rootfsDir / containerSymlink);
-        expectedContainerLibsAfterInjection.push_back(dummyLibsDir / expectedContainerLibAfterInjection);
+        expectContainerLib(containerSymlink, expectedContainerLibAfterInjection);
         return *this;
     }
 
@@ -73,6 +72,12 @@ public:
                                 const boost::filesystem::path& expectedContainerLibAfterInjection) {
         sarus::common::createFoldersIfNecessary((rootfsDir / containerLib).parent_path());
         boost::filesystem::copy_file(dummyLibsDir / dummyLib, rootfsDir / containerLib);
+        expectContainerLib(containerLib, expectedContainerLibAfterInjection);
+        return *this;
+    }
+
+    Checker& expectContainerLib(const boost::filesystem::path& containerLib,
+                                const boost::filesystem::path& expectedContainerLibAfterInjection) {
         containerLibs.push_back(rootfsDir / containerLib);
         expectedContainerLibsAfterInjection.push_back(dummyLibsDir / expectedContainerLibAfterInjection);
         return *this;

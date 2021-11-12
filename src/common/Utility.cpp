@@ -759,9 +759,12 @@ std::vector<boost::filesystem::path> getSharedLibsFromDynamicLinker(
     auto output = sarus::common::executeCommand(command.str());
     std::stringstream stream{output};
     std::string line;
-    std::getline(stream, line); // drop first line of output (header)
     while(std::getline(stream, line)) {
+        // Look for "arrow" separator to only parse lines containing library entries
         auto pos = line.rfind(" => ");
+        if(pos == std::string::npos) {
+            continue;
+        }
         auto library = line.substr(pos + 4);
         libraries.push_back(library);
     }

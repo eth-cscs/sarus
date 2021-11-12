@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added support for applying SELinux labels to container processes and to mounts performed by the OCI runtime
 - The MPI hook whitelists access to devices bind mounted inside containers
 - cgroup filesystems are mounted inside containers
+- Added CI unit and integration tests from source on Fedora 34
 - Added CI unit and integration tests from source on OpenSUSE Leap 15.3
 
 ### Changed
@@ -37,6 +38,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Updated recommended NVIDIA Container Toolkit version to 1.5.1
 - Updated Dropbear software used by the SSH hook to version 2020.81
 - Miscellaneous updates to Dockerfiles used for CI stages; in particular, the Sarus static standalone package is now built on Alpine Linux 3.14 with a GCC 10.3.1 toolchain
+
+### Fixed
+
+- Corrected the error message when attempting to pull an image by digest
 
 ### Removed
 

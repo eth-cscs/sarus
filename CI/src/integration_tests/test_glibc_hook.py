@@ -62,6 +62,17 @@ def _get_host_glibc_libs():
         # Leap 15.2 still bundles libcrypt with glibc
         libs.remove(os.path.join(_get_glibc_path(), "libcrypt.so.1"))
         libs.append("/usr/lib64/libcrypt.so.1")
+    if _get_distro_id() == "fedora" and int(_get_distro_version_id()) >= 28:
+        # libnsl.so.1 is no longer part of the glibc package and no longer installed by default since F28:
+        # https://fedoraproject.org/wiki/Releases/28/ChangeSet#NIS_switching_to_new_libnsl_to_support_IPv6
+        # Fedora >=28 ships with /usr/lib64/libnsl.so.2 (from the libnsl2 RPM, e.g.
+        # https://fedora.pkgs.org/34/fedora-x86_64/libnsl2-1.3.0-2.fc34.x86_64.rpm.html).
+        # The RPM description states that "This code was formerly part of glibc, but is now standalone to
+        # be able to link against TI-RPC for IPv6 support."
+        libs.remove(os.path.join(_get_glibc_path(), "libnsl.so.1"))
+        libs.append("/usr/lib64/libnsl.so.2")
+        # Fedora does not install by default libnss_hesiod.so.2 at least since Fedora 28 (could be earlier)
+        libs.remove(os.path.join(_get_glibc_path(), "libnss_hesiod.so.2"))
     return libs
 
 class TestGlibcHook(unittest.TestCase):
