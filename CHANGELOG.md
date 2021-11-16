@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Added the ability to pull from insecure registries via `insecureRegistries` parameter in `sarus.json`
 - Added the `-e/--env` option to `sarus run` for setting environment variables inside the container. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#environment)
 - Added the `--device` option to `sarus run` for mounting and whitelisting devices inside containers. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#mounting-custom-devices-into-the-container)
 - Added support for the optional `siteDevices` parameter in the `sarus.json` configuration file.

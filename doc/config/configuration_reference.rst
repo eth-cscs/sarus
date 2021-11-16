@@ -203,6 +203,15 @@ paths within containers.
 It is OK to perform this under ``/var`` or ``/opt`` or a novel path that your
 site maintains (e.g. ``/scratch``).
 
+.. _config-reference-insecureRegistries:
+
+insecureRegistries (array, OPTIONAL)
+------------------------------------
+List of strings defining registries for which TLS/SSL security will not be enforced
+when pulling images. Note that this opens the door for many potential security
+vulnerabilities, and as such should only be used in exceptional cases such as local
+testing.
+
 siteDevices (array, OPTIONAL)
 -----------------------------
 List of JSON object defining device files which will be automatically mounted

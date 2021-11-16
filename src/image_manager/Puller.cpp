@@ -143,8 +143,11 @@ namespace image_manager {
             printLog( boost::format("> %-15.15s: %s") % "found in cache" % digest, common::LogLevel::GENERAL);
             return;
         }
-    
-        web::http::client::http_client       client( getServerUri(config->imageID.server) );
+
+        web::http::client::http_client_config clientConfig;
+        clientConfig.set_validate_certificates(config->enforceSecureServer);
+
+        web::http::client::http_client       client( getServerUri(config->imageID.server), clientConfig );
         web::http::http_request              request(methods::GET);
         web::http::http_response             response;
 
@@ -218,7 +221,10 @@ namespace image_manager {
                 printLog( boost::format("Layer %s: download redirected to %s/%s") % digest % downloadUri % path, common::LogLevel::DEBUG);
 
                 try {
-                    web::http::client::http_client redirectClient( downloadUri );
+                    web::http::client::http_client_config clientConfig;
+                    clientConfig.set_validate_certificates(config->enforceSecureServer);
+
+                    web::http::client::http_client redirectClient( downloadUri, clientConfig );
                     web::http::http_request        redirectRequest(methods::GET);
                     web::http::http_response       redirectResponse;
 
@@ -308,7 +314,10 @@ namespace image_manager {
                  common::LogLevel::INFO);
 
         // Attempt to retrieve manifest
-        web::http::client::http_client client (getServerUri(config->imageID.server));
+        web::http::client::http_client_config clientConfig;
+        clientConfig.set_validate_certificates(config->enforceSecureServer);
+
+        web::http::client::http_client client (getServerUri(config->imageID.server), clientConfig);
         web::http::http_request              request(methods::GET);
         pplx::task<web::http::http_response> responseTask;
         web::http::http_response             response;
@@ -499,10 +508,13 @@ namespace image_manager {
             web::http::client::http_client_config clientConfig;
             web::credentials creds( U(config->authentication.username), U(config->authentication.password) );
             clientConfig.set_credentials(creds);
+            clientConfig.set_validate_certificates(config->enforceSecureServer);
             return std::unique_ptr<web::http::client::http_client>( new web::http::client::http_client( server, clientConfig ));
         }
 
-        return std::unique_ptr<web::http::client::http_client>( new web::http::client::http_client( server ));
+        web::http::client::http_client_config clientConfig;
+        clientConfig.set_validate_certificates(config->enforceSecureServer);
+        return std::unique_ptr<web::http::client::http_client>( new web::http::client::http_client( server, clientConfig ));
     }
 
     /**
@@ -546,7 +558,7 @@ namespace image_manager {
     }
 
     std::string Puller::getServerUri(const std::string &server) {
-        return "https://" + server;
+        return (config->enforceSecureServer) ? "https://" + server : "http://" + server ;
     }
 
     void Puller::printLog(  const boost::format &message, common::LogLevel LogLevel,

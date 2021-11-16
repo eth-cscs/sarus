@@ -95,6 +95,8 @@ class Config {
 
         bool useCentralizedRepository = false;
 
+        bool enforceSecureServer = true; // for CommandPull
+
         std::chrono::high_resolution_clock::time_point program_start; // for time measurement
 };
 }
