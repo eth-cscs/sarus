@@ -20,11 +20,8 @@ check_git_repo() {
     cp -rT $sarus_src_dir /home/docker/sarus-git
     mkdir -p /home/docker/sarus-git/build
     cd /home/docker/sarus-git/build
-    cmake   -DCMAKE_PREFIX_PATH="/opt/boost/1_65_0" \
-            -DBUILD_STATIC=TRUE \
-            .. \
-            > cmake_stdout.txt
-    fail_on_error "failed to run Cmake on git repo"
+    cmake -DBUILD_STATIC=TRUE .. > cmake_stdout.txt
+    fail_on_error "failed to run CMake on git repo"
     log "    Config successful, checking version string"
     version_from_cmake=$(cat cmake_stdout.txt | grep "Sarus version" | awk -F ": " '{print $2}')
     version_from_git=$(git describe --tags --dirty)
