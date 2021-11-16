@@ -44,7 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
-- The use of the `bind-propagation` property for bind mounts (deprecated in Sarus 1.1.) has now been removed. All bind mounts are done with recursive private (`rprivate`) propagation.
+- The use of the `bind-propagation` property for bind mounts (deprecated in Sarus 1.1.0) has now been removed. All bind mounts are done with recursive private (`rprivate`) propagation.
 
 ### Security
 
