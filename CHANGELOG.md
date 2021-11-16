@@ -9,7 +9,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Added the ability to pull from insecure registries via `insecureRegistries` parameter in `sarus.json`
-- Added script to check for host requirements in CI, linked in documentation.
 - Added the `-e/--env` option to `sarus run` for setting environment variables inside the container. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#environment)
 - Added the `--device` option to `sarus run` for mounting and whitelisting devices inside containers. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#mounting-custom-devices-into-the-container)
 - Added support for the optional `siteDevices` parameter in the `sarus.json` configuration file.
@@ -20,8 +19,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added support for applying SELinux labels to container processes and to mounts performed by the OCI runtime
 - The MPI hook whitelists access to devices bind mounted inside containers
 - cgroup filesystems are mounted inside containers
-- Added CI unit and integration tests from source on Fedora 34
-- Added CI unit and integration tests from source on OpenSUSE Leap 15.3
+- Added script to check for host requirements in CI, linked in documentation.
+- Added CI unit and integration tests from source on Fedora 34 and OpenSUSE Leap 15.3
 
 ### Changed
 
