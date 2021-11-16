@@ -195,7 +195,6 @@ achieve the same performance as the natively built test.
 .. _fig-osu-latency-results:
 
 .. figure:: plot_native_mpich_mvapich_intelmpi.*
-   :scale: 100 %
    :alt: OSU Latency results
 
    Results of the OSU Latency benchmark for the native MPI and three different
@@ -212,7 +211,6 @@ displayed in the following Figure:
 .. _fig-osu-alltoall-results:
 
 .. figure:: alltoall-results.*
-   :scale: 100 %
    :alt: OSU All-to-all results
 
    Results of the OSU All-to-all benchmark for the native MPI and MPICH 3.1.4

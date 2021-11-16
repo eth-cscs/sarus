@@ -10,11 +10,11 @@ Operating System
 * `util-linux <https://github.com/karelzak/util-linux>`_ >= 2.20 (these utilities are usually bundled with the Linux distribution itself;
   v2.20 was released in August 2011)
 * The following kernel modules loaded:
-
   * loop
   * squashfs
   * overlayfs
 
+These requirements are tracked by the `CI/check_host.sh <https://github.com/eth-cscs/sarus/blob/master/CI/check_host.sh>` script.
 
 Software
 ========
@@ -61,13 +61,13 @@ Python 3 is required if you are interested to also run the integration tests:
 Additional dependencies
 -----------------------
 
-* `libarchive <https://github.com/libarchive/libarchive>`_ 3.4.1
-* `Boost libraries <https://www.boost.org/>`_ >= 1.60.x (recommended 1.65.x)
-* `C++ REST SDK <https://github.com/Microsoft/cpprestsdk>`_ v2.10.0
-* `RapidJSON <http://rapidjson.org/index.html>`_ commit 663f076
+* `libarchive <https://github.com/libarchive/libarchive>`_ >= 3.4.1 (recommended 3.5.2)
+* `Boost libraries <https://www.boost.org/>`_ >= 1.60.x (recommended 1.77.x)
+* `C++ REST SDK <https://github.com/Microsoft/cpprestsdk>`_ >= v2.10.0 (recommended 2.10.18)
+* `RapidJSON <http://rapidjson.org/index.html>`_ commit 00dbcf2
 
 .. important::
-    We recommend these versions as they are the ones routinely used for build
+    The recommended versions are the ones routinely used for build
     integration and testing, thus guaranteed to work.
 
 As the specific software versions listed above may not be provided by the system
@@ -110,7 +110,7 @@ Sarus internally relies on an OCI-compliant runtime to spawn a container.
 
 Here we will provide some indications to install `runc
 <https://github.com/opencontainers/runc>`_, the reference implementation from
-the Open Container Initiative. The recommended version is **v1.0.0-rc10**.
+the Open Container Initiative. The recommended version is **v1.0.2**.
 
 The simplest solution is to download a pre-built binary release from the
 project's GitHub page:

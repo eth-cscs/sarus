@@ -125,6 +125,11 @@ static void populateJSON(rj::Document& document) {
     disallowExactValue.PushBack("/opt", allocator);
     userMountsValue.AddMember("notAllowedPaths", disallowExactValue, allocator);
     document.AddMember("userMounts", userMountsValue, allocator);
+
+    // insecureRegistries
+    rj::Value insecureRegistriesValue(rj::kArrayType);
+    insecureRegistriesValue.PushBack("insecure.registry:5000", allocator);
+    document.AddMember("insecureRegistries", insecureRegistriesValue, allocator);
 }
 
 void createOCIHook(const boost::filesystem::path& hooksDir) {

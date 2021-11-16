@@ -35,7 +35,7 @@ EOF
 
 [ -e dropbear ] || git clone https://github.com/mkj/dropbear.git
 cd dropbear
-git checkout DROPBEAR_2020.79
+git checkout DROPBEAR_2020.81
 autoconf
 autoheader
 

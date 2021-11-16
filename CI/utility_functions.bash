@@ -116,9 +116,9 @@ build_sarus_archive() {
 
     # runc is statically linked with libseccomp, which is licensed under GNU LGPL-2.1.
     # To comply with LGPL-2.1 (§6(a)), include the libseccomp source code in the licenses folder.
-    wget -O ${prefix_dir}/licenses/libseccomp-2.4.3.tar.gz https://github.com/opencontainers/runc/releases/download/v1.0.0-rc92/libseccomp-2.4.3.tar.gz
+    wget -O ${prefix_dir}/licenses/libseccomp-2.5.1.tar.gz https://github.com/opencontainers/runc/releases/download/v1.0.2/libseccomp-2.5.1.tar.gz
 
-    mkdir -p ${prefix_dir}/var/OCIBundleDir
+    mkdir -pv ${prefix_dir}/var/OCIBundleDir
 
     # Bring cached binaries if available (see Dockerfile.build)
     cp /usr/local/bin/tini-static-amd64 ${prefix_dir}/bin || true
@@ -128,11 +128,10 @@ build_sarus_archive() {
     cd ${prefix_dir}/.. && tar cz --owner=root --group=root --file=../${archive_name} *
     cp  ${build_dir}/${archive_name} ${build_dir}/../${archive_name}
 
-    # Standalone README goes to root directory to be used by CI as root-level deployment artifact
-    # This way users can read extracting instruction before actually extracting the standalone archive :)
-    cp  ${build_dir}/../standalone/README.md ${build_dir}/../README.md
+    # Adjust standalone README instructions
+    cp -v ${build_dir}/../standalone/README.md ${build_dir}/README.md
     version=${CI_COMMIT_TAG-${TRAVIS_TAG-"1.0.0"}}
-    sed -i ${build_dir}/../README.md -e "s|@SARUS_VERSION@|${version}|g"
+    sed -i ${build_dir}/README.md -e "s|@SARUS_VERSION@|${version}|g"
     fail_on_error "Failed to prepare README.md for Sarus archive"
 
     # Prepare RELEASE notes for CI to use
@@ -169,6 +168,15 @@ install_sarus_from_archive() {
     cd ${pwd_backup}
 }
 
+run_sarus_registry() {
+    # copy mounted directory to get around needing write permission and prevent writing to host machine as root
+    sarus pull registry:2
+    sarus run --mount=type=bind,src=/var/local_registry,dst=/var/local_registry,readonly \
+    registry:2 sh -c "cp -r /var/local_registry /var/lib/registry && \
+    registry serve /etc/docker/registry/config.yml" \
+    > /dev/null 2>&1 &
+}
+
 run_unit_tests() {
     local build_dir=$1; shift
     cd ${build_dir}
@@ -194,7 +202,7 @@ run_integration_tests() {
 
     echo "Running integration tests with user=docker"
     sudo -u docker --login bash -c "
-        PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=/sarus-source/CI/src:\$PYTHONPATH \
+        PATH=/opt/sarus/default/bin:\${PATH} PYTHONPATH=/sarus-source/CI/src:\${PYTHONPATH} \
         CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker \
         pytest -v -m 'not asroot' /sarus-source/CI/src/integration_tests/" # TIP: Add -s --last-failed to pytest to get more output from failed tests.
     fail_on_error "Python integration tests failed"
@@ -204,7 +212,7 @@ run_integration_tests() {
     sudo --login bash -c "
         PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=/sarus-source/CI/src:\$PYTHONPATH \
         CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker \
-        pytest -v -s -m asroot /sarus-source/CI/src/integration_tests/"
+        pytest -v -m asroot /sarus-source/CI/src/integration_tests/"
     fail_on_error "Python integration tests as root failed"
     echo "Successfully run integration tests with user=root"
 }

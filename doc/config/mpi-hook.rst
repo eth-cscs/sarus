@@ -63,6 +63,8 @@ arguments, but its actions are controlled through a few environment variables:
   files or directories that are required for the correct functionality of the
   host MPI implementation (e.g. specific device files). These resources will
   be bind mounted inside the container with the same path they have on the host.
+  If a path corresponds to a device file, that file will be whitelisted for
+  read/write access in the container's devices cgroup.
 
 The following is an example of `OCI hook JSON configuration file
 <https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_

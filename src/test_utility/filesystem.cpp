@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <dirent.h>
 #include <string.h>
 #include <cstdlib>
@@ -134,6 +135,31 @@ static std::tuple<dev_t, ino_t> getDeviceIDAndINodeNumber(const boost::filesyste
 
 bool isSameBindMountedFile(const boost::filesystem::path& file0, const boost::filesystem::path& file1) {
     return getDeviceIDAndINodeNumber(file0) == getDeviceIDAndINodeNumber(file1);
+}
+
+static int clearFileTypeBits(const mode_t fileMode) {
+    return fileMode & ~(S_IFREG | S_IFCHR | S_IFBLK | S_IFIFO | S_IFSOCK);
+}
+
+static void createFilesystemNode(const boost::filesystem::path& path, const mode_t mode, const dev_t deviceID) {
+    if (mknod(path.c_str(), mode, deviceID) != 0) {
+        auto message = boost::format("Failed to mknod test device file %s: %s") % path % strerror(errno);
+        SARUS_THROW_ERROR(message.str().c_str());
+    }
+}
+
+void createCharacterDeviceFile(const boost::filesystem::path& path, const int majorID, const int minorID, const mode_t mode) {
+    auto fileMode = clearFileTypeBits(mode);
+    fileMode = S_IFCHR | mode;
+    auto deviceID = makedev(majorID, minorID);
+    createFilesystemNode(path, fileMode, deviceID);
+}
+
+void createBlockDeviceFile(const boost::filesystem::path& path, const int majorID, const int minorID, const mode_t mode) {
+    auto fileMode = clearFileTypeBits(mode);
+    fileMode = S_IFBLK | mode;
+    auto deviceID = makedev(majorID, minorID);
+    createFilesystemNode(path, fileMode, deviceID);
 }
 
 void create_test_directory_tree(const std::string& dir) {

@@ -1,0 +1,16 @@
+{
+    "defaultAction": "SCMP_ACT_ALLOW",
+    "architectures": [
+        "SCMP_ARCH_X86",
+        "SCMP_ARCH_X32"
+    ],
+    "syscalls": [
+        {
+            "names": [
+                "getcwd",
+                "chmod"
+            ],
+            "action": "SCMP_ACT_ERRNO"
+        }
+    ]
+}

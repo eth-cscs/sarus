@@ -8,5 +8,6 @@
     "mksquashfsPath": "/usr/sbin/mksquashfs",
     "initPath": "/opt/sarus/bin/init",
     "runcPath": "/usr/bin/runc.amd64",
-    "ramFilesystemType": "tmpfs"
+    "ramFilesystemType": "tmpfs",
+    "seccompProfile": "opt/sarus/etc/seccomp/default.json"
 }

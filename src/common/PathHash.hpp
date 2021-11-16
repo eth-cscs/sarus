@@ -12,6 +12,7 @@
 #define sarus_common_PathHash_hpp
 
 #include <boost/filesystem.hpp>
+#include <boost/functional/hash.hpp>
 
 namespace sarus {
 namespace common {

@@ -55,14 +55,13 @@ class TestCommandRun(unittest.TestCase):
                                     options_of_run_command=["--entrypoint=echo"])
         self.assertEqual(out, ["--option arg"])
 
-    def test_init_process(self):
-        # without init process
-        processes = self._run_ps_in_container(with_init_process=False)
+    def test_private_pid_namespace(self):
+        processes = self._run_ps_in_container(with_private_pid_namespace=True, with_init_process=False)
         self.assertEqual(len(processes), 1)
         self.assertEqual(processes[0], {"pid": 1, "comm": "ps"})
 
-        # with init process
-        processes = self._run_ps_in_container(with_init_process=True)
+    def test_init_process(self):
+        processes = self._run_ps_in_container(with_private_pid_namespace=True, with_init_process=True)
         self.assertEqual(len(processes), 2)
         self.assertEqual(processes[0], {"pid": 1, "comm": "init"})
         self.assertEqual(processes[1]["comm"], "ps")
@@ -79,12 +78,13 @@ class TestCommandRun(unittest.TestCase):
         self.assertEqual(util.run_image_and_get_prettyname(is_centralized_repository, "quay.io/ethcscs/centos:7"),
             "CentOS Linux")
 
-    def _run_ps_in_container(self, with_init_process):
+    def _run_ps_in_container(self, with_private_pid_namespace, with_init_process):
         util.pull_image_if_necessary(is_centralized_repository=False, image=self.default_image)
+        options = []
+        if with_private_pid_namespace:
+            options += ['--pid=private']
         if with_init_process:
-            options = ["--init"]
-        else:
-            options = []
+            options += ["--init"]
         out = util.run_command_in_container(is_centralized_repository=False,
                                             image=self.default_image,
                                             command=["ps", "-o", "pid,comm"],

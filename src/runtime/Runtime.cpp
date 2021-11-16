@@ -52,6 +52,7 @@ void Runtime::setupOCIBundle() {
     copyEtcFilesIntoRootfs();
     mountInitProgramIntoRootfsIfNecessary();
     performCustomMounts();
+    performDeviceMounts();
     remountRootfsWithNoSuid();
     fdHandler.preservePMIFdIfAny();
     fdHandler.passStdoutAndStderrToHooks();
@@ -208,6 +209,14 @@ void Runtime::performCustomMounts() const {
         mount->performMount();
     }
     utility::logMessage("Successfully performed custom mounts", common::LogLevel::INFO);
+}
+
+void Runtime::performDeviceMounts() const {
+    utility::logMessage("Performing device mounts", common::LogLevel::INFO);
+    for(const auto& mount : config->commandRun.deviceMounts) {
+        mount->performMount();
+    }
+    utility::logMessage("Successfully performed device mounts", common::LogLevel::INFO);
 }
 
 void Runtime::remountRootfsWithNoSuid() const {

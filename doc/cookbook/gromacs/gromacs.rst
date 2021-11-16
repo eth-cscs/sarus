@@ -109,7 +109,6 @@ figure:
 .. _fig-gromacs-results:
 
 .. figure:: gromacs-results.*
-   :scale: 100%
    :alt: GROMACS results
 
    Comparison of wall clock execution time, performance, and speedup between native

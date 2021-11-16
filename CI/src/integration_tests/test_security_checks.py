@@ -57,9 +57,9 @@ class TestSecurityChecks(unittest.TestCase):
             self._check_untamperable(SCHEMA_FILENAME)
 
     def test_untamperable_binaries(self):
-        MKSQ_PATH = shutil.which("mksquashfs")
-        INIT_PATH = "/opt/sarus/default/bin/tini-static-amd64"
-        RUNC_PATH = "/opt/sarus/default/bin/runc.amd64"
+        MKSQ_PATH = self._get_parameter_from_config_file("mksquashfsPath")
+        INIT_PATH = self._get_parameter_from_config_file("initPath")
+        RUNC_PATH = self._get_parameter_from_config_file("runcPath")
 
         self._check_untamperable(MKSQ_PATH)
         self._check_untamperable(INIT_PATH)
@@ -73,6 +73,10 @@ class TestSecurityChecks(unittest.TestCase):
         self._check_untamperable("/opt/sarus/default/bin/ssh_hook")
         self._check_untamperable("/opt/sarus/default/dropbear")
 
+    def _get_parameter_from_config_file(self, parameter):
+        with open(CONFIG_FILENAME) as conf_file:
+            conf = json.load(conf_file)
+            return conf[parameter]
 
     def _assert_raises(self, command, expected_message_content):
             actual_message = self._get_sarus_error_output(command)
@@ -142,16 +146,16 @@ def changed_permissions(path, mod):
 
 @contextmanager
 def disabled_security_checks():
-    shutil.copy2("/opt/sarus/default/etc/sarus.json", "/opt/sarus/default/etc/sarus.json.testbak")
-    with open("/opt/sarus/default/etc/sarus.json") as conf_file:
+    shutil.copy2(CONFIG_FILENAME, CONFIG_FILENAME+".testbak")
+    with open(CONFIG_FILENAME) as conf_file:
         conf_content = json.load(conf_file)
     try:
-        with open("/opt/sarus/default/etc/sarus.json", "w") as conf_file:
+        with open(CONFIG_FILENAME, "w") as conf_file:
             conf_content['securityChecks'] = False
             json.dump(conf_content, conf_file)
         yield
     finally:
-        shutil.move("/opt/sarus/default/etc/sarus.json.testbak", "/opt/sarus/default/etc/sarus.json")
+        shutil.move(CONFIG_FILENAME+".testbak", CONFIG_FILENAME)
 
 
 if __name__ == '__main__':

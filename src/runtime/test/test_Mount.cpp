@@ -30,10 +30,10 @@ using namespace sarus;
 TEST_GROUP(MountTestGroup) {
 };
 
-#ifdef NOTROOT
-IGNORE_TEST(MountTestGroup, mount_test) {
-#else
+#ifdef ASROOT
 TEST(MountTestGroup, mount_test) {
+#else
+IGNORE_TEST(MountTestGroup, mount_test) {
 #endif
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;

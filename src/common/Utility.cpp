@@ -69,7 +69,7 @@ std::unordered_map<std::string, std::string> parseEnvironmentVariables(char** en
 std::tuple<std::string, std::string> parseEnvironmentVariable(const std::string& variable) {
     auto keyEnd = std::find(variable.cbegin(), variable.cend(), '=');
     if(keyEnd == variable.cend()) {
-        auto message = boost::format("Failed to parse environment variable \"%s\". Expected symbol '='.")
+        auto message = boost::format("Failed to parse environment variable \"%s\". Expected '=' separator.")
             % variable;
         SARUS_THROW_ERROR(message.str());
     }
@@ -323,7 +323,7 @@ std::string getHostname() {
 
 size_t getFileSize(const boost::filesystem::path& filename) {
     struct stat st;
-    if(stat(filename.string().c_str(), &st) != 0) {
+    if(stat(filename.c_str(), &st) != 0) {
         auto message = boost::format("Failed to retrieve size of file %s. Stat failed: %s")
             % filename % strerror(errno);
         SARUS_THROW_ERROR(message.str());
@@ -331,10 +331,39 @@ size_t getFileSize(const boost::filesystem::path& filename) {
     return st.st_size;
 }
 
+dev_t getDeviceID(const boost::filesystem::path& path) {
+    struct stat sb;
+    if(stat(path.c_str(), &sb) != 0) {
+        auto message = boost::format("Failed to retrieve device ID of file %s. Stat failed: %s")
+            % path % strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+    logMessage(boost::format("Got device ID for %s: %d") % path % sb.st_rdev, LogLevel::DEBUG);
+    return sb.st_rdev;
+}
+
+char getDeviceType(const boost::filesystem::path& path) {
+    char deviceType;
+    if (sarus::common::isCharacterDevice(path)) {
+        deviceType = 'c';
+    }
+    else if (sarus::common::isBlockDevice(path)) {
+        deviceType = 'b';
+    }
+    else {
+        auto message = boost::format("Failed to recognize device type of file %s."
+                                     " File is not a device or has unknown device type.") % path;
+        SARUS_THROW_ERROR(message.str());
+    }
+    logMessage(boost::format("Got device type for %s: '%c'") % path % deviceType, LogLevel::DEBUG);
+    return deviceType;
+}
+
 std::tuple<uid_t, gid_t> getOwner(const boost::filesystem::path& path) {
     struct stat sb;
     if(stat(path.c_str(), &sb) != 0) {
-        auto message = boost::format("Failed to stat %s: %s") % path % strerror(errno);
+        auto message = boost::format("Failed to retrieve owner of file %s. Stat failed: %s")
+            % path % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
     return std::tuple<uid_t, gid_t>{sb.st_uid, sb.st_gid};
@@ -522,12 +551,42 @@ int countFilesInDirectory(const boost::filesystem::path& path) {
     return numberOfFiles;
 }
 
+bool isDeviceFile(const boost::filesystem::path& path) {
+    struct stat sb;
+    if(stat(path.c_str(), &sb) != 0) {
+        auto message = boost::format("Failed to check if file %s is a device file. Stat failed: %s")
+            % path % strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+    return S_ISBLK(sb.st_mode) || S_ISCHR(sb.st_mode);
+}
+
+bool isBlockDevice(const boost::filesystem::path& path) {
+    struct stat sb;
+    if(stat(path.c_str(), &sb) != 0) {
+        auto message = boost::format("Failed to check if file %s is a block device. Stat failed: %s")
+            % path % strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+    return S_ISBLK(sb.st_mode);
+}
+
+bool isCharacterDevice(const boost::filesystem::path& path) {
+    struct stat sb;
+    if (stat(path.c_str(), &sb) != 0) {
+        auto message = boost::format("Failed to check if file %s is a charater device. Stat failed: %s")
+            % path % strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+    return S_ISCHR(sb.st_mode);
+}
+
 static bool isSymlink(const boost::filesystem::path& path) {
     struct stat sb;
-    if (lstat(path.string().c_str(), &sb) != 0) {
+    if (lstat(path.c_str(), &sb) != 0) {
         return false;
     }
-    return (sb.st_mode & S_IFMT) == S_IFLNK;
+    return S_ISLNK(sb.st_mode);
 }
 
 static boost::filesystem::path getSymlinkTarget(const boost::filesystem::path& path) {
@@ -700,9 +759,12 @@ std::vector<boost::filesystem::path> getSharedLibsFromDynamicLinker(
     auto output = sarus::common::executeCommand(command.str());
     std::stringstream stream{output};
     std::string line;
-    std::getline(stream, line); // drop first line of output (header)
     while(std::getline(stream, line)) {
+        // Look for "arrow" separator to only parse lines containing library entries
         auto pos = line.rfind(" => ");
+        if(pos == std::string::npos) {
+            continue;
+        }
         auto library = line.substr(pos + 4);
         libraries.push_back(library);
     }
@@ -923,6 +985,22 @@ std::string readFile(const boost::filesystem::path& path) {
     auto s = std::string(   std::istreambuf_iterator<char>(ifs),
                             std::istreambuf_iterator<char>());
     return s;
+}
+
+void writeTextFile(const std::string& text, const boost::filesystem::path& filename, const std::ios_base::openmode mode) {
+    try {
+        createFoldersIfNecessary(filename.parent_path());
+        auto ofs = std::ofstream{filename.string(), mode};
+        if (!ofs) {
+            auto message = boost::format("Failed to open std::ofstream for %s") % filename;
+            SARUS_THROW_ERROR(message.str());
+        }
+        ofs << text;
+    }
+    catch(const std::exception& e) {
+        auto message = boost::format("Failed to write text file %s") % filename;
+        SARUS_RETHROW_ERROR(e, message.str());
+    }
 }
 
 rapidjson::Document readJSON(const boost::filesystem::path& filename) {

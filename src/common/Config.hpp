@@ -26,6 +26,7 @@
 #include "common/UserIdentity.hpp"
 #include "common/Logger.hpp"
 #include "runtime/Mount.hpp"
+#include "runtime/DeviceMount.hpp"
 
 
 namespace sarus {
@@ -62,13 +63,16 @@ class Config {
 
         struct CommandRun {
             std::unordered_map<std::string, std::string> hostEnvironment;
+            std::unordered_map<std::string, std::string> userEnvironment;
             std::unordered_map<std::string, std::string> bundleAnnotations;
             std::vector<int> cpuAffinity;
             std::vector<std::string> userMounts;
             std::vector<std::shared_ptr<runtime::Mount>> mounts;
+            std::vector<std::shared_ptr<runtime::DeviceMount>> deviceMounts;
             boost::optional<boost::filesystem::path> workdir;
             boost::optional<CLIArguments> entrypoint;
             CLIArguments execArgs;
+            bool createNewPIDNamespace = false;
             bool allocatePseudoTTY = false;
             bool addInitProcess = false;
             bool useMPI = false;
@@ -90,6 +94,8 @@ class Config {
         boost::filesystem::path archivePath; // for CommandLoad
 
         bool useCentralizedRepository = false;
+
+        bool enforceSecureServer = true; // for CommandPull
 
         std::chrono::high_resolution_clock::time_point program_start; // for time measurement
 };

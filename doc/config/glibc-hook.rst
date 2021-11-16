@@ -19,7 +19,11 @@ In order for the replacements to work seamlessly, the hook does the following:
   replaced when they are older than the host's libraries.
 
 * Check ABI compatibility between host and container glibc.
-  Host and container glibc libraries must have the same soname.
+  Host and container glibc libraries must have the same soname for the
+  replacement to take place.
+
+If an ABI-compatible counterpart for a host library cannot be found in the
+container, the host library will be added to the container's filesystem.
 
 Hook installation
 =================

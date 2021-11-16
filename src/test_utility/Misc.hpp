@@ -11,6 +11,8 @@
 #ifndef sarus_test_utility_Misc_hpp
 #define sarus_test_utility_Misc_hpp
 
+#include <rapidjson/prettywriter.h>
+
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
 #include "common/PasswdDB.hpp"
@@ -31,6 +33,14 @@ std::tuple<uid_t, gid_t> getNonRootUserIds() {
     }
     
     SARUS_THROW_ERROR("Failed to find non-root user ids");
+}
+
+std::string prettyPrintJSON(const rapidjson::Value& json) {
+    namespace rj = rapidjson;
+    rj::StringBuffer buffer;
+    rj::PrettyWriter<rj::StringBuffer> writer(buffer);
+    json.Accept(writer);
+    return buffer.GetString();
 }
 
 }
