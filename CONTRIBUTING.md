@@ -12,7 +12,7 @@ content submission.
 - When adding new features or fixing bugs not covered by existing tests, please also provide unit and/or integration tests
   for the code.
 - Add an entry to the `CHANGELOG.md` file.
-- Submit your contributions as GitHub Pull Requests to the main public repository at https://github.com/eth-cscs/sarus.
+- Submit your contributions as GitHub Pull Requests to the main public repository at https://github.com/eth-cscs/sarus targeting `develop` branch.
 
 ### Code style
 

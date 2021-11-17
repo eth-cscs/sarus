@@ -111,7 +111,7 @@ build_sarus_archive() {
     fail_on_error "Failed to make install Sarus"
 
     # Adjust standalone README instructions
-    version=${CI_COMMIT_TAG-${TRAVIS_TAG-"1.0.0"}}
+    version=${CI_COMMIT_TAG-${GITHUB_REF_NAME-"1.0.0"}}
     sed -e "s|@SARUS_VERSION@|${version}|g" ${build_dir}/../standalone/README.md.in > ${build_dir}/../standalone/README.md
     cp -v ${build_dir}/../standalone/README.md ${build_dir}/README.md
     fail_on_error "Failed to prepare README.md for Sarus archive"
@@ -134,9 +134,10 @@ build_sarus_archive() {
     cd ${prefix_dir}/.. && tar cz --owner=root --group=root --file=../${archive_name} *
     cp  ${build_dir}/${archive_name} ${build_dir}/../${archive_name}
 
-    # Prepare RELEASE notes for CI to use
+    echo "Prepare RELEASE_NOTES for CI to use"
     python3 ${build_dir}/../CI/create_release_notes.py
     fail_on_error "Failed to prepare RELEASE_NOTES.md for Sarus archive"
+    cp -v ${build_dir}/../RELEASE_NOTES.md ${build_dir}/RELEASE_NOTES.md
 
     echo "Successfully built Sarus sarchive"
 }

@@ -12,26 +12,18 @@ sarus-build-images() {
     echo "${FUNCNAME^^} with:"
     _print_parameters
 
-    # Travis is not supporting buildkit at the moment :(
-    local BK=1
-    local BKIC=1
-    if [ "${TRAVIS}" == "true" ]; then
-        BK=0
-        BKIC=0
-    fi
-
     # Use develop as build cache source
     if [ "$(_git_branch)" == "develop" ]; then
-        DOCKER_BUILDKIT=${BK} docker build --build-arg BUILDKIT_INLINE_CACHE=${BKIC} -t ${image_build} -f ${script_dir}/${dockerfile_build} ${script_dir}
+        DOCKER_BUILDKIT=1 docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${image_build} -f ${script_dir}/${dockerfile_build} ${script_dir}
         fail_on_error "failed to build ${image_build} image"
-        DOCKER_BUILDKIT=${BK} docker build --build-arg BUILDKIT_INLINE_CACHE=${BKIC} -t ${image_run} -f ${script_dir}/${dockerfile_run} ${script_dir}
+        DOCKER_BUILDKIT=1 docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ${image_run} -f ${script_dir}/${dockerfile_run} ${script_dir}
         fail_on_error "failed to build ${image_run} image"
     else
         local image_build_repo=$(echo ${image_build} | cut -d':' -f1)
         local image_run_repo=$(echo ${image_run} | cut -d':' -f1)
-        DOCKER_BUILDKIT=${BK} docker build --cache-from ${image_build_repo}:develop -t ${image_build} -f ${script_dir}/${dockerfile_build} ${script_dir}
+        DOCKER_BUILDKIT=1 docker build --cache-from ${image_build_repo}:develop -t ${image_build} -f ${script_dir}/${dockerfile_build} ${script_dir}
         fail_on_error "failed to build ${image_build} image"
-        DOCKER_BUILDKIT=${BK} docker build --cache-from ${image_run_repo}:develop -t ${image_run} -f ${script_dir}/${dockerfile_run} ${script_dir}
+        DOCKER_BUILDKIT=1 docker build --cache-from ${image_run_repo}:develop -t ${image_run} -f ${script_dir}/${dockerfile_run} ${script_dir}
         fail_on_error "failed to build ${image_run} image"
     fi
 }
@@ -280,7 +272,7 @@ _run_cmd_in_container() {
                           --mount=src=${cache_local_repo_dir},dst=/home/docker/.sarus,type=bind \
                           --mount=src=${cache_centralized_repo_dir},dst=/var/sarus/centralized_repository,type=bind \
                           -e CI_COMMIT_TAG \
-                          -e TRAVIS_TAG ${additional_docker_opts}"
+                          -e GITHUB_REF_NAME ${additional_docker_opts}"
 
     docker run ${docker_options} \
         ${image} bash -c "
@@ -381,8 +373,8 @@ _build_dir_container() {
 
 _git_branch() {
     local git_branch=""
-    if [ -n "${TRAVIS_BRANCH}" ]; then
-        git_branch=${TRAVIS_BRANCH}  # TravisCI
+    if [ -n "${GITHUB_REF_NAME}" ]; then
+        git_branch=${GITHUB_REF_NAME}  # GithubActions
     else
         git_branch=$(git symbolic-ref --short -q HEAD) || git_branch=${CI_COMMIT_REF_NAME} || git_branch="git-detached"
     fi

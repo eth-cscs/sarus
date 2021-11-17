@@ -1,0 +1,33 @@
+# https://docs.github.com/en/actions/using-workflows
+name: Sarus Integration
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - github_actions
+  pull_request:
+    branches:
+      # Pull Requests should aim develop branch. See CONTRIBUTING.md
+      - develop
+    types: [opened, reopened, edited]
+
+jobs:
+  check-documentation:
+    uses: ./.github/workflows/documentation.yml
+
+  check-standalone-integration:
+    needs: [check-documentation]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and Test
+        shell: bash
+        run: |
+          git clone --depth 1 --recursive --shallow-submodules https://github.com/eth-cscs/sarus && cd sarus
+          CI/check_host.sh
+          . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $(pwd)/cache standalone-build standalone-run
+          sarus-build-images
+          sarus-build
+          sarus-utest
+          sarus-itest-standalone

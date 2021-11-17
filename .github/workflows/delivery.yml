@@ -1,0 +1,64 @@
+# https://docs.github.com/en/actions/using-workflows
+name: Sarus Delivery
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+*'
+
+jobs:
+  check-documentation:
+    uses: ./.github/workflows/documentation.yml
+
+  build-test-and-release:
+    needs: [check-documentation]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and Test
+        shell: bash
+        run: |
+          git clone --depth 1 --recursive --shallow-submodules https://github.com/eth-cscs/sarus && cd sarus
+          CI/check_host.sh
+          . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $(pwd)/cache standalone-build standalone-run
+          sarus-build-images
+          sarus-build
+          sarus-utest
+          sarus-itest-standalone
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body_path: ./sarus/RELEASE_NOTES.md
+          draft: true
+          prerelease: false
+      - name: Upload Release Artifact
+        id: upload-release-artifact
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./sarus/sarus-Release.tar.gz
+          asset_name: sarus-Release.tar.gz
+          asset_content_type: application/gzip
+      - name: Upload Release Readme
+        id: upload-release-readme
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./sarus/standalone/README.md
+          asset_name: README.md
+          asset_content_type: text/plain
+      - name: Publish Release
+        id: publish-release
+        uses: eregon/publish-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.create_release.outputs.id }}
