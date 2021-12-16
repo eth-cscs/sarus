@@ -5,6 +5,7 @@ stages:
   - from_source
   - publish_images
   - cleanup
+  - staging
   - deploy
   - fast_test
   - full_test
@@ -189,6 +190,14 @@ cleanup_images:
   script:
     - . ./CI/utility_docker_functions.bash
     - sarus-cleanup-images
+
+trigger_ops:
+  stage: staging
+  trigger:
+    project: 'ids/sarus-ops'
+    strategy: depend
+  rules:
+    - if: $CI_COMMIT_TAG
 
 deploy:
   stage: deploy
