@@ -21,7 +21,7 @@ import subprocess
 # -- Project information -----------------------------------------------------
 
 project = 'Sarus'
-copyright = '2018-2021, ETH Zurich'
+copyright = '2018-2022, ETH Zurich'
 author = 'Swiss National Supercomputing Centre'
 
 # Retrieve the version string
