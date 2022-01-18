@@ -11,5 +11,7 @@ install(TARGETS glibc_hook DESTINATION ${CMAKE_INSTALL_PREFIX}/bin PERMISSIONS
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE)
 
-add_subdirectory(test)
+if(${ENABLE_UNIT_TESTS})
+    add_subdirectory(test)
+endif(${ENABLE_UNIT_TESTS})
 

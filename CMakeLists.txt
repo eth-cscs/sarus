@@ -19,6 +19,7 @@ endif(${BUILD_STATIC})
 set(LIBEXECDIR ${CMAKE_INSTALL_PREFIX}/libexec CACHE PATH "libexec directory [$CMAKE_INSTALL_PREFIX/libexec]")
 set(ENABLE_SSH TRUE CACHE BOOL "Build a statically-linked SSH software to be executed inside the container [TRUE]")
 
+set(ENABLE_UNIT_TESTS TRUE CACHE BOOL "Build unit tests. Also downloads and builds the CppUTest framework [TRUE]")
 set(ENABLE_TESTS_WITH_VALGRIND FALSE CACHE BOOL "Run each unit test through valgrind [FALSE]")
 
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)

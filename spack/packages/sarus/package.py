@@ -30,11 +30,12 @@ class Sarus(CMakePackage):
     """Sarus is an OCI-compliant container engine for HPC systems."""
 
     homepage = "https://github.com/eth-cscs/sarus"
-    url      = "https://github.com/eth-cscs/sarus/archive/1.3.3.tar.gz"
+    url      = "https://github.com/eth-cscs/sarus/archive/1.4.0.tar.gz"
     git      = "https://github.com/eth-cscs/sarus.git"
 
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('1.4.0',   tag='1.4.0')
     version('1.3.3',   tag='1.3.3')
     version('1.3.2',   tag='1.3.2')
     version('1.3.1',   tag='1.3.1')
@@ -51,6 +52,9 @@ class Sarus(CMakePackage):
             description='Run the script to setup a starting Sarus configuration as '
                         'part of the installation phase. Running the script requires '
                         'super-user privileges.')
+    variant('unit_tests', default=False,
+            description='Build unit test executables in the build directory. '
+                        'Also downloads and builds internally the CppUTest framework.')
 
     depends_on('wget', type='build')
     depends_on('expat', type='build')
@@ -69,7 +73,8 @@ class Sarus(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = ['-DCMAKE_TOOLCHAIN_FILE=./cmake/toolchain_files/gcc.cmake',
-                '-DENABLE_SSH=%s' % ('+ssh' in spec)]
+                '-DENABLE_SSH=%s' % ('+ssh' in spec),
+                '-DENABLE_UNIT_TESTS=%s' % ('+unit_tests' in spec)]
         return args
 
     def install(self, spec, prefix):

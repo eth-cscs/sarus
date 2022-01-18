@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## Unreleased
+
+### Added
+
+- Added CMake option to control build of unit test executables
+
+### Changed
+
+
+
+### Fixed
+
+
+
+### Removed
+
+
+
+### Security
+
+
+
+
 ## [1.4.0]
 
 ### Added

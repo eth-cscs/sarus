@@ -9,5 +9,7 @@ if(${BUILD_STATIC})
     target_link_libraries(common_library pthread dl)
 endif(${BUILD_STATIC})
 
-add_subdirectory(test)
+if(${ENABLE_UNIT_TESTS})
+    add_subdirectory(test)
+endif(${ENABLE_UNIT_TESTS})
 

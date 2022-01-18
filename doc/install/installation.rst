@@ -93,6 +93,8 @@ to customize the installation:
    - ``configure_installation``: Run the script to setup a starting Sarus
      configuration as part of the installation phase. Running the script
      requires super-user privileges [True].
+   - ``unit_tests``: Build unit test executables in the build directory.
+     Also downloads and builds internally the CppUTest framework [False].
 
 For example, in order to perform a quick installation without SSH we could use:
 
@@ -228,6 +230,8 @@ order to customize your build:
    - ``CMAKE_INSTALL_PREFIX``: installation directory of Sarus [/usr/local].
    - ``ENABLE_SSH``: build and install the SSH hook and custom SSH software to enable
      connections inside containers [TRUE].
+   - ``ENABLE_UNIT_TESTS``: build unit tests. Also downloads and builds internally
+     the CppUTest framework  [TRUE].
    - ``ENABLE_TESTS_WITH_VALGRIND``: run each unit test through valgrind [FALSE].
 
 Copy files to the installation directory:
