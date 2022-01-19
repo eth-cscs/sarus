@@ -6,6 +6,7 @@ stages:
   - prepare_pipeline
   - build_images
   - build_and_test
+  - artifact_store
   - from_source
   - publish_images
   - cleanup
@@ -17,6 +18,28 @@ stages:
 variables:
   # https://confluence.cscs.ch/x/Y4DtCw
   HOST_CACHES_PATH: /var/lib/gitlab-runner/cache/ids/sarus
+  VAULT_ADDR: https://vault.giuv.cscs.ch
+  VAULT_PATH: kv/c4k-ci/pilatus2/sarus-ops
+  JFROG_URI: art.cscs.ch
+  JFROG_REPO_PATH: artifactory/sarus-gen
+
+get_credentials:
+  image: vault:latest
+  stage: prepare_pipeline
+  tags:
+    - docker
+  script:
+    - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=c4k-ci jwt=$CI_JOB_JWT)"
+    - if [[ ${#VAULT_TOKEN} -lt 3 ]]; then echo "ERROR, Vault token empty"; exit 1; fi
+    - export JFROG_USER="$(vault kv get -field=JFROG_USER $VAULT_PATH)"
+    - export JFROG_TOKEN="$(vault kv get -field=JFROG_TOKEN $VAULT_PATH)"
+    - echo "JFROG_USER=${JFROG_USER}" >> credentials.env
+    - echo "JFROG_TOKEN=${JFROG_TOKEN}" >> credentials.env
+  artifacts:
+    public: false
+    expire_in: 40 minute
+    reports:
+      dotenv: credentials.env
 
 clean_caches:
   stage: prepare_pipeline
@@ -52,7 +75,6 @@ standalone_debug:
   script:
     - . ./CI/utility_docker_functions.bash Debug gcc.cmake $(pwd) $HOST_CACHES_PATH standalone-build standalone-run
     - sarus-build-and-test
-
   artifacts:
     name: "sarus-Debug-$CI_COMMIT_REF_NAME"
     paths:
@@ -64,12 +86,38 @@ standalone_release:
   script:
     - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH standalone-build standalone-run
     - sarus-build-and-test
-
   artifacts:
     name: "sarus-Release-$CI_COMMIT_REF_NAME"
     paths:
       - sarus-Release.tar.gz
       - README.md
+
+artifact_store:
+  stage: artifact_store
+  image: alpine:latest
+  script:
+    - echo ">>> Computing checksums for artifact"
+    - sha1=$(shasum -a 1 sarus-Release.tar.gz | awk '{print $1}')
+    - sha256=$(shasum -a 256 sarus-Release.tar.gz | awk '{print $1}')
+    - md5=$(md5sum sarus-Release.tar.gz | awk '{print $1}')
+    - echo ">>> Performing upload to ${JFROG_URI}"
+    - ret=$(curl -H "X-JFrog-Art-Api:${JFROG_TOKEN}" -H "X-Checksum-md5:${md5}" -H "X-Checksum-sha1:${sha1}" -H "X-Checksum-sha256:${sha256}" -XPUT https://${JFROG_URI}/${JFROG_REPO_PATH}/sarus-Release -T sarus-Release.tar.gz)
+    - msg=$(echo $ret | jq ".path")
+    - |-
+        if [ "$msg" = "null" ] ; then
+          status=$(echo $ret | jq ".errors[].status")
+           msg=$(echo $ret | jq ".errors[].message")
+           if [ "$message" = "" ]; then
+               msg="<no message provided>"
+           fi
+           echo ">>> Error uploading artifact to JFrog repository at ${JFROG_URI}/${JFROG_REPO_PATH}"
+           echo ">>> ${status}: ${msg}"
+           exit 1
+        fi
+  dependencies:
+    - get_credentials
+    - standalone_release
+
 
 .from_source:
   stage: from_source
