@@ -22,8 +22,6 @@
 
 #define SARUS_UNITTEST_MAIN_FUNCTION() \
 int main(int argc, char **argv) { \
-    /* disable cpputest's leak detection to avoid false positives, e.g. because of static objects */ \
-    MemoryLeakWarningPlugin::turnOffNewDeleteOverloads(); \
     try { \
         return CommandLineTestRunner::RunAllTests(argc, argv); \
     } \

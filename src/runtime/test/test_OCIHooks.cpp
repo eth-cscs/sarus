@@ -142,7 +142,7 @@ TEST(OCIHooksTestGroup, create_hook_and_check_members) {
     CHECK_EQUAL(hook.version, std::string{"1.0.0"});
 
     CHECK(hook.jsonHook["path"].GetString() == std::string{"/dir/test_hook"});
-    CHECK_EQUAL(hook.jsonHook["args"].GetArray().Size(), 2)
+    CHECK_EQUAL(hook.jsonHook["args"].GetArray().Size(), 2);
     CHECK_EQUAL(hook.jsonHook["args"].GetArray()[0].GetString(), std::string{"test_hook"});
     CHECK_EQUAL(hook.jsonHook["args"].GetArray()[1].GetString(), std::string{"arg"});
     CHECK_EQUAL(hook.jsonHook["env"].GetArray().Size(), 2);
