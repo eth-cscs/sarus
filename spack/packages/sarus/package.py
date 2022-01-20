@@ -88,7 +88,7 @@ class Sarus(CMakePackage):
 
     def install_runc(self, spec, prefix):
         wget = which('wget')
-        runc_url = 'https://github.com/opencontainers/runc/releases/download/v1.0.2/runc.amd64'
+        runc_url = 'https://github.com/opencontainers/runc/releases/download/v1.0.3/runc.amd64'
         runc_install_path = prefix.bin + '/runc.amd64'
         wget('-O', runc_install_path, runc_url)
         set_executable(runc_install_path)

@@ -4,7 +4,7 @@ pwd_bak=$PWD
 
 # Install runc
 cd /tmp && \
-    wget -O runc.amd64 https://github.com/opencontainers/runc/releases/download/v1.0.2/runc.amd64 && \
+    wget -O runc.amd64 https://github.com/opencontainers/runc/releases/download/v1.0.3/runc.amd64 && \
     chmod 755 runc.amd64 && \
     sudo mv runc.amd64 /usr/local/bin/ && \
     sudo chown root:root /usr/local/bin/runc.amd64 && \
