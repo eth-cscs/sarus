@@ -32,6 +32,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "common/Error.hpp"
 #include "common/Logger.hpp"
@@ -144,12 +145,9 @@ namespace image_manager {
             return;
         }
 
-        web::http::client::http_client_config clientConfig;
-        clientConfig.set_validate_certificates(config->enforceSecureServer);
-
-        web::http::client::http_client       client( getServerUri(config->imageID.server), clientConfig );
-        web::http::http_request              request(methods::GET);
-        web::http::http_response             response;
+        std::unique_ptr<web::http::client::http_client> client = setupHttpClient(getServerUri(config->imageID.server));
+        web::http::http_request  request(methods::GET);
+        web::http::http_response response;
 
         // make a copy of the authorization token to avoid data races because
         // multiple instances of this function could be running in parallel
@@ -178,7 +176,7 @@ namespace image_manager {
             printLog( boost::format("httpclient: uri=%s, path=%s, auth-header=%25.25s..., digest=%25.25s...")
                         % getServerUri(config->imageID.server) % path % authorizationHeader % digest, common::LogLevel::DEBUG);
 
-            response = client.request(request).get();
+            response = client->request(request).get();
             printLog( boost::format("Received HTTP response status code (%s): %s, digest=%s")
                 % response.status_code() % response.reason_phrase() % digest, common::LogLevel::DEBUG);
 
@@ -221,15 +219,12 @@ namespace image_manager {
                 printLog( boost::format("Layer %s: download redirected to %s/%s") % digest % downloadUri % path, common::LogLevel::DEBUG);
 
                 try {
-                    web::http::client::http_client_config clientConfig;
-                    clientConfig.set_validate_certificates(config->enforceSecureServer);
-
-                    web::http::client::http_client redirectClient( downloadUri, clientConfig );
+                    std::unique_ptr<web::http::client::http_client> redirectClient = setupHttpClient(downloadUri);
                     web::http::http_request        redirectRequest(methods::GET);
                     web::http::http_response       redirectResponse;
 
                     redirectRequest.set_request_uri(path);
-                    redirectResponse = redirectClient.request(redirectRequest).get();
+                    redirectResponse = redirectClient->request(redirectRequest).get();
 
                     if ( redirectResponse.status_code() != status_codes::OK ) {
                         auto message = boost::format("Received HTTP response status code (%s): %s, uri=%s, path=%s, digest=%s")
@@ -314,16 +309,13 @@ namespace image_manager {
                  common::LogLevel::INFO);
 
         // Attempt to retrieve manifest
-        web::http::client::http_client_config clientConfig;
-        clientConfig.set_validate_certificates(config->enforceSecureServer);
-
-        web::http::client::http_client client (getServerUri(config->imageID.server), clientConfig);
+        std::unique_ptr<web::http::client::http_client> client = setupHttpClient(getServerUri(config->imageID.server));
         web::http::http_request              request(methods::GET);
         pplx::task<web::http::http_response> responseTask;
         web::http::http_response             response;
 
         request.set_request_uri( makeImageManifestUri() );
-        responseTask = client.request(request);
+        responseTask = client->request(request);
 
         try {
             responseTask.wait();
@@ -352,7 +344,7 @@ namespace image_manager {
             printLog( boost::format("header      : %s") % U(authorizationString), common::LogLevel::DEBUG);
             printLog( boost::format("full request: %s") % authHeaderRequest.to_string(), common::LogLevel::DEBUG);
 
-            response = client.request(authHeaderRequest).get();
+            response = client->request(authHeaderRequest).get();
 
             // If an Unauthorized response is returned again, inform the user and suggest to use login credentials
             if(response.status_code() == status_codes::Unauthorized || response.status_code() == status_codes::Forbidden) {
@@ -452,7 +444,7 @@ namespace image_manager {
         std::tie(realm, service, scope) = parseWwwAuthenticateHeader(auth_header);
 
         // get authorized token
-        std::unique_ptr<web::http::client::http_client> tokenClient = setupHttpClientWithCredential( realm );
+        std::unique_ptr<web::http::client::http_client> tokenClient = setupHttpClient( realm );
         web::http::http_request tokenReq(methods::GET);
         web::uri_builder tokenUriBuilder("");
         web::http::http_response tokenResp;
@@ -502,19 +494,84 @@ namespace image_manager {
         return token;
     }
 
-    std::unique_ptr<web::http::client::http_client> Puller::setupHttpClientWithCredential(const std::string& server) {
-        // if repository is private, add credential configrations
-        if(config->authentication.isAuthenticationNeeded) {
-            web::http::client::http_client_config clientConfig;
-            web::credentials creds( U(config->authentication.username), U(config->authentication.password) );
-            clientConfig.set_credentials(creds);
-            clientConfig.set_validate_certificates(config->enforceSecureServer);
-            return std::unique_ptr<web::http::client::http_client>( new web::http::client::http_client( server, clientConfig ));
-        }
-
+    std::unique_ptr<web::http::client::http_client> Puller::setupHttpClient(const std::string& server) {
         web::http::client::http_client_config clientConfig;
         clientConfig.set_validate_certificates(config->enforceSecureServer);
+        setProxyIfNecessary(clientConfig);
+
+        // if repository is private, add credential configurations
+        if(config->authentication.isAuthenticationNeeded) {
+            web::credentials creds( U(config->authentication.username), U(config->authentication.password) );
+            clientConfig.set_credentials(creds);
+        }
+
         return std::unique_ptr<web::http::client::http_client>( new web::http::client::http_client( server, clientConfig ));
+    }
+
+    void Puller::setProxyIfNecessary(web::http::client::http_client_config& clientConfig) {
+        auto proxyURI = getProxy();
+        if (!proxyURI.empty()) {
+            printLog( boost::format("Setting proxy for HTTP client: %s") % proxyURI, common::LogLevel::DEBUG);
+            clientConfig.set_proxy(web::web_proxy(proxyURI));
+        }
+    }
+
+    std::string Puller::getProxy() {
+        // Prefer lower case variable name like Python's urllib
+        auto noProxyVar = config->commandRun.hostEnvironment.find("no_proxy");
+        if (noProxyVar != config->commandRun.hostEnvironment.end() && !noProxyVar->second.empty()) {
+            if (isRegistryInNoProxyList(noProxyVar->second)) {
+                return std::string{};
+            }
+        }
+        else {
+            noProxyVar = config->commandRun.hostEnvironment.find("NO_PROXY");
+            if (noProxyVar != config->commandRun.hostEnvironment.end() && !noProxyVar->second.empty()) {
+                if (isRegistryInNoProxyList(noProxyVar->second)) {
+                    return std::string{};
+                }
+            }
+        }
+
+        auto proxyVar = config->commandRun.hostEnvironment.find("ALL_PROXY");
+        if (proxyVar != config->commandRun.hostEnvironment.end() && !proxyVar->second.empty()) {
+            return proxyVar->second;
+        }
+
+        if (config->enforceSecureServer) {
+            // Prefer lower case like curl and Python's urllib
+            auto proxyVar = config->commandRun.hostEnvironment.find("https_proxy");
+            if (proxyVar != config->commandRun.hostEnvironment.end() && !proxyVar->second.empty()) {
+                return proxyVar->second;
+            }
+            proxyVar = config->commandRun.hostEnvironment.find("HTTPS_PROXY");
+            if (proxyVar != config->commandRun.hostEnvironment.end() && !proxyVar->second.empty()) {
+                return proxyVar->second;
+            }
+        }
+        else {
+            // Only check lower case to avoid security issues with upper case version in CGI environments
+            auto proxyVar = config->commandRun.hostEnvironment.find("http_proxy");
+            if (proxyVar != config->commandRun.hostEnvironment.end() && !proxyVar->second.empty()) {
+                return proxyVar->second;
+            }
+        }
+
+        return std::string{};
+    }
+
+    bool Puller::isRegistryInNoProxyList(const std::string& noProxyList) {
+        if (noProxyList == "*") {
+            return true;
+        }
+        auto hostnames = std::vector<std::string>{};
+        boost::split(hostnames, noProxyList, boost::is_any_of(","));
+        for (const auto& host : hostnames) {
+            if (host == config->imageID.server) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Added support for proxy connections when pulling images from remote registries
 - Added CMake option to control build of unit test executables
 
 ### Changed

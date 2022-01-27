@@ -210,7 +210,7 @@ Additional features
 Pulling images from private or 3rd party registries
 ---------------------------------------------------
 
-By default, Sarus tries to pull images from `DockerHub <https://hub.docker.com/>`_
+By default, Sarus tries to pull images from `Docker Hub <https://hub.docker.com/>`_
 public repositories. To perform a pull from a private repository, use the
 ``--login`` option to the :program:`sarus pull` command and enter your
 credentials:
@@ -269,6 +269,48 @@ as displayed by the :program:`sarus images` command in the first two columns:
 
     Once Skopeo has downloaded the image as a tar file, the image can be
     loaded into Sarus with the :ref:`sarus load <user-load-archive>` command.
+
+Pulling images using a proxy
+----------------------------
+
+Sarus can use a proxy to connect to remote registries and pull images depending
+on the values of specific environment variables, which are also used by other
+tools and libraries like `curl <https://everything.curl.dev/usingcurl/proxies/env>`_
+or Python's `urllib <https://docs.python.org/3/library/urllib.request.html#urllib.request.getproxies>`_.
+
+If the ``https_proxy`` or ``HTTPS_PROXY`` environment variables are set, Sarus
+uses the value as the proxy hostname for default connections (which use the
+HTTPS protocol). In case both variables are set, the lower case version
+is preferred.
+
+.. code-block:: bash
+
+    https_proxy=https://proxy.example.com:3128
+
+When pulling from a registry which is configured as :ref:`insecure <config-reference-insecureRegistries>`,
+the ``http_proxy`` environment variable is looked up for a proxy hostname.
+Only the lower case version of ``http_proxy`` is used because of
+`security reasons <https://everything.curl.dev/usingcurl/proxies/env#http_proxy-in-lower-case-only>`_
+when running in CGI environments.
+
+If the ``ALL_PROXY`` environment variable is set, Sarus uses its value as proxy
+hostname for all connections, whether secure or insecure.
+
+To connect to a specific registry without going through the proxy, even when
+a proxy is set by one of the previously mentioned variables, the ``no_proxy``
+or ``NO_PROXY`` environment variables can be used. Such variables should contain
+a list of comma-separated hostnames for which a proxy connection is not used.
+For example, to append Docker Hub to the list of hosts excluded from proxying:
+
+.. code-block:: bash
+
+    no_proxy=example.domain.com,index.docker.io
+
+The entries in ``no_proxy`` and ``NO_PROXY`` must match a registry hostname exactly
+in order to be effective. Use of an asterisk (``\*``) as a wildcard for hostname
+expansion is not supported. However, the variables can be set to a single asterisk
+to match all hosts. In case both variables are set, the lower case version
+is preferred.
 
 .. _user-load-archive:
 

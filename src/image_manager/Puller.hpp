@@ -34,6 +34,7 @@ public:
     Puller(std::shared_ptr<const common::Config> config);
     PulledImage pull();
     web::json::value retrieveImageManifest();
+    std::string getProxy();
 
 private:    
     std::string makeImageManifestUri();
@@ -46,7 +47,9 @@ private:
     bool checkSum(const std::string &digest, const boost::filesystem::path &filename);
     void printLog(  const boost::format &message, common::LogLevel LogLevel,
                     std::ostream& outStream = std::cout, std::ostream& errStream = std::cerr);
-    std::unique_ptr<web::http::client::http_client> setupHttpClientWithCredential(const std::string& server);
+    std::unique_ptr<web::http::client::http_client> setupHttpClient(const std::string& server);
+    void setProxyIfNecessary(web::http::client::http_client_config& clientConfig);
+    bool isRegistryInNoProxyList(const std::string& noProxyList);
     std::tuple<std::string, std::string, std::string> parseWwwAuthenticateHeader(const std::string& auth_header);
 
 private:
