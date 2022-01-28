@@ -20,15 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-
-
-### Removed
-
-
-
-### Security
-
-
+- Fixed generation of README files for standalone archives
 
 
 ## [1.4.0]

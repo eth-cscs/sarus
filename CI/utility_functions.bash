@@ -112,7 +112,13 @@ build_sarus_archive() {
     make install
     fail_on_error "Failed to make install Sarus"
 
-    rsync -arvL --chmod=go-w ${build_dir}/../standalone/ ${prefix_dir}/
+    # Adjust standalone README instructions
+    version=${CI_COMMIT_TAG-${TRAVIS_TAG-"1.0.0"}}
+    sed -e "s|@SARUS_VERSION@|${version}|g" ${build_dir}/../standalone/README.md.in > ${build_dir}/../standalone/README.md
+    cp -v ${build_dir}/../standalone/README.md ${build_dir}/README.md
+    fail_on_error "Failed to prepare README.md for Sarus archive"
+
+    rsync -arvL --chmod=go-w --exclude=*.in ${build_dir}/../standalone/ ${prefix_dir}/
 
     # runc is statically linked with libseccomp, which is licensed under GNU LGPL-2.1.
     # To comply with LGPL-2.1 (§6(a)), include the libseccomp source code in the licenses folder.
@@ -127,12 +133,6 @@ build_sarus_archive() {
     # Tar archive
     cd ${prefix_dir}/.. && tar cz --owner=root --group=root --file=../${archive_name} *
     cp  ${build_dir}/${archive_name} ${build_dir}/../${archive_name}
-
-    # Adjust standalone README instructions
-    cp -v ${build_dir}/../standalone/README.md ${build_dir}/README.md
-    version=${CI_COMMIT_TAG-${TRAVIS_TAG-"1.0.0"}}
-    sed -i ${build_dir}/README.md -e "s|@SARUS_VERSION@|${version}|g"
-    fail_on_error "Failed to prepare README.md for Sarus archive"
 
     # Prepare RELEASE notes for CI to use
     python3 ${build_dir}/../CI/create_release_notes.py

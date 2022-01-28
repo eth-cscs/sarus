@@ -79,7 +79,7 @@ standalone_debug:
     name: "sarus-Debug-$CI_COMMIT_REF_NAME"
     paths:
       - sarus-Debug.tar.gz
-      - README.md
+      - standalone/README.md
 
 standalone_release:
   stage: build_and_test
@@ -90,7 +90,7 @@ standalone_release:
     name: "sarus-Release-$CI_COMMIT_REF_NAME"
     paths:
       - sarus-Release.tar.gz
-      - README.md
+      - standalone/README.md
 
 artifact_store:
   stage: artifact_store
