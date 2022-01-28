@@ -21,7 +21,7 @@ for file_json_in in $(cd ${HOOKS_TEMPLATES_DIR} && ls *.json.in); do
 
     # NVIDIA
     sed -i ${file_json} -e "s|@NVIDIA_TOOLKIT_PATH@|/opt/sarus/bin|g"
-    sed -i ${file_json} -e "s|@LIBNVIDIA_CONTAINER_PATH@|/usr/local/libnvidia-container_1.2.0|g"
+    sed -i ${file_json} -e "s|@LIBNVIDIA_CONTAINER_PATH@|/usr/local/libnvidia-container_1.7.0|g"
 
     # MPI
     sed -i ${file_json} -e "s|@MPI_LIBS@|/usr/lib64/mvapich2-2.2/lib/libmpi.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpicxx.so.12.0.5:/usr/lib64/mvapich2-2.2/lib/libmpifort.so.12.0.5|g"

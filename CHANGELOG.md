@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## Unreleased
+## [Unreleased]
 
 ### Added
 
@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Updated recommended runc version to 1.0.3
+- Updated recommended libnvidia-container version to 1.7.0
+- Updated recommended NVIDIA Container Toolkit version to 1.7.0
 - Updated CppUTest framework for unit tests to version 4.0
 
 ### Fixed

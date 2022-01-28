@@ -19,7 +19,7 @@ The Toolkit depends on the library and utility provided by the
 `libnvidia-container <https://github.com/NVIDIA/libnvidia-container>`_
 project to carry out the low-level actions of importing the GPU device and
 drivers inside the container. At the time of writing, the latest release of
-libnvidia-container is version 1.5.1. The most straightforward way to obtain
+libnvidia-container is version 1.7.0. The most straightforward way to obtain
 the library and its CLI utility binary is to configure the related
 `package repository <https://nvidia.github.io/libnvidia-container/>`_
 for your Linux distribution and install the pre-built packages. For example, on
@@ -39,7 +39,7 @@ Installation
 ============
 
 At the time of writing, the latest revision of the NVIDIA Container Toolkit
-is version 1.5.1.
+is version 1.7.0.
 
 System packages
 ---------------
@@ -81,11 +81,11 @@ You can now proceed to build the Toolkit:
     
     $ git clone https://github.com/NVIDIA/nvidia-container-toolkit.git
     $ cd nvidia-container-toolkit
-    $ git checkout v1.5.1
+    $ git checkout v1.7.0
     $ make binary
 
     # Copy the toolkit binary to an installation directory
-    $ sudo cp ./nvidia-container-toolkit /opt/sarus/bin/nvidia-container-toolkit-1.5.1
+    $ sudo cp ./nvidia-container-toolkit /opt/sarus/bin/nvidia-container-toolkit-1.7.0
 
 To ensure correct functionality, the Toolkit also needs a TOML configuration file
 to be present on the system, and will look for it in the default path
