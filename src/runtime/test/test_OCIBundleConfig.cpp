@@ -118,12 +118,12 @@ static void checkExistenceAndPermissions(const boost::filesystem::path& file) {
 }
 
 /**
-/* Sort environment arrays in both JSON objects to avoid test failures due to how the elements
-/* are ordered in the Sarus-generated JSON: inside Sarus the container environment is stored
-/* as an unordered map, so the order of the elements when converted to a linear JSON array
-/* is compiler-dependent.
-/* The sorting does not compromise the test since what is important here is if the individual
-/* elements are all there and they match, not which order they are in.
+ * Sort environment arrays in both JSON objects to avoid test failures due to how the elements
+ * are ordered in the Sarus-generated JSON: inside Sarus the container environment is stored
+ * as an unordered map, so the order of the elements when converted to a linear JSON array
+ * is compiler-dependent.
+ * The sorting does not compromise the test since what is important here is if the individual
+ * elements are all there and they match, not which order they are in.
  */
 static void sortJsonEnvironmentArray(rj::Document& json) {
     auto rjStringCompare = [](const rapidjson::Value& lhs, const rapidjson::Value& rhs) {
