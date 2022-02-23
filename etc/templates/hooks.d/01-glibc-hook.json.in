@@ -3,6 +3,7 @@
     "hook": {
         "path": "@INSTALL_PATH@/bin/glibc_hook",
         "env": [
+            "LDD_PATH=/usr/bin/ldd",
             "LDCONFIG_PATH=/sbin/ldconfig",
             "READELF_PATH=/usr/bin/readelf",
             "GLIBC_LIBS=@GLIBC_LIBS@"

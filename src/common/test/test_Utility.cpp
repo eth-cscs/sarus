@@ -495,12 +495,6 @@ TEST(UtilityTestGroup, isLibc) {
     CHECK(!common::isLibc("libc_bogus.so"));
 }
 
-TEST(UtilityTestGroup, parseLibcVersion) {
-    CHECK((std::tuple<unsigned int, unsigned int>{0, 0} == common::parseLibcVersion("libc-0.0.so")));
-    CHECK((std::tuple<unsigned int, unsigned int>{2, 29} == common::parseLibcVersion("libc-2.29.so")));
-    CHECK((std::tuple<unsigned int, unsigned int>{100, 100} == common::parseLibcVersion("libc-100.100.so")));
-}
-
 TEST(UtilityTestGroup, is64bitSharedLib) {
     auto dummyLibsDir = boost::filesystem::path{__FILE__}
         .parent_path()

@@ -36,7 +36,9 @@ ConfigRAII::~ConfigRAII() {
         boost::filesystem::remove_all(dir);
     }
     boost::filesystem::remove_all(config->directories.repository);
-    boost::filesystem::current_path(startingPath);
+    if (boost::filesystem::exists(startingPath)) {
+        boost::filesystem::current_path(startingPath);
+    }
 }
 
 static void populateJSON(rj::Document& document) {

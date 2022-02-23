@@ -91,6 +91,21 @@ public:
         return *this;
     }
 
+    Checker& mockLddWithOlderVersion() {
+        sarus::common::copyFile(boost::filesystem::current_path() / "lddMockOlder", rootfsDir / lddPath);
+        return *this;
+    }
+
+    Checker& mockLddWithEqualVersion() {
+        sarus::common::copyFile(boost::filesystem::current_path() / "lddMockEqual", rootfsDir / lddPath);
+        return *this;
+    }
+
+    Checker& mockLddWithNewerVersion() {
+        sarus::common::copyFile(boost::filesystem::current_path() / "lddMockNewer", rootfsDir / lddPath);
+        return *this;
+    }
+
     void checkSuccess() const {
         setupTestEnvironment();
         GlibcHook{}.injectGlibcLibrariesIfNecessary();
@@ -115,10 +130,15 @@ private:
         sarus::common::writeJSON(doc, bundleDir / "config.json");
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
+        sarus::common::setEnvironmentVariable("LDD_PATH=" + (boost::filesystem::current_path() / "lddMockEqual").string());
         sarus::common::setEnvironmentVariable("LDCONFIG_PATH=ldconfig");
         sarus::common::setEnvironmentVariable("READELF_PATH=readelf");
         sarus::common::setEnvironmentVariable("GLIBC_LIBS="
             + sarus::common::makeColonSeparatedListOfPaths(hostLibs));
+
+        sarus::common::createFoldersIfNecessary(rootfsDir / "tmp",
+                                                doc["process"]["user"]["uid"].GetInt(),
+                                                doc["process"]["user"]["gid"].GetInt());
     }
 
     void checkContainerLibraries() const {
@@ -138,6 +158,7 @@ private:
 
 private:
     test_utility::config::ConfigRAII configRAII = test_utility::config::makeConfig();
+    boost::filesystem::path lddPath = boost::filesystem::path{"/usr/bin/ldd"};
     boost::filesystem::path bundleDir = boost::filesystem::path{ configRAII.config->json["OCIBundleDir"].GetString() };
     boost::filesystem::path rootfsDir = bundleDir / configRAII.config->json["rootfsFolder"].GetString();
     boost::filesystem::path dummyLibsDir = boost::filesystem::path{__FILE__}

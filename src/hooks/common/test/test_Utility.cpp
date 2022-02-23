@@ -367,6 +367,18 @@ TEST(HooksUtilityTestGroup, whitelistDeviceInCgroup) {
     CHECK_THROWS(sarus::common::Error, utility::whitelistDeviceInCgroup(testDir.getPath(), dummyFile));
 }
 
+TEST(HooksUtilityTestGroup, parseLibcVersionFromLddOutput) {
+    CHECK((std::tuple<unsigned int, unsigned int>{2, 34} == utility::parseLibcVersionFromLddOutput(
+            "ldd (GNU libc) 2.34\n"
+            "Copyright (C) 2021 Free Software Foundation, Inc.\n"
+            "This is free software; see the source for copying conditions.  There is NO\n"
+            "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
+            "Written by Roland McGrath and Ulrich Drepper.")));
+    CHECK((std::tuple<unsigned int, unsigned int>{2, 31} == utility::parseLibcVersionFromLddOutput("ldd (Ubuntu GLIBC 2.31-0ubuntu9.2) 2.31")));
+    CHECK((std::tuple<unsigned int, unsigned int>{0, 0} == utility::parseLibcVersionFromLddOutput("ldd (GNU libc) 0.0")));
+    CHECK((std::tuple<unsigned int, unsigned int>{100, 100} == utility::parseLibcVersionFromLddOutput("ldd (GNU libc) 100.100")));
+}
+
 }}}} // namespace
 
 SARUS_UNITTEST_MAIN_FUNCTION();

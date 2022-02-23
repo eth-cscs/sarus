@@ -12,10 +12,13 @@
 
 #include <iostream>
 #include <cstring>
+#include <grp.h>
+#include <sys/prctl.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <fcntl.h>
 #include <boost/format.hpp>
+#include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <rapidjson/istreamwrapper.h>
 
@@ -298,6 +301,65 @@ void whitelistDeviceInCgroup(const boost::filesystem::path& cgroupPath, const bo
 
     utility::logMessage(boost::format("Successfully whitelisted device %s for rw access") % deviceFile,
             sarus::common::LogLevel::DEBUG);
+}
+
+void switchToUnprivilegedProcess(const uid_t targetUid, const gid_t targetGid) {
+    // drop all capabilities
+    // go through capability zero, one, two, ... until prctl() fails
+    // because we went beyond the last valid capability
+    for(int capIdx = 0; ; capIdx++) {
+        if (prctl(PR_CAPBSET_DROP, capIdx, 0, 0, 0) != 0) {
+            if(errno == EINVAL) {
+                break; // reached end of valid capabilities
+            }
+            else {
+                auto message = boost::format("Failed to prctl(PR_CAPBSET_DROP, %d, 0, 0, 0): %s")
+                    % capIdx % strerror(errno);
+                SARUS_THROW_ERROR(message.str());
+            }
+        }
+    }
+
+    // drop supplementary groups (if any)
+    if(setgroups(0, NULL) != 0) {
+        auto message = boost::format("Failed to setgroups(0, NULL): %s") % strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    // change to user's gid
+    if(setresgid(targetGid, targetGid, targetGid) != 0) {
+        auto message = boost::format("Failed to setresgid(%1%, %1%, %1%): %2%") % targetGid % strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    // change to user's uid
+    if(setresuid(targetUid, targetUid, targetUid) != 0) {
+        auto message = boost::format("Failed to setresuid(%1%, %1%, %1%): %2%") % targetUid % strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    // set NoNewPrivs
+    if(prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0) {
+        auto message = boost::format("Failed to prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0): %s") % strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+}
+
+std::tuple<unsigned int, unsigned int> parseLibcVersionFromLddOutput(const std::string& lddOutput) {
+    auto outputLines = std::vector<std::string>();
+    boost::split(outputLines, lddOutput, boost::is_any_of("\n"));
+    boost::cmatch matches;
+    boost::regex re("^ldd \\(.*\\) (\\d+)\\.(\\d+)?$");
+    if (boost::regex_match(outputLines[0].c_str(), matches, re)) {
+        return std::tuple<unsigned int, unsigned int>{
+            std::stoi(matches[1]),
+            std::stoi(matches[2])
+        };
+    }
+    else {
+        auto message = boost::format("Failed to parse glibc version from ldd output head:\n%s") % outputLines[0];
+        SARUS_THROW_ERROR(message.str());
+    }
 }
 
 void logMessage(const boost::format& message, sarus::common::LogLevel level, std::ostream& out, std::ostream& err) {

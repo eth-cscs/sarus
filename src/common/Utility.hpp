@@ -50,6 +50,7 @@ void logProcessUserAndGroupIdentifiers();
 std::string executeCommand(const std::string& command);
 int forkExecWait(const common::CLIArguments& args,
                  const boost::optional<std::function<void()>>& preExecActions = {});
+void redirectStdoutToFile(const boost::filesystem::path& file);
 void SetStdinEcho(bool);
 std::string getHostname();
 size_t getFileSize(const boost::filesystem::path& filename);
@@ -86,7 +87,6 @@ std::vector<std::string> resolveSharedLibAbi(const boost::filesystem::path& lib,
                                            const boost::filesystem::path& rootDir = "/");
 std::string getSharedLibSoname(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath);
 bool isLibc(const boost::filesystem::path&);
-std::tuple<unsigned int, unsigned int> parseLibcVersion(const boost::filesystem::path&);
 bool is64bitSharedLib(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath);
 std::vector<int> getCpuAffinity();
 void setCpuAffinity(const std::vector<int>&);

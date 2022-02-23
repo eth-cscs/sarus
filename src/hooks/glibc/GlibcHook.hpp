@@ -34,9 +34,9 @@ private:
     bool containerHasGlibc() const;
     std::vector<boost::filesystem::path> get64bitContainerLibraries() const;
     boost::optional<boost::filesystem::path> findLibc(const std::vector<boost::filesystem::path>& libs) const;
-    bool containerGlibcHasToBeReplaced(
-        const boost::filesystem::path& hostLibc,
-        const boost::filesystem::path& containerLibc) const;
+    bool containerGlibcHasToBeReplaced() const;
+    std::tuple<unsigned int, unsigned int> detectHostLibcVersion() const;
+    std::tuple<unsigned int, unsigned int> detectContainerLibcVersion() const;
     void verifyThatHostAndContainerGlibcAreABICompatible(
         const boost::filesystem::path& hostLibc,
         const boost::filesystem::path& containerLibc) const;
@@ -51,6 +51,7 @@ private:
     boost::filesystem::path rootfsDir;
     pid_t pidOfContainer;
     sarus::common::UserIdentity userIdentity;
+    boost::filesystem::path lddPath;
     boost::filesystem::path ldconfigPath;
     boost::filesystem::path readelfPath;
     std::vector<boost::filesystem::path> hostLibraries;

@@ -60,6 +60,7 @@ TEST(GlibcHookTestGroup, test) {
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addContainerLibcAndSymlink("libc.so.5-container", "/lib64/libc-2.25.so", "/lib64/libc.so.5", {})
         .runLdconfigInContainer()
+        .mockLddWithOlderVersion()
         .checkFailure();
 
     // no glibc injection needed (container's glibc version == host's glibc version)
@@ -67,6 +68,7 @@ TEST(GlibcHookTestGroup, test) {
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addContainerLibcAndSymlink("libc.so.6-container", "/lib64/libc-2.26.so", "/lib64/libc.so.6", "libc.so.6-container")
         .runLdconfigInContainer()
+        .mockLddWithEqualVersion()
         .checkSuccess();
 
     // no glibc injection needed (container's glibc version > host's glibc version)
@@ -74,6 +76,7 @@ TEST(GlibcHookTestGroup, test) {
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addContainerLibcAndSymlink("libc.so.6-container", "/lib64/libc-2.27.so", "/lib64/libc.so.6", "libc.so.6-container")
         .runLdconfigInContainer()
+        .mockLddWithNewerVersion()
         .checkSuccess();
 
     // glibc replacement of single library
@@ -81,6 +84,7 @@ TEST(GlibcHookTestGroup, test) {
         .addHostLibcAndSymlink("libc.so.6-host", "/lib64/libc-2.26.so", "/lib64/libc.so.6")
         .addContainerLibcAndSymlink("libc.so.6-container", "/lib64/libc-2.25.so", "/lib64/libc.so.6", "libc.so.6-host")
         .runLdconfigInContainer()
+        .mockLddWithOlderVersion()
         .checkSuccess();
 
     // glibc replacement and addition of libraries
@@ -90,6 +94,7 @@ TEST(GlibcHookTestGroup, test) {
         .addContainerLibcAndSymlink("libc.so.6-container", "/lib64/libc-2.25.so", "/lib64/libc.so.6", "libc.so.6-host")
         .expectContainerLib("/lib64/ld-linux-x86-64.so.2", "ld-linux-x86-64.so.2-host")
         .runLdconfigInContainer()
+        .mockLddWithOlderVersion()
         .checkSuccess();
 
     // glibc replacement of multiple libraries
@@ -99,6 +104,7 @@ TEST(GlibcHookTestGroup, test) {
         .addContainerLibcAndSymlink("libc.so.6-container", "/lib64/libc-2.25.so", "/lib64/libc.so.6", "libc.so.6-host")
         .addContainerLib("ld-linux-x86-64.so.2-container", "/lib64/ld-linux-x86-64.so.2", "ld-linux-x86-64.so.2-host")
         .runLdconfigInContainer()
+        .mockLddWithOlderVersion()
         .checkSuccess();
 
     // mixed 32-bit and 64-bit libraries in container
@@ -109,6 +115,7 @@ TEST(GlibcHookTestGroup, test) {
         .addContainerLibcAndSymlink("libc.so.6-container", "/lib64/libc-2.25.so", "/lib64/libc.so.6", "libc.so.6-host")
         .expectContainerLib("/lib64/ld-linux-x86-64.so.2", "ld-linux-x86-64.so.2-host")
         .runLdconfigInContainer()
+        .mockLddWithOlderVersion()
         .checkSuccess();
 }
 

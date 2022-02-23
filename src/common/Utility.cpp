@@ -32,6 +32,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <limits.h>
+#include <fcntl.h>
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
@@ -295,6 +296,12 @@ int forkExecWait(const common::CLIArguments& args,
 
         return WEXITSTATUS(status);
     }
+}
+
+void redirectStdoutToFile(const boost::filesystem::path& path) {
+    int fd = open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    dup2(fd, 1);
+    close(fd);
 }
 
 void SetStdinEcho(bool flag)
@@ -902,21 +909,6 @@ std::string getSharedLibSoname(const boost::filesystem::path& path, const boost:
 
     auto message = boost::format("Failed to parse library soname from readelf output: %s") % output;
     SARUS_THROW_ERROR(message.str());
-}
-
-std::tuple<unsigned int, unsigned int> parseLibcVersion(const boost::filesystem::path& lib) {
-    boost::cmatch matches;
-    boost::regex re("^(.*/)*libc-(\\d+)\\.(\\d+)?\\.so$");
-    if (boost::regex_match(lib.c_str(), matches, re)) {
-        return std::tuple<unsigned int, unsigned int>{
-            std::stoi(matches[2]),
-            std::stoi(matches[3])
-        };
-    }
-    else {
-        auto message = boost::format("Failed to parse libc ABI version from %s.") % lib;
-        SARUS_THROW_ERROR(message.str());
-    }
 }
 
 bool is64bitSharedLib(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath) {

@@ -96,9 +96,9 @@ class TestGlibcHook(unittest.TestCase):
     def _pull_docker_images(cls):
         util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/alpine:3.14") # no glibc
         util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/centos:6") # glibc 2.12
-        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/fedora:34") # assumption: glibc >= host's glibc
+        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/fedora:35") # assumption: glibc >= host's glibc
         # based on fedora - assumption: glibc >= host's glibc
-        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry")
+        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry_f35")
 
     @classmethod
     def _enable_hook(cls):
@@ -109,6 +109,7 @@ class TestGlibcHook(unittest.TestCase):
         hook["hook"]["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/glibc_hook"
         hook["hook"]["env"] = [
             "GLIBC_LIBS=" + ":".join(cls._HOST_GLIBC_LIBS),
+            "LDD_PATH=" + shutil.which("ldd"),
             "LDCONFIG_PATH=" + shutil.which("ldconfig"),
             "READELF_PATH=" + shutil.which("readelf"),
         ]
@@ -138,13 +139,13 @@ class TestGlibcHook(unittest.TestCase):
 
     def test_no_injection_in_container_with_recent_glibc(self):
         self._glibc_command_line_option = True
-        self._container_image = "quay.io/ethcscs/fedora:34"
+        self._container_image = "quay.io/ethcscs/fedora:35"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert not hashes
 
     def test_no_injection_in_container_with_recent_glibc_and_nonexisting_ldcache_entry(self):
         self._glibc_command_line_option = True
-        self._container_image = "quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry"
+        self._container_image = "quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry_f35"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert not hashes
 

@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Added
+
+### Changed
+
+- The Glibc hook now uses the output of `ldd` to detect the version of glibc
+
+### Fixed
+
+### Removed
+
+### Security
+
+
 ## [1.4.1]
 
 ### Added

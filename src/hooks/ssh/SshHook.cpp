@@ -14,8 +14,6 @@
 #include <cstdlib>
 #include <tuple>
 #include <sstream>
-#include <grp.h>
-#include <sys/prctl.h>
 #include <boost/format.hpp>
 #include <boost/regex.hpp>
 
@@ -353,45 +351,7 @@ void SshHook::startSshDaemonInContainer() const {
             SARUS_THROW_ERROR(message.str());
         }
 
-        // drop all capabilities
-        // go through capability zero, one, two, ... until prctl() fails
-        // because we went beyond the last valid capability
-        for(int capIdx = 0; ; capIdx++) {
-            if (prctl(PR_CAPBSET_DROP, capIdx, 0, 0, 0) != 0) {
-                if(errno == EINVAL) {
-                    break; // reached end of valid capabilities
-                }
-                else {
-                    auto message = boost::format("Failed to prctl(PR_CAPBSET_DROP, %d, 0, 0, 0): %s")
-                        % capIdx % strerror(errno);
-                    SARUS_THROW_ERROR(message.str());
-                }
-            }
-        }
-
-        // drop supplementary groups (if any)
-        if(setgroups(0, NULL) != 0) {
-            auto message = boost::format("Failed to setgroups(0, NULL): %s") % strerror(errno);
-            SARUS_THROW_ERROR(message.str());
-        }
-
-        // change to user's gid
-        if(setresgid(gidOfUser, gidOfUser, gidOfUser) != 0) {
-            auto message = boost::format("Failed to setresgid(%1%, %1%, %1%): %2%") % gidOfUser % strerror(errno);
-            SARUS_THROW_ERROR(message.str());
-        }
-
-        // change to user's uid
-        if(setresuid(uidOfUser, uidOfUser, uidOfUser) != 0) {
-            auto message = boost::format("Failed to setresuid(%1%, %1%, %1%): %2%") % uidOfUser % strerror(errno);
-            SARUS_THROW_ERROR(message.str());
-        }
-
-        // set NoNewPrivs
-        if(prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0) {
-            auto message = boost::format("Failed to prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0): %s") % strerror(errno);
-            SARUS_THROW_ERROR(message.str());
-        }
+        hooks::common::utility::switchToUnprivilegedProcess(uidOfUser, gidOfUser);
     };
 
     auto sshKeysPathWithinContainer = "/" / boost::filesystem::relative(sshKeysDirInContainer, rootfsDir);

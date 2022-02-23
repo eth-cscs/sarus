@@ -23,6 +23,7 @@
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 
+#include "common/CLIArguments.hpp"
 #include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
 
@@ -59,7 +60,7 @@ void GlibcHook::injectGlibcLibrariesIfNecessary() {
         logMessage("Not replacing glibc libraries (container doesn't have 64-bit libc)", sarus::common::LogLevel::INFO);
         return; // nothing to do (could be a 32-bit container without a 64-bit libc)
     }
-    if(!containerGlibcHasToBeReplaced(*hostLibc, *containerLibc)) {
+    if(!containerGlibcHasToBeReplaced()) {
         logMessage("Not replacing glibc libraries (container's glibc is new enough)", sarus::common::LogLevel::INFO);
         return; // nothing to do
     }
@@ -94,6 +95,8 @@ void GlibcHook::parseConfigJSONOfBundle() {
 
 void GlibcHook::parseEnvironmentVariables() {
     logMessage("Parsing environment variables", sarus::common::LogLevel::INFO);
+
+    lddPath = sarus::common::getEnvironmentVariable("LDD_PATH");
 
     ldconfigPath = sarus::common::getEnvironmentVariable("LDCONFIG_PATH");
 
@@ -136,13 +139,9 @@ boost::optional<boost::filesystem::path> GlibcHook::findLibc(const std::vector<b
     }
 }
 
-bool GlibcHook::containerGlibcHasToBeReplaced(  const boost::filesystem::path& hostLibc,
-                                                const boost::filesystem::path& containerLibc) const {
-    auto hostSymlinkTarget = sarus::common::realpathWithinRootfs("/", hostLibc);
-    auto hostVersion = sarus::common::parseLibcVersion(hostSymlinkTarget);
-    auto containerSymlinkTarget = sarus::common::realpathWithinRootfs(rootfsDir, containerLibc);
-    auto containerVersion = sarus::common::parseLibcVersion(containerSymlinkTarget);
-
+bool GlibcHook::containerGlibcHasToBeReplaced() const {
+    auto hostVersion = detectHostLibcVersion();
+    auto containerVersion = detectContainerLibcVersion();
     if(containerVersion < hostVersion) {
         auto message = boost::format("Detected glibc %1%.%2% (< %3%.%4%) in the container. Replacing it with glibc %3%.%4% from the host."
                                      " Please consider upgrading the container image to a distribution with glibc >= %3%.%4%.")
@@ -154,6 +153,65 @@ bool GlibcHook::containerGlibcHasToBeReplaced(  const boost::filesystem::path& h
     else {
         return false;
     }
+}
+
+/*
+ * Use the output of "ldd --version" to obtain information about the glibc version from the host.
+ * Obtaining the glibc version through the glibc.so filename is not always viable since some Linux distributions
+ * (e.g. Ubuntu 21.10, Fedora 35) package the library without the version in the filename.
+ * Likewise, obtaining the version from executing the glibc shared object is not reliable because some distributions
+ * ship the library object without execution permissions.
+ * A 3rd option for the detection would be to compile a small program which prints glibc version macros; however
+ * that would require glibc headers to be available in the container, which cannot be guaranteed, e.g. in the case
+ * of a slim image.
+ */
+std::tuple<unsigned int, unsigned int> GlibcHook::detectHostLibcVersion() const {
+    auto lddOutput = std::string();
+    try {
+        lddOutput = sarus::common::executeCommand(lddPath.string() + " --version");
+    }
+    catch (sarus::common::Error& e) {
+        SARUS_RETHROW_ERROR(e, "Failed to detect host glibc version.");
+    }
+
+    return hooks::common::utility::parseLibcVersionFromLddOutput(lddOutput);
+}
+
+/*
+ * Use the output of "ldd --version" to obtain information about the glibc version from the container.
+ * The same considerations made for detectHostLibcVersion() apply here.
+ * Because the Glibc hook runs with root privileges, this function uses the forkExecWait() utility function to
+ * drop all privileges and switch to the user identity before executing a binary from the container.
+ * A file is used to store information about the ldd output, since forkExecWait() does not capture stdout.
+ */
+std::tuple<unsigned int, unsigned int> GlibcHook::detectContainerLibcVersion() const {
+    auto glibcOutput = std::string();
+    auto lddOutputPath = sarus::common::makeUniquePathWithRandomSuffix(boost::filesystem::path{"/tmp/glibc-hook-ldd-out"});
+
+    std::function<void()> preExecActions = [this, &lddOutputPath]() {
+        if(chroot(rootfsDir.c_str()) != 0) {
+            auto message = boost::format("Failed to chroot to %s: %s")
+                % rootfsDir % strerror(errno);
+            SARUS_THROW_ERROR(message.str());
+        }
+
+        hooks::common::utility::switchToUnprivilegedProcess(userIdentity.uid, userIdentity.gid);
+        sarus::common::createFileIfNecessary(lddOutputPath);
+        sarus::common::redirectStdoutToFile(lddOutputPath);
+    };
+
+    auto lddCommand = sarus::common::CLIArguments{"/usr/bin/ldd", "--version"};
+    auto status = sarus::common::forkExecWait(lddCommand, preExecActions);
+    if(status != 0) {
+        auto message = boost::format("Failed to detect container glibc version. /usr/bin/ldd exited with status %d")
+            % status;
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    auto lddOutput = sarus::common::readFile(rootfsDir / lddOutputPath);
+    boost::filesystem::remove(rootfsDir / lddOutputPath);
+
+    return hooks::common::utility::parseLibcVersionFromLddOutput(lddOutput);
 }
 
 void GlibcHook::verifyThatHostAndContainerGlibcAreABICompatible(

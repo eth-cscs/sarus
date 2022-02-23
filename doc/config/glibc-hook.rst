@@ -39,6 +39,9 @@ Sarus configuration
 The program is meant to be run as a **prestart** hook and does not accept
 arguments, but its actions are controlled through a few environment variables:
 
+* ``LDD_PATH``: Absolute path to a trusted ``ldd``
+  program **on the host**.
+
 * ``LDCONFIG_PATH``: Absolute path to a trusted ``ldconfig``
   program **on the host**.
 

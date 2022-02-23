@@ -55,7 +55,7 @@ class TestMPIHook(unittest.TestCase):
         util.pull_image_if_necessary(is_centralized_repository=False,
                                      image="quay.io/ethcscs/sarus-integration-tests:no_mpi_libraries")
         util.pull_image_if_necessary(is_centralized_repository=False,
-                                     image="quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry")
+                                     image="quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry_f35")
 
     @classmethod
     def _create_site_resources(cls):
@@ -149,7 +149,7 @@ class TestMPIHook(unittest.TestCase):
 
     def test_container_without_mpi_libraries_and_nonexisting_ldcache_entry(self):
         self._mpi_command_line_option = True
-        self._container_image = "quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry"
+        self._container_image = "quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry_f35"
         self._assert_sarus_raises_mpi_error_containing_text(
             text = "No MPI libraries found in the container")
 

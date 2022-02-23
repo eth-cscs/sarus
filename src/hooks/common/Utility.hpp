@@ -38,6 +38,8 @@ boost::filesystem::path findCgroupPathInHierarchy(const std::string& subsystemNa
         const boost::filesystem::path& subsystemMountRoot, const pid_t pid);
 boost::filesystem::path findCgroupPath(const std::string& subsystemName, const boost::filesystem::path& procPrefixDir, const pid_t pid);
 void whitelistDeviceInCgroup(const boost::filesystem::path& cgroupPath, const boost::filesystem::path& deviceFile);
+void switchToUnprivilegedProcess(const uid_t targetUid, const gid_t targetGid);
+std::tuple<unsigned int, unsigned int> parseLibcVersionFromLddOutput(const std::string& lddOutput);
 void logMessage(const boost::format& message, sarus::common::LogLevel level,
         std::ostream& out=std::cout, std::ostream& err=std::cerr);
 void logMessage(const std::string& message, sarus::common::LogLevel level,
