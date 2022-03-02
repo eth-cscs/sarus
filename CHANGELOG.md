@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - The Glibc hook now uses the output of `ldd` to detect the version of glibc
+- Sarus now attempts to parse the Bearer authorization token regardless of the value of the `Content-Type` response header when pulling images
 
 ### Fixed
 

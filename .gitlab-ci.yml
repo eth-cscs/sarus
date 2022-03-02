@@ -37,7 +37,7 @@ get_credentials:
     - echo "JFROG_TOKEN=${JFROG_TOKEN}" >> credentials.env
   artifacts:
     public: false
-    expire_in: 40 minute
+    expire_in: 80 minute
     reports:
       dotenv: credentials.env
 
@@ -92,7 +92,7 @@ standalone_release:
       - sarus-Release.tar.gz
       - standalone/README.md
 
-artifact_store:
+.artifact_store:
   stage: artifact_store
   image: alpine:latest
   script:

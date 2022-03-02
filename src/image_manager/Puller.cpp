@@ -480,12 +480,13 @@ namespace image_manager {
         }
 
         try {
-            json::value respJson = tokenResp.extract_json().get();
+            json::value respJson = tokenResp.extract_json(true).get();
             token = respJson[U("token")].serialize();
             token = common::eraseFirstAndLastDoubleQuote(token);
         }
         catch (const std::exception& e) {
-            SARUS_RETHROW_ERROR(e, "Failed to get Token: %s");
+            auto message = boost::format("Failed to get Token: %s") % e.what();
+            SARUS_RETHROW_ERROR(e, message.str());
         }
 
         printLog( boost::format("Got token: %s") % token, common::LogLevel::DEBUG);
