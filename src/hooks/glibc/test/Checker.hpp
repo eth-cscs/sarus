@@ -92,17 +92,17 @@ public:
     }
 
     Checker& mockLddWithOlderVersion() {
-        sarus::common::copyFile(boost::filesystem::current_path() / "lddMockOlder", rootfsDir / lddPath);
+        sarus::common::copyFile(boost::filesystem::current_path() / "mocks/lddMockOlder", rootfsDir / lddPath);
         return *this;
     }
 
     Checker& mockLddWithEqualVersion() {
-        sarus::common::copyFile(boost::filesystem::current_path() / "lddMockEqual", rootfsDir / lddPath);
+        sarus::common::copyFile(boost::filesystem::current_path() / "mocks/lddMockEqual", rootfsDir / lddPath);
         return *this;
     }
 
     Checker& mockLddWithNewerVersion() {
-        sarus::common::copyFile(boost::filesystem::current_path() / "lddMockNewer", rootfsDir / lddPath);
+        sarus::common::copyFile(boost::filesystem::current_path() / "mocks/lddMockNewer", rootfsDir / lddPath);
         return *this;
     }
 
@@ -130,7 +130,7 @@ private:
         sarus::common::writeJSON(doc, bundleDir / "config.json");
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
-        sarus::common::setEnvironmentVariable("LDD_PATH=" + (boost::filesystem::current_path() / "lddMockEqual").string());
+        sarus::common::setEnvironmentVariable("LDD_PATH=" + (boost::filesystem::current_path() / "mocks/lddMockEqual").string());
         sarus::common::setEnvironmentVariable("LDCONFIG_PATH=ldconfig");
         sarus::common::setEnvironmentVariable("READELF_PATH=readelf");
         sarus::common::setEnvironmentVariable("GLIBC_LIBS="

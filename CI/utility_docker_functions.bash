@@ -112,13 +112,9 @@ sarus-utest() {
     echo "${FUNCNAME^^} with:"
     _print_parameters
 
-    if [ ${toolchain_file} = "gcc-asan.cmake" ]; then
-        privileged_excludes="GlibcHook"
-    fi
-
     _run_cmd_in_container ${image_run} root \
         ". /sarus-source/CI/utility_functions.bash && \
-        run_unit_tests $(_build_dir_container) ${privileged_excludes}"
+        run_unit_tests $(_build_dir_container)"
 
     fail_on_error "${FUNCNAME}: failed"
 }

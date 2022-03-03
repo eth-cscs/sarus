@@ -178,12 +178,8 @@ run_sarus_registry() {
 }
 
 run_unit_tests() {
-    local build_dir=$1; shift && privileged_excludes="$1"
+    local build_dir=$1; shift || error "${FUNCNAME}: missing build_dir argument"
     cd ${build_dir}
-
-    if [ ! -z ${privileged_excludes} ]; then
-        privileged_excludes=("--exclude-regex" "${privileged_excludes}")
-    fi
 
     # Note: use CI/LSan.supp to suppress errors about memory leaks in
     # Sarus dependencies, e.g. OpenSSL. Such leaks are out of our control.
@@ -191,7 +187,7 @@ run_unit_tests() {
     sudo -u docker CTEST_OUTPUT_ON_FAILURE=1 ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=${build_dir}/../CI/LSan.supp ctest --exclude-regex AsRoot
     fail_on_error "Unit tests as normal user failed"
 
-    CTEST_OUTPUT_ON_FAILURE=1 ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=${build_dir}/../CI/LSan.supp ctest --tests-regex AsRoot "${privileged_excludes[@]}" # Add as many regex as you want with -R. Allow output with -VV.
+    CTEST_OUTPUT_ON_FAILURE=1 ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=${build_dir}/../CI/LSan.supp ctest --tests-regex AsRoot # Add as many regex as you want with -R. Allow output with -VV.
     # TODO: allow args forwarding to cpputest so we can run specific testswithin the filtered file with -n for example.
     fail_on_error "Unit tests as root user failed"
 
