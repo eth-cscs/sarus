@@ -17,6 +17,7 @@ COPY ./installation/ /tmp/
 RUN /tmp/install_sudo.sh fedora:34
 RUN /tmp/install_packages_fedora:34.sh
 RUN bash -i -c "/tmp/install_dep_rapidjson.bash"
+RUN bash -i -c "/tmp/install_dep_runc.bash"
 RUN pip3 install -r /tmp/requirements_tests.txt
 
 RUN useradd -m docker \
