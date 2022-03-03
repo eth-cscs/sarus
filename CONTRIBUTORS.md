@@ -9,3 +9,4 @@
 - Mariotti, Kean. ETH Zurich - CSCS
 - Nikolov, Teodor. ETH Zurich - CSCS
 - Piccinali, Jean-Guillaume. ETH Zurich - CSCS
+- Tiernan, Peter. ETH Zurich - CSCS
