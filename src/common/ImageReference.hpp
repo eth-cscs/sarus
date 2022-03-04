@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef sarus_common_ImageID_hpp
-#define sarus_common_ImageID_hpp
+#ifndef sarus_common_ImageReference_hpp
+#define sarus_common_ImageReference_hpp
 
 #include <string>
 #include <ostream>
@@ -18,20 +18,21 @@
 namespace sarus {
 namespace common {
 
-struct ImageID {
+struct ImageReference {
     std::string server;
     std::string repositoryNamespace;
     std::string image;
     std::string tag;
+    std::string string() const;
     std::string getUniqueKey() const;
 
     static const std::string DEFAULT_SERVER;
     static const std::string DEFAULT_REPOSITORY_NAMESPACE;
 };
 
-bool operator==(const ImageID&, const ImageID&);
+bool operator==(const ImageReference&, const ImageReference&);
 
-std::ostream& operator<<(std::ostream&, const ImageID&);
+std::ostream& operator<<(std::ostream&, const ImageReference&);
 
 }
 }

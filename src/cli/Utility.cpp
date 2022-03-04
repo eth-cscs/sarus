@@ -46,20 +46,20 @@ static std::string getImageTag(const std::string& in) {
 }
 
 /**
- * Validates the image ID read through CLI.
- * Returns true if the image ID is valid, otherwise false.
+ * Validates the image reference read through CLI.
+ * Returns true if the image reference is valid, otherwise false.
  * 
- * An invalid image ID contains the pattern "..", which could
+ * An invalid image reference contains the pattern "..", which could
  * be exploited by a malicious user to access data outside the
- * Sarus's repository folder. E.g. if the image ID is
+ * Sarus's repository folder. E.g. if the image reference is
  * "../../image:tag", then the resulting unique key would be
  * "../../image/tag".
  */
-bool isValidCLIInputImageID(const std::string& imageID) {
+bool isValidCLIInputImageReference(const std::string& imageReference) {
     boost::cmatch matches;
     boost::regex disallowedPattern(".*\\.\\..*");
 
-    if (boost::regex_match(imageID.c_str(), matches, disallowedPattern)) {
+    if (boost::regex_match(imageReference.c_str(), matches, disallowedPattern)) {
         return false;
     }
     return true;
@@ -68,7 +68,7 @@ bool isValidCLIInputImageID(const std::string& imageID) {
 /**
  * Parse the input name of container image
  */ 
-common::ImageID parseImageID(const common::CLIArguments& imageArgs) {
+common::ImageReference parseImageReference(const common::CLIArguments& imageArgs) {
     if(imageArgs.argc() != 1) {
         auto message = boost::format(
             "Invalid image ID %s\n"
@@ -76,13 +76,13 @@ common::ImageID parseImageID(const common::CLIArguments& imageArgs) {
         SARUS_THROW_ERROR(message.str());
     }
 
-    return parseImageID(imageArgs.argv()[0]);
+    return parseImageReference(imageArgs.argv()[0]);
 }
 
 /**
- * Parse the input ID of container image
+ * Parse the input reference of container image
  */ 
-common::ImageID parseImageID(const std::string &input) {
+common::ImageReference parseImageReference(const std::string &input) {
     printLog( boost::format("parsing image ID"), common::LogLevel::DEBUG);
 
     std::string server;
@@ -90,7 +90,7 @@ common::ImageID parseImageID(const std::string &input) {
     std::string image;
     std::string tag;
 
-    if(!isValidCLIInputImageID(input)) {
+    if(!isValidCLIInputImageReference(input)) {
         auto message = boost::format("Invalid image ID '%s'\n"
                                     "Image IDs are not allowed to contain the sequence '..'") % input;
         SARUS_THROW_ERROR(message.str());
@@ -109,15 +109,15 @@ common::ImageID parseImageID(const std::string &input) {
     }
     // matches pattern <repositoryNamespace>/image<:tag>
     else if(boost::regex_match( input.c_str(), matches, withNamespace)) {
-        server = common::ImageID::DEFAULT_SERVER;
+        server = common::ImageReference::DEFAULT_SERVER;
         repositoryNamespace = matches[1];
         image  = getImageName(matches[2].str());
         tag    = getImageTag(matches[2].str());
     }
     // matches pattern image<:tag>
     else {
-        server = common::ImageID::DEFAULT_SERVER;
-        repositoryNamespace = common::ImageID::DEFAULT_REPOSITORY_NAMESPACE;
+        server = common::ImageReference::DEFAULT_SERVER;
+        repositoryNamespace = common::ImageReference::DEFAULT_REPOSITORY_NAMESPACE;
         image  = getImageName(input);
         tag    = getImageTag(input);
     }
@@ -128,11 +128,11 @@ common::ImageID parseImageID(const std::string &input) {
         SARUS_THROW_ERROR(message.str());
     }
 
-    auto imageID = common::ImageID{ server, repositoryNamespace, image, tag };
+    auto imageReference = common::ImageReference{ server, repositoryNamespace, image, tag };
 
-    printLog(boost::format("successfully parsed image ID %s") % imageID, common::LogLevel::DEBUG);
+    printLog(boost::format("successfully parsed image ID %s") % imageReference, common::LogLevel::DEBUG);
 
-    return imageID;
+    return imageReference;
 }
 
 static bool hasDashPrefix(const char* s) {

@@ -92,8 +92,8 @@ private:
 
             parsePathOfArchiveToBeLoaded(positionalArgs.argv()[0]);
 
-            conf->imageID = cli::utility::parseImageID(positionalArgs.argv()[1]);
-            conf->imageID.server = "load";
+            conf->imageReference = cli::utility::parseImageReference(positionalArgs.argv()[1]);
+            conf->imageReference.server = "load";
             conf->useCentralizedRepository = values.count("centralized-repository");
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }

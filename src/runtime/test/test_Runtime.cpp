@@ -59,7 +59,7 @@ IGNORE_TEST(RuntimeTestGroup, setupOCIBundle) {
     config->commandRun.execArgs = common::CLIArguments{"/bin/bash"};
     // hack to make the resulting image's file path = <repository dir>////test-image.squashfs
     config->directories.images = boost::filesystem::path{__FILE__}.parent_path();
-    config->imageID = common::ImageID{"", "", "", "test_image"};
+    config->imageReference = common::ImageReference{"", "", "", "test_image"};
 
     auto bundleDir = boost::filesystem::path{config->json["OCIBundleDir"].GetString()};
     auto overlayfsLowerDir = bundleDir / "overlay/rootfs-lower"; // hardcoded so in production code being tested
@@ -73,7 +73,7 @@ IGNORE_TEST(RuntimeTestGroup, setupOCIBundle) {
     common::createFileIfNecessary(prefixDir / "etc/group");
 
     // create dummy metadata file in image repo
-    auto metadataFileRAII = common::PathRAII{boost::filesystem::path(config->directories.images / (config->imageID.getUniqueKey() + ".meta"))};
+    auto metadataFileRAII = common::PathRAII{boost::filesystem::path(config->directories.images / (config->imageReference.getUniqueKey() + ".meta"))};
     common::createFileIfNecessary(metadataFileRAII.getPath());
     std::ofstream metadataStream(metadataFileRAII.getPath().c_str());
     metadataStream << "{}";

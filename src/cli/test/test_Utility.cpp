@@ -20,53 +20,53 @@ using namespace sarus;
 TEST_GROUP(CLIUtilityTestGroup) {
 };
 
-TEST(CLIUtilityTestGroup, isValidCLIInputImageID) {
-    // valid image ids
-    CHECK_TRUE(cli::utility::isValidCLIInputImageID("image"));
-    CHECK_TRUE(cli::utility::isValidCLIInputImageID("image:tag"));
-    CHECK_TRUE(cli::utility::isValidCLIInputImageID("namespace/image:tag"));
-    CHECK_TRUE(cli::utility::isValidCLIInputImageID("server/namespace/image:tag"));
+TEST(CLIUtilityTestGroup, isValidCLIInputImageReference) {
+    // valid image references
+    CHECK_TRUE(cli::utility::isValidCLIInputImageReference("image"));
+    CHECK_TRUE(cli::utility::isValidCLIInputImageReference("image:tag"));
+    CHECK_TRUE(cli::utility::isValidCLIInputImageReference("namespace/image:tag"));
+    CHECK_TRUE(cli::utility::isValidCLIInputImageReference("server/namespace/image:tag"));
     
-    // invalid image ids
-    CHECK_FALSE(cli::utility::isValidCLIInputImageID("../image"));
+    // invalid image references
+    CHECK_FALSE(cli::utility::isValidCLIInputImageReference("../image"));
 
-    CHECK_FALSE(cli::utility::isValidCLIInputImageID("../image:tag"));
-    CHECK_FALSE(cli::utility::isValidCLIInputImageID("image/..:tag"));
-    CHECK_FALSE(cli::utility::isValidCLIInputImageID("image:../tag"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageReference("../image:tag"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageReference("image/..:tag"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageReference("image:../tag"));
 
-    CHECK_FALSE(cli::utility::isValidCLIInputImageID("../namespace/image:tag"));
-    CHECK_FALSE(cli::utility::isValidCLIInputImageID("namespace/../image:tag"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageReference("../namespace/image:tag"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageReference("namespace/../image:tag"));
 
-    CHECK_FALSE(cli::utility::isValidCLIInputImageID("../server/namespace/image:tag"));
-    CHECK_FALSE(cli::utility::isValidCLIInputImageID("server/../image:tag"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageReference("../server/namespace/image:tag"));
+    CHECK_FALSE(cli::utility::isValidCLIInputImageReference("server/../image:tag"));
 }
 
-TEST(CLIUtilityTestGroup, parseImageID) {
-    auto imageID = common::ImageID{};
+TEST(CLIUtilityTestGroup, parseImageReference) {
+    auto imageReference = common::ImageReference{};
 
-    imageID = cli::utility::parseImageID("image");
-    CHECK_EQUAL(imageID.server, std::string{"index.docker.io"});
-    CHECK_EQUAL(imageID.repositoryNamespace, std::string{"library"});
-    CHECK_EQUAL(imageID.image, std::string{"image"});
-    CHECK_EQUAL(imageID.tag, std::string{"latest"});
+    imageReference = cli::utility::parseImageReference("image");
+    CHECK_EQUAL(imageReference.server, std::string{"index.docker.io"});
+    CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"library"});
+    CHECK_EQUAL(imageReference.image, std::string{"image"});
+    CHECK_EQUAL(imageReference.tag, std::string{"latest"});
 
-    imageID = cli::utility::parseImageID("image:tag");
-    CHECK_EQUAL(imageID.server, std::string{"index.docker.io"});
-    CHECK_EQUAL(imageID.repositoryNamespace, std::string{"library"});
-    CHECK_EQUAL(imageID.image, std::string{"image"});
-    CHECK_EQUAL(imageID.tag, std::string{"tag"});
+    imageReference = cli::utility::parseImageReference("image:tag");
+    CHECK_EQUAL(imageReference.server, std::string{"index.docker.io"});
+    CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"library"});
+    CHECK_EQUAL(imageReference.image, std::string{"image"});
+    CHECK_EQUAL(imageReference.tag, std::string{"tag"});
 
-    imageID = cli::utility::parseImageID("namespace/image:tag");
-    CHECK_EQUAL(imageID.server, std::string{"index.docker.io"});
-    CHECK_EQUAL(imageID.repositoryNamespace, std::string{"namespace"});
-    CHECK_EQUAL(imageID.image, std::string{"image"});
-    CHECK_EQUAL(imageID.tag, std::string{"tag"});
+    imageReference = cli::utility::parseImageReference("namespace/image:tag");
+    CHECK_EQUAL(imageReference.server, std::string{"index.docker.io"});
+    CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace"});
+    CHECK_EQUAL(imageReference.image, std::string{"image"});
+    CHECK_EQUAL(imageReference.tag, std::string{"tag"});
 
-    imageID = cli::utility::parseImageID("server/namespace/image:tag");
-    CHECK_EQUAL(imageID.server, std::string{"server"});
-    CHECK_EQUAL(imageID.repositoryNamespace, std::string{"namespace"});
-    CHECK_EQUAL(imageID.image, std::string{"image"});
-    CHECK_EQUAL(imageID.tag, std::string{"tag"});
+    imageReference = cli::utility::parseImageReference("server/namespace/image:tag");
+    CHECK_EQUAL(imageReference.server, std::string{"server"});
+    CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace"});
+    CHECK_EQUAL(imageReference.image, std::string{"image"});
+    CHECK_EQUAL(imageReference.tag, std::string{"tag"});
 }
 
 std::tuple<common::CLIArguments, common::CLIArguments> generateGroupedArguments(

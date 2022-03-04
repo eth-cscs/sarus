@@ -26,11 +26,11 @@ namespace sarus {
 namespace cli {
 namespace utility {
 
-bool isValidCLIInputImageID(const std::string&);
+bool isValidCLIInputImageReference(const std::string&);
 
-common::ImageID parseImageID(const common::CLIArguments& imageArgs);
+common::ImageReference parseImageReference(const common::CLIArguments& imageArgs);
 
-common::ImageID parseImageID(const std::string& input);
+common::ImageReference parseImageReference(const std::string& input);
 
 std::tuple<common::CLIArguments, common::CLIArguments> groupOptionsAndPositionalArguments(
         const common::CLIArguments&,

@@ -22,7 +22,7 @@
 
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
-#include "common/ImageID.hpp"
+#include "common/ImageReference.hpp"
 #include "common/CLIArguments.hpp"
 #include "runtime/Utility.hpp"
 #include "runtime/mount_utilities.hpp"

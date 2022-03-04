@@ -42,16 +42,16 @@ namespace image_manager {
      */
     void ImageStore::addImage(const common::SarusImage& image) {
         printLog(   boost::format("Adding image %s to metadata file %s")
-                    % image.imageID % metadataFile,
+                    % image.imageReference % metadataFile,
                     common::LogLevel::INFO);
 
         common::Lockfile lock{metadataFile};
         auto metadata = readRepositoryMetadata();
 
-        // remove previous entries with the same image ID (if any)
+        // remove previous entries with the same image reference (if any)
         auto& images = metadata["images"];
         for(auto it = images.Begin(); it != images.End(); ) {
-            if ((*it)["uniqueKey"].GetString() == image.imageID.getUniqueKey()) {
+            if ((*it)["uniqueKey"].GetString() == image.imageReference.getUniqueKey()) {
                 it = images.Erase(it);
             } else {
                 ++it;
@@ -71,16 +71,16 @@ namespace image_manager {
     /**
      * Remove container image from repository
      */
-    void ImageStore::removeImage(const common::ImageID& imageID) {
+    void ImageStore::removeImage(const common::ImageReference& imageReference) {
         printLog(   boost::format("Removing image %s from metadata file %s")
-                    % imageID % metadataFile,
+                    % imageReference % metadataFile,
                     common::LogLevel::INFO);
 
         common::Lockfile lock{metadataFile};
 
         auto metadata = readRepositoryMetadata();
         const rj::Value* imageMetadata = nullptr;
-        auto uniqueKey = imageID.getUniqueKey();
+        auto uniqueKey = imageReference.getUniqueKey();
 
         printLog(boost::format("looking up unique key %s in metadata file") % uniqueKey, common::LogLevel::DEBUG);
 
@@ -93,7 +93,7 @@ namespace image_manager {
         }
 
         if (!imageMetadata) {
-            auto message = boost::format("Cannot find image '%s'") % config->imageID;
+            auto message = boost::format("Cannot find image '%s'") % config->imageReference;
             printLog(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
@@ -112,7 +112,7 @@ namespace image_manager {
             boost::filesystem::remove_all(metadataPath);
         }
         catch(std::exception& e) {
-            auto message = boost::format("Failed to remove image %s") % imageID;
+            auto message = boost::format("Failed to remove image %s") % imageReference;
             SARUS_RETHROW_ERROR(e, message.str());
         }
 
@@ -130,13 +130,13 @@ namespace image_manager {
         auto images = std::vector<common::SarusImage>{};
 
         for (const auto& imageMetadata : metadata["images"].GetArray()) {
-            auto imageID = common::ImageID{
+            auto imageReference = common::ImageReference{
                 imageMetadata["server"].GetString(),
                 imageMetadata["namespace"].GetString(),
                 imageMetadata["image"].GetString(),
                 imageMetadata["tag"].GetString()};
             auto image = common::SarusImage{
-                imageID,
+                imageReference,
                 imageMetadata["digest"].GetString(),
                 imageMetadata["datasize"].GetString(),
                 imageMetadata["created"].GetString(),
@@ -172,19 +172,19 @@ namespace image_manager {
         try {
             auto ret = rj::Value{rj::kObjectType};
             ret.AddMember(  "uniqueKey",
-                            rj::Value{image.imageID.getUniqueKey().c_str(), allocator},
+                            rj::Value{image.imageReference.getUniqueKey().c_str(), allocator},
                             allocator);
             ret.AddMember(  "server",
-                            rj::Value{image.imageID.server.c_str(), allocator},
+                            rj::Value{image.imageReference.server.c_str(), allocator},
                             allocator);
             ret.AddMember(  "namespace",
-                            rj::Value{image.imageID.repositoryNamespace.c_str(), allocator},
+                            rj::Value{image.imageReference.repositoryNamespace.c_str(), allocator},
                             allocator);
             ret.AddMember(  "image",
-                            rj::Value{image.imageID.image.c_str(), allocator},
+                            rj::Value{image.imageReference.image.c_str(), allocator},
                             allocator);
             ret.AddMember(  "tag",
-                            rj::Value{image.imageID.tag.c_str(), allocator},
+                            rj::Value{image.imageReference.tag.c_str(), allocator},
                             allocator);
             ret.AddMember(  "digest",
                             rj::Value{image.digest.c_str(), allocator},

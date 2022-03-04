@@ -22,9 +22,9 @@
 #include <rapidjson/document.h>
 
 #include "common/CLIArguments.hpp"
-#include "common/ImageID.hpp"
 #include "common/UserIdentity.hpp"
 #include "common/Logger.hpp"
+#include "ImageReference.hpp"
 #include "runtime/Mount.hpp"
 #include "runtime/DeviceMount.hpp"
 
@@ -84,7 +84,7 @@ class Config {
         boost::filesystem::path getMetadataFileOfImage() const;
 
         BuildTime buildTime;
-        common::ImageID imageID;
+        common::ImageReference imageReference;
         Directories directories;
         rapidjson::Document json{ rapidjson::kObjectType };
         UserIdentity userIdentity;

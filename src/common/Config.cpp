@@ -54,13 +54,13 @@ void Config::Directories::initialize(bool useCentralizedRepository, const common
 }
 
 boost::filesystem::path Config::getImageFile() const {
-    auto key = imageID.getUniqueKey();
+    auto key = imageReference.getUniqueKey();
     auto file = boost::filesystem::path(directories.images.string() + "/" + key + ".squashfs");
     return file;
 }
 
 boost::filesystem::path Config::getMetadataFileOfImage() const {
-    auto key = imageID.getUniqueKey();
+    auto key = imageReference.getUniqueKey();
     auto file = boost::filesystem::path(directories.images.string() + "/" + key + ".meta");
     return file;
 }

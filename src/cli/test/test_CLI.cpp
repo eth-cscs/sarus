@@ -122,10 +122,10 @@ TEST(CLITestGroup, generated_config_for_CommandLoad) {
         CHECK_EQUAL(conf->directories.tempFromCLI.empty(), true);
         CHECK_EQUAL(conf->useCentralizedRepository, true);
         CHECK_EQUAL(conf->archivePath.string(), expectedArchivePath.string());
-        CHECK_EQUAL(conf->imageID.server, std::string{"load"});
-        CHECK_EQUAL(conf->imageID.repositoryNamespace, std::string{"library"});
-        CHECK_EQUAL(conf->imageID.image, std::string{"image"});
-        CHECK_EQUAL(conf->imageID.tag, std::string{"tag"});
+        CHECK_EQUAL(conf->imageReference.server, std::string{"load"});
+        CHECK_EQUAL(conf->imageReference.repositoryNamespace, std::string{"library"});
+        CHECK_EQUAL(conf->imageReference.image, std::string{"image"});
+        CHECK_EQUAL(conf->imageReference.tag, std::string{"tag"});
     }
     // temp dir
     {
@@ -135,10 +135,10 @@ TEST(CLITestGroup, generated_config_for_CommandLoad) {
         CHECK_EQUAL(conf->directories.temp.string(), std::string{"/custom-temp-dir"});
         CHECK_EQUAL(conf->useCentralizedRepository, false);
         CHECK_EQUAL(conf->archivePath.string(), expectedArchivePath.string());
-        CHECK_EQUAL(conf->imageID.server, std::string{"load"});
-        CHECK_EQUAL(conf->imageID.repositoryNamespace, std::string{"library"});
-        CHECK_EQUAL(conf->imageID.image, std::string{"image"});
-        CHECK_EQUAL(conf->imageID.tag, std::string{"tag"});
+        CHECK_EQUAL(conf->imageReference.server, std::string{"load"});
+        CHECK_EQUAL(conf->imageReference.repositoryNamespace, std::string{"library"});
+        CHECK_EQUAL(conf->imageReference.image, std::string{"image"});
+        CHECK_EQUAL(conf->imageReference.tag, std::string{"tag"});
     }
 }
 
@@ -149,10 +149,10 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
         CHECK(conf->directories.tempFromCLI.empty() == true);
         CHECK(conf->useCentralizedRepository == false);
         CHECK(conf->enforceSecureServer == true);
-        CHECK(conf->imageID.server == "index.docker.io");
-        CHECK(conf->imageID.repositoryNamespace == "library");
-        CHECK(conf->imageID.image == "ubuntu");
-        CHECK(conf->imageID.tag == "latest");
+        CHECK(conf->imageReference.server == "index.docker.io");
+        CHECK(conf->imageReference.repositoryNamespace == "library");
+        CHECK(conf->imageReference.image == "ubuntu");
+        CHECK(conf->imageReference.tag == "latest");
     }
     // centralized repo
     {
@@ -160,10 +160,10 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
         CHECK(conf->directories.tempFromCLI.empty() == true);
         CHECK(conf->useCentralizedRepository == true);
         CHECK(conf->enforceSecureServer == true);
-        CHECK(conf->imageID.server == "index.docker.io");
-        CHECK(conf->imageID.repositoryNamespace == "library");
-        CHECK(conf->imageID.image == "ubuntu");
-        CHECK(conf->imageID.tag == "latest");
+        CHECK(conf->imageReference.server == "index.docker.io");
+        CHECK(conf->imageReference.repositoryNamespace == "library");
+        CHECK(conf->imageReference.image == "ubuntu");
+        CHECK(conf->imageReference.tag == "latest");
     }
     // temp-dir option and custom server
     {
@@ -173,10 +173,10 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
             "my.own.server:5000/user/image:tag"});
         CHECK(conf->directories.temp.string() == "/custom-temp-dir");
         CHECK(conf->enforceSecureServer == true);
-        CHECK(conf->imageID.server == "my.own.server:5000");
-        CHECK(conf->imageID.repositoryNamespace == "user");
-        CHECK(conf->imageID.image == "image");
-        CHECK(conf->imageID.tag == "tag");
+        CHECK(conf->imageReference.server == "my.own.server:5000");
+        CHECK(conf->imageReference.repositoryNamespace == "user");
+        CHECK(conf->imageReference.image == "image");
+        CHECK(conf->imageReference.tag == "tag");
     }
     // insecure registry
     {
@@ -184,10 +184,10 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
         CHECK(conf->directories.tempFromCLI.empty() == true);
         CHECK(conf->useCentralizedRepository == false);
         CHECK(conf->enforceSecureServer == false);
-        CHECK(conf->imageID.server == "insecure.registry:5000");
-        CHECK(conf->imageID.repositoryNamespace == "user");
-        CHECK(conf->imageID.image == "image");
-        CHECK(conf->imageID.tag == "tag");
+        CHECK(conf->imageReference.server == "insecure.registry:5000");
+        CHECK(conf->imageReference.repositoryNamespace == "user");
+        CHECK(conf->imageReference.image == "image");
+        CHECK(conf->imageReference.tag == "tag");
     }
 }
 
@@ -196,19 +196,19 @@ TEST(CLITestGroup, generated_config_for_CommandRmi) {
     {
         auto conf = generateConfig({"rmi", "ubuntu"});
         CHECK_EQUAL(conf->useCentralizedRepository, false);
-        CHECK_EQUAL(conf->imageID.server, std::string{"index.docker.io"});
-        CHECK_EQUAL(conf->imageID.repositoryNamespace, std::string{"library"});
-        CHECK_EQUAL(conf->imageID.image, std::string{"ubuntu"});
-        CHECK_EQUAL(conf->imageID.tag, std::string{"latest"});
+        CHECK_EQUAL(conf->imageReference.server, std::string{"index.docker.io"});
+        CHECK_EQUAL(conf->imageReference.repositoryNamespace, std::string{"library"});
+        CHECK_EQUAL(conf->imageReference.image, std::string{"ubuntu"});
+        CHECK_EQUAL(conf->imageReference.tag, std::string{"latest"});
     }
     // centralized repo
     {
         auto conf = generateConfig({"rmi", "--centralized-repository", "ubuntu"});
         CHECK_EQUAL(conf->useCentralizedRepository, true);
-        CHECK_EQUAL(conf->imageID.server, std::string{"index.docker.io"});
-        CHECK_EQUAL(conf->imageID.repositoryNamespace, std::string{"library"});
-        CHECK_EQUAL(conf->imageID.image, std::string{"ubuntu"});
-        CHECK_EQUAL(conf->imageID.tag, std::string{"latest"});
+        CHECK_EQUAL(conf->imageReference.server, std::string{"index.docker.io"});
+        CHECK_EQUAL(conf->imageReference.repositoryNamespace, std::string{"library"});
+        CHECK_EQUAL(conf->imageReference.image, std::string{"ubuntu"});
+        CHECK_EQUAL(conf->imageReference.tag, std::string{"latest"});
     }
 }
 
@@ -216,10 +216,10 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
     // empty values
     {
         auto conf = generateConfig({"run", "image"});
-        CHECK_EQUAL(conf->imageID.server, std::string{"index.docker.io"});
-        CHECK_EQUAL(conf->imageID.repositoryNamespace, std::string{"library"});
-        CHECK_EQUAL(conf->imageID.image, std::string{"image"});
-        CHECK_EQUAL(conf->imageID.tag, std::string{"latest"});
+        CHECK_EQUAL(conf->imageReference.server, std::string{"index.docker.io"});
+        CHECK_EQUAL(conf->imageReference.repositoryNamespace, std::string{"library"});
+        CHECK_EQUAL(conf->imageReference.image, std::string{"image"});
+        CHECK_EQUAL(conf->imageReference.tag, std::string{"latest"});
         CHECK_EQUAL(conf->useCentralizedRepository, false);
         CHECK_EQUAL(conf->commandRun.createNewPIDNamespace, false);
         CHECK_EQUAL(conf->commandRun.addInitProcess, false);
@@ -355,10 +355,10 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
         CHECK_EQUAL(conf->commandRun.userEnvironment.size(), 1);
         CHECK_EQUAL(conf->commandRun.userEnvironment["CONTAINER"], std::string{"sarus"});
         CHECK_EQUAL(conf->commandRun.mounts.size(), 2); // 1 site mount + 1 user mount
-        CHECK_EQUAL(conf->imageID.server, std::string{"index.docker.io"});
-        CHECK_EQUAL(conf->imageID.repositoryNamespace, std::string{"library"});
-        CHECK_EQUAL(conf->imageID.image, std::string{"ubuntu"});
-        CHECK_EQUAL(conf->imageID.tag, std::string{"latest"});
+        CHECK_EQUAL(conf->imageReference.server, std::string{"index.docker.io"});
+        CHECK_EQUAL(conf->imageReference.repositoryNamespace, std::string{"library"});
+        CHECK_EQUAL(conf->imageReference.image, std::string{"ubuntu"});
+        CHECK_EQUAL(conf->imageReference.tag, std::string{"latest"});
         CHECK(conf->commandRun.execArgs.argc() == 3);
         CHECK_EQUAL(conf->commandRun.execArgs.argv()[0], std::string{"bash"});
         CHECK_EQUAL(conf->commandRun.execArgs.argv()[1], std::string{"-c"});

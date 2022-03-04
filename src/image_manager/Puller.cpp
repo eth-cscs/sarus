@@ -61,7 +61,7 @@ namespace image_manager {
         double elapsed;
 
         // output params
-        printLog( boost::format("# image            : %s") % config->imageID, common::LogLevel::GENERAL);
+        printLog( boost::format("# image            : %s") % config->imageReference, common::LogLevel::GENERAL);
         printLog( boost::format("# cache directory  : %s") % config->directories.cache, common::LogLevel::GENERAL);
         printLog( boost::format("# temp directory   : %s") % config->directories.temp, common::LogLevel::GENERAL);
         printLog( boost::format("# images directory : %s") % config->directories.images, common::LogLevel::GENERAL);
@@ -145,7 +145,7 @@ namespace image_manager {
             return;
         }
 
-        std::unique_ptr<web::http::client::http_client> client = setupHttpClient(getServerUri(config->imageID.server));
+        std::unique_ptr<web::http::client::http_client> client = setupHttpClient(getServerUri(config->imageReference.server));
         web::http::http_request  request(methods::GET);
         web::http::http_response response;
 
@@ -161,8 +161,8 @@ namespace image_manager {
             }
             
             std::string path = (boost::format("v2/%s/%s/blobs/%s")
-                                % config->imageID.repositoryNamespace
-                                % config->imageID.image
+                                % config->imageReference.repositoryNamespace
+                                % config->imageReference.image
                                 % digest).str();
             request.set_request_uri(path);
 
@@ -174,7 +174,7 @@ namespace image_manager {
             }
 
             printLog( boost::format("httpclient: uri=%s, path=%s, auth-header=%25.25s..., digest=%25.25s...")
-                        % getServerUri(config->imageID.server) % path % authorizationHeader % digest, common::LogLevel::DEBUG);
+                        % getServerUri(config->imageReference.server) % path % authorizationHeader % digest, common::LogLevel::DEBUG);
 
             response = client->request(request).get();
             printLog( boost::format("Received HTTP response status code (%s): %s, digest=%s")
@@ -243,7 +243,7 @@ namespace image_manager {
             else {
                 printLog( boost::format("> %-15.15s: %s") % "failed" % digest, common::LogLevel::GENERAL);
                 auto message =  boost::format("Unexpected HTTP response status code (%s): %s, uri=%s, path=%s, digest=%s")
-                                    % response.status_code() % response.reason_phrase() % getServerUri(config->imageID.server)
+                                    % response.status_code() % response.reason_phrase() % getServerUri(config->imageReference.server)
                                     % path % digest;
                 printLog(message, common::LogLevel::INFO);
                 continue;
@@ -305,11 +305,11 @@ namespace image_manager {
      * Retrieve image manifest from server
      */
     web::json::value Puller::retrieveImageManifest() {
-        printLog(boost::format("Retrieving image manifest from %s") % config->imageID.server,
+        printLog(boost::format("Retrieving image manifest from %s") % config->imageReference.server,
                  common::LogLevel::INFO);
 
         // Attempt to retrieve manifest
-        std::unique_ptr<web::http::client::http_client> client = setupHttpClient(getServerUri(config->imageID.server));
+        std::unique_ptr<web::http::client::http_client> client = setupHttpClient(getServerUri(config->imageReference.server));
         web::http::http_request              request(methods::GET);
         pplx::task<web::http::http_response> responseTask;
         web::http::http_response             response;
@@ -339,7 +339,7 @@ namespace image_manager {
             std::string authorizationString = (boost::format("Bearer %s") % authorizationToken).str();
             authHeaderRequest.headers().add(header_names::authorization, U(authorizationString) );
 
-            printLog( boost::format("server      : %s") % getServerUri(config->imageID.server), common::LogLevel::DEBUG);
+            printLog( boost::format("server      : %s") % getServerUri(config->imageReference.server), common::LogLevel::DEBUG);
             printLog( boost::format("request_uri : %s") % makeImageManifestUri(), common::LogLevel::DEBUG);
             printLog( boost::format("header      : %s") % U(authorizationString), common::LogLevel::DEBUG);
             printLog( boost::format("full request: %s") % authHeaderRequest.to_string(), common::LogLevel::DEBUG);
@@ -351,7 +351,7 @@ namespace image_manager {
                 auto message = boost::format{"Failed to pull image '%s'"
                     "\nThe image may be private or not present in the remote registry."
                     "\nDid you perform a login with the proper credentials?"
-                    "\nSee 'sarus help pull' (--login option)"} % config->imageID;
+                    "\nSee 'sarus help pull' (--login option)"} % config->imageReference;
                 printLog(message, common::LogLevel::GENERAL, std::cerr);
 
                 message = boost::format{"Failed to pull manifest. Received http_response status code(%s): %s"}
@@ -362,7 +362,7 @@ namespace image_manager {
 
         // Throw an error if response is not successful
         if(response.status_code() != status_codes::OK) {
-            auto message = boost::format{"Failed to pull image '%s'"}  % config->imageID;
+            auto message = boost::format{"Failed to pull image '%s'"}  % config->imageReference;
             if(response.status_code() == status_codes::NotFound){
                 message = boost::format{"%s\nThe image is not present in the remote registry."} % message.str();
             }
@@ -382,7 +382,7 @@ namespace image_manager {
         if ( manifest.has_field(U("errors")) ) {
             auto message = boost::format("Failed to retrieve manifest for image %s."
                                          " Downloaded manifest has 'errors' field: %s")
-                % config->imageID % manifest.serialize();
+                % config->imageReference % manifest.serialize();
             SARUS_THROW_ERROR(message.str());
         }
 
@@ -396,9 +396,9 @@ namespace image_manager {
 
     std::string Puller::makeImageManifestUri() {
         return (boost::format("v2/%s/%s/manifests/%s")
-                % config->imageID.repositoryNamespace
-                % config->imageID.image
-                % config->imageID.tag).str();
+                % config->imageReference.repositoryNamespace
+                % config->imageReference.image
+                % config->imageReference.tag).str();
     }
 
     /**
@@ -434,7 +434,7 @@ namespace image_manager {
     }
 
     std::string Puller::requestAuthorizationToken(web::http::http_response& response) {
-        printLog(boost::format("Getting new authorization token from %s") % config->imageID.server,
+        printLog(boost::format("Getting new authorization token from %s") % config->imageReference.server,
                  common::LogLevel::DEBUG);
 
         std::string realm;
@@ -464,7 +464,7 @@ namespace image_manager {
         if(tokenResp.status_code() != status_codes::OK) {
             if (tokenResp.status_code() == status_codes::Unauthorized) {
                 auto message = boost::format{"Authorization failed when retrieving token for image '%s'"
-                        "\nPlease check the entered credentials."}  % config->imageID;
+                        "\nPlease check the entered credentials."}  % config->imageReference;
                 printLog(message, common::LogLevel::GENERAL, std::cerr);
 
                 message = boost::format("Failed to get token. Received http_response status code(%s): %s")
@@ -568,7 +568,7 @@ namespace image_manager {
         auto hostnames = std::vector<std::string>{};
         boost::split(hostnames, noProxyList, boost::is_any_of(","));
         for (const auto& host : hostnames) {
-            if (host == config->imageID.server) {
+            if (host == config->imageReference.server) {
                 return true;
             }
         }

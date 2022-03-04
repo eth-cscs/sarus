@@ -23,7 +23,7 @@ TEST_GROUP(PullerTestGroup) {
 TEST(PullerTestGroup, testGetManifest) {
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
-    config->imageID = common::ImageID{"quay.io", "ethcscs", "alpine", "3.14"};
+    config->imageReference = common::ImageReference{"quay.io", "ethcscs", "alpine", "3.14"};
 
     auto puller = image_manager::Puller{config};
 
@@ -32,8 +32,8 @@ TEST(PullerTestGroup, testGetManifest) {
     // test manifest
     web::json::value manifest = puller.retrieveImageManifest();
     CHECK( !manifest.has_field(U("errors")) );
-    CHECK( manifest.at(U("name")) == web::json::value(config->imageID.repositoryNamespace + "/" + config->imageID.image) );
-    CHECK( manifest.at(U("tag"))  == web::json::value(config->imageID.tag) );
+    CHECK( manifest.at(U("name")) == web::json::value(config->imageReference.repositoryNamespace + "/" + config->imageReference.image) );
+    CHECK( manifest.at(U("tag"))  == web::json::value(config->imageReference.tag) );
 
     puller.pull();
 }
@@ -41,7 +41,7 @@ TEST(PullerTestGroup, testGetManifest) {
 TEST(PullerTestGroup, testGetProxy) {
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
-    config->imageID = common::ImageID{"index.docker.io", "ethcscs", "alpine", "latest"};
+    config->imageReference = common::ImageReference{"index.docker.io", "ethcscs", "alpine", "latest"};
 
     auto puller = image_manager::Puller{config};
 

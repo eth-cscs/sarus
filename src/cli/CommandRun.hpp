@@ -147,7 +147,7 @@ private:
             boost::program_options::store(parsed, values);
             boost::program_options::notify(values);
 
-            conf->imageID = cli::utility::parseImageID(positionalArgs.argv()[0]);
+            conf->imageReference = cli::utility::parseImageReference(positionalArgs.argv()[0]);
             conf->useCentralizedRepository = values.count("centralized-repository");
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
             // the remaining arguments (after image) are all part of the command to be executed in the container
@@ -456,7 +456,7 @@ private:
 
         try {
             if(!boost::filesystem::exists(conf->getImageFile())) {
-                auto message = boost::format("Specified image %s is not available") % conf->imageID;
+                auto message = boost::format("Specified image %s is not available") % conf->imageReference;
                 cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
                 exit(EXIT_FAILURE);
             }

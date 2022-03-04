@@ -64,7 +64,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
     def test_command_load(self):
-        command = ["sarus", "load", "--invalid-option", "archive.tar", "imageid"]
+        command = ["sarus", "load", "--invalid-option", "archive.tar", "imageRef"]
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help load'"
         self._check(command, expected_message)
 
@@ -76,7 +76,7 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Too few arguments for command 'load'\nSee 'sarus help load'"
         self._check(command, expected_message)
 
-        command = ["sarus", "load", "archive.tar", "imageid", "extra-argument"]
+        command = ["sarus", "load", "archive.tar", "imageRef", "extra-argument"]
         expected_message = "Too many arguments for command 'load'\nSee 'sarus help load'"
         self._check(command, expected_message)
 
@@ -88,7 +88,7 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = ("Invalid image ID '///'\nSee 'sarus help load'")
         self._check(command, expected_message)
 
-        command = ["sarus", "load", "--temp-dir=/invalid-dir", "archive.tar", "imageid"]
+        command = ["sarus", "load", "--temp-dir=/invalid-dir", "archive.tar", "imageRef"]
         expected_message = "Invalid temporary directory \"/invalid-dir\""
         self._check(command, expected_message)
 

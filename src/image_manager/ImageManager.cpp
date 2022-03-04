@@ -42,7 +42,7 @@ namespace image_manager {
         issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled();
         issueWarningIfIsCentralizedRepositoryAndIsNotRootUser();
 
-        printLog(boost::format("Pulling image %s") % config->imageID, common::LogLevel::INFO);
+        printLog(boost::format("Pulling image %s") % config->imageReference, common::LogLevel::INFO);
 
         auto pulledImage = puller.pull();
         processImage(pulledImage);
@@ -79,11 +79,11 @@ namespace image_manager {
         issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled();
         issueWarningIfIsCentralizedRepositoryAndIsNotRootUser();
 
-        printLog(boost::format("removing image %s") % config->imageID, common::LogLevel::INFO);
+        printLog(boost::format("removing image %s") % config->imageReference, common::LogLevel::INFO);
 
-        imageStore.removeImage(config->imageID);
+        imageStore.removeImage(config->imageReference);
 
-        printLog(boost::format("removed image %s") % config->imageID, common::LogLevel::GENERAL);
+        printLog(boost::format("removed image %s") % config->imageReference, common::LogLevel::GENERAL);
         printLog(boost::format("successfully removed image"), common::LogLevel::INFO);
     }
 
@@ -103,7 +103,7 @@ namespace image_manager {
         auto imageSizeString = common::SarusImage::createSizeString(imageSize);
         auto created = common::SarusImage::createTimeString(std::time(nullptr));
         auto sarusImage = common::SarusImage{
-            config->imageID,
+            config->imageReference,
             digest,
             imageSizeString,
             created,
@@ -138,7 +138,7 @@ namespace image_manager {
         // from https://github.com/opencontainers/go-digest/blob/master/digest.go
         boost::regex digestRegexp("@[a-z0-9]+(?:[.+_-][a-z0-9]+)*");
         boost::smatch matches;
-        if(boost::regex_search(config->imageID.image, matches, digestRegexp, boost::regex_constants::match_partial)) {
+        if(boost::regex_search(config->imageReference.image, matches, digestRegexp, boost::regex_constants::match_partial)) {
             auto message = boost::format("Pulling images by digest is currently not supported. "
                                          "The feature will be introduced in a future release");
             printLog(message, common::LogLevel::GENERAL, std::cerr);

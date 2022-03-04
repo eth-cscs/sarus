@@ -21,9 +21,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
+#include "../common/ImageReference.hpp"
 #include "common/Config.hpp"
 #include "common/CLIArguments.hpp"
-#include "common/ImageID.hpp"
 #include "common/SarusImage.hpp"
 #include "cli/Utility.hpp"
 #include "cli/Command.hpp"
@@ -50,24 +50,24 @@ public:
     void execute() override {
         auto fieldGetters = std::unordered_map<std::string, field_getter_t>{};
         fieldGetters["SERVER"] = [](const common::SarusImage& image) {
-            return image.imageID.server;
+            return image.imageReference.server;
         };
         fieldGetters["REPOSITORY"] = [](const common::SarusImage& image) {
-            if(image.imageID.server != common::ImageID::DEFAULT_SERVER) {
-                return image.imageID.server
-                    + "/" + image.imageID.repositoryNamespace
-                    + "/" + image.imageID.image;
+            if(image.imageReference.server != common::ImageReference::DEFAULT_SERVER) {
+                return image.imageReference.server
+                    + "/" + image.imageReference.repositoryNamespace
+                    + "/" + image.imageReference.image;
             }
-            else if(image.imageID.repositoryNamespace != common::ImageID::DEFAULT_REPOSITORY_NAMESPACE) {
-                return image.imageID.repositoryNamespace
-                    + "/" + image.imageID.image;
+            else if(image.imageReference.repositoryNamespace != common::ImageReference::DEFAULT_REPOSITORY_NAMESPACE) {
+                return image.imageReference.repositoryNamespace
+                    + "/" + image.imageReference.image;
             }
             else {
-                return image.imageID.image;
+                return image.imageReference.image;
             }
         };
         fieldGetters["TAG"] = [](const common::SarusImage& image) {
-            return image.imageID.tag;
+            return image.imageReference.tag;
         };
         fieldGetters["DIGEST"] = [](const common::SarusImage& image) {
             return image.digest;

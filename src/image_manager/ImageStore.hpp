@@ -31,7 +31,7 @@ public:
     ImageStore(std::shared_ptr<const common::Config>);
 
     void addImage(const common::SarusImage&);
-    void removeImage(const common::ImageID&);
+    void removeImage(const common::ImageReference&);
     std::vector<common::SarusImage> listImages() const;
     const boost::filesystem::path& getMetadataFile() const { return metadataFile; }
 

@@ -24,13 +24,13 @@ TEST_GROUP(ImageStoreTestGroup) {
 
 TEST(ImageStoreTestGroup, test_ImageStore) {
     auto configRAII = test_utility::config::makeConfig();
-    configRAII.config->imageID = {"index.docker.io", "library", "hello-world", "latest"};
+    configRAII.config->imageReference = {"index.docker.io", "library", "hello-world", "latest"};
 
     std::string dummyDigest = "XXXdigestXXX";
     time_t currentTime = time_t(nullptr);
 
     auto image = common::SarusImage{
-        configRAII.config->imageID,
+        configRAII.config->imageReference,
         dummyDigest,
         common::SarusImage::createSizeString(size_t(1024)),
         common::SarusImage::createTimeString(currentTime),
@@ -56,7 +56,7 @@ TEST(ImageStoreTestGroup, test_ImageStore) {
     CHECK(imageStore.listImages() == expectedImages);
 
     // remove image
-    imageStore.removeImage(configRAII.config->imageID);
+    imageStore.removeImage(configRAII.config->imageReference);
     CHECK(imageStore.listImages().empty());
 }
 

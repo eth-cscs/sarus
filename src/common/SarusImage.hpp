@@ -14,14 +14,14 @@
 #include <string>
 #include <boost/filesystem.hpp>
 
-#include "common/ImageID.hpp"
+#include "ImageReference.hpp"
 
 
 namespace sarus {
 namespace common {
 
 struct SarusImage {
-    common::ImageID imageID;
+    common::ImageReference imageReference;
     std::string digest;                 // The digest of the container image
     std::string datasize;               // The size of container image file
     std::string created;                // The time creation time

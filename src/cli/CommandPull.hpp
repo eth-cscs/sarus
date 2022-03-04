@@ -97,9 +97,9 @@ private:
                 readUserCredentialsFromCLI(conf->authentication);
             }
 
-            conf->imageID = cli::utility::parseImageID(positionalArgs.argv()[0]);
+            conf->imageReference = cli::utility::parseImageReference(positionalArgs.argv()[0]);
             conf->useCentralizedRepository = values.count("centralized-repository");
-            conf->enforceSecureServer = !serverIsAllowedInsecure(conf->imageID.server);
+            conf->enforceSecureServer = !serverIsAllowedInsecure(conf->imageReference.server);
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch (std::exception& e) {

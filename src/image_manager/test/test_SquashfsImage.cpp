@@ -24,7 +24,7 @@ TEST_GROUP(SquashfsImageTestGroup) {
 TEST(SquashfsImageTestGroup, testSquashfsImage) {
     auto configRAII = test_utility::config::makeConfig();
     auto& config = *configRAII.config;
-    config.imageID = {"server", "repositoryNamespace", "image", "tag"};
+    config.imageReference = {"server", "repositoryNamespace", "image", "tag"};
 
     common::PathRAII repository{config.directories.repository};
     boost::filesystem::remove_all(repository.getPath());

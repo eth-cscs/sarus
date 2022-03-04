@@ -185,7 +185,7 @@ ConfigRAII makeConfig() {
     raii.config->directories.initialize(false, *raii.config);
 
     // image + metadata
-    raii.config->imageID = common::ImageID{"test", "test", "test", "test_image"};
+    raii.config->imageReference = common::ImageReference{"test", "test", "test", "test_image"};
     common::createFileIfNecessary(raii.config->getMetadataFileOfImage());
     std::ofstream metadataStream(raii.config->getMetadataFileOfImage().c_str());
     metadataStream << "{}";
