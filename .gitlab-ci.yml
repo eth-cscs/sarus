@@ -16,12 +16,7 @@ stages:
   - full_test
 
 variables:
-  # https://confluence.cscs.ch/x/Y4DtCw
   HOST_CACHES_PATH: /var/lib/gitlab-runner/cache/ids/sarus
-  VAULT_ADDR: https://vault.giuv.cscs.ch
-  VAULT_PATH: kv/c4k-ci/pilatus2/sarus-ops
-  JFROG_URI: art.cscs.ch
-  JFROG_REPO_PATH: artifactory/sarus-gen
 
 get_credentials:
   image: vault:latest
@@ -37,7 +32,7 @@ get_credentials:
     - echo "JFROG_TOKEN=${JFROG_TOKEN}" >> credentials.env
   artifacts:
     public: false
-    expire_in: 80 minute
+    expire_in: 120 minute
     reports:
       dotenv: credentials.env
 
@@ -92,32 +87,20 @@ standalone_release:
       - sarus-Release.tar.gz
       - standalone/README.md
 
-.artifact_store:
+artifact_store:
   stage: artifact_store
-  image: alpine:latest
+  image: releases-docker.jfrog.io/jfrog/jfrog-cli
+  tags:
+    - docker
   script:
-    - echo ">>> Computing checksums for artifact"
-    - sha1=$(shasum -a 1 sarus-Release.tar.gz | awk '{print $1}')
-    - sha256=$(shasum -a 256 sarus-Release.tar.gz | awk '{print $1}')
-    - md5=$(md5sum sarus-Release.tar.gz | awk '{print $1}')
-    - echo ">>> Performing upload to ${JFROG_URI}"
-    - ret=$(curl -H "X-JFrog-Art-Api:${JFROG_TOKEN}" -H "X-Checksum-md5:${md5}" -H "X-Checksum-sha1:${sha1}" -H "X-Checksum-sha256:${sha256}" -XPUT https://${JFROG_URI}/${JFROG_REPO_PATH}/sarus-Release -T sarus-Release.tar.gz)
-    - msg=$(echo $ret | jq ".path")
-    - |-
-        if [ "$msg" = "null" ] ; then
-          status=$(echo $ret | jq ".errors[].status")
-           msg=$(echo $ret | jq ".errors[].message")
-           if [ "$message" = "" ]; then
-               msg="<no message provided>"
-           fi
-           echo ">>> Error uploading artifact to JFrog repository at ${JFROG_URI}/${JFROG_REPO_PATH}"
-           echo ">>> ${status}: ${msg}"
-           exit 1
-        fi
+    - echo ">>> Performing upload to JFROG"
+    - jfrog config add --artifactory-url=${JFROG_URL} --access-token=${JFROG_TOKEN} --user=${JFROG_USER}
+    - jfrog config show
+    - FILE="sarus-Release.tar.gz"
+    - jfrog rt u ${FILE} ${JFROG_REPO}/${FILE}
   dependencies:
     - get_credentials
     - standalone_release
-
 
 .from_source:
   stage: from_source
