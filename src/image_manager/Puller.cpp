@@ -38,6 +38,7 @@
 #include "common/Logger.hpp"
 #include "common/Utility.hpp"
 #include "image_manager/ImageManager.hpp"
+#include "image_manager/Utility.hpp"
 
 using namespace web;                        // Common features like URIs.
 using namespace web::http;                  // Common HTTP functionality
@@ -66,16 +67,30 @@ namespace image_manager {
         printLog( boost::format("# temp directory   : %s") % config->directories.temp, common::LogLevel::GENERAL);
         printLog( boost::format("# images directory : %s") % config->directories.images, common::LogLevel::GENERAL);
 
-        auto manifest = retrieveImageManifest();
+        std::string imageDigest = retrieveImageDigest();
+        printLog( boost::format("# image digest : %s") % imageDigest, common::LogLevel::GENERAL);
 
-        if (!manifest.has_field(U("fsLayers"))) {
-            SARUS_THROW_ERROR("manifest does not have \"fsLayers\" field.");
+        auto skopeoPath = config->json["skopeoPath"].GetString();
+        auto skopeoArgs = common::CLIArguments{skopeoPath};
+
+        auto skopeoVerbosity = utility::getSkopeoVerbosityOption();
+        if (!skopeoVerbosity.empty()) {
+            skopeoArgs.push_back(skopeoVerbosity);
         }
-        web::json::value fsLayers = manifest[U("fsLayers")];
+
+        auto ociImagePath = common::makeUniquePathWithRandomSuffix(config->directories.temp / "ociImage");
+        printLog( boost::format("Creating temporary OCI image in: %s") % ociImagePath, common::LogLevel::GENERAL);
+        skopeoArgs += common::CLIArguments{"copy",
+                                           "docker://"+config->imageReference.string(),
+                                           "oci:"+ociImagePath.string()+":sarus-pull"};
 
         start = std::chrono::system_clock::now();
-
-        saveImage(fsLayers);
+        auto status = common::forkExecWait(skopeoArgs);
+        if(status != 0) {
+            auto message = boost::format("%s exited with code %d") % skopeoArgs % status;
+            printLog(message, common::LogLevel::INFO);
+            exit(status);
+        }
 
         end = std::chrono::system_clock::now();
         elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / double(1000);
@@ -83,7 +98,59 @@ namespace image_manager {
         printLog(boost::format("Elapsed time on pulling    : %s [sec]") % elapsed, common::LogLevel::INFO);
         printLog(boost::format("Successfully pulled image"), common::LogLevel::INFO);
 
-        return PulledImage{config, manifest};
+        return PulledImage{config, imageDigest, ociImagePath};
+    }
+
+    /*
+     * Retrieve the image's digest using 'skopeo inspect'
+     */
+    std::string Puller::retrieveImageDigest() const {
+        auto skopeoPath = config->json["skopeoPath"].GetString();
+        auto skopeoVerbosity = utility::getSkopeoVerbosityOption();
+        auto inspectCommand = boost::format("%s %s inspect docker://%s") % skopeoPath % skopeoVerbosity % config->imageReference;
+        auto inspectOutput = std::string();
+        try {
+            inspectOutput = common::executeCommand(inspectCommand.str());
+        }
+        catch(common::Error& e) {
+            // Confirm skopeo failed because of image non existent or unauthorized access
+            auto errorMessage = std::string(e.what());
+            auto exitCodeString = std::string{"Process terminated with status 1"};
+            auto manifestErrorString = std::string{"Error reading manifest"};
+
+            /**
+             * Registries often respond differently to the same incorrect requests, making it very hard to understand
+             * whether an image is not present in the registry or is just private.
+             * For example, Docker Hub responds both "denied" and "unauthorized", regardless if the image is private or non-existent;
+             * Quay.io responds "unauthorized" regardless if the image is private or non-existent.
+             * Additionally, the error strings might have different contents depending on the registry.
+             */
+            auto deniedAccessString = std::string{"denied:"};
+            auto unauthorizedAccessString = std::string{"unauthorized:"};
+
+            if(errorMessage.find(exitCodeString) != std::string::npos
+               && errorMessage.find(manifestErrorString) != std::string::npos) {
+                auto messageHeader = boost::format{"Failed to pull image '%s'"
+                                                   "\nError reading manifest from registry."} % config->imageReference;
+                printLog(messageHeader, common::LogLevel::GENERAL, std::cerr);
+
+                if(errorMessage.find(unauthorizedAccessString) != std::string::npos
+                   || errorMessage.find(deniedAccessString) != std::string::npos) {
+                    auto message = boost::format{"%s\nThe image may be private or not present in the remote registry."
+                                                 "\nDid you perform a login with the proper credentials?"
+                                                 "\nSee 'sarus help pull' (--login option)"} % messageHeader;
+                    printLog(message, common::LogLevel::GENERAL, std::cerr);
+                }
+
+                SARUS_THROW_ERROR(errorMessage, common::LogLevel::INFO);
+            }
+            else {
+                SARUS_RETHROW_ERROR(e, "Error accessing image in the remote registry.");
+            }
+        }
+
+        auto registryImageData = common::parseJSON(inspectOutput);
+        return registryImageData["Digest"].GetString();
     }
 
     /**
@@ -620,7 +687,7 @@ namespace image_manager {
     }
 
     void Puller::printLog(  const boost::format &message, common::LogLevel LogLevel,
-                            std::ostream& outStream, std::ostream& errStream)
+                            std::ostream& outStream, std::ostream& errStream) const
     {
         common::Logger::getInstance().log(message.str(), sysname, LogLevel, outStream, errStream);
     }

@@ -10,6 +10,7 @@
 
 #include "PathRAII.hpp"
 #include "Error.hpp"
+#include "Utility.hpp"
 
 
 namespace sarus {
@@ -29,15 +30,22 @@ PathRAII::PathRAII(const boost::filesystem::path& path)
 
 PathRAII::PathRAII(PathRAII&& rhs)
     : path{std::move(rhs.path)}
-{}
+{
+    rhs.release();
+}
 
 PathRAII& PathRAII::operator=(PathRAII&& rhs) {
     path = std::move(rhs.path);
+    rhs.release();
     return *this;
 }
 
 PathRAII::~PathRAII() {
-    if(path) {
+    if(path && boost::filesystem::exists(*path)) {
+        // Ensure the path contents can be removed by enforcing owner write permissions
+        // This is needed when using PathRAII for OCI image expansion directories, because
+        // some images (e.g. Fedora) contain files without owner write perms
+        setFilesAsOwnerWritable();
         boost::filesystem::remove_all(*path);
     }
 }
@@ -48,6 +56,22 @@ const boost::filesystem::path& PathRAII::getPath() const {
 
 void PathRAII::release() {
     path.reset();
+}
+
+void PathRAII::setFilesAsOwnerWritable() const {
+    if (boost::filesystem::is_regular_file(*path)) {
+        boost::filesystem::permissions(*path, boost::filesystem::perms::add_perms | boost::filesystem::perms::owner_write);
+        return;
+    }
+
+    for (const auto& entry : boost::filesystem::recursive_directory_iterator(*path)) {
+        if (!isSymlink(entry.path())) {
+            auto filePermissions = entry.status().permissions();
+            if ( (filePermissions & boost::filesystem::perms::owner_write) == 0 ) {
+                boost::filesystem::permissions(entry.path(), boost::filesystem::perms::add_perms | boost::filesystem::perms::owner_write);
+            }
+        }
+    }
 }
 
 }

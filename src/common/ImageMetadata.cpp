@@ -141,6 +141,7 @@ void ImageMetadata::parseJSON(const rapidjson::Value& json) {
             env[key] = value;
         }
     }
+    // TODO Parse labels!!
 }
 
 bool operator==(const ImageMetadata& lhs, const ImageMetadata& rhs) {

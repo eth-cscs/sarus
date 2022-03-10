@@ -94,6 +94,12 @@ static void populateJSON(rj::Document& document) {
                           " adding the path where mksquashfs is installed.");
     }
 
+    document.AddMember( "skopeoPath",
+                        rj::Value{"/usr/bin/skopeo", allocator},
+                        allocator);
+    document.AddMember( "umociPath",
+                        rj::Value{"/usr/bin/umoci", allocator},
+                        allocator);
     document.AddMember( "initPath",
                         rj::Value{"/usr/bin/init-program", allocator},
                         allocator);

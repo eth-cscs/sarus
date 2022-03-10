@@ -33,6 +33,12 @@ TEST(JSONTestGroup, validFile) {
     CHECK_EQUAL(config->json["OCIBundleDir"].GetString(), std::string("/var/sarus/OCIBundleDir"));
     CHECK_EQUAL(config->json["rootfsFolder"].GetString(), std::string("rootfsFolder"));
     CHECK_EQUAL(config->json["prefixDir"].GetString(), std::string("/opt/sarus"));
+    CHECK_EQUAL(config->json["tempDir"].GetString(), std::string("/tmp"));
+    CHECK_EQUAL(config->json["localRepositoryBaseDir"].GetString(), std::string("/home"));
+    CHECK_EQUAL(config->json["skopeoPath"].GetString(), std::string("/usr/bin/skopeo"));
+    CHECK_EQUAL(config->json["umociPath"].GetString(), std::string("/usr/bin/umoci"));
+    CHECK_EQUAL(config->json["mksquashfsPath"].GetString(), std::string("/usr/sbin/mksquashfs"));
+    CHECK_EQUAL(config->json["initPath"].GetString(), std::string("/opt/sarus/bin/init"));
     CHECK_EQUAL(config->json["runcPath"].GetString(), std::string("/usr/bin/runc.amd64"));
     CHECK_EQUAL(config->json["ramFilesystemType"].GetString(), std::string("tmpfs"));
 

@@ -109,12 +109,33 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Too many arguments for command 'pull'\nSee 'sarus help pull'"
         self._check(command, expected_message)
 
+        command = ["sarus", "pull", "--temp-dir=/invalid-dir", "quay.io/ethcscs/alpine"]
+        expected_message = "Invalid temporary directory \"/invalid-dir\""
+        self._check(command, expected_message)
+
         command = ["sarus", "pull", "///"]
         expected_message = ("Invalid image ID '///'\nSee 'sarus help pull'")
         self._check(command, expected_message)
 
         command = ["sarus", "pull", "invalid-image-1kds710dkj"]
         expected_message = ("Failed to pull image 'index.docker.io/library/invalid-image-1kds710dkj:latest'"
+                            "\nError reading manifest from registry."
+                            "\nThe image may be private or not present in the remote registry."
+                            "\nDid you perform a login with the proper credentials?"
+                            "\nSee 'sarus help pull' (--login option)")
+        self._check(command, expected_message)
+
+        command = ["sarus", "pull", "quay.io/ethcscs/invalid-image-1kds710dkj"]
+        expected_message = ("Failed to pull image 'quay.io/ethcscs/invalid-image-1kds710dkj:latest'"
+                            "\nError reading manifest from registry."
+                            "\nThe image may be private or not present in the remote registry."
+                            "\nDid you perform a login with the proper credentials?"
+                            "\nSee 'sarus help pull' (--login option)")
+        self._check(command, expected_message)
+
+        command = ["sarus", "pull", "ethcscs/private-example"]
+        expected_message = ("Failed to pull image 'index.docker.io/ethcscs/private-example:latest'"
+                            "\nError reading manifest from registry."
                             "\nThe image may be private or not present in the remote registry."
                             "\nDid you perform a login with the proper credentials?"
                             "\nSee 'sarus help pull' (--login option)")
@@ -122,6 +143,7 @@ class TestErrorMessages(unittest.TestCase):
 
         command = ["sarus", "pull", "quay.io/ethcscs/private-example"]
         expected_message = ("Failed to pull image 'quay.io/ethcscs/private-example:latest'"
+                            "\nError reading manifest from registry."
                             "\nThe image may be private or not present in the remote registry."
                             "\nDid you perform a login with the proper credentials?"
                             "\nSee 'sarus help pull' (--login option)")
@@ -142,13 +164,11 @@ class TestErrorMessages(unittest.TestCase):
                             "The feature will be introduced in a future release")
         self._check(command, expected_message)
 
+    @unittest.skip("Not implemented yet")
+    def test_command_pull_authentication_options(self):
         command = ["bash", "-c", "printf 'invalid-username\ninvalid-password' |sarus pull --login quay.io/ethcscs/private-example"]
         expected_message = ("Authorization failed when retrieving token for image 'quay.io/ethcscs/private-example:latest'"
                             "\nPlease check the entered credentials.")
-        self._check(command, expected_message)
-
-        command = ["sarus", "pull", "--temp-dir=/invalid-dir", "quay.io/ethcscs/alpine"]
-        expected_message = "Invalid temporary directory \"/invalid-dir\""
         self._check(command, expected_message)
 
     def test_command_rmi(self):

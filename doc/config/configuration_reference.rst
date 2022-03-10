@@ -49,7 +49,7 @@ Recommended value: ``/opt/sarus/<version>``
 .. _config-reference-hooksDir:
 
 hooksDir (string, OPTIONAL)
-----------------------------
+---------------------------
 Absolute path to the directory containing the `OCI hook JSON configuration files
 <https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_.
 See :doc:`/config/configure_hooks`.
@@ -93,6 +93,16 @@ contents should be modifiable only by the system administrators.
 
 Recommended value: ``/var/sarus/centralized_repository``
 
+skopeoPath (string, REQUIRED)
+-----------------------------
+Absolute path to a trusted ``skopeo`` binary, which will be used to pull images
+from container registries or load them from local files.
+
+umociPath (string, REQUIRED)
+----------------------------
+Absolute path to a trusted ``umoci`` binary, which will be used to unpack image
+contents before converting them to SquashFS format.
+
 mksquashfsPath (string, REQUIRED)
 ---------------------------------
 Absolute path to trusted ``mksquashfs`` binary.
@@ -102,7 +112,7 @@ This executable must satisfy the :ref:`security requirements
 .. _config-reference-initPath:
 
 initPath (string, REQUIRED)
----------------------------------
+---------------------------
 Absolute path to trusted init process static binary which will launch the
 user-specified applications within the container when the ``--init`` option
 to :program:`sarus run` is used.
@@ -332,6 +342,8 @@ Example configuration file
         "tempDir": "/tmp",
         "localRepositoryBaseDir": "/home",
         "centralizedRepositoryDir": "/var/sarus/centralized_repository",
+        "skopeoPath": "/usr/bin/skopeo",
+        "umociPath": "/usr/bin/umoci",
         "mksquashfsPath": "/usr/sbin/mksquashfs",
         "runcPath": "/usr/local/sbin/runc.amd64",
         "ramFilesystemType": "tmpfs",

@@ -5,6 +5,8 @@
     "prefixDir": "/opt/sarus",
     "tempDir": "/tmp",
     "localRepositoryBaseDir" : "/home",
+    "skopeoPath": "/usr/bin/skopeo",
+    "umociPath": "/usr/bin/umoci",
     "mksquashfsPath": "/usr/sbin/mksquashfs",
     "initPath": "/opt/sarus/bin/init",
     "runcPath": "/usr/bin/runc.amd64",

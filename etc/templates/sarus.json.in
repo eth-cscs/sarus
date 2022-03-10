@@ -7,6 +7,8 @@
     "tempDir": "/tmp",
     "localRepositoryBaseDir": "@LOCAL_REPO_DIR@",
     "centralizedRepositoryDir": "@CENTRAL_REPO_DIR@",
+    "skopeoPath": "@SKOPEO_PATH@",
+    "umociPath": "@UMOCI_PATH@",
     "mksquashfsPath": "@MKSQUASHFS_PATH@",
     "initPath": "@INIT_PATH@",
     "runcPath": "@RUNC_PATH@",

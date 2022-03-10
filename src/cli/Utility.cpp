@@ -67,7 +67,7 @@ bool isValidCLIInputImageReference(const std::string& imageReference) {
 
 /**
  * Parse the input name of container image
- */ 
+ */
 common::ImageReference parseImageReference(const common::CLIArguments& imageArgs) {
     if(imageArgs.argc() != 1) {
         auto message = boost::format(
@@ -81,7 +81,7 @@ common::ImageReference parseImageReference(const common::CLIArguments& imageArgs
 
 /**
  * Parse the input reference of container image
- */ 
+ */
 common::ImageReference parseImageReference(const std::string &input) {
     printLog( boost::format("parsing image ID"), common::LogLevel::DEBUG);
 

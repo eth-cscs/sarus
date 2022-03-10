@@ -588,7 +588,7 @@ bool isCharacterDevice(const boost::filesystem::path& path) {
     return S_ISCHR(sb.st_mode);
 }
 
-static bool isSymlink(const boost::filesystem::path& path) {
+bool isSymlink(const boost::filesystem::path& path) {
     struct stat sb;
     if (lstat(path.c_str(), &sb) != 0) {
         return false;
@@ -995,19 +995,37 @@ void writeTextFile(const std::string& text, const boost::filesystem::path& filen
     }
 }
 
-rapidjson::Document readJSON(const boost::filesystem::path& filename) {
+rapidjson::Document parseJSONStream(std::istream& is) {
     auto json = rapidjson::Document{};
 
     try {
-        std::ifstream ifs(filename.string());
-        rapidjson::IStreamWrapper isw(ifs);
+        rapidjson::IStreamWrapper isw(is);
         json.ParseStream(isw);
     }
     catch (const std::exception& e) {
-        auto message = boost::format("Error reading JSON from %s") % filename;
-        SARUS_RETHROW_ERROR(e, message.str());
+        SARUS_RETHROW_ERROR(e, "Error parsing JSON stream");
     }
 
+    return json;
+}
+
+rapidjson::Document parseJSON(const std::string& string) {
+    std::istringstream iss(string);
+    auto json = parseJSONStream(iss);
+    if (json.HasParseError()) {
+        auto message = boost::format(
+            "Error parsing JSON string:\n'%s'\nInput data is not valid JSON\n"
+            "Error(offset %u): %s")
+            % static_cast<unsigned>(json.GetErrorOffset())
+            % rapidjson::GetParseError_En(json.GetParseError());
+        SARUS_THROW_ERROR(message.str());
+    }
+    return json;
+}
+
+rapidjson::Document readJSON(const boost::filesystem::path& filename) {
+    std::ifstream ifs(filename.string());
+    auto json = parseJSONStream(ifs);
     if (json.HasParseError()) {
         auto message = boost::format(
             "Error parsing JSON file %s. Input data is not valid JSON\n"

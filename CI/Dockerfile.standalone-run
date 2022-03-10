@@ -12,13 +12,13 @@
 # It expects the standalone already built (see Dockerfile.build)
 # See utility_docker_functions.bash.
 #
-FROM ubuntu:20.04
+FROM ubuntu:21.10
 
 RUN apt-get update --fix-missing \
     && DEBIAN_FRONTEND=noninteractive \
        apt-get install -y --no-install-recommends \
           sudo rsync vim squashfs-tools build-essential cmake git gcc-10 python3 python3-pip python3-setuptools \
-          munge slurm-wlm \
+          munge slurm-wlm skopeo umoci \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

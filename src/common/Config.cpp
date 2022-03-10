@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 
 #include "common/Config.hpp"
+#include "common/Error.hpp"
 #include "common/Utility.hpp"
 
 
@@ -50,6 +51,11 @@ void Config::Directories::initialize(bool useCentralizedRepository, const common
     }
     else {
         temp = boost::filesystem::path(config.json["tempDir"].GetString());
+    }
+    if (!boost::filesystem::is_directory(temp)) {
+        auto message = boost::format("Invalid temporary directory %s") % temp;
+        logMessage(message, common::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 }
 

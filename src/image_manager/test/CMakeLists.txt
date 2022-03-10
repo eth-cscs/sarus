@@ -9,3 +9,4 @@ add_unit_test(image_manager_PulledImage test_PulledImage.cpp "${link_libraries}"
 add_unit_test(image_manager_SquashfsImage test_SquashfsImage.cpp "${link_libraries}")
 add_unit_test(image_manager_ImageStore test_ImageStore.cpp "${link_libraries}")
 add_unit_test(image_manager_Puller test_Puller.cpp "${link_libraries}")
+add_unit_test(image_manager_Utility test_Utility.cpp "${link_libraries}")

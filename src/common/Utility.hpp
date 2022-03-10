@@ -72,6 +72,7 @@ int countFilesInDirectory(const boost::filesystem::path& path);
 bool isDeviceFile(const boost::filesystem::path& path);
 bool isBlockDevice(const boost::filesystem::path& path);
 bool isCharacterDevice(const boost::filesystem::path& path);
+bool isSymlink(const boost::filesystem::path& path);
 boost::filesystem::path realpathWithinRootfs(const boost::filesystem::path& rootfs, const boost::filesystem::path& path);
 std::unordered_map<std::string, std::string> parseMap(const std::string& input,
                                                       const std::string& pairSeparators = ",",
@@ -96,6 +97,8 @@ void writeTextFile(const std::string& text,
                    const boost::filesystem::path& filename,
                    const std::ios_base::openmode mode = std::ios_base::out);
 rapidjson::SchemaDocument readJSONSchema(const boost::filesystem::path& schemaFile);
+rapidjson::Document parseJSONStream(std::istream& is);
+rapidjson::Document parseJSON(const std::string& string);
 rapidjson::Document readJSON(const boost::filesystem::path& filename);
 rapidjson::Document readAndValidateJSON(const boost::filesystem::path& jsonFile,
                                         const boost::filesystem::path& schemaFile);

@@ -129,10 +129,13 @@ TEST(CLITestGroup, generated_config_for_CommandLoad) {
     }
     // temp dir
     {
+        auto customTempDir = common::PathRAII("/tmp/sarus-utest-temp-dir");
+        common::createFoldersIfNecessary(customTempDir.getPath());
+
         auto conf = generateConfig(
-            {"load", "--temp-dir=/custom-temp-dir", "archive.tar", "library/image:tag"});
+            {"load", "--temp-dir="+customTempDir.getPath().string(), "archive.tar", "library/image:tag"});
         auto expectedArchivePath = boost::filesystem::absolute("archive.tar");
-        CHECK_EQUAL(conf->directories.temp.string(), std::string{"/custom-temp-dir"});
+        CHECK_EQUAL(conf->directories.temp.string(), customTempDir.getPath().string());
         CHECK_EQUAL(conf->useCentralizedRepository, false);
         CHECK_EQUAL(conf->archivePath.string(), expectedArchivePath.string());
         CHECK_EQUAL(conf->imageReference.server, std::string{"load"});
@@ -167,11 +170,14 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
     }
     // temp-dir option and custom server
     {
+        auto customTempDir = common::PathRAII("/tmp/sarus-utest-temp-dir");
+        common::createFoldersIfNecessary(customTempDir.getPath());
+
         auto conf = generateConfig(
             {"pull",
-            "--temp-dir=/custom-temp-dir",
+            "--temp-dir="+customTempDir.getPath().string(),
             "my.own.server:5000/user/image:tag"});
-        CHECK(conf->directories.temp.string() == "/custom-temp-dir");
+        CHECK(conf->directories.temp.string() == customTempDir.getPath().string());
         CHECK(conf->enforceSecureServer == true);
         CHECK(conf->imageReference.server == "my.own.server:5000");
         CHECK(conf->imageReference.repositoryNamespace == "user");

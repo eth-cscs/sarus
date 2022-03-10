@@ -27,10 +27,9 @@ TEST(PulledImageTestGroup, test) {
     // pull
     auto puller = image_manager::Puller{configRAII.config};
     auto manifest = puller.retrieveImageManifest();
-    puller.pull();
+    auto pulledImage = puller.pull();
 
     // expand
-    auto pulledImage = PulledImage{configRAII.config, manifest};
     common::PathRAII expandedImage;
     common::ImageMetadata metadata;
     std::tie(expandedImage, metadata, std::ignore) = pulledImage.expand();

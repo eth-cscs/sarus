@@ -28,6 +28,12 @@
         "centralizedRepositoryDir": {
             "$ref": "definitions.schema.json#/AbsolutePath"
         },
+        "skopeoPath": {
+            "$ref": "definitions.schema.json#/AbsolutePath"
+        },
+        "umociPath": {
+            "$ref": "definitions.schema.json#/AbsolutePath"
+        },
         "mksquashfsPath": {
             "$ref": "definitions.schema.json#/AbsolutePath"
         },
@@ -116,6 +122,8 @@
         "prefixDir",
         "tempDir",
         "localRepositoryBaseDir",
+        "skopeoPath",
+        "umociPath",
         "mksquashfsPath",
         "initPath",
         "runcPath",

@@ -27,7 +27,7 @@ namespace image_manager {
  */
 class PulledImage : public InputImage {
 public:
-    PulledImage(std::shared_ptr<const common::Config> config, web::json::value& manifest);
+    PulledImage(std::shared_ptr<const common::Config> config, const std::string& digest, const boost::filesystem::path& imagePath);
     std::tuple<common::PathRAII, common::ImageMetadata, std::string> expand() const override;
 
 private:
@@ -35,6 +35,7 @@ private:
 
 private:
     std::vector<boost::filesystem::path> layers;
+    common::PathRAII imageDir;
     common::ImageMetadata metadata;
     std::string digest;
 };

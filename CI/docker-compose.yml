@@ -2,11 +2,11 @@ version: '2'
 
 services:
   controller:
-    image: ethcscs/sarus-ci-run:1.1.0
+    image: ethcscs/sarus-ci-standalone-run:skopeo_umoci
     hostname: controller
     volumes:
       - etc-munge-volume:/etc/munge
-      - etc-slurm-llnl-volume:/etc/slurm-llnl
+      - etc-slurm-volume:/etc/slurm
       - opt-sarus-volume:/opt/sarus
       - @cached_oci_hooks_dir@:/home/docker/.oci-hooks
       - @cached_local_repo_dir@:/home/docker/.sarus
@@ -17,21 +17,21 @@ services:
       bash -c ". /sarus-source/CI/utility_functions.bash
       && . /sarus-source/CI/src/integration_tests_for_virtual_cluster/helpers.bash
       && change_uid_gid_of_docker_user @host_uid@ @host_gid@
-      && /usr/sbin/create-munge-key -f
+      && sudo -u munge -g munge /usr/sbin/mungekey -f
       && /etc/init.d/munge start
-      && generate_slurm_conf /etc/slurm-llnl/slurm.conf controller server0 server1
-      && slurmctld -L /var/log/slurm-llnl/slurmctld
+      && generate_slurm_conf /etc/slurm/slurm.conf controller server0 server1
+      && slurmctld -L /var/log/slurm/slurmctld
       && install_sarus_from_archive /opt/sarus @artifact_name@
       && touch /var/sync/controller-start-finished
       && sleep infinity"
 
   server0:
-    image: ethcscs/sarus-ci-run:1.1.0
+    image: ethcscs/sarus-ci-standalone-run:skopeo_umoci
     privileged: true
     hostname: server0
     volumes:
       - etc-munge-volume:/etc/munge
-      - etc-slurm-llnl-volume:/etc/slurm-llnl
+      - etc-slurm-volume:/etc/slurm
       - opt-sarus-volume:/opt/sarus
       - @cached_oci_hooks_dir@:/home/docker/.oci-hooks
       - @cached_local_repo_dir@:/home/docker/.sarus
@@ -45,8 +45,8 @@ services:
       . /sarus-source/CI/utility_functions.bash
       && change_uid_gid_of_docker_user @host_uid@ @host_gid@
       && /etc/init.d/munge start
-      && touch /etc/slurm-llnl/gres.conf
-      && slurmd -L /var/log/slurm-llnl/slurmd
+      && touch /etc/slurm/gres.conf
+      && slurmd -L /var/log/slurm/slurmd
       && sleep infinity"
 
   # Docker compose allows to automatically scale a service, i.e. spawn additional instances
@@ -55,12 +55,12 @@ services:
   # to be accessible directly through different hostnames, whereas Docker compose would put a
   # load balancer in front of the servers and they would look like a single machine with one hostname.
   server1:
-    image: ethcscs/sarus-ci-run:1.1.0
+    image: ethcscs/sarus-ci-standalone-run:skopeo_umoci
     privileged: true
     hostname: server1
     volumes:
       - etc-munge-volume:/etc/munge
-      - etc-slurm-llnl-volume:/etc/slurm-llnl
+      - etc-slurm-volume:/etc/slurm
       - opt-sarus-volume:/opt/sarus
       - @cached_oci_hooks_dir@:/home/docker/.oci-hooks
       - @cached_local_repo_dir@:/home/docker/.sarus
@@ -74,11 +74,11 @@ services:
       . /sarus-source/CI/utility_functions.bash
       && change_uid_gid_of_docker_user @host_uid@ @host_gid@
       && /etc/init.d/munge start
-      && touch /etc/slurm-llnl/gres.conf
-      && slurmd -L /var/log/slurm-llnl/slurmd
+      && touch /etc/slurm/gres.conf
+      && slurmd -L /var/log/slurm/slurmd
       && sleep infinity"
 
 volumes:
   etc-munge-volume:
-  etc-slurm-llnl-volume:
+  etc-slurm-volume:
   opt-sarus-volume:

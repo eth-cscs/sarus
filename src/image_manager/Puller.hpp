@@ -33,6 +33,7 @@ class Puller {
 public:
     Puller(std::shared_ptr<const common::Config> config);
     PulledImage pull();
+    std::string retrieveImageDigest() const;
     web::json::value retrieveImageManifest();
     std::string getProxy();
 
@@ -46,7 +47,7 @@ private:
     std::string requestAuthorizationToken(web::http::http_response& response);
     bool checkSum(const std::string &digest, const boost::filesystem::path &filename);
     void printLog(  const boost::format &message, common::LogLevel LogLevel,
-                    std::ostream& outStream = std::cout, std::ostream& errStream = std::cerr);
+                    std::ostream& outStream = std::cout, std::ostream& errStream = std::cerr) const;
     std::unique_ptr<web::http::client::http_client> setupHttpClient(const std::string& server);
     void setProxyIfNecessary(web::http::client::http_client_config& clientConfig);
     bool isRegistryInNoProxyList(const std::string& noProxyList);

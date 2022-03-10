@@ -34,6 +34,8 @@ public:
     void release();
 
 private:
+    void setFilesAsOwnerWritable() const;
+
     boost::optional<boost::filesystem::path> path;
 };
 
