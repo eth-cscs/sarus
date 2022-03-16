@@ -70,7 +70,7 @@ public:
             return image.imageReference.tag;
         };
         fieldGetters["DIGEST"] = [](const common::SarusImage& image) {
-            return image.digest;
+            return image.digest.empty() ? std::string{"<none>"} : image.digest;
         };
         fieldGetters["CREATED"] = [](const common::SarusImage& image) {
             return image.created;

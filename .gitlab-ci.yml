@@ -225,6 +225,7 @@ cleanup_images:
   except:
     - master
     - develop
+    - image_manager_update
   script:
     - . ./CI/utility_docker_functions.bash
     - sarus-cleanup-images

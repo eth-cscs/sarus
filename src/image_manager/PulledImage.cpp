@@ -9,9 +9,11 @@
  */
 
 #include "PulledImage.hpp"
+
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 #include "image_manager/Utility.hpp"
+
 
 namespace sarus {
 namespace image_manager {
@@ -24,7 +26,8 @@ PulledImage::PulledImage(std::shared_ptr<const common::Config> config, const std
     auto imageIndex = common::readJSON(imageDir.getPath() / "index.json");
     auto schemaItr = imageIndex.FindMember("schemaVersion");
     if (schemaItr == imageIndex.MemberEnd() || schemaItr->value.GetUint() != 2) {
-        SARUS_THROW_ERROR("Unsupported OCI image index format. The 'schemaVersion' property could not be found or its value is different from '2'");
+        log("Unsupported OCI image index format. The 'schemaVersion' property could not be found or its value is different from '2'. "
+            "Attempting to proceed with image processing...", common::LogLevel::WARN);
     }
 
     std::string manifestDigest = imageIndex["manifests"][0]["digest"].GetString();

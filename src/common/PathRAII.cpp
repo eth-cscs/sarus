@@ -42,10 +42,10 @@ PathRAII& PathRAII::operator=(PathRAII&& rhs) {
 
 PathRAII::~PathRAII() {
     if(path && boost::filesystem::exists(*path)) {
-        // Ensure the path contents can be removed by enforcing owner write permissions
+        // Ensure the path contents can be removed by enforcing owner write and exec permissions.
         // This is needed when using PathRAII for OCI image expansion directories, because
-        // some images (e.g. Fedora) contain files without owner write perms
-        setFilesAsOwnerWritable();
+        // some images (e.g. Fedora) contain files without owner write or search perms
+        setFilesAsRemovableByOwner();
         boost::filesystem::remove_all(*path);
     }
 }
@@ -58,18 +58,17 @@ void PathRAII::release() {
     path.reset();
 }
 
-void PathRAII::setFilesAsOwnerWritable() const {
+void PathRAII::setFilesAsRemovableByOwner() const {
+    auto requiredPermissions = boost::filesystem::perms::owner_write | boost::filesystem::perms::owner_exe;
+    boost::filesystem::permissions(*path, boost::filesystem::perms::add_perms | requiredPermissions);
+
     if (boost::filesystem::is_regular_file(*path)) {
-        boost::filesystem::permissions(*path, boost::filesystem::perms::add_perms | boost::filesystem::perms::owner_write);
         return;
     }
 
     for (const auto& entry : boost::filesystem::recursive_directory_iterator(*path)) {
         if (!isSymlink(entry.path())) {
-            auto filePermissions = entry.status().permissions();
-            if ( (filePermissions & boost::filesystem::perms::owner_write) == 0 ) {
-                boost::filesystem::permissions(entry.path(), boost::filesystem::perms::add_perms | boost::filesystem::perms::owner_write);
-            }
+            boost::filesystem::permissions(entry.path(), boost::filesystem::perms::add_perms | requiredPermissions);
         }
     }
 }

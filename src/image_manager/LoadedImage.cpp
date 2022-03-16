@@ -12,80 +12,66 @@
 
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
+#include "image_manager/Utility.hpp"
 
 
 namespace sarus {
 namespace image_manager {
 
-LoadedImage::LoadedImage(   std::shared_ptr<const common::Config> config,
-                            const boost::filesystem::path& imageArchive)
-    : InputImage{std::move(config)}
-    , imageArchive{imageArchive}
-{}
+LoadedImage::LoadedImage(std::shared_ptr<const common::Config> config, const boost::filesystem::path& imagePath)
+    : InputImage{std::move(config)},
+      imageDir{imagePath}
+{
+    auto imageIndex = common::readJSON(imageDir.getPath() / "index.json");
+    auto schemaItr = imageIndex.FindMember("schemaVersion");
+    if (schemaItr == imageIndex.MemberEnd() || schemaItr->value.GetUint() != 2) {
+        log("Unsupported OCI image index format. The 'schemaVersion' property could not be found or its value is different from '2'. "
+            "Attempting to proceed with image processing...", common::LogLevel::WARN);
+    }
+
+    std::string manifestDigest = imageIndex["manifests"][0]["digest"].GetString();
+    auto manifestHash = manifestDigest.substr(manifestDigest.find(":")+1);
+    auto imageManifest = common::readJSON(imageDir.getPath() / "blobs/sha256" / manifestHash);
+
+    std::string configDigest = imageManifest["config"]["digest"].GetString();
+    auto configHash = configDigest.substr(configDigest.find(":")+1);
+    auto imageConfig = common::readJSON(imageDir.getPath() / "blobs/sha256" / configHash);
+
+    metadata = common::ImageMetadata(imageConfig["config"]);
+}
 
 std::tuple<common::PathRAII, common::ImageMetadata, std::string> LoadedImage::expand() const {
-    log(boost::format("expanding loaded image from archive %s") % imageArchive, common::LogLevel::INFO);
+    log(boost::format("> unpacking OCI image ..."), common::LogLevel::GENERAL);
+    auto umociPath = config->json["umociPath"].GetString();
+    auto umociArgs = common::CLIArguments{umociPath};
 
-    auto initialWorkingDir = boost::filesystem::current_path();
-    auto tempArchiveDir = common::PathRAII{makeTemporaryExpansionDirectory()};
+    auto umociVerbosity = utility::getUmociVerbosityOption();
+    if (!umociVerbosity.empty()) {
+        umociArgs.push_back(umociVerbosity);
+    }
+
     auto expansionDir = common::PathRAII{makeTemporaryExpansionDirectory()};
+    umociArgs += common::CLIArguments{"raw", "unpack", "--rootless",
+                                      "--image", imageDir.getPath().string()+":sarus-load",
+                                      expansionDir.getPath().string()};
 
-    try {
-        extractArchive(imageArchive, tempArchiveDir.getPath());
+    auto start = std::chrono::system_clock::now();
+    auto status = common::forkExecWait(umociArgs);
+    if(status != 0) {
+        auto message = boost::format("%s exited with code %d") % umociArgs % status;
+        log(message, common::LogLevel::INFO);
+        exit(status);
     }
-    catch(common::Error& e) {
-        auto message = boost::format("failed to extract archive %s") % imageArchive;
-        SARUS_RETHROW_ERROR(e, message.str());
-    }
-    common::changeDirectory( initialWorkingDir );
+    auto end = std::chrono::system_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / double(1000);
 
-    // read manifest.json to construct metadata
-    boost::filesystem::path manifestFilePath( tempArchiveDir.getPath() / "manifest.json" );
-    auto loadedManifest = common::readJSON(manifestFilePath);
-    log("manifest.json: " + common::serializeJSON(loadedManifest), common::LogLevel::DEBUG);
+    log(boost::format("Elapsed time on unpacking    : %s [sec]") % elapsed, common::LogLevel::INFO);
+    log(boost::format("Successfully unpacked OCI bundle"), common::LogLevel::INFO);
 
-    // if archive contains more than 1 container manifest or empty, throw error
-    if (loadedManifest.Size() != 1) {
-        auto message = boost::format("expected archive %s to contain exactly one manifest, but found %d")
-            % imageArchive % loadedManifest.Size();
-        SARUS_THROW_ERROR(message.str());
-    }
-
-    // read manifest
-    auto& manifest = loadedManifest.GetArray()[0];
-    auto& layers = manifest["Layers"];
-    auto& RepoTags = manifest["RepoTags"];
-
-    // parse config json
-    auto configFile = tempArchiveDir.getPath() / manifest["Config"].GetString();
-    auto imageConfig = common::readJSON(configFile);
-    if (!imageConfig.HasMember("config")) {
-        auto message = boost::format(   "Image configuration file %s is malformed: "
-                                        "no \"config\" field detected") % configFile;
-        SARUS_THROW_ERROR(message.str());
-    }
-    auto metadata = common::ImageMetadata(imageConfig["config"]);
-
-    log("Config: " + common::serializeJSON(imageConfig), common::LogLevel::DEBUG);
-    log("layers: %s" + common::serializeJSON(layers), common::LogLevel::DEBUG);
-    log("Repotags: %s" + common::serializeJSON(RepoTags), common::LogLevel::DEBUG);
-
-    // create list of layer archive paths
-    std::vector<boost::filesystem::path> layerArchives;
-    for(const auto& layer: layers.GetArray()) {
-        std::string layerArchive = layer.GetString();
-        boost::filesystem::path layerArchivePath(tempArchiveDir.getPath() / layerArchive);
-        layerArchives.push_back(layerArchivePath);
-    }
-
-    expandLayers(layerArchives, expansionDir.getPath());
-
-    log(boost::format("successfully expanded loaded image from archive %s") % imageArchive, common::LogLevel::INFO);
-
-    auto digest = configFile.stem().string();
-    return std::tuple<common::PathRAII, common::ImageMetadata, std::string>{
-        std::move(expansionDir), std::move(metadata), digest
-    };
+    // TODO add return of configHash as imageID
+    return std::tuple<common::PathRAII, common::ImageMetadata, std::string>(
+        std::move(expansionDir), metadata, std::string{}
+    );
 }
 
 }} // namespace

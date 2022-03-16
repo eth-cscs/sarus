@@ -10,6 +10,7 @@
 
 #include <memory>
 
+#include "image_manager/Loader.hpp"
 #include "image_manager/LoadedImage.hpp"
 #include "test_utility/config.hpp"
 #include "test_utility/unittest_main_function.hpp"
@@ -24,14 +25,16 @@ TEST_GROUP(InputImageTestGroup) {
 TEST(InputImageTestGroup, image_with_nonexecutable_directory) {
     auto configRAII = test_utility::config::makeConfig();
     auto archive = boost::filesystem::path{__FILE__}.parent_path() / "saved_image_with_non-executable_dir.tar";
-    auto loadedImage = LoadedImage(configRAII.config, archive);
+    auto loader = Loader{configRAII.config};
+    auto loadedImage = loader.load(archive);
     loadedImage.expand();
 }
 
 TEST(InputImageTestGroup, image_with_whiteouts) {
     auto configRAII = test_utility::config::makeConfig();
     auto archive = boost::filesystem::path{__FILE__}.parent_path() / "saved_image_with_whiteouts.tar";
-    auto loadedImage = LoadedImage(configRAII.config, archive);
+    auto loader = Loader{configRAII.config};
+    auto loadedImage = loader.load(archive);
     common::PathRAII expandedImage;
     std::tie(expandedImage, std::ignore, std::ignore) = loadedImage.expand();
 

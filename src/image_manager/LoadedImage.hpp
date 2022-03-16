@@ -26,11 +26,12 @@ namespace image_manager {
  */
 class LoadedImage : public InputImage {
 public:
-    LoadedImage(std::shared_ptr<const common::Config> config, const boost::filesystem::path& imageArchive);
+    LoadedImage(std::shared_ptr<const common::Config> config, const boost::filesystem::path& imagePath);
     std::tuple<common::PathRAII, common::ImageMetadata, std::string> expand() const override;
 
 private:
-    boost::filesystem::path imageArchive;
+    common::PathRAII imageDir;
+    common::ImageMetadata metadata;
 };
 
 }
