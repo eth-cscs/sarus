@@ -37,8 +37,8 @@ environment variables must be defined:
 
 * ``DROPBEAR_DIR``: Absolute path to the location of the custom SSH software.
 
-* ``"SERVER_PORT``: TCP port on which the SSH daemon will listen. This must be an unused
-  port and is tipically set to a value different than 22 in order to avoid clashes with an SSH
+* ``SERVER_PORT``: TCP port on which the SSH daemon will listen. This must be an unused
+  port and is typically set to a value different than 22 in order to avoid clashes with an SSH
   daemon that could be running on the host.
 
 The following is an example of `OCI hook JSON configuration file
