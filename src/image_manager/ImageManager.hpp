@@ -19,7 +19,7 @@
 #include "common/SarusImage.hpp"
 #include "image_manager/OCIImage.hpp"
 #include "image_manager/ImageStore.hpp"
-#include "image_manager/Puller.hpp"
+#include "image_manager/SkopeoDriver.hpp"
 
 
 namespace sarus {
@@ -44,7 +44,7 @@ private:
 
 private:
     std::shared_ptr<const common::Config> config;
-    Puller puller;
+    SkopeoDriver skopeoDriver;
     ImageStore imageStore;
     const std::string sysname = "ImageManager";  // system name for logger
 };

@@ -10,9 +10,6 @@
 
 #include "image_manager/ImageManager.hpp"
 
-#include <iostream>
-#include <chrono> // for timer
-
 #include <cpprest/json.h>
 #include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
@@ -21,7 +18,6 @@
 #include "common/Error.hpp"
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
-#include "image_manager/Loader.hpp"
 #include "image_manager/SquashfsImage.hpp"
 #include "image_manager/Utility.hpp"
 
@@ -31,7 +27,7 @@ namespace image_manager {
 
     ImageManager::ImageManager(std::shared_ptr<const common::Config> config)
     : config(config)
-    , puller(config)
+    , skopeoDriver(config)
     , imageStore(config)
     {}
 
@@ -54,8 +50,8 @@ namespace image_manager {
         std::string imageDigest = retrieveImageDigest();
         printLog( boost::format("# image digest     : %s") % imageDigest, common::LogLevel::GENERAL);
 
-        auto pulledImage = puller.pull();
-        processImage(pulledImage, imageDigest);
+        auto ociImagePath = skopeoDriver.copyToOCIImage("docker", config->imageReference.string());
+        processImage(OCIImage{config, ociImagePath}, imageDigest);
 
         printLog(boost::format("Successfully pulled image"), common::LogLevel::INFO);
     }
@@ -69,9 +65,8 @@ namespace image_manager {
 
         printLog(boost::format("Loading image archive %s") % archive, common::LogLevel::INFO);
 
-        auto loader = Loader{config};
-        auto loadedImage = loader.load(archive);
-        processImage(loadedImage, std::string{});
+        auto ociImagePath = skopeoDriver.copyToOCIImage("docker-archive", archive.string());
+        processImage(OCIImage{config, ociImagePath}, std::string{});
 
         printLog(boost::format("Successfully loaded image archive"), common::LogLevel::INFO);
     }
@@ -103,8 +98,8 @@ namespace image_manager {
         metadata.write(config->getMetadataFileOfImage());
         auto metadataRAII = common::PathRAII{config->getMetadataFileOfImage()};
 
-        auto expandedImage = image.expand();
-        auto squashfs = SquashfsImage{*config, expandedImage.getPath(), config->getImageFile()};
+        auto unpackedImage = image.unpack();
+        auto squashfs = SquashfsImage{*config, unpackedImage.getPath(), config->getImageFile()};
         auto squashfsRAII = common::PathRAII{squashfs.getPathOfImage()};
 
         auto imageSize = common::getFileSize(config->getImageFile());
@@ -126,12 +121,9 @@ namespace image_manager {
     }
 
     std::string ImageManager::retrieveImageDigest() const {
-        auto skopeoPath = config->json["skopeoPath"].GetString();
-        auto skopeoVerbosity = utility::getSkopeoVerbosityOption();
-        auto inspectCommand = boost::format("%s %s inspect docker://%s") % skopeoPath % skopeoVerbosity % config->imageReference;
-        auto inspectOutput = std::string();
+        rapidjson::Document imageManifest;
         try {
-            inspectOutput = common::executeCommand(inspectCommand.str());
+            imageManifest = skopeoDriver.inspect("docker", config->imageReference.string());
         }
         catch(common::Error& e) {
             // Confirm skopeo failed because of image non existent or unauthorized access
@@ -140,8 +132,8 @@ namespace image_manager {
             auto manifestErrorString = std::string{"Error reading manifest"};
 
             /**
-             * Registries often respond differently to the same incorrect requests, making it very hard to understand
-             * whether an image is not present in the registry or is just private.
+             * Registries often respond differently to the same incorrect requests, making it very hard to
+             * consistently understand whether an image is not present in the registry or it's just private.
              * For example, Docker Hub responds both "denied" and "unauthorized", regardless if the image is private or non-existent;
              * Quay.io responds "unauthorized" regardless if the image is private or non-existent.
              * Additionally, the error strings might have different contents depending on the registry.
@@ -157,9 +149,9 @@ namespace image_manager {
 
                 if(errorMessage.find(unauthorizedAccessString) != std::string::npos
                    || errorMessage.find(deniedAccessString) != std::string::npos) {
-                    auto message = boost::format{"%s\nThe image may be private or not present in the remote registry."
+                    auto message = boost::format{"The image may be private or not present in the remote registry."
                                                  "\nDid you perform a login with the proper credentials?"
-                                                 "\nSee 'sarus help pull' (--login option)"} % messageHeader;
+                                                 "\nSee 'sarus help pull' (--login option)"};
                     printLog(message, common::LogLevel::GENERAL, std::cerr);
                 }
 
@@ -170,8 +162,7 @@ namespace image_manager {
             }
         }
 
-        auto registryImageData = common::parseJSON(inspectOutput);
-        return registryImageData["Digest"].GetString();
+        return imageManifest["Digest"].GetString();
     }
 
     void ImageManager::issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled() const {

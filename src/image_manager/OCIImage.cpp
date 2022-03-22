@@ -13,6 +13,7 @@
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 #include "image_manager/Utility.hpp"
+#include "image_manager/UmociDriver.hpp"
 
 
 namespace sarus {
@@ -40,47 +41,28 @@ OCIImage::OCIImage(std::shared_ptr<const common::Config> config, const boost::fi
     imageID = configHash;
 }
 
-common::PathRAII OCIImage::expand() const {
-    log(boost::format("> unpacking OCI image ..."), common::LogLevel::GENERAL);
-    auto umociPath = config->json["umociPath"].GetString();
-    auto umociArgs = common::CLIArguments{umociPath};
+common::PathRAII OCIImage::unpack() const {
+    log(boost::format("> unpacking OCI image"), common::LogLevel::GENERAL);
 
-    auto umociVerbosity = utility::getUmociVerbosityOption();
-    if (!umociVerbosity.empty()) {
-        umociArgs.push_back(umociVerbosity);
-    }
+    auto unpackDir = common::PathRAII{makeTemporaryUnpackDirectory()};
 
-    auto expansionDir = common::PathRAII{makeTemporaryExpansionDirectory()};
-    umociArgs += common::CLIArguments{"raw", "unpack", "--rootless",
-                                      "--image", imageDir.getPath().string()+":sarus-oci-image",
-                                      expansionDir.getPath().string()};
+    auto umociDriver = UmociDriver{config};
+    umociDriver.unpack(imageDir.getPath(), unpackDir.getPath());
 
-    auto start = std::chrono::system_clock::now();
-    auto status = common::forkExecWait(umociArgs);
-    if(status != 0) {
-        auto message = boost::format("%s exited with code %d") % umociArgs % status;
-        log(message, common::LogLevel::INFO);
-        exit(status);
-    }
-    auto end = std::chrono::system_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / double(1000);
-
-    log(boost::format("Elapsed time on unpacking    : %s [sec]") % elapsed, common::LogLevel::INFO);
     log(boost::format("Successfully unpacked OCI image"), common::LogLevel::INFO);
-
-    return std::move(expansionDir);
+    return std::move(unpackDir);
 }
 
-boost::filesystem::path OCIImage::makeTemporaryExpansionDirectory() const {
-    auto tempExpansionDir = common::makeUniquePathWithRandomSuffix(config->directories.temp / "expansion-directory");
+boost::filesystem::path OCIImage::makeTemporaryUnpackDirectory() const {
+    auto tempUnpackDir = common::makeUniquePathWithRandomSuffix(config->directories.temp / "unpack-directory");
     try {
-        common::createFoldersIfNecessary(tempExpansionDir);
+        common::createFoldersIfNecessary(tempUnpackDir);
     }
     catch(common::Error& e) {
-        auto message = boost::format("Error creating temporary expansion directory %s") % config->directories.temp;
+        auto message = boost::format("Error creating temporary unpacking directory %s") % tempUnpackDir;
         SARUS_RETHROW_ERROR(e, message.str());
     }
-    return tempExpansionDir;
+    return tempUnpackDir;
 }
 
 void OCIImage::release() {

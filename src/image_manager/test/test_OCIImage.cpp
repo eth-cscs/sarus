@@ -8,7 +8,6 @@
  *
  */
 
-#include "image_manager/Puller.hpp"
 #include "image_manager/OCIImage.hpp"
 #include "test_utility/config.hpp"
 #include "test_utility/unittest_main_function.hpp"
@@ -20,17 +19,17 @@ namespace test {
 TEST_GROUP(OCIImageTestGroup) {
 };
 
-TEST(OCIImageTestGroup, testExpand) {
+TEST(OCIImageTestGroup, unpack) {
     auto configRAII = test_utility::config::makeConfig();
     auto imagePath = boost::filesystem::path{__FILE__}.parent_path() / "saved_image_oci";
     auto ociImage = OCIImage{configRAII.config, imagePath};
 
-    auto expandedImage = ociImage.expand();
+    auto unpackedImage = ociImage.unpack();
 
-    auto expectedDirectory = expandedImage.getPath() / "etc";
+    auto expectedDirectory = unpackedImage.getPath() / "etc";
     CHECK(boost::filesystem::exists(expectedDirectory));
 
-    auto expectedFile = expandedImage.getPath() / "etc/os-release";
+    auto expectedFile = unpackedImage.getPath() / "etc/os-release";
     CHECK(boost::filesystem::exists(expectedFile));
 
     // Release the internal PathRAII so the OCIImage dtor does not remove the "saved_image_oci"
@@ -38,7 +37,7 @@ TEST(OCIImageTestGroup, testExpand) {
     ociImage.release();
 }
 
-TEST(OCIImageTestGroup, testMetadata) {
+TEST(OCIImageTestGroup, getMetadata) {
     auto configRAII = test_utility::config::makeConfig();
     auto imagePath = boost::filesystem::path{__FILE__}.parent_path() / "saved_image_oci";
     auto ociImage = OCIImage{configRAII.config, imagePath};
@@ -53,7 +52,7 @@ TEST(OCIImageTestGroup, testMetadata) {
     ociImage.release();
 }
 
-TEST(OCIImageTestGroup, testImageID) {
+TEST(OCIImageTestGroup, getImageID) {
     auto configRAII = test_utility::config::makeConfig();
     auto imagePath = boost::filesystem::path{__FILE__}.parent_path() / "saved_image_oci";
     auto ociImage = OCIImage{configRAII.config, imagePath};
