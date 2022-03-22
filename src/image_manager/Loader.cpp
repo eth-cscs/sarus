@@ -29,7 +29,7 @@ Loader::Loader(std::shared_ptr<const common::Config> config)
     : config{std::move(config)}
 {}
 
-LoadedImage Loader::load(const boost::filesystem::path& imageArchive) {
+OCIImage Loader::load(const boost::filesystem::path& imageArchive) {
     std::chrono::system_clock::time_point start, end;
     double elapsed;
 
@@ -50,7 +50,7 @@ LoadedImage Loader::load(const boost::filesystem::path& imageArchive) {
     printLog( boost::format("Creating temporary OCI image in: %s") % ociImagePath, common::LogLevel::GENERAL);
     skopeoArgs += common::CLIArguments{"copy",
                                        "docker-archive:"+imageArchive.string(),
-                                       "oci:"+ociImagePath.string()+":sarus-load"};
+                                       "oci:"+ociImagePath.string()+":sarus-oci-image"};
 
     start = std::chrono::system_clock::now();
     auto status = common::forkExecWait(skopeoArgs);
@@ -65,7 +65,7 @@ LoadedImage Loader::load(const boost::filesystem::path& imageArchive) {
 
     printLog(boost::format("Elapsed time on loading    : %s [sec]") % elapsed, common::LogLevel::INFO);
 
-    return LoadedImage{config, ociImagePath};
+    return OCIImage{config, ociImagePath};
 }
 
 void Loader::printLog(const boost::format &message, common::LogLevel LogLevel,

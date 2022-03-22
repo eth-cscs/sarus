@@ -17,7 +17,7 @@
 #include "common/Config.hpp"
 #include "common/Logger.hpp"
 #include "common/SarusImage.hpp"
-#include "image_manager/InputImage.hpp"
+#include "image_manager/OCIImage.hpp"
 #include "image_manager/ImageStore.hpp"
 #include "image_manager/Puller.hpp"
 
@@ -34,7 +34,8 @@ public:
     std::vector<common::SarusImage> listImages() const;
 
 private:
-    void processImage(const InputImage& image);
+    void processImage(const OCIImage& image, const std::string& digest);
+    std::string retrieveImageDigest() const;
     void issueWarningIfIsCentralizedRepositoryAndIsNotRootUser() const;
     void issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled() const;
     void issueErrorIfPullingByDigest() const;

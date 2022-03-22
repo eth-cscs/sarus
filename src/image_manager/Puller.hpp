@@ -23,7 +23,7 @@
 #include "common/Config.hpp"
 #include "common/Utility.hpp"
 #include "common/Logger.hpp"
-#include "image_manager/PulledImage.hpp"
+#include "image_manager/OCIImage.hpp"
 
 
 namespace sarus {
@@ -32,7 +32,7 @@ namespace image_manager {
 class Puller {
 public:
     Puller(std::shared_ptr<const common::Config> config);
-    PulledImage pull();
+    OCIImage pull();
     std::string retrieveImageDigest() const;
     web::json::value retrieveImageManifest();
     std::string getProxy();

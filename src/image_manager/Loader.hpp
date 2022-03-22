@@ -18,7 +18,7 @@
 
 #include "common/Config.hpp"
 #include "common/Logger.hpp"
-#include "image_manager/LoadedImage.hpp"
+#include "image_manager/OCIImage.hpp"
 
 
 namespace sarus {
@@ -27,7 +27,7 @@ namespace image_manager {
 class Loader {
 public:
     Loader(std::shared_ptr<const common::Config> config);
-    LoadedImage load(const boost::filesystem::path& imageArchive);
+    OCIImage load(const boost::filesystem::path& imageArchive);
 
 private:
     void printLog(const boost::format &message, common::LogLevel LogLevel,
