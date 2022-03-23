@@ -32,7 +32,7 @@ get_credentials:
     - echo "JFROG_TOKEN=${JFROG_TOKEN}" >> credentials.env
   artifacts:
     public: false
-    expire_in: 120 minute
+    expire_in: 200 minute
     reports:
       dotenv: credentials.env
 
@@ -93,14 +93,17 @@ artifact_store:
   tags:
     - docker
   script:
-    - echo ">>> Performing upload to JFROG"
+    - NAME="sarus-Release-${CI_COMMIT_TAG}.tar.gz"
+    - echo ">>> Performing upload ${NAME} to ${JFROG_URL}"
     - jfrog config add --artifactory-url=${JFROG_URL} --access-token=${JFROG_TOKEN} --user=${JFROG_USER}
     - jfrog config show
     - FILE="sarus-Release.tar.gz"
-    - jfrog rt u ${FILE} ${JFROG_REPO}/${FILE}
+    - jfrog rt u ${FILE} ${JFROG_REPO}/${NAME}
   dependencies:
     - get_credentials
     - standalone_release
+  rules:
+    - if: $CI_COMMIT_TAG
 
 .from_source:
   stage: from_source
@@ -228,6 +231,9 @@ cleanup_images:
 
 trigger_ops:
   stage: staging
+  variables:
+    TEMP_PACKAGE: "sarus-Release-$CI_COMMIT_TAG.tar.gz"
+    version: $CI_COMMIT_TAG
   trigger:
     project: 'ids/sarus-ops'
     strategy: depend

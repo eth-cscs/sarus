@@ -22,5 +22,5 @@ class TestCommandVersion(unittest.TestCase):
         out = subprocess.check_output(command).decode()
         lines = util.command_output_without_trailing_new_lines(out)
         assert len(lines) == 1
-        assert re.match(r"^\d+\.\d+\.\d+(-.+)*$", lines[0]) is not None \
+        assert re.match(r"^\d+(\.\d+)?(\.\d+)?([-+]+.*)?$", lines[0]) is not None \
                or lines[0] == "VERSION-NOT-AVAILABLE"
