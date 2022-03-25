@@ -76,7 +76,7 @@ command with ``sudo``:
    spack repo create ${SPACK_LOCAL_REPO}
    spack repo add ${SPACK_LOCAL_REPO}
 
-   # Import Spack packages for Cpprestsdk, RapidJSON and Sarus
+   # Import Spack packages for RapidJSON and Sarus
    cp -r <Sarus project root dir>/spack/packages/* ${SPACK_LOCAL_REPO}/packages/
 
    # Install Sarus
@@ -144,7 +144,7 @@ following example:
    spack repo create ${SPACK_LOCAL_REPO}
    spack repo add ${SPACK_LOCAL_REPO}
 
-   # Import Spack packages for Cpprestsdk, RapidJSON and Sarus
+   # Import Spack packages for RapidJSON and Sarus
    cp -r <Sarus project root dir>/spack/packages/* ${SPACK_LOCAL_REPO}/packages/
 
     # Install Sarus skipping the configure_installation script
@@ -194,7 +194,7 @@ Get Sarus source code:
     git clone git@github.com:eth-cscs/sarus.git
     cd sarus
 
-Create a new folder ``${build_dir}}`` to build Sarus from source. e.g. ``build-Release``:
+Create a new folder ``${build_dir}`` to build Sarus from source. e.g. ``build-Release``:
 
 .. literalinclude:: ../../CI/utility_functions.bash
    :language: bash
@@ -216,8 +216,7 @@ Configure and build (in this example ``${build_type} = Release`` and ``${toolcha
        cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/gcc.cmake \
              -DCMAKE_INSTALL_PREFIX=${prefix_dir} \
              -DCMAKE_BUILD_TYPE=Release \
-             -DCMAKE_PREFIX_PATH="<boost install dir>;<cpprestsdk install dir>;<libarchive install dir>;<rapidjson install dir>" \
-             -Dcpprestsdk_INCLUDE_DIR=<cpprestsdk include dir> \
+             -DCMAKE_PREFIX_PATH="<boost install dir>;<rapidjson install dir>" \
              ..
 
 .. note::

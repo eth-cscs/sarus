@@ -11,6 +11,7 @@
 #include "Utility.hpp"
 
 #include <fstream>
+#include <sstream>
 #include <array>
 #include <memory>
 #include <string>
@@ -1137,21 +1138,6 @@ std::string serializeJSON(const rapidjson::Value& json) {
     rj::Writer<rj::StringBuffer> writer(buffer);
     json.Accept(writer);
     return buffer.GetString();
-}
-
-rapidjson::Document convertCppRestJsonToRapidJson(web::json::value& cppRest) {
-    try {
-        std::stringstream is(cppRest.serialize());
-        rapidjson::IStreamWrapper isw(is);
-        rapidjson::Document doc;
-        doc.ParseStream(isw);
-        return doc;
-    }
-    catch(const std::exception& e) {
-        auto message = boost::format("Failed to parse rapidjson object from JSON string %s")
-            % cppRest.serialize();
-        SARUS_RETHROW_ERROR(e, message.str());
-    }
 }
 
 void logMessage(const boost::format& message, LogLevel level, std::ostream& out, std::ostream& err) {

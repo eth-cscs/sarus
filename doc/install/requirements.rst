@@ -61,9 +61,7 @@ Python 3 is required if you are interested to also run the integration tests:
 Additional dependencies
 -----------------------
 
-* `libarchive <https://github.com/libarchive/libarchive>`_ >= 3.4.1 (recommended 3.5.2)
 * `Boost libraries <https://www.boost.org/>`_ >= 1.60.x (recommended 1.77.x)
-* `C++ REST SDK <https://github.com/Microsoft/cpprestsdk>`_ >= v2.10.0 (recommended 2.10.18)
 * `RapidJSON <http://rapidjson.org/index.html>`_ commit 00dbcf2
 
 .. important::
@@ -75,19 +73,10 @@ package manager, we suggest to install from source:
 
 .. note::
     The following instructions will default to ``/usr/local`` as the installation
-    prefix. To install to a specific location, use the ``-DCMAKE_INSTALL_PREFIX``
-    CMake options for libarchive and C++ REST SDK and the ``--prefix`` option for
+    prefix. To install to a specific location, use the ``--prefix`` option for
     the Boost libraries.
 
 .. literalinclude:: ../../CI/installation/install_dep_boost.bash
-   :language: bash
-   :start-after: set -ex
-
-.. literalinclude:: ../../CI/installation/install_dep_libarchive.bash
-   :language: bash
-   :start-after: set -ex
-
-.. literalinclude:: ../../CI/installation/install_dep_cpprestsdk.bash
    :language: bash
    :start-after: set -ex
 

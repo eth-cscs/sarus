@@ -6,7 +6,7 @@ set -ex
 sudo zypper install -y gcc-c++ glibc-static wget which git gzip bzip2 \
     make autoconf automake libtool squashfs libcap-devel cmake \
     zlib-devel zlib-devel-static libopenssl-devel libexpat-devel \
-    libarchive-devel runc tini-static \
+    runc tini-static \
     libboost_atomic1_75_0-devel \
     libboost_chrono1_75_0-devel \
     libboost_filesystem1_75_0-devel \

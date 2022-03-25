@@ -33,15 +33,6 @@ include_directories(${RapidJSON_INCLUDE_DIR})
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
-find_package(cpprestsdk REQUIRED NAMES cpprestsdk cpprest)
-set(cpprestsdk_INCLUDE_DIR CACHE PATH "cpprestsdk's include directory. Specify this directory if cmake cannot find it automatically.")
-if(EXISTS ${cpprestsdk_INCLUDE_DIR})
-   include_directories(${cpprestsdk_INCLUDE_DIR})
-endif()
-
-find_package(LibArchive REQUIRED)
-include_directories(${LibArchive_INCLUDE_DIRS})
-
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 

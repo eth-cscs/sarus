@@ -62,8 +62,8 @@ class Sarus(CMakePackage):
     depends_on('expat', type='build')
     depends_on('squashfs', type=('build', 'run'))
     depends_on('boost@1.65.0: cxxstd=11')
-    depends_on('cpprestsdk@2.10.0:')
-    depends_on('libarchive@3.4.1:')
+    depends_on('cpprestsdk@2.10.0:', when='@:1.4.2')
+    depends_on('libarchive@3.4.1:', when='@:1.4.2')
     depends_on('rapidjson@00dbcf2', type='build')
 
     # autoconf is required to build Dropbear for the SSH hook

@@ -23,12 +23,6 @@ RUN apk update \
 COPY ./installation/install_dep_boost.bash /tmp/
 RUN . /tmp/install_dep_boost.bash
 
-COPY ./installation/install_dep_libarchive.bash /tmp/
-RUN . /tmp/install_dep_libarchive.bash
-
-COPY ./installation/install_dep_cpprestsdk.bash /tmp/
-RUN . /tmp/install_dep_cpprestsdk.bash
-
 COPY ./installation/install_dep_rapidjson.bash /tmp/
 RUN . /tmp/install_dep_rapidjson.bash
 

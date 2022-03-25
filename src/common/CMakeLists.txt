@@ -3,7 +3,7 @@ configure_file(ConfigBuildTime.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/ConfigBuildTim
 
 file(GLOB common_srcs "*.cpp" "*.c")
 add_library(common_library STATIC ${common_srcs})
-target_link_libraries(common_library ${Boost_LIBRARIES} cpprestsdk::cpprest)
+target_link_libraries(common_library ${Boost_LIBRARIES})
 
 if(${BUILD_STATIC})
     target_link_libraries(common_library pthread dl)

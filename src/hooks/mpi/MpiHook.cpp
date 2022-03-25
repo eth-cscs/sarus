@@ -184,7 +184,7 @@ void MpiHook::checkContainerMpiLibrariesHaveAbiVersion() const {
     log("Checking that container's MPI shared libs have ABI version",
         sarus::common::LogLevel::INFO);
 
-    for(const auto entry : hostToContainerMpiLibs) {
+    for(const auto& entry : hostToContainerMpiLibs) {
         bool found = false;
         for(const auto& lib : entry.second) {
             if(lib.hasMajorVersion()) {

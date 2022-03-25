@@ -524,24 +524,6 @@ TEST(UtilityTestGroup, serializeJSON) {
     CHECK_EQUAL(common::removeWhitespaces(actual), expected);
 }
 
-TEST(UtilityTestGroup, convertCppRestJsonToRapidJson) {
-    auto cppRest = web::json::value{};
-    cppRest[U("object")] = web::json::value{};
-    cppRest[U("object")][U("string")] = web::json::value("text");
-    cppRest[U("object")][U("list")][0] = web::json::value("element0");
-    cppRest[U("object")][U("list")][1] = web::json::value("element1");
-    cppRest[U("object")][U("subobject")] = web::json::value{};
-    cppRest[U("object")][U("subobject")][U("string")] = web::json::value("text");
-
-    auto rapidJson = common::convertCppRestJsonToRapidJson(cppRest);
-
-    CHECK_EQUAL(rapidJson["object"]["string"].GetString(), std::string{"text"});
-    CHECK_EQUAL(rapidJson["object"]["list"].Size(), 2);
-    CHECK_EQUAL(rapidJson["object"]["list"].GetArray()[0].GetString(), std::string{"element0"});
-    CHECK_EQUAL(rapidJson["object"]["list"].GetArray()[1].GetString(), std::string{"element1"});
-    CHECK_EQUAL(rapidJson["object"]["subobject"]["string"].GetString(), std::string{"text"});
-}
-
 TEST(UtilityTestGroup, setCpuAffinity_invalid_argument) {
     CHECK_THROWS(common::Error, common::setCpuAffinity({})); // no CPUs
 }

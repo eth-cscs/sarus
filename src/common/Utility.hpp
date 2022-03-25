@@ -21,7 +21,6 @@
 #include <boost/optional.hpp>
 #include <boost/format.hpp>
 #include <boost/filesystem.hpp>
-#include <cpprest/json.h>
 #include <rapidjson/document.h>
 #include <rapidjson/schema.h>
 
@@ -104,7 +103,6 @@ rapidjson::Document readAndValidateJSON(const boost::filesystem::path& jsonFile,
                                         const boost::filesystem::path& schemaFile);
 void writeJSON(const rapidjson::Value& json, const boost::filesystem::path& filename);
 std::string serializeJSON(const rapidjson::Value& json);
-rapidjson::Document convertCppRestJsonToRapidJson(web::json::value&);
 void logMessage(const std::string&, LogLevel, std::ostream& out = std::cout, std::ostream& err = std::cerr);
 void logMessage(const boost::format&, LogLevel, std::ostream& out = std::cout, std::ostream& err = std::cerr);
 

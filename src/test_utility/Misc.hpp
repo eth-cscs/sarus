@@ -11,6 +11,8 @@
 #ifndef sarus_test_utility_Misc_hpp
 #define sarus_test_utility_Misc_hpp
 
+#include <sstream>
+
 #include <rapidjson/prettywriter.h>
 
 #include "common/Error.hpp"

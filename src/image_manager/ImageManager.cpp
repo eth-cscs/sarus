@@ -10,7 +10,6 @@
 
 #include "image_manager/ImageManager.hpp"
 
-#include <cpprest/json.h>
 #include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
