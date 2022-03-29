@@ -31,7 +31,7 @@ class TestCommandImages(unittest.TestCase):
         self._test_command_images(is_centralized_repository=True)
 
     def _test_command_images(self, is_centralized_repository):
-        expected_header = ["REPOSITORY", "TAG", "DIGEST", "CREATED", "SIZE", "SERVER"]
+        expected_header = ["REPOSITORY", "TAG", "IMAGE", "ID", "CREATED", "SIZE", "SERVER"]
 
         # import image (with fixed digest)
         image_archive = os.path.dirname(os.path.abspath(__file__)) + "/saved_image.tar"
@@ -45,7 +45,7 @@ class TestCommandImages(unittest.TestCase):
         image_output = self._image_in_output_of_images_command(is_centralized_repository, "load/library/loaded_image", "latest")
         self.assertEqual(image_output[0], "load/library/loaded_image")
         self.assertEqual(image_output[1], "latest")
-        self.assertEqual(image_output[2], "<none>")
+        self.assertEqual(image_output[2], "501d1a8f0487")
         self.assertEqual(image_output[5], "load")
         self.assertTrue(re.match(r"1\.[89]\dMB", image_output[4]))
 

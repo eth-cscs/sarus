@@ -50,27 +50,27 @@ public:
     void execute() override {
         auto fieldGetters = std::unordered_map<std::string, field_getter_t>{};
         fieldGetters["SERVER"] = [](const common::SarusImage& image) {
-            return image.imageReference.server;
+            return image.reference.server;
         };
         fieldGetters["REPOSITORY"] = [](const common::SarusImage& image) {
-            if(image.imageReference.server != common::ImageReference::DEFAULT_SERVER) {
-                return image.imageReference.server
-                    + "/" + image.imageReference.repositoryNamespace
-                    + "/" + image.imageReference.image;
+            if(image.reference.server != common::ImageReference::DEFAULT_SERVER) {
+                return image.reference.server
+                    + "/" + image.reference.repositoryNamespace
+                    + "/" + image.reference.image;
             }
-            else if(image.imageReference.repositoryNamespace != common::ImageReference::DEFAULT_REPOSITORY_NAMESPACE) {
-                return image.imageReference.repositoryNamespace
-                    + "/" + image.imageReference.image;
+            else if(image.reference.repositoryNamespace != common::ImageReference::DEFAULT_REPOSITORY_NAMESPACE) {
+                return image.reference.repositoryNamespace
+                    + "/" + image.reference.image;
             }
             else {
-                return image.imageReference.image;
+                return image.reference.image;
             }
         };
         fieldGetters["TAG"] = [](const common::SarusImage& image) {
-            return image.imageReference.tag;
+            return image.reference.tag;
         };
-        fieldGetters["DIGEST"] = [](const common::SarusImage& image) {
-            return image.digest.empty() ? std::string{"<none>"} : image.digest;
+        fieldGetters["IMAGE ID"] = [](const common::SarusImage& image) {
+            return image.id.empty() ? std::string{"<none>"} : image.id;
         };
         fieldGetters["CREATED"] = [](const common::SarusImage& image) {
             return image.created;
@@ -155,9 +155,9 @@ private:
         width = std::max(width, minFieldWidth);
         formatString += "   %-" + std::to_string(width) + "." + std::to_string(width) + "s";
 
-        std::size_t printedCharactersOfDigest = 12;
-        formatString += "   %-" + std::to_string(printedCharactersOfDigest)
-            + "." + std::to_string(printedCharactersOfDigest) + "s";
+        std::size_t printedCharactersOfID = 12;
+        formatString += "   %-" + std::to_string(printedCharactersOfID)
+            + "." + std::to_string(printedCharactersOfID) + "s";
 
         width = maxFieldLength(images, fieldGetters["CREATED"]);
         width = std::max(width, minFieldWidth);
@@ -184,7 +184,7 @@ private:
     void printImages(   const std::vector<common::SarusImage>& images,
                         std::unordered_map<std::string, field_getter_t>& fieldGetters,
                         boost::format format) {
-        std::cout << format % "REPOSITORY" % "TAG" % "DIGEST" % "CREATED" % "SIZE" % "SERVER\n";
+        std::cout << format % "REPOSITORY" % "TAG" % "IMAGE ID" % "CREATED" % "SIZE" % "SERVER\n";
 
         for(const auto& image : images) {
             // For some weird reason we need to create a copy of the strings retrieved through
@@ -192,7 +192,7 @@ private:
             std::cout   << format
                         % std::string(fieldGetters["REPOSITORY"](image))
                         % std::string(fieldGetters["TAG"](image))
-                        % std::string(fieldGetters["DIGEST"](image))
+                        % std::string(fieldGetters["IMAGE ID"](image))
                         % std::string(fieldGetters["CREATED"](image))
                         % std::string(fieldGetters["SIZE"](image))
                         % std::string(fieldGetters["SERVER"](image))

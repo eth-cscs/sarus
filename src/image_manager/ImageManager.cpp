@@ -104,9 +104,9 @@ namespace image_manager {
         auto imageSize = common::getFileSize(config->getImageFile());
         auto imageSizeString = common::SarusImage::createSizeString(imageSize);
         auto created = common::SarusImage::createTimeString(std::time(nullptr));
-        // TODO Add ImageID to SarusImage (corresponds to OCI image config hash to be returned by image.expand())
         auto sarusImage = common::SarusImage{
             config->imageReference,
+            image.getImageID(),
             digest,
             imageSizeString,
             created,

@@ -152,7 +152,7 @@ You can use :program:`sarus images` to list the images available on the system:
 .. code-block:: bash
 
     $ sarus images
-    REPOSITORY                 TAG       DIGEST         CREATED               SIZE         SERVER
+    REPOSITORY                 TAG       IMAGE ID       CREATED               SIZE         SERVER
     <repo name>/hello-python   1.0       6bc9d2cd1831   2018-01-19T09:43:04   40.16MB      index.docker.io
 
 4. Run the image at scale with Sarus
@@ -240,7 +240,7 @@ as displayed by the :program:`sarus images` command in the first two columns:
 .. code-block:: bash
 
     $ sarus images
-    REPOSITORY                       TAG          DIGEST         CREATED               SIZE         SERVER
+    REPOSITORY                       TAG          IMAGE ID       CREATED               SIZE         SERVER
     nvcr.io/nvidia/k8s/cuda-sample   nbody        29e2298d9f71   2019-01-14T12:22:25   91.88MB      nvcr.io
 
     $ srun -N1 sarus run nvcr.io/nvidia/k8s/cuda-sample:nbody cat /usr/local/cuda/version.txt
@@ -338,7 +338,7 @@ the Sarus image:
 .. code-block:: bash
 
     $ sarus images
-    REPOSITORY       TAG          DIGEST         CREATED      SIZE         SERVER
+    REPOSITORY       TAG          IMAGE ID       CREATED      SIZE         SERVER
 
     $ srun sarus load ./debian.tar my_debian
     > expand image layers ...
@@ -349,7 +349,7 @@ the Sarus image:
     # created: <user home>/.sarus/images/load/library/my_debian/latest.meta
 
     $ sarus images
-    REPOSITORY               TAG          DIGEST         CREATED               SIZE         SERVER
+    REPOSITORY               TAG          IMAGE ID       CREATED               SIZE         SERVER
     load/library/my_debian   latest       2fe79f06fa6d   2018-01-31T15:08:56   47.04MB      load
 
 The image is now ready to use. Notice that the origin server for the image has
@@ -373,14 +373,14 @@ rmi` command:
 .. code-block:: bash
 
     $ sarus images
-    REPOSITORY       TAG          DIGEST         CREATED               SIZE         SERVER
+    REPOSITORY       TAG          IMAGE ID       CREATED               SIZE         SERVER
     library/debian   latest       6bc9d2cd1831   2018-01-31T14:11:27   40.17MB      index.docker.io
 
     $ sarus rmi debian:latest
     removed index.docker.io/library/debian/latest
 
     $ sarus images
-    REPOSITORY   TAG          DIGEST         CREATED      SIZE         SERVER
+    REPOSITORY   TAG          IMAGE ID       CREATED      SIZE         SERVER
 
 To remove images pulled from 3rd party registries or images loaded from local
 tar archives you need to enter the image descriptor (repository[:tag]) as
@@ -389,7 +389,7 @@ displayed by the :program:`sarus images` command:
 .. code-block:: bash
 
     $ sarus images
-    REPOSITORY               TAG          DIGEST         CREATED               SIZE         SERVER
+    REPOSITORY               TAG          IMAGE ID       CREATED               SIZE         SERVER
     load/library/my_debian   latest       2fe79f06fa6d   2018-01-31T15:08:56   47.04MB      load
 
     $ sarus rmi load/library/my_debian

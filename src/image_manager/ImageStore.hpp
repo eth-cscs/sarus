@@ -34,6 +34,7 @@ public:
     void removeImage(const common::ImageReference&);
     std::vector<common::SarusImage> listImages() const;
     const boost::filesystem::path& getMetadataFile() const { return metadataFile; }
+    std::string getImageID(const rapidjson::Value& imageMetadata) const;
 
 private:
     rapidjson::Document readRepositoryMetadata() const;

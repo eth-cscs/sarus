@@ -42,7 +42,7 @@ namespace image_manager {
      */
     void ImageStore::addImage(const common::SarusImage& image) {
         printLog(   boost::format("Adding image %s to metadata file %s")
-                    % image.imageReference % metadataFile,
+                    % image.reference % metadataFile,
                     common::LogLevel::INFO);
 
         common::Lockfile lock{metadataFile};
@@ -51,7 +51,7 @@ namespace image_manager {
         // remove previous entries with the same image reference (if any)
         auto& images = metadata["images"];
         for(auto it = images.Begin(); it != images.End(); ) {
-            if ((*it)["uniqueKey"].GetString() == image.imageReference.getUniqueKey()) {
+            if ((*it)["uniqueKey"].GetString() == image.reference.getUniqueKey()) {
                 it = images.Erase(it);
             } else {
                 ++it;
@@ -137,6 +137,7 @@ namespace image_manager {
                 imageMetadata["tag"].GetString()};
             auto image = common::SarusImage{
                 imageReference,
+                getImageID(imageMetadata),
                 imageMetadata["digest"].GetString(),
                 imageMetadata["datasize"].GetString(),
                 imageMetadata["created"].GetString(),
@@ -149,6 +150,18 @@ namespace image_manager {
         printLog(boost::format("Successfully created list of images."), common::LogLevel::DEBUG);
 
         return images;
+    }
+
+    /**
+     * The "id" property was introduced with Sarus 1.5.0
+     * This function provides compatibility with image metadata created by an earlier Sarus version
+     */
+    std::string ImageStore::getImageID(const rapidjson::Value& imageMetadata) const {
+        auto itr = imageMetadata.FindMember("id");
+        if (itr != imageMetadata.MemberEnd()) {
+            return itr->value.GetString();
+        }
+        return std::string{};
     }
 
     rapidjson::Document ImageStore::readRepositoryMetadata() const {
@@ -172,19 +185,22 @@ namespace image_manager {
         try {
             auto ret = rj::Value{rj::kObjectType};
             ret.AddMember(  "uniqueKey",
-                            rj::Value{image.imageReference.getUniqueKey().c_str(), allocator},
+                            rj::Value{image.reference.getUniqueKey().c_str(), allocator},
                             allocator);
             ret.AddMember(  "server",
-                            rj::Value{image.imageReference.server.c_str(), allocator},
+                            rj::Value{image.reference.server.c_str(), allocator},
                             allocator);
             ret.AddMember(  "namespace",
-                            rj::Value{image.imageReference.repositoryNamespace.c_str(), allocator},
+                            rj::Value{image.reference.repositoryNamespace.c_str(), allocator},
                             allocator);
             ret.AddMember(  "image",
-                            rj::Value{image.imageReference.image.c_str(), allocator},
+                            rj::Value{image.reference.image.c_str(), allocator},
                             allocator);
             ret.AddMember(  "tag",
-                            rj::Value{image.imageReference.tag.c_str(), allocator},
+                            rj::Value{image.reference.tag.c_str(), allocator},
+                            allocator);
+            ret.AddMember(  "id",
+                            rj::Value{image.id.c_str(), allocator},
                             allocator);
             ret.AddMember(  "digest",
                             rj::Value{image.digest.c_str(), allocator},

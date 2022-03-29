@@ -95,7 +95,7 @@ Below is an example of some basic usage of Sarus:
     > make squashfs image: "/home/user/.sarus/images/index.docker.io/library/alpine/latest.squashfs"
 
     $ sarus images
-    REPOSITORY   TAG          DIGEST         CREATED               SIZE         SERVER
+    REPOSITORY   TAG          IMAGE ID       CREATED               SIZE         SERVER
     alpine       latest       65e50dd72f89   2019-08-21T16:07:06   2.59MB       index.docker.io
 
     $ sarus run alpine cat /etc/os-release
