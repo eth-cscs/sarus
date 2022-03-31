@@ -297,6 +297,31 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
         };
         CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
     }
+    // Image annotations
+    {
+        metadata.labels["com.test.image.key"] = "image_value";
+        auto configRAII = test_utility::config::makeConfig();
+        auto& config = configRAII.config;
+        auto expectedAnnotations = std::unordered_map<std::string, std::string>{
+            {"com.test.dummy_key", "dummy_value"},
+            {"com.hooks.logging.level", "2"},
+            {"com.test.image.key", "image_value"},
+        };
+        CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
+        metadata.labels.erase("com.test.image.key");
+    }
+    // Engine annotations override image ones
+    {
+        metadata.labels["com.test.dummy_key"] = "image_value";
+        auto configRAII = test_utility::config::makeConfig();
+        auto& config = configRAII.config;
+        auto expectedAnnotations = std::unordered_map<std::string, std::string>{
+            {"com.test.dummy_key", "dummy_value"},
+            {"com.hooks.logging.level", "2"},
+        };
+        auto annot = ConfigsMerger{config, metadata}.getBundleAnnotations();
+        CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
+    }
 }
 
 TEST(ConfigsMergerTestGroup, command_to_execute) {

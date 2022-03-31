@@ -98,6 +98,13 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getEnvironmentInCont
 std::unordered_map<std::string, std::string> ConfigsMerger::getBundleAnnotations() const {
     auto annotations = config->commandRun.bundleAnnotations;
 
+    // Merge the labels from the image.
+    // Note that the unordered_map::insert() function only inserts an element into the container
+    // if the container doesn't already contain an element with an equivalent key.
+    // In other words, the elements from the map used as argument to insert() have lower priority
+    const auto& imageLabels = metadata.labels;
+    annotations.insert(imageLabels.cbegin(), imageLabels.cend());
+
     if(config->commandRun.enableGlibcReplacement) {
         annotations["com.hooks.glibc.enabled"] = "true";
     }

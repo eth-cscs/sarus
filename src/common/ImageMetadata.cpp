@@ -100,6 +100,15 @@ void ImageMetadata::write(const boost::filesystem::path& path) const {
                              allocator);
     }
 
+    if (!labels.empty()) {
+        json.AddMember("Labels", rapidjson::Value{rapidjson::kObjectType}, allocator);
+        for(const auto& kv : labels) {
+            auto key = rapidjson::Value{kv.first.c_str(), allocator};
+            auto value = rapidjson::Value{kv.second.c_str(), allocator};
+            json["Labels"].AddMember(key, value, allocator);
+        }
+    }
+
     common::writeJSON(json, path);
 
     logMessage("Successfully written image metadata file", LogLevel::INFO);
@@ -141,7 +150,11 @@ void ImageMetadata::parseJSON(const rapidjson::Value& json) {
             env[key] = value;
         }
     }
-    // TODO Parse labels!!
+    if (json.HasMember("Labels")) {
+        for (const auto& label : json["Labels"].GetObject()) {
+            labels[label.name.GetString()] = label.value.GetString();
+        }
+    }
 }
 
 bool operator==(const ImageMetadata& lhs, const ImageMetadata& rhs) {

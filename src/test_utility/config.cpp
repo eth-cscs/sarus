@@ -194,7 +194,11 @@ ConfigRAII makeConfig() {
     raii.config->imageReference = common::ImageReference{"test", "test", "test", "test_image"};
     common::createFileIfNecessary(raii.config->getMetadataFileOfImage());
     std::ofstream metadataStream(raii.config->getMetadataFileOfImage().c_str());
-    metadataStream << "{}";
+    metadataStream << "{"
+    "    \"Labels\": {"
+    "        \"com.test.image.key\": \"image_value\""
+    "    }"
+    "}";
     metadataStream.close();
 
     raii.config->commandRun.hostEnvironment = {{"key", "value"}};

@@ -45,6 +45,9 @@ TEST(OCIImageTestGroup, getMetadata) {
     auto expectedMetadata = common::ImageMetadata{};
     expectedMetadata.cmd = common::CLIArguments{"/bin/sh"};
     expectedMetadata.env["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
+    expectedMetadata.labels["com.example.project.git.url"] = "https://example.com/project.git";
+    expectedMetadata.labels["com.example.project.git.commit"] = "45a939b2999782a3f005621a8d0f29aa387e1d6b";
+    expectedMetadata.labels["com.test.engine.name"] = "sarus";
     CHECK(ociImage.getMetadata() == expectedMetadata);
 
     // Release the internal PathRAII so the OCIImage dtor does not remove the "saved_image_oci"
@@ -57,7 +60,7 @@ TEST(OCIImageTestGroup, getImageID) {
     auto imagePath = boost::filesystem::path{__FILE__}.parent_path() / "saved_image_oci";
     auto ociImage = OCIImage{configRAII.config, imagePath};
 
-    auto expectedImageID = std::string{"501d1a8f0487e93128df34ea349795bc324d5e0c0d5112e08386a9dfaff620be"};
+    auto expectedImageID = std::string{"2c2372178e530e6207e05f0756bb4b3018a92f62616c4af5fd4c42eb361e6079"};
     CHECK(ociImage.getImageID() == expectedImageID);
 
     // Release the internal PathRAII so the OCIImage dtor does not remove the "saved_image_oci"

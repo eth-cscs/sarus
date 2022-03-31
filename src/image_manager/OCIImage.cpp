@@ -23,6 +23,7 @@ OCIImage::OCIImage(std::shared_ptr<const common::Config> config, const boost::fi
     : config{std::move(config)},
       imageDir{imagePath}
 {
+    log(boost::format("Creating OCIImage object from image at %s") % imageDir.getPath(), common::LogLevel::DEBUG);
     auto imageIndex = common::readJSON(imageDir.getPath() / "index.json");
     auto schemaItr = imageIndex.FindMember("schemaVersion");
     if (schemaItr == imageIndex.MemberEnd() || schemaItr->value.GetUint() != 2) {
@@ -30,10 +31,12 @@ OCIImage::OCIImage(std::shared_ptr<const common::Config> config, const boost::fi
     }
 
     std::string manifestDigest = imageIndex["manifests"][0]["digest"].GetString();
+    log(boost::format("Found manifest digest: %s") % manifestDigest, common::LogLevel::DEBUG);
     auto manifestHash = manifestDigest.substr(manifestDigest.find(":")+1);
     auto imageManifest = common::readJSON(imageDir.getPath() / "blobs/sha256" / manifestHash);
 
     std::string configDigest = imageManifest["config"]["digest"].GetString();
+    log(boost::format("Found config digest: %s") % configDigest, common::LogLevel::DEBUG);
     auto configHash = configDigest.substr(configDigest.find(":")+1);
     auto imageConfig = common::readJSON(imageDir.getPath() / "blobs/sha256" / configHash);
 
