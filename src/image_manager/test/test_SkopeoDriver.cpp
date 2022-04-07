@@ -60,7 +60,7 @@ TEST(SkopeoDriverTestGroup, copyToOCIImage) {
     }
 }
 
-TEST(SkopeoDriverTestGroup, inspect) {
+TEST(SkopeoDriverTestGroup, inspectRaw) {
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
     boost::filesystem::remove_all(config->directories.cache);
@@ -68,10 +68,46 @@ TEST(SkopeoDriverTestGroup, inspect) {
     auto driver = image_manager::SkopeoDriver{config};
 
     auto imageReference = std::string{"quay.io/ethcscs/alpine:3.14"};
-    auto returnedManifest = driver.inspect("docker", imageReference);
+    auto expectedManifest = common::readJSON(boost::filesystem::path{__FILE__}.parent_path() / "expected_inspect_raw_manifest.json");
 
-    auto expectedManifest = common::readJSON(boost::filesystem::path{__FILE__}.parent_path() / "expected_inspect_manifest.json");
+    auto returnedManifest = driver.inspectRaw("docker", imageReference);
     CHECK(returnedManifest == expectedManifest);
+
+    // Check debug mode does not alter result
+    common::Logger::getInstance().setLevel(common::LogLevel::DEBUG);
+    returnedManifest = driver.inspectRaw("docker", imageReference);
+    CHECK(returnedManifest == expectedManifest);
+    common::Logger::getInstance().setLevel(common::LogLevel::WARN);
+}
+
+TEST(SkopeoDriverTestGroup, manifestDigest) {
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = configRAII.config;
+    boost::filesystem::remove_all(config->directories.cache);
+
+    auto driver = image_manager::SkopeoDriver{config};
+
+    auto rawManifestPath = boost::filesystem::path{__FILE__}.parent_path() / "expected_inspect_raw_manifest.json";
+    CHECK(driver.manifestDigest(rawManifestPath) == std::string{"sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d"});
+
+    // OCI image blobs have their own digests as filenames, so it's a useful property for more test cases
+    auto blobsPath = boost::filesystem::path{__FILE__}.parent_path() / "saved_image_oci/blobs/sha256";
+    auto testFile = blobsPath / "a64cda09ceb8b10ba4116e5b8f5628bfb72e35d7fbae76369bec728cbd839fd9";
+    CHECK(driver.manifestDigest(testFile) == std::string{"sha256:a64cda09ceb8b10ba4116e5b8f5628bfb72e35d7fbae76369bec728cbd839fd9"});
+
+    testFile = blobsPath / "2c2372178e530e6207e05f0756bb4b3018a92f62616c4af5fd4c42eb361e6079";
+    CHECK(driver.manifestDigest(testFile) == std::string{"sha256:2c2372178e530e6207e05f0756bb4b3018a92f62616c4af5fd4c42eb361e6079"});
+
+    // Test file writing by RapidJSON digests to the same value
+    auto jsonManifest = common::readJSON(rawManifestPath);
+    auto writtenManifest = common::makeUniquePathWithRandomSuffix(config->directories.repository / "testManifest");
+    common::writeJSON(jsonManifest, writtenManifest);
+    CHECK(driver.manifestDigest(writtenManifest) == std::string{"sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d"});
+
+    // Check debug mode does not alter result
+    common::Logger::getInstance().setLevel(common::LogLevel::DEBUG);
+    CHECK(driver.manifestDigest(rawManifestPath) == std::string{"sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d"});
+    common::Logger::getInstance().setLevel(common::LogLevel::WARN);
 }
 
 TEST(SkopeoDriverTestGroup, generateBaseArgs) {
@@ -100,6 +136,7 @@ TEST(SkopeoDriverTestGroup, generateBaseArgs) {
     skopeoArgs = driver.generateBaseArgs();
     expectedArgs = common::CLIArguments{"/usr/bin/skopeo"};
     CHECK(skopeoArgs == expectedArgs);
+    logger.setLevel(common::LogLevel::WARN);
 }
 
 }}} // namespace

@@ -56,6 +56,7 @@ public:
 
     bool empty() const;
     void clear();
+    std::string string() const;
 
 private:
     std::vector<char*> args;

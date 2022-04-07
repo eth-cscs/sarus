@@ -53,7 +53,7 @@ common::PathRAII OCIImage::unpack() const {
     umociDriver.unpack(imageDir.getPath(), unpackDir.getPath());
 
     log(boost::format("Successfully unpacked OCI image"), common::LogLevel::INFO);
-    return std::move(unpackDir);
+    return unpackDir;
 }
 
 boost::filesystem::path OCIImage::makeTemporaryUnpackDirectory() const {

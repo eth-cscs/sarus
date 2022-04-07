@@ -16,7 +16,6 @@
 
 #include <boost/format.hpp>
 #include <boost/filesystem.hpp>
-#include <rapidjson/document.h>
 
 #include "common/Config.hpp"
 #include "common/LogLevel.hpp"
@@ -30,7 +29,8 @@ class SkopeoDriver {
 public:
     SkopeoDriver(std::shared_ptr<const common::Config> config);
     boost::filesystem::path copyToOCIImage(const std::string& sourceTransport, const std::string& sourceReference) const;
-    rapidjson::Document inspect(const std::string& sourceTransport, const std::string& sourceReference) const;
+    rapidjson::Document inspectRaw(const std::string& sourceTransport, const std::string& sourceReference) const;
+    std::string manifestDigest(const boost::filesystem::path& manifestPath) const;
     common::CLIArguments generateBaseArgs() const;
 
 private:

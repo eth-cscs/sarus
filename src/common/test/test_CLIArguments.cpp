@@ -42,4 +42,14 @@ TEST(CLIArgumentsTestGroup, deserialize) {
     CHECK(args == expected);
 };
 
+TEST(CLIArgumentsTestGroup, string) {
+    std::stringstream is("[\"command\", \"arg0\", \"arg1\"]");
+
+    common::CLIArguments args;
+    is >> args;
+
+    auto expected = std::string{"command arg0 arg1"};
+    CHECK(args.string() == expected);
+};
+
 SARUS_UNITTEST_MAIN_FUNCTION();

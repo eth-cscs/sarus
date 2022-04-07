@@ -120,48 +120,50 @@ namespace image_manager {
     }
 
     std::string ImageManager::retrieveImageDigest() const {
-        rapidjson::Document imageManifest;
-        try {
-            imageManifest = skopeoDriver.inspect("docker", config->imageReference.string());
-        }
-        catch(common::Error& e) {
-            // Confirm skopeo failed because of image non existent or unauthorized access
-            auto errorMessage = std::string(e.what());
-            auto exitCodeString = std::string{"Process terminated with status 1"};
-            auto manifestErrorString = std::string{"Error reading manifest"};
+        auto imageDigest = std::string{};
+        auto inspectOutput = skopeoDriver.inspectRaw("docker", config->imageReference.string());
 
-            /**
-             * Registries often respond differently to the same incorrect requests, making it very hard to
-             * consistently understand whether an image is not present in the registry or it's just private.
-             * For example, Docker Hub responds both "denied" and "unauthorized", regardless if the image is private or non-existent;
-             * Quay.io responds "unauthorized" regardless if the image is private or non-existent.
-             * Additionally, the error strings might have different contents depending on the registry.
-             */
-            auto deniedAccessString = std::string{"denied:"};
-            auto unauthorizedAccessString = std::string{"unauthorized:"};
-
-            if(errorMessage.find(exitCodeString) != std::string::npos
-               && errorMessage.find(manifestErrorString) != std::string::npos) {
-                auto messageHeader = boost::format{"Failed to pull image '%s'"
-                                                   "\nError reading manifest from registry."} % config->imageReference;
-                printLog(messageHeader, common::LogLevel::GENERAL, std::cerr);
-
-                if(errorMessage.find(unauthorizedAccessString) != std::string::npos
-                   || errorMessage.find(deniedAccessString) != std::string::npos) {
-                    auto message = boost::format{"The image may be private or not present in the remote registry."
-                                                 "\nDid you perform a login with the proper credentials?"
-                                                 "\nSee 'sarus help pull' (--login option)"};
-                    printLog(message, common::LogLevel::GENERAL, std::cerr);
-                }
-
-                SARUS_THROW_ERROR(errorMessage, common::LogLevel::INFO);
-            }
-            else {
-                SARUS_RETHROW_ERROR(e, "Error accessing image in the remote registry.");
-            }
+        auto mediaTypeItr =  inspectOutput.FindMember("mediaType");
+        if (mediaTypeItr == inspectOutput.MemberEnd()) {
+            auto message = boost::format("Failed to pull image '%s'\n"
+                                         "Unknown manifest media type returned by remote registry."
+                                         "The 'mediaType' property could not be found") % config->imageReference;
+            SARUS_THROW_ERROR(message.str());
         }
 
-        return imageManifest["Digest"].GetString();
+        auto mediaType = std::string{mediaTypeItr->value.GetString()};
+        // If we have a recognized manifest type, the image digest is the sha256 digest of the manifest
+        if (mediaType == "application/vnd.oci.image.manifest.v1+json"
+            || mediaType == "application/vnd.docker.distribution.manifest.v2+json"
+            || mediaType == "application/vnd.docker.distribution.manifest.v1+json") {
+            printLog("Computing image digest from raw manifest", common::LogLevel::INFO);
+            auto manifestFile = common::PathRAII(common::makeUniquePathWithRandomSuffix(config->directories.temp / "sarusPullManifest"));
+            common::writeJSON(inspectOutput, manifestFile.getPath());
+            imageDigest = skopeoDriver.manifestDigest(manifestFile.getPath());
+        }
+        // If we have an OCI index or Docker manifest list (aka "fat manifest"), retrieve the digest
+        // of the manifest for the current platform (hardware arch + OS)
+        else if (mediaType == "application/vnd.oci.image.index.v1+json"
+                 || mediaType == "application/vnd.docker.distribution.manifest.list.v2+json") {
+            printLog("Retrieving image digest from OCI index or Docker manifest list", common::LogLevel::INFO);
+            auto platform = utility::getCurrentOCIPlatform();
+            imageDigest = utility::getPlatformDigestFromOCIIndex(inspectOutput, platform);
+            if (imageDigest.empty()) {
+                printLog("Unable to retrieve registry digest for image being pulled. Attempting to continue with empty digest",
+                         common::LogLevel::WARN);
+            }
+        }
+        // The OCI Image spec states that mediaTypes unknown to the implementation must be ignored
+        else {
+            auto message = boost::format("Unknown mediaType of manifest returned by remote registry: %s. "
+                                         "Attempting to continue with empty digest") % mediaType;
+            printLog(message, common::LogLevel::WARN);
+        }
+
+        auto message = boost::format("Got image digest: %s") % imageDigest;
+        printLog(message, common::LogLevel::INFO);
+
+        return imageDigest;
     }
 
     void ImageManager::issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled() const {
@@ -195,7 +197,11 @@ namespace image_manager {
     }
 
     void ImageManager::printLog(const boost::format& message, common::LogLevel LogLevel, std::ostream& outStream, std::ostream& errStream) const {
-        common::Logger::getInstance().log(message.str(), sysname, LogLevel, outStream, errStream);
+        printLog(message.str(), LogLevel, outStream, errStream);
+    }
+
+    void ImageManager::printLog(const std::string& message, common::LogLevel LogLevel, std::ostream& outStream, std::ostream& errStream) const {
+        common::Logger::getInstance().log(message, sysname, LogLevel, outStream, errStream);
     }
 
 } // namespace

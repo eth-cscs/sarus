@@ -138,7 +138,7 @@ namespace image_manager {
             auto image = common::SarusImage{
                 imageReference,
                 getImageID(imageMetadata),
-                imageMetadata["digest"].GetString(),
+                imageMetadata["registryDigest"].GetString(),
                 imageMetadata["datasize"].GetString(),
                 imageMetadata["created"].GetString(),
                 boost::filesystem::path{imageMetadata["imagePath"].GetString()},
@@ -158,6 +158,18 @@ namespace image_manager {
      */
     std::string ImageStore::getImageID(const rapidjson::Value& imageMetadata) const {
         auto itr = imageMetadata.FindMember("id");
+        if (itr != imageMetadata.MemberEnd()) {
+            return itr->value.GetString();
+        }
+        return std::string{};
+    }
+
+    /**
+     * The "registryDigest" property was introduced with Sarus 1.5.0
+     * This function provides compatibility with image metadata created by an earlier Sarus version
+     */
+    std::string ImageStore::getRegistryDigest(const rapidjson::Value& imageMetadata) const {
+        auto itr = imageMetadata.FindMember("registryDigest");
         if (itr != imageMetadata.MemberEnd()) {
             return itr->value.GetString();
         }
@@ -202,8 +214,8 @@ namespace image_manager {
             ret.AddMember(  "id",
                             rj::Value{image.id.c_str(), allocator},
                             allocator);
-            ret.AddMember(  "digest",
-                            rj::Value{image.digest.c_str(), allocator},
+            ret.AddMember(  "registryDigest",
+                            rj::Value{image.registryDigest.c_str(), allocator},
                             allocator);
             ret.AddMember(  "imagePath",
                             rj::Value{image.imageFile.string().c_str(), allocator},

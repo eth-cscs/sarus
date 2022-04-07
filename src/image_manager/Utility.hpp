@@ -13,13 +13,22 @@
 
 #include <string>
 
+#include <boost/format.hpp>
+#include <rapidjson/document.h>
+
+#include "common/Logger.hpp"
+
 namespace sarus {
 namespace image_manager {
 namespace utility {
 
-std::string getSkopeoVerbosityOption();
+rapidjson::Document getCurrentOCIPlatform();
+std::string getPlatformDigestFromOCIIndex(const rapidjson::Document& index, const rapidjson::Document& targetPlatform);
 
-std::string getUmociVerbosityOption();
+void printLog(const boost::format& message, common::LogLevel LogLevel,
+              std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr);
+void printLog(const std::string& message, common::LogLevel LogLevel,
+              std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr);
 
 }
 }

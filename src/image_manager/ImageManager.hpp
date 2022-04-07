@@ -41,6 +41,8 @@ private:
     void issueErrorIfPullingByDigest() const;
     void printLog(const boost::format& message, common::LogLevel LogLevel,
                   std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
+    void printLog(const std::string& message, common::LogLevel LogLevel,
+            std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
 
 private:
     std::shared_ptr<const common::Config> config;

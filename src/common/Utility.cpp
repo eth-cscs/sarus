@@ -1017,6 +1017,7 @@ rapidjson::Document parseJSON(const std::string& string) {
         auto message = boost::format(
             "Error parsing JSON string:\n'%s'\nInput data is not valid JSON\n"
             "Error(offset %u): %s")
+            % string
             % static_cast<unsigned>(json.GetErrorOffset())
             % rapidjson::GetParseError_En(json.GetParseError());
         SARUS_THROW_ERROR(message.str());
@@ -1123,7 +1124,8 @@ void writeJSON(const rapidjson::Value& json, const boost::filesystem::path& file
             SARUS_THROW_ERROR(message.str());
         }
         rapidjson::OStreamWrapper osw(ofs);
-        rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+        rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(osw);
+        writer.SetIndent(' ', 3);
         json.Accept(writer);
     }
     catch(const std::exception& e) {

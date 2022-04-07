@@ -13,6 +13,7 @@
 #include <iterator>
 #include <sstream>
 #include <boost/format.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 
@@ -95,6 +96,11 @@ void CLIArguments::clear() {
     args = { nullptr };
 }
 
+std::string CLIArguments::string() const {
+    auto stringArgs = std::vector<std::string>{this->begin(), this->end()};
+    return boost::algorithm::join(stringArgs, " ");
+}
+
 bool operator==(const CLIArguments& lhs, const CLIArguments& rhs) {
     if(lhs.argc() != rhs.argc()) {
         return false;
@@ -134,8 +140,6 @@ std::ostream& operator<<(std::ostream& os, const CLIArguments& args) {
 }
 
 std::istream& operator>>(std::istream& is, CLIArguments& args) {
-    std::string s(  std::istreambuf_iterator<char>(is),
-                    std::istreambuf_iterator<char>());
     rapidjson::IStreamWrapper sw(is);
     rapidjson::Document doc;
     doc.ParseStream(sw);
