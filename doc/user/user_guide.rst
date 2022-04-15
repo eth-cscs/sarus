@@ -373,44 +373,31 @@ digest is pointing to.
 Pulling images using a proxy
 ----------------------------
 
-Sarus can use a proxy to connect to remote registries and pull images depending
-on the values of specific environment variables, which are also used by other
-tools and libraries like `curl <https://everything.curl.dev/usingcurl/proxies/env>`_
-or Python's `urllib <https://docs.python.org/3/library/urllib.request.html#urllib.request.getproxies>`_.
+Sarus delegates communication with remote registries to `Skopeo
+<https://github.com/containers/skopeo>`_, which in turn uses the Golang standard
+library to implement http connections. The usage of a proxy by the Golang
+`http package <https://pkg.go.dev/net/http>`_ can be controlled through a set of
+`environment variables <https://pkg.go.dev/net/http#ProxyFromEnvironment>`_.
 
-If the ``https_proxy`` or ``HTTPS_PROXY`` environment variables are set, Sarus
-uses the value as the proxy hostname for default connections (which use the
-HTTPS protocol). In case both variables are set, the lower case version
-is preferred.
+The ``HTTP_PROXY`` and ``HTTPS_PROXY`` variables (or their lowercase versions)
+are used to indicate proxies for the respective protocols. For https requests,
+``HTTPS_PROXY`` takes precedence over ``HTTP_PROXY``.
 
-.. code-block:: bash
+To connect to a specific registry without going through the proxy, the
+``NO_PROXY`` or ``no_proxy`` environment variables can be used. Such variables
+should contain a list of comma-separated values for which a proxy connection is
+not used.
 
-    https_proxy=https://proxy.example.com:3128
-
-When pulling from a registry which is configured as insecure,
-the ``http_proxy`` environment variable is looked up for a proxy hostname.
-Only the lower case version of ``http_proxy`` is used because of
-`security reasons <https://everything.curl.dev/usingcurl/proxies/env#http_proxy-in-lower-case-only>`_
-when running in CGI environments.
-
-If the ``ALL_PROXY`` environment variable is set, Sarus uses its value as proxy
-hostname for all connections, whether secure or insecure.
-
-To connect to a specific registry without going through the proxy, even when
-a proxy is set by one of the previously mentioned variables, the ``no_proxy``
-or ``NO_PROXY`` environment variables can be used. Such variables should contain
-a list of comma-separated hostnames for which a proxy connection is not used.
-For example, to append Docker Hub to the list of hosts excluded from proxying:
+The values of the environment variables may be either a complete URL or in a
+``host[:port]`` format, in which case the ``http`` scheme is assumed.
+The supported schemes are ``http``, ``https``, and ``socks5``.
+For example:
 
 .. code-block:: bash
 
-    no_proxy=example.domain.com,index.docker.io
-
-The entries in ``no_proxy`` and ``NO_PROXY`` must match a registry hostname exactly
-in order to be effective. Use of an asterisk (``\*``) as a wildcard for hostname
-expansion is not supported. However, the variables can be set to a single asterisk
-to match all hosts. In case both variables are set, the lower case version
-is preferred.
+    http_proxy=socket5://127.0.0.1:3128
+    https_proxy=https://127.0.0.1:3128
+    no_proxy=localhost,127.0.0.1,*.docker.io
 
 Pulling images from insecure registries
 ---------------------------------------
