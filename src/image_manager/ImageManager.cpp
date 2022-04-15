@@ -33,7 +33,7 @@ namespace image_manager {
     /**
      * Pull the container image and add to the repository
      */
-    void ImageManager::pullImage() {
+    void ImageManager::pullImage(const std::string& transport) {
         issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled();
         issueWarningIfIsCentralizedRepositoryAndIsNotRootUser();
 
@@ -60,7 +60,7 @@ namespace image_manager {
         // If pulling only with tag, attempt to complete the reference by retrieving
         // the digest from the remote registry, to be consistent with Docker behavior
         if (pullReference.digest.empty()) {
-            pullReference.digest = retrieveRegistryDigest(pullReference);
+            pullReference.digest = retrieveRegistryDigest(transport, pullReference);
         }
         printLog( boost::format("# image digest     : %s") % pullReference.digest, common::LogLevel::GENERAL);
 
@@ -77,7 +77,7 @@ namespace image_manager {
         // Re-normalize pullReference to always pull by digest internally.
         // This avoids inconsistencies in case the reference resolution done by Skopeo mismatches
         // with the registry digest found by Sarus
-        auto ociImagePath = skopeoDriver.copyToOCIImage("docker", pullReference.normalize().string());
+        auto ociImagePath = skopeoDriver.copyToOCIImage(transport, pullReference.normalize().string());
         processImage(OCIImage{config, ociImagePath}, pullReference);
 
         printLog("Successfully pulled image", common::LogLevel::INFO);
@@ -149,9 +149,9 @@ namespace image_manager {
         squashfsRAII.release();
     }
 
-    std::string ImageManager::retrieveRegistryDigest(const common::ImageReference& targetReference) const {
+    std::string ImageManager::retrieveRegistryDigest(const std::string& transport, const common::ImageReference& targetReference) const {
         auto imageDigest = std::string{};
-        auto inspectOutput = skopeoDriver.inspectRaw("docker", targetReference.string());
+        auto inspectOutput = skopeoDriver.inspectRaw(transport, targetReference.string());
 
         auto mediaTypeItr =  inspectOutput.FindMember("mediaType");
         if (mediaTypeItr == inspectOutput.MemberEnd()) {

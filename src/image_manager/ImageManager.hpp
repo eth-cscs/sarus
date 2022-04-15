@@ -28,14 +28,14 @@ namespace image_manager {
 class ImageManager {    
 public:        
     ImageManager(std::shared_ptr<const common::Config> config);
-    void pullImage();
+    void pullImage(const std::string& transport);
     void loadImage(const std::string& format, const boost::filesystem::path& archive);
     void removeImage();
     std::vector<common::SarusImage> listImages() const;
 
 private:
     void processImage(const OCIImage& image, const common::ImageReference& storageReference);
-    std::string retrieveRegistryDigest(const common::ImageReference& targetReference) const;
+    std::string retrieveRegistryDigest(const std::string& transport, const common::ImageReference& targetReference) const;
     void issueWarningIfIsCentralizedRepositoryAndIsNotRootUser() const;
     void issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled() const;
     void printLog(const boost::format& message, common::LogLevel LogLevel,

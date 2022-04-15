@@ -299,6 +299,9 @@ std::string SkopeoDriver::getTransportString(const std::string& transport) const
     else if (transport == std::string{"sif"}) {
         return std::string{"sif:"};
     }
+    else if (transport == std::string{"containers-storage"}) {
+        return std::string{"containers-storage:"};
+    }
 
     auto message = boost::format("Transport type not supported: %s") % transport;
     SARUS_THROW_ERROR(message.str());
