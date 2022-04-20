@@ -35,7 +35,7 @@ public:
 
 private:
     void processImage(const OCIImage& image, const std::string& digest);
-    std::string retrieveImageDigest() const;
+    std::string retrieveRegistryDigest() const;
     void issueWarningIfIsCentralizedRepositoryAndIsNotRootUser() const;
     void issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled() const;
     void issueErrorIfPullingByDigest() const;

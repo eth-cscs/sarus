@@ -23,11 +23,15 @@ struct ImageReference {
     std::string repositoryNamespace;
     std::string image;
     std::string tag;
+    std::string digest;
+    std::string getFullName() const;
     std::string string() const;
+    std::string normalize() const;
     std::string getUniqueKey() const;
 
     static const std::string DEFAULT_SERVER;
     static const std::string DEFAULT_REPOSITORY_NAMESPACE;
+    static const std::string DEFAULT_TAG;
 };
 
 bool operator==(const ImageReference&, const ImageReference&);

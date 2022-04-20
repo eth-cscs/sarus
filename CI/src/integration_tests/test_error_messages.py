@@ -88,7 +88,7 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = ("Invalid image ID '///'\nSee 'sarus help load'")
         self._check(command, expected_message)
 
-        command = ["sarus", "load", "--temp-dir=/invalid-dir", "archive.tar", "imageRef"]
+        command = ["sarus", "load", "--temp-dir=/invalid-dir", "archive.tar", "quay.io/ethcscs/alpine"]
         expected_message = "Invalid temporary directory \"/invalid-dir\""
         self._check(command, expected_message)
 

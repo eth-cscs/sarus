@@ -12,13 +12,13 @@
 
 #include <chrono>
 
-#include <boost/regex.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string/join.hpp>
 
 #include "common/Config.hpp"
 #include "common/Utility.hpp"
 #include "cli/MountParser.hpp"
+#include "cli/regex.hpp"
 
 
 namespace sarus {
@@ -26,23 +26,32 @@ namespace cli {
 namespace utility {
 
 /**
- * Get image's name from "image<:tag>"
+ * Parse server, namespace and individual image name from a string matching cli::regex::name
  */
-static std::string getImageName(const std::string& in) {
-    if ( in.find(":") == std::string::npos) {
-        return in;
-    }
-    return in.substr( 0, in.find_last_of(":") );
-}
+static std::tuple<std::string, std::string, std::string> parseNameMatch(const std::string& in) {
+    auto server = common::ImageReference::DEFAULT_SERVER;
+    auto repositoryNamespace = common::ImageReference::DEFAULT_REPOSITORY_NAMESPACE;
+    auto image = std::string{};
+    auto first_separator = in.find_first_of("/");
+    auto last_separator = in.find_last_of("/");
 
-/**
- * Get image's tag from "image<:tag>"
- */
-static std::string getImageTag(const std::string& in) {
-    if ( in.find(":") == std::string::npos) {
-        return "latest";
+    // No separators found: input is short image name
+    if (last_separator == std::string::npos){
+        image = in;
     }
-    return in.substr( in.find_last_of(":") + 1, in.size() - in.find_last_of(":") - 1);
+    // Only one separator: input is "namespace/image"
+    else if (first_separator == last_separator){
+        repositoryNamespace = in.substr(0, first_separator);
+        image = in.substr(last_separator+1);
+    }
+    // Two or more separators
+    else {
+        server = in.substr(0, first_separator);
+        repositoryNamespace = in.substr(first_separator + 1, last_separator - first_separator - 1);
+        image = in.substr(last_separator+1);
+    }
+
+    return std::tuple<std::string, std::string, std::string>{server, repositoryNamespace, image};
 }
 
 /**
@@ -66,7 +75,7 @@ bool isValidCLIInputImageReference(const std::string& imageReference) {
 }
 
 /**
- * Parse the input name of container image
+ * Parse the CLI arguments corresponding to an image reference
  */
 common::ImageReference parseImageReference(const common::CLIArguments& imageArgs) {
     if(imageArgs.argc() != 1) {
@@ -80,57 +89,53 @@ common::ImageReference parseImageReference(const common::CLIArguments& imageArgs
 }
 
 /**
- * Parse the input reference of container image
+ * Parse the input reference of a container image
  */
 common::ImageReference parseImageReference(const std::string &input) {
-    printLog( boost::format("parsing image ID"), common::LogLevel::DEBUG);
+    printLog( boost::format("Parsing image ID from string: %s") % input, common::LogLevel::DEBUG);
 
-    std::string server;
-    std::string repositoryNamespace;
-    std::string image;
-    std::string tag;
+    auto server              = std::string{};
+    auto repositoryNamespace = std::string{};
+    auto image               = std::string{};
+    auto tag                 = std::string{};
+    auto digest              = std::string{};
 
     if(!isValidCLIInputImageReference(input)) {
         auto message = boost::format("Invalid image ID '%s'\n"
-                                    "Image IDs are not allowed to contain the sequence '..'") % input;
+                                     "Image IDs are not allowed to contain the sequence '..'") % input;
         SARUS_THROW_ERROR(message.str());
     }
 
-    boost::regex withServer("(.*?)/(.*?)/(.*?)");
-    boost::regex withNamespace("(.*?)/(.*?)");
-    boost::cmatch matches;
+    boost::smatch matches;
+    if (boost::regex_match(input, matches, regex::reference)) {
+        auto nameMatch   = matches[1];
+        auto tagMatch    = matches[2];
+        auto digestMatch = matches[3];
 
-    // matches pattern <hostname>/<repositoryNamespace>/image<:tag>
-    if(boost::regex_match( input.c_str(), matches, withServer)) {
-        server = matches[1].str();
-        repositoryNamespace = matches[2].str();
-        image  = getImageName(matches[3].str());
-        tag    = getImageTag(matches[3].str());
+        std::tie(server, repositoryNamespace, image) = parseNameMatch(nameMatch);
+
+        if (tagMatch.matched) {
+            tag = tagMatch.str();
+        }
+        else {
+            // If there is not a digest, use default tag
+            // If there is a digest, the tag does not matter
+            if (!digestMatch.matched) {
+                tag = common::ImageReference::DEFAULT_TAG;
+            }
+        }
+
+        if (digestMatch.matched) {
+            digest = digestMatch.str();
+        }
     }
-    // matches pattern <repositoryNamespace>/image<:tag>
-    else if(boost::regex_match( input.c_str(), matches, withNamespace)) {
-        server = common::ImageReference::DEFAULT_SERVER;
-        repositoryNamespace = matches[1];
-        image  = getImageName(matches[2].str());
-        tag    = getImageTag(matches[2].str());
-    }
-    // matches pattern image<:tag>
     else {
-        server = common::ImageReference::DEFAULT_SERVER;
-        repositoryNamespace = common::ImageReference::DEFAULT_REPOSITORY_NAMESPACE;
-        image  = getImageName(input);
-        tag    = getImageTag(input);
-    }
-
-    // if empty field exists, throw exception
-    if(server == "" || repositoryNamespace == "" || image == "" || tag == "") {
         auto message = boost::format("Invalid image ID '%s'") % input;
         SARUS_THROW_ERROR(message.str());
     }
 
-    auto imageReference = common::ImageReference{ server, repositoryNamespace, image, tag };
-
-    printLog(boost::format("successfully parsed image ID %s") % imageReference, common::LogLevel::DEBUG);
+    auto imageReference = common::ImageReference{server, repositoryNamespace, image, tag, digest};
+    printLog(boost::format("Successfully parsed image ID %s") % imageReference, common::LogLevel::DEBUG);
 
     return imageReference;
 }

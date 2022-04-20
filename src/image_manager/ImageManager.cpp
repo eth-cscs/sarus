@@ -46,7 +46,7 @@ namespace image_manager {
         printLog( boost::format("# temp directory   : %s") % config->directories.temp, common::LogLevel::GENERAL);
         printLog( boost::format("# images directory : %s") % config->directories.images, common::LogLevel::GENERAL);
 
-        std::string imageDigest = retrieveImageDigest();
+        std::string imageDigest = retrieveRegistryDigest();
         printLog( boost::format("# image digest     : %s") % imageDigest, common::LogLevel::GENERAL);
 
         auto ociImagePath = skopeoDriver.copyToOCIImage("docker", config->imageReference.string());
@@ -119,7 +119,7 @@ namespace image_manager {
         squashfsRAII.release();
     }
 
-    std::string ImageManager::retrieveImageDigest() const {
+    std::string ImageManager::retrieveRegistryDigest() const {
         auto imageDigest = std::string{};
         auto inspectOutput = skopeoDriver.inspectRaw("docker", config->imageReference.string());
 
@@ -188,7 +188,7 @@ namespace image_manager {
         // from https://github.com/opencontainers/go-digest/blob/master/digest.go
         boost::regex digestRegexp("@[a-z0-9]+(?:[.+_-][a-z0-9]+)*");
         boost::smatch matches;
-        if(boost::regex_search(config->imageReference.image, matches, digestRegexp, boost::regex_constants::match_partial)) {
+        if(boost::regex_search(config->imageReference.string(), matches, digestRegexp, boost::regex_constants::match_partial)) {
             auto message = boost::format("Pulling images by digest is currently not supported. "
                                          "The feature will be introduced in a future release");
             printLog(message, common::LogLevel::GENERAL, std::cerr);
