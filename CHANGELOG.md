@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Added [Skopeo](https://github.com/containers/skopeo) as a dependency to pull or load container images
 - Added [Umoci](https://umo.ci/) as a dependency to unpack OCI images
+- Added support for pulling images by digest
 - Added support for labels defined in OCI image configurations
 
 ### Changed

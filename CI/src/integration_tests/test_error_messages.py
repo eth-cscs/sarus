@@ -88,6 +88,14 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = ("Invalid image ID '///'\nSee 'sarus help load'")
         self._check(command, expected_message)
 
+        command = ["sarus", "load", "archive.tar", "target-image@sha256:778fdd9f62a6d7c0e53a97489ab3db17738bc5c1acf09a18738a2a674025eae6"]
+        expected_message = ("Destination image ID must not contain a digest when loading the image from a file\nSee 'sarus help load'")
+        self._check(command, expected_message)
+
+        command = ["sarus", "load", "archive.tar", "target-image:latest@sha256:778fdd9f62a6d7c0e53a97489ab3db17738bc5c1acf09a18738a2a674025eae6"]
+        expected_message = ("Destination image ID must not contain a digest when loading the image from a file\nSee 'sarus help load'")
+        self._check(command, expected_message)
+
         command = ["sarus", "load", "--temp-dir=/invalid-dir", "archive.tar", "quay.io/ethcscs/alpine"]
         expected_message = "Invalid temporary directory \"/invalid-dir\""
         self._check(command, expected_message)
@@ -147,21 +155,6 @@ class TestErrorMessages(unittest.TestCase):
                             "\nThe image may be private or not present in the remote registry."
                             "\nDid you perform a login with the proper credentials?"
                             "\nSee 'sarus help pull' (--login option)")
-        self._check(command, expected_message)
-
-        command = ["sarus", "pull", "fedora@sha256:e69b5a62ce23c673885bddc94e6679c9b2af683059637ceddb9cff458537a326"]
-        expected_message = ("Pulling images by digest is currently not supported. "
-                            "The feature will be introduced in a future release")
-        self._check(command, expected_message)
-
-        command = ["sarus", "pull", "fedora:32@sha256:e69b5a62ce23c673885bddc94e6679c9b2af683059637ceddb9cff458537a326"]
-        expected_message = ("Pulling images by digest is currently not supported. "
-                            "The feature will be introduced in a future release")
-        self._check(command, expected_message)
-
-        command = ["sarus", "pull", "quay.io/ethcscs/ubuntu@sha256:778fdd9f62a6d7c0e53a97489ab3db17738bc5c1acf09a18738a2a674025eae6"]
-        expected_message = ("Pulling images by digest is currently not supported. "
-                            "The feature will be introduced in a future release")
         self._check(command, expected_message)
 
     @unittest.skip("Not implemented yet")

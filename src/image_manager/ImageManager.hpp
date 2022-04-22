@@ -34,11 +34,10 @@ public:
     std::vector<common::SarusImage> listImages() const;
 
 private:
-    void processImage(const OCIImage& image, const std::string& digest);
-    std::string retrieveRegistryDigest() const;
+    void processImage(const OCIImage& image, const common::ImageReference& storageReference);
+    std::string retrieveRegistryDigest(const common::ImageReference& targetReference) const;
     void issueWarningIfIsCentralizedRepositoryAndIsNotRootUser() const;
     void issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled() const;
-    void issueErrorIfPullingByDigest() const;
     void printLog(const boost::format& message, common::LogLevel LogLevel,
                   std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
     void printLog(const std::string& message, common::LogLevel LogLevel,

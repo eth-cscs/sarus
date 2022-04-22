@@ -65,19 +65,28 @@ TEST(ImageReferenceTestGroup, string) {
 TEST(ImageReferenceTestGroup, normalize) {
     // all members
     auto ref = common::ImageReference{"server", "namespace", "image", "tag", "sha256:1234567890abcdef"};
-    CHECK_EQUAL(ref.normalize(), std::string{"server/namespace/image@sha256:1234567890abcdef"});
+    auto expectedRef = common::ImageReference{"server", "namespace", "image", "", "sha256:1234567890abcdef"};
+    auto expectedString = std::string{"server/namespace/image@sha256:1234567890abcdef"};
+    CHECK(ref.normalize() == expectedRef);
+    CHECK(ref.normalize().string() == expectedString);
 
     // no digest
     ref = common::ImageReference{"server", "namespace", "image", "tag", ""};
-    CHECK_EQUAL(ref.normalize(), std::string{"server/namespace/image:tag"});
+    expectedString = std::string{"server/namespace/image:tag"};
+    CHECK(ref.normalize() == ref);
+    CHECK(ref.normalize().string() == expectedString);
 
     // no tag
     ref = common::ImageReference{"server", "namespace", "image", "", "sha256:1234567890abcdef"};
-    CHECK_EQUAL(ref.normalize(), std::string{"server/namespace/image@sha256:1234567890abcdef"});
+    expectedString = std::string{"server/namespace/image@sha256:1234567890abcdef"};
+    CHECK(ref.normalize() == ref);
+    CHECK(ref.normalize().string() == expectedString);
 
     // no tag and no digest
     ref = common::ImageReference{"server", "namespace", "image", "", ""};
-    CHECK_EQUAL(ref.normalize(), std::string{"server/namespace/image"});
+    expectedString = std::string{"server/namespace/image"};
+    CHECK(ref.normalize() == ref);
+    CHECK(ref.normalize().string() == expectedString);
 
 }
 

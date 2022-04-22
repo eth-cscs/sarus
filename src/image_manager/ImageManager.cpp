@@ -34,23 +34,37 @@ namespace image_manager {
      * Pull the container image and add to the repository
      */
     void ImageManager::pullImage() {
-        issueErrorIfPullingByDigest();
         issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled();
         issueWarningIfIsCentralizedRepositoryAndIsNotRootUser();
 
         printLog(boost::format("Pulling image %s") % config->imageReference, common::LogLevel::INFO);
 
-        // output params
         printLog( boost::format("# image            : %s") % config->imageReference, common::LogLevel::GENERAL);
         printLog( boost::format("# cache directory  : %s") % config->directories.cache, common::LogLevel::GENERAL);
         printLog( boost::format("# temp directory   : %s") % config->directories.temp, common::LogLevel::GENERAL);
         printLog( boost::format("# images directory : %s") % config->directories.images, common::LogLevel::GENERAL);
 
-        std::string imageDigest = retrieveRegistryDigest();
-        printLog( boost::format("# image digest     : %s") % imageDigest, common::LogLevel::GENERAL);
+        // Normalize the reference provided by the CLI for two reasons:
+        // - consistency with Docker, Podman, and Buildah, which completely ignore the tag
+        //   when a digest is provided. The tag is considered more of a convenience helper for
+        //   the user writing or reading the pull command.
+        // - avoid ambiguities about image storage: if a digest is provided by the user, the
+        //   image will be stored by Sarus using the digest; this is also a form of ignoring the
+        //   tag at the storage level
+        auto pullReference = config->imageReference.normalize();
 
-        auto ociImagePath = skopeoDriver.copyToOCIImage("docker", config->imageReference.string());
-        processImage(OCIImage{config, ociImagePath}, imageDigest);
+        // If pulling only with tag, attempt to complete the reference by retrieving
+        // the digest from the remote registry, to be consistent with Docker behavior
+        if (pullReference.digest.empty()) {
+            pullReference.digest = retrieveRegistryDigest(pullReference);
+        }
+        printLog( boost::format("# image digest     : %s") % pullReference.digest, common::LogLevel::GENERAL);
+
+        // Re-normalize pullReference to always pull by digest internally.
+        // This avoids inconsistencies in case the reference resolution done by Skopeo mismatches
+        // with the registry digest found by Sarus
+        auto ociImagePath = skopeoDriver.copyToOCIImage("docker", pullReference.normalize().string());
+        processImage(OCIImage{config, ociImagePath}, pullReference);
 
         printLog(boost::format("Successfully pulled image"), common::LogLevel::INFO);
     }
@@ -65,7 +79,7 @@ namespace image_manager {
         printLog(boost::format("Loading image archive %s") % archive, common::LogLevel::INFO);
 
         auto ociImagePath = skopeoDriver.copyToOCIImage("docker-archive", archive.string());
-        processImage(OCIImage{config, ociImagePath}, std::string{});
+        processImage(OCIImage{config, ociImagePath}, config->imageReference);
 
         printLog(boost::format("Successfully loaded image archive"), common::LogLevel::INFO);
     }
@@ -92,22 +106,24 @@ namespace image_manager {
         printLog(boost::format("successfully removed image"), common::LogLevel::INFO);
     }
 
-    void ImageManager::processImage(const OCIImage& image, const std::string& digest) {
+    void ImageManager::processImage(const OCIImage& image, const common::ImageReference& storageReference) {
         auto metadata = image.getMetadata();
-        metadata.write(config->getMetadataFileOfImage());
-        auto metadataRAII = common::PathRAII{config->getMetadataFileOfImage()};
+        auto metadataFile = imageStore.getMetadataFileOfImage(storageReference);
+        metadata.write(metadataFile);
+        auto metadataRAII = common::PathRAII{metadataFile};
 
         auto unpackedImage = image.unpack();
-        auto squashfs = SquashfsImage{*config, unpackedImage.getPath(), config->getImageFile()};
+
+        auto squashfsImagePath = imageStore.getImageFile(storageReference);
+        auto squashfs = SquashfsImage{*config, unpackedImage.getPath(), squashfsImagePath};
         auto squashfsRAII = common::PathRAII{squashfs.getPathOfImage()};
 
-        auto imageSize = common::getFileSize(config->getImageFile());
+        auto imageSize = common::getFileSize(squashfsRAII.getPath());
         auto imageSizeString = common::SarusImage::createSizeString(imageSize);
         auto created = common::SarusImage::createTimeString(std::time(nullptr));
         auto sarusImage = common::SarusImage{
-            config->imageReference,
+            storageReference,
             image.getImageID(),
-            digest,
             imageSizeString,
             created,
             squashfsRAII.getPath(),
@@ -119,15 +135,15 @@ namespace image_manager {
         squashfsRAII.release();
     }
 
-    std::string ImageManager::retrieveRegistryDigest() const {
+    std::string ImageManager::retrieveRegistryDigest(const common::ImageReference& targetReference) const {
         auto imageDigest = std::string{};
-        auto inspectOutput = skopeoDriver.inspectRaw("docker", config->imageReference.string());
+        auto inspectOutput = skopeoDriver.inspectRaw("docker", targetReference.string());
 
         auto mediaTypeItr =  inspectOutput.FindMember("mediaType");
         if (mediaTypeItr == inspectOutput.MemberEnd()) {
             auto message = boost::format("Failed to pull image '%s'\n"
                                          "Unknown manifest media type returned by remote registry."
-                                         "The 'mediaType' property could not be found") % config->imageReference;
+                                         "The 'mediaType' property could not be found") % targetReference;
             SARUS_THROW_ERROR(message.str());
         }
 
@@ -180,19 +196,6 @@ namespace image_manager {
             auto message = boost::format("attempting to perform an operation on the"
                 " centralized repository without root privileges");
             printLog(message, common::LogLevel::WARN);
-        }
-    }
-
-    void ImageManager::issueErrorIfPullingByDigest() const {
-        // Build regexp for catching digests with "@" + first part of the digest regexp (before colon separator)
-        // from https://github.com/opencontainers/go-digest/blob/master/digest.go
-        boost::regex digestRegexp("@[a-z0-9]+(?:[.+_-][a-z0-9]+)*");
-        boost::smatch matches;
-        if(boost::regex_search(config->imageReference.string(), matches, digestRegexp, boost::regex_constants::match_partial)) {
-            auto message = boost::format("Pulling images by digest is currently not supported. "
-                                         "The feature will be introduced in a future release");
-            printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
     }
 

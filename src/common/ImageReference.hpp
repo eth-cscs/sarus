@@ -26,8 +26,8 @@ struct ImageReference {
     std::string digest;
     std::string getFullName() const;
     std::string string() const;
-    std::string normalize() const;
     std::string getUniqueKey() const;
+    ImageReference normalize() const;
 
     static const std::string DEFAULT_SERVER;
     static const std::string DEFAULT_REPOSITORY_NAMESPACE;

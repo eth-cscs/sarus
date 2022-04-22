@@ -134,11 +134,11 @@ namespace image_manager {
                 imageMetadata["server"].GetString(),
                 imageMetadata["namespace"].GetString(),
                 imageMetadata["image"].GetString(),
-                imageMetadata["tag"].GetString()};
+                imageMetadata["tag"].GetString(),
+                imageMetadata["registryDigest"].GetString()};
             auto image = common::SarusImage{
                 imageReference,
                 getImageID(imageMetadata),
-                imageMetadata["registryDigest"].GetString(),
                 imageMetadata["datasize"].GetString(),
                 imageMetadata["created"].GetString(),
                 boost::filesystem::path{imageMetadata["imagePath"].GetString()},
@@ -211,11 +211,11 @@ namespace image_manager {
             ret.AddMember(  "tag",
                             rj::Value{image.reference.tag.c_str(), allocator},
                             allocator);
+            ret.AddMember(  "registryDigest",
+                            rj::Value{image.reference.digest.c_str(), allocator},
+                            allocator);
             ret.AddMember(  "id",
                             rj::Value{image.id.c_str(), allocator},
-                            allocator);
-            ret.AddMember(  "registryDigest",
-                            rj::Value{image.registryDigest.c_str(), allocator},
                             allocator);
             ret.AddMember(  "imagePath",
                             rj::Value{image.imageFile.string().c_str(), allocator},
@@ -256,6 +256,18 @@ namespace image_manager {
         }
 
         printLog( boost::format("Success to update metadata: %s") % metadataFile, common::LogLevel::DEBUG);
+    }
+
+    boost::filesystem::path ImageStore::getImageFile(const common::ImageReference& reference) const {
+        auto key = reference.getUniqueKey();
+        auto file = boost::filesystem::path(config->directories.images.string() + "/" + key + ".squashfs");
+        return file;
+    }
+
+    boost::filesystem::path ImageStore::getMetadataFileOfImage(const common::ImageReference& reference) const {
+        auto key = reference.getUniqueKey();
+        auto file = boost::filesystem::path(config->directories.images.string() + "/" + key + ".meta");
+        return file;
     }
 
     void ImageStore::printLog(  const boost::format &message, common::LogLevel LogLevel,

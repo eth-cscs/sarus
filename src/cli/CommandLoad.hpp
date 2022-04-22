@@ -58,7 +58,7 @@ public:
 
     void printHelpMessage() const override {
         auto printer = cli::HelpMessage()
-            .setUsage("sarus load [OPTIONS] file REPOSITORY[:TAG]")
+            .setUsage("sarus load [OPTIONS] FILE NAME[:TAG]")
             .setDescription(getBriefDescription())
             .setOptionsDescription(optionsDescription);
         std::cout << printer;
@@ -94,6 +94,13 @@ private:
 
             conf->imageReference = cli::utility::parseImageReference(positionalArgs.argv()[1]);
             conf->imageReference.server = "load";
+
+            // Image digests in Sarus are meant as the digests by which images are stored in remote registries.
+            // Thus, it's incorrect for loaded images to have digests associated with them
+            if (!conf->imageReference.digest.empty()) {
+                SARUS_THROW_ERROR("Destination image ID must not contain a digest when loading the image from a file");
+            }
+
             conf->useCentralizedRepository = values.count("centralized-repository");
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }

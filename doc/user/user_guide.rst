@@ -270,6 +270,71 @@ as displayed by the :program:`sarus images` command in the first two columns:
     Once Skopeo has downloaded the image as a tar file, the image can be
     loaded into Sarus with the :ref:`sarus load <user-load-archive>` command.
 
+Pulling images by digest (immutable identifier)
+-----------------------------------------------
+
+Container images are usually pulled using a *tag*, which is an arbitrary label
+to differentiate images within the same repository.
+Image tags are mutable, and can potentially point to different images at
+different times, for example in the case an image is rebuilt.
+
+Sarus supports the capability to pull images using a *digest*, an immutable
+identifier which uniquely and consistently points to a specific version of an
+image.
+Digests are useful to increase clarity and reproducibility in container workflows
+by allowing to reference exact software stack versions.
+
+As defined by the
+`OCI Image Specification <https://github.com/opencontainers/image-spec/blob/main/descriptor.md#digests>`,
+digests take the form of a string using the ``<algorithm>:<encoded>``
+pattern. The ``algorithm`` portion indicates the cryptographic algorithm
+used for the digest, while the ``encoded`` portion represents the result of
+the hash function.
+
+To pull an image by digest, append the digest to the image name using ``@`` as
+separator:
+
+.. code-block:: bash
+
+    $ sarus pull debian@sha256:039f72a400b48c272c6348f0a3f749509b18e611901a21379abc7eb6edd53392
+    # image            : index.docker.io/library/debian@sha256:039f72a400b48c272c6348f0a3f749509b18e611901a21379abc7eb6edd53392
+    # cache directory  : "/home/<user>/.sarus/cache"
+    # temp directory   : "/tmp"
+    # images directory : "/home/<user>/.sarus/images"
+    # image digest     : sha256:039f72a400b48c272c6348f0a3f749509b18e611901a21379abc7eb6edd53392
+    Getting image source signatures
+    Copying blob 5492f66d2700 done
+    Copying config 3c3ca0ede6 done
+    Writing manifest to image destination
+    Storing signatures
+    > unpacking OCI image
+    > make squashfs image: "/home/<user>/.sarus/images/index.docker.io/library/debian/sha256-039f72a400b48c272c6348f0a3f749509b18e611901a21379abc7eb6edd53392.squashfs"
+
+It is possible to combine tag and digest in the argument of the :program:`sarus pull`
+command. In this case, Sarus proceeds to pull the image indicated by the digest
+and completely ignores the tag. This behavior is consistent with other container
+tools like Docker, Podman and Buildah:
+
+.. code-block::
+
+    $ sarus pull alpine:3.15.2@sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97
+    # image            : index.docker.io/library/alpine:3.15.2@sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97
+    # cache directory  : "/home/<user>/.sarus/cache"
+    # temp directory   : "/tmp"
+    # images directory : "/home/<user>/.sarus/images"
+    # image digest     : sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97
+    Getting image source signatures
+    Copying blob 3aa4d0bbde19 done
+    Copying config e367198082 done
+    Writing manifest to image destination
+    Storing signatures
+    > unpacking OCI image
+    > make squashfs image: "/home/<user>/.sarus/images/index.docker.io/library/alpine/sha256-73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97.squashfs"
+
+Even if the tag is ignored by the pull, it can still serve as a visual aid for
+for users writing or reading the command, helping to understand what image the
+digest is pointing to.
+
 Pulling images using a proxy
 ----------------------------
 

@@ -67,7 +67,7 @@ public:
             }
         };
         fieldGetters["TAG"] = [](const common::SarusImage& image) {
-            return image.reference.tag;
+            return image.reference.tag.empty() ? std::string{"<none>"} : image.reference.tag;
         };
         fieldGetters["IMAGE ID"] = [](const common::SarusImage& image) {
             return image.id.empty() ? std::string{"<none>"} : image.id;

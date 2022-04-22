@@ -45,7 +45,6 @@ std::string SarusImage::createSizeString(size_t size)
 bool operator==(const SarusImage& lhs, const SarusImage& rhs) {
     return lhs.reference == rhs.reference
         && lhs.id == rhs.id
-        && lhs.registryDigest == rhs.registryDigest
         && lhs.datasize == rhs.datasize
         && lhs.created == rhs.created;
 }

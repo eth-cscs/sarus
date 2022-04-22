@@ -36,6 +36,8 @@ public:
     const boost::filesystem::path& getMetadataFile() const { return metadataFile; }
     std::string getImageID(const rapidjson::Value& imageMetadata) const;
     std::string getRegistryDigest(const rapidjson::Value& imageMetadata) const;
+    boost::filesystem::path getImageFile(const common::ImageReference& reference) const;
+    boost::filesystem::path getMetadataFileOfImage(const common::ImageReference& reference) const;
 
 private:
     rapidjson::Document readRepositoryMetadata() const;

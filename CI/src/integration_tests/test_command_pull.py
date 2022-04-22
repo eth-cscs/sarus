@@ -56,6 +56,18 @@ class TestCommandPull(unittest.TestCase):
         self._test_command_pull("ubuntu:20.04",
                                 is_centralized_repository=False)
 
+    @unittest.skip("Coming soon: requires digest support from 'sarus images'")
+    def test_command_pull_by_digest(self):
+        self._test_command_pull("quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d",
+                                is_centralized_repository=False,
+                                expected_string="quay.io/ethcscs/alpine:<none>@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d")
+
+    @unittest.skip("Coming soon: requires digest support from 'sarus images'")
+    def test_command_pull_by_tag_and_digest(self):
+        self._test_command_pull("quay.io/ethcscs/alpine:3.14@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d",
+                                is_centralized_repository=False,
+                                expected_string="quay.io/ethcscs/alpine:<none>@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d")
+
     @unittest.skip("Not implemented yet")
     def test_command_pull_fails_with_insecure_registry(self):
         with self.assertRaises(subprocess.CalledProcessError):
@@ -83,14 +95,16 @@ class TestCommandPull(unittest.TestCase):
     def test_multiple_pulls_with_centralized_repository(self):
         self._test_multiple_pulls("quay.io/ethcscs/alpine:3.14", is_centralized_repository=True)
 
-    def _test_command_pull(self, image, is_centralized_repository):
+    def _test_command_pull(self, image, is_centralized_repository, expected_string=None):
+        expected_image = expected_string if expected_string else image
+
         util.remove_image_if_necessary(is_centralized_repository, image)
         actual_images = util.list_images(is_centralized_repository)
-        self.assertEqual(actual_images.count(image), 0)
+        self.assertEqual(actual_images.count(expected_image), 0)
 
         util.pull_image_if_necessary(is_centralized_repository, image)
         actual_images = util.list_images(is_centralized_repository)
-        self.assertEqual(actual_images.count(image), 1)
+        self.assertEqual(actual_images.count(expected_image), 1)
 
     # check that multiple pulls of the same image don't generate
     # multiple entries in the list of available images

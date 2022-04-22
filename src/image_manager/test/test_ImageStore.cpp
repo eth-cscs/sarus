@@ -25,22 +25,20 @@ TEST_GROUP(ImageStoreTestGroup) {
 
 TEST(ImageStoreTestGroup, test_ImageStore) {
     auto configRAII = test_utility::config::makeConfig();
-    configRAII.config->imageReference = {"index.docker.io", "library", "hello-world", "latest"};
+    configRAII.config->imageReference = {"index.docker.io", "library", "hello-world", "latest", "sha256:1234567890abcdef"};
+
+    auto imageStore = image_manager::ImageStore{ configRAII.config };
 
     std::string dummyID = "a9561eb1b190625c9adb5a9513e72c4dedafc1cb2d4c5236c9a6957ec7dfd5a9";
-    std::string dummyDigest = "XXXdigestXXX";
     time_t currentTime = time_t(nullptr);
 
     auto image = common::SarusImage{
         configRAII.config->imageReference,
         dummyID,
-        dummyDigest,
         common::SarusImage::createSizeString(size_t(1024)),
         common::SarusImage::createTimeString(currentTime),
-        configRAII.config->getImageFile(),
-        configRAII.config->getMetadataFileOfImage()};
-
-    auto imageStore = image_manager::ImageStore{ configRAII.config };
+        imageStore.getImageFile(configRAII.config->imageReference),
+        imageStore.getMetadataFileOfImage(configRAII.config->imageReference)};
 
     // clean repository
     boost::filesystem::remove_all(configRAII.config->directories.repository);

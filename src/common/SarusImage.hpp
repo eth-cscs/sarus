@@ -21,16 +21,15 @@ namespace sarus {
 namespace common {
 
 struct SarusImage {
-    common::ImageReference reference;  // A string in the format "server/namespace/image[:tag]".
-                                       // In the scope of SarusImage, digests are not used within
-                                       // references, but are allocated in their own data member
+    common::ImageReference reference;  // A reference can be expressed as a string in the format
+                                       // "server/namespace/image[:tag][@digest]".
+                                       // If the digest is present, it is the digest of the container
+                                       // image manifest in the *registry* it was pulled from;
+                                       // it is *NOT* the manifest digest of the OCI image pulled with Skopeo
 
     std::string id;              // The sha256 hash of the image configuration JSON,
                                  // as defined by the OCI Image specification:
                                  // https://github.com/opencontainers/image-spec/blob/main/config.md#imageid
-
-    std::string registryDigest;  // The digest of the container image manifest in the *registry* it was pulled from;
-                                 // *NOT* the manifest digest of the OCI image pulled with Skopeo
 
     std::string datasize;        // The size of container image file
 

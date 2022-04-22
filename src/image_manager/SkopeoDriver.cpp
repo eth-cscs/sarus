@@ -27,6 +27,8 @@ SkopeoDriver::SkopeoDriver(std::shared_ptr<const common::Config> config)
 {}
 
 boost::filesystem::path SkopeoDriver::copyToOCIImage(const std::string& sourceTransport, const std::string& sourceReference) const {
+    printLog( boost::format("Copying '%s' to OCI image") % sourceReference, common::LogLevel::INFO);
+
     auto ociImagePath = common::makeUniquePathWithRandomSuffix(tempDir / "ociImage");
     printLog( boost::format("Creating temporary OCI image in: %s") % ociImagePath, common::LogLevel::DEBUG);
 
