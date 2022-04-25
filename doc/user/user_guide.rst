@@ -429,6 +429,23 @@ As with images from 3rd party registries, to use or remove loaded images you
 need to enter the image descriptor (repository[:tag]) as displayed by the
 :program:`sarus images` command in the first two columns.
 
+Displaying image digests
+------------------------
+
+Images pulled by digest do not have a tag associated to them. In order to run
+or remove such images, it is necessary to provide the full digest after the
+image name. The digests of the images available in the Sarus local repository
+can be displayed using the ``--digests`` option of the :program:`sarus images`
+command:
+
+.. code-block::
+
+    $ sarus images --digests
+    REPOSITORY   TAG          DIGEST                                                                    IMAGE ID       CREATED               SIZE         SERVER
+    alpine       latest       sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97   e3671980822d   2022-03-25T13:17:13   2.61MB       index.docker.io
+    fedora       latest       sha256:36af84ba69e21c9ef86a0424a090674c433b2b80c2462e57503886f1d823abe8   04d13a5c8de5   2022-03-25T13:17:57   50.03MB      index.docker.io
+    ubuntu       <none>       sha256:dcc176d1ab45d154b767be03c703a35fe0df16cfb1cc7ea5dd3b6f9af99b6718   4f4768f23ea4   2022-03-25T13:21:40   26.41MB      index.docker.io
+
 Removing images
 ---------------
 

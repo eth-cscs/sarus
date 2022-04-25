@@ -27,19 +27,30 @@ def load_image(is_centralized_repository, image_archive, image_name):
     subprocess.check_call(command)
 
 
-def list_images(is_centralized_repository):
+def get_images_command_output(is_centralized_repository, print_digests=False):
+    command = ["sarus", "images"]
     if is_centralized_repository:
-        command = ["sarus", "images", "--centralized-repository"]
-    else:
-        command = ["sarus", "images"]
+        command += ["--centralized-repository"]
+    if print_digests:
+        command += ["--digests"]
     lines = get_trimmed_output(command)
+    return [line.split() for line in lines]
+
+
+def list_images(is_centralized_repository, with_digests=False):
+    lines = get_images_command_output(is_centralized_repository, with_digests)
     lines_without_header = lines[1:]
     images = []
     for line in lines_without_header:
-        fields = line.split()
-        image_repository = fields[0]
-        image_tag = fields[1]
-        images.append(image_repository + ":" + image_tag)
+        image_repository = line[0]
+        image_tag = line[1]
+        image_entry = f"{image_repository}:{image_tag}"
+
+        if with_digests:
+            image_digest = line[2]
+            image_entry += f"@{image_digest}"
+
+        images.append(image_entry)
     return images
 
 

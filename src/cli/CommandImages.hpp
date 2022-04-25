@@ -72,6 +72,14 @@ public:
         fieldGetters["IMAGE ID"] = [](const common::SarusImage& image) {
             return image.id.empty() ? std::string{"<none>"} : image.id;
         };
+        fieldGetters["DIGEST"] = [this](const common::SarusImage& image) {
+            if (this->printDigests) {
+                return image.reference.digest.empty() ? std::string{"<none>"} : image.reference.digest;
+            }
+            else {
+                return std::string{};
+            }
+        };
         fieldGetters["CREATED"] = [](const common::SarusImage& image) {
             return image.created;
         };
@@ -90,7 +98,7 @@ public:
     }
 
     std::string getBriefDescription() const override {
-        return "List images";
+        return "List locally available images";
     }
 
     void printHelpMessage() const override {
@@ -107,6 +115,7 @@ private:
 private:
     void initializeOptionsDescription() {
         optionsDescription.add_options()
+            ("digests", "Show digests")
             ("centralized-repository", "Use centralized repository instead of the local one");
     }
 
@@ -130,6 +139,8 @@ private:
 
             conf->useCentralizedRepository = values.count("centralized-repository");
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
+
+            printDigests = values.count("digests") ? true : false;
         }
         catch(std::exception& e) {
             auto message = boost::format("%s\nSee 'sarus help images'") % e.what();
@@ -154,6 +165,15 @@ private:
         width = maxFieldLength(images, fieldGetters["TAG"]);
         width = std::max(width, minFieldWidth);
         formatString += "   %-" + std::to_string(width) + "." + std::to_string(width) + "s";
+
+        if (printDigests) {
+            width = maxFieldLength(images, fieldGetters["DIGEST"]);
+            width = std::max(width, minFieldWidth);
+            formatString += "   %-" + std::to_string(width) + "." + std::to_string(width) + "s";
+        }
+        else {
+            formatString += "%s";
+        }
 
         std::size_t printedCharactersOfID = 12;
         formatString += "   %-" + std::to_string(printedCharactersOfID)
@@ -184,7 +204,7 @@ private:
     void printImages(   const std::vector<common::SarusImage>& images,
                         std::unordered_map<std::string, field_getter_t>& fieldGetters,
                         boost::format format) {
-        std::cout << format % "REPOSITORY" % "TAG" % "IMAGE ID" % "CREATED" % "SIZE" % "SERVER\n";
+        std::cout << format % "REPOSITORY" % "TAG" % (printDigests ? "DIGEST" : "") % "IMAGE ID" % "CREATED" % "SIZE" % "SERVER\n";
 
         for(const auto& image : images) {
             // For some weird reason we need to create a copy of the strings retrieved through
@@ -192,6 +212,7 @@ private:
             std::cout   << format
                         % std::string(fieldGetters["REPOSITORY"](image))
                         % std::string(fieldGetters["TAG"](image))
+                        % std::string(fieldGetters["DIGEST"](image))
                         % std::string(fieldGetters["IMAGE ID"](image))
                         % std::string(fieldGetters["CREATED"](image))
                         % std::string(fieldGetters["SIZE"](image))
@@ -204,6 +225,7 @@ private:
     boost::program_options::options_description optionsDescription{"Options"};
     std::shared_ptr<common::Config> conf;
     std::unique_ptr<image_manager::ImageManager> imageManager;
+    bool printDigests;
 };
 
 } // namespace

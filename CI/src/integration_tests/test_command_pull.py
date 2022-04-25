@@ -56,13 +56,13 @@ class TestCommandPull(unittest.TestCase):
         self._test_command_pull("ubuntu:20.04",
                                 is_centralized_repository=False)
 
-    @unittest.skip("Coming soon: requires digest support from 'sarus images'")
+    @unittest.skip("Coming soon: requires digest support from 'sarus rmi'")
     def test_command_pull_by_digest(self):
         self._test_command_pull("quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d",
                                 is_centralized_repository=False,
                                 expected_string="quay.io/ethcscs/alpine:<none>@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d")
 
-    @unittest.skip("Coming soon: requires digest support from 'sarus images'")
+    @unittest.skip("Coming soon: requires digest support from 'sarus rmi'")
     def test_command_pull_by_tag_and_digest(self):
         self._test_command_pull("quay.io/ethcscs/alpine:3.14@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d",
                                 is_centralized_repository=False,
