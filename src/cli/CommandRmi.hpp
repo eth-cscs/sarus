@@ -88,7 +88,7 @@ private:
                         .run(), values);
             boost::program_options::notify(values);
 
-            conf->imageReference = cli::utility::parseImageReference(positionalArgs.argv()[0]);
+            conf->imageReference = cli::utility::parseImageReference(positionalArgs.argv()[0]).normalize();
             conf->useCentralizedRepository = values.count("centralized-repository");
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }

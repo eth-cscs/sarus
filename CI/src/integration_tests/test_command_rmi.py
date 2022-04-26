@@ -21,13 +21,22 @@ class TestCommandRmi(unittest.TestCase):
     def test_command_rmi_with_centralized_repository(self):
         self._test_command_rmi(is_centralized_repository=True)
 
-    def _test_command_rmi(self, is_centralized_repository):
-        image = "quay.io/ethcscs/alpine:latest"
+    def test_command_rmi_by_digest(self):
+        self._test_command_rmi(is_centralized_repository=False,
+                               image="quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d",
+                               expected_string="quay.io/ethcscs/alpine:<none>@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d")
+
+    def test_command_rmi_by_tag_and_digest(self):
+        self._test_command_rmi(is_centralized_repository=False,
+                               image="quay.io/ethcscs/alpine:3.14@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d",
+                               expected_string="quay.io/ethcscs/alpine:<none>@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d")
+
+    def _test_command_rmi(self, is_centralized_repository, image="quay.io/ethcscs/alpine:latest",
+                          expected_string=None):
+        expected_image = expected_string if expected_string else image
 
         util.pull_image_if_necessary(is_centralized_repository, image)
-        actual_images = set(util.list_images(is_centralized_repository))
-        self.assertTrue(image in actual_images)
+        self.assertTrue(util.is_image_available(is_centralized_repository, expected_image))
 
         util.remove_image_if_necessary(is_centralized_repository, image)
-        actual_images = set(util.list_images(is_centralized_repository))
-        self.assertTrue(image not in actual_images)
+        self.assertFalse(util.is_image_available(is_centralized_repository, expected_image))

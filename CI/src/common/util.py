@@ -54,8 +54,32 @@ def list_images(is_centralized_repository, with_digests=False):
     return images
 
 
+def is_image_available(is_centralized_repository, target_image):
+    target_digest = target_image.split("@")[1] if "@sha256:" in target_image else None
+    if not target_digest:
+        if ":" in target_image:
+            target_tag = target_image.split(":")[1]
+        else:
+            target_tag = "latest"
+    else:
+        target_tag = None
+
+    available_images = get_images_command_output(is_centralized_repository, bool(target_digest))
+
+    for available_entry in available_images:
+        available_name, available_tag, available_digest, *rest = available_entry
+
+        if target_image.startswith(available_name):
+            if target_tag and available_tag == target_tag:
+                return True
+            if target_digest and available_tag == "<none>" and available_digest == target_digest:
+                return True
+
+    return False
+
+
 def pull_image_if_necessary(is_centralized_repository, image):
-    if image in list_images(is_centralized_repository):
+    if is_image_available(is_centralized_repository, image):
         return
     pull_image(is_centralized_repository, image)
 
@@ -69,7 +93,7 @@ def pull_image(is_centralized_repository, image):
 
 
 def remove_image_if_necessary(is_centralized_repository, image):
-    if image not in list_images(is_centralized_repository):
+    if not is_image_available(is_centralized_repository, image):
         return
     if is_centralized_repository:
         command = ["sarus", "rmi", "--centralized-repository", image]

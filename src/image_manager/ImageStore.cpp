@@ -33,7 +33,7 @@ namespace sarus {
 namespace image_manager {
 
     ImageStore::ImageStore(std::shared_ptr<const common::Config> config)
-        : config{config}
+        : imagesDirectory{config->directories.images}
         , metadataFile{config->directories.repository / "metadata.json"}
     {}
 
@@ -75,38 +75,24 @@ namespace image_manager {
         printLog(   boost::format("Removing image %s from metadata file %s")
                     % imageReference % metadataFile,
                     common::LogLevel::INFO);
-
         common::Lockfile lock{metadataFile};
 
-        auto metadata = readRepositoryMetadata();
-        const rj::Value* imageMetadata = nullptr;
-        auto uniqueKey = imageReference.getUniqueKey();
-
-        printLog(boost::format("looking up unique key %s in metadata file") % uniqueKey, common::LogLevel::DEBUG);
-
-        // look for image's metadata
-        for(const auto& image : metadata["images"].GetArray()) {
-            if(image["uniqueKey"].GetString() == uniqueKey) {
-                imageMetadata = &image;
-                break;
-            }
-        }
+        auto repositoryMetadata = readRepositoryMetadata();
+        auto imageMetadata = findImageMetadata(imageReference, repositoryMetadata);
 
         if (!imageMetadata) {
-            auto message = boost::format("Cannot find image '%s'") % config->imageReference;
+            auto message = boost::format("Cannot find image '%s'") % imageReference;
             printLog(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
-
-        printLog(boost::format("Success to find unique key"), common::LogLevel::DEBUG);
 
         // remove image
         try {
             auto imagePath = boost::filesystem::path{(*imageMetadata)["imagePath"].GetString()};
             auto metadataPath = boost::filesystem::path{(*imageMetadata)["metadataPath"].GetString()};
 
-            metadata["images"].GetArray().Erase(imageMetadata);
-            atomicallyUpdateMetadataFile(metadata);
+            repositoryMetadata["images"].GetArray().Erase(imageMetadata);
+            atomicallyUpdateMetadataFile(repositoryMetadata);
 
             boost::filesystem::remove_all(imagePath);
             boost::filesystem::remove_all(metadataPath);
@@ -193,6 +179,23 @@ namespace image_manager {
         return metadata;
     }
 
+    const rapidjson::Value* ImageStore::findImageMetadata(const common::ImageReference& reference, const rapidjson::Document& metadata) const {
+        printLog(boost::format("Looking for reference '%s' in repository metadata") % reference, common::LogLevel::DEBUG);
+        const rj::Value* imageMetadata = nullptr;
+        auto uniqueKey = reference.getUniqueKey();
+
+        for(const auto& image : metadata["images"].GetArray()) {
+            if(image["uniqueKey"].GetString() == uniqueKey) {
+                imageMetadata = &image;
+                break;
+            }
+        }
+
+        printLog(boost::format("Metadata for reference '%s' %s") % reference % (imageMetadata ? "found" : "not found"),
+                 common::LogLevel::DEBUG);
+        return imageMetadata;
+    }
+
     rapidjson::Value ImageStore::createImageJSON(const common::SarusImage& image, rapidjson::MemoryPoolAllocator<>& allocator) const {
         try {
             auto ret = rj::Value{rj::kObjectType};
@@ -259,15 +262,13 @@ namespace image_manager {
     }
 
     boost::filesystem::path ImageStore::getImageFile(const common::ImageReference& reference) const {
-        auto key = reference.getUniqueKey();
-        auto file = boost::filesystem::path(config->directories.images.string() + "/" + key + ".squashfs");
-        return file;
+        auto relativePath = reference.getUniqueKey() + ".squashfs";
+        return imagesDirectory / relativePath;
     }
 
     boost::filesystem::path ImageStore::getMetadataFileOfImage(const common::ImageReference& reference) const {
-        auto key = reference.getUniqueKey();
-        auto file = boost::filesystem::path(config->directories.images.string() + "/" + key + ".meta");
-        return file;
+        auto relativePath = reference.getUniqueKey() + ".meta";
+        return imagesDirectory / relativePath;
     }
 
     void ImageStore::printLog(  const boost::format &message, common::LogLevel LogLevel,

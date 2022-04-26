@@ -41,6 +41,7 @@ public:
 
 private:
     rapidjson::Document readRepositoryMetadata() const;
+    const rapidjson::Value* findImageMetadata(const common::ImageReference& reference, const rapidjson::Document& metadata) const;
     void atomicallyUpdateMetadataFile(const rapidjson::Value& metadata) const;
     rapidjson::Value createImageJSON(const common::SarusImage&, rapidjson::MemoryPoolAllocator<>& allocator) const;
     void printLog(  const boost::format &message, common::LogLevel LogLevel,
@@ -48,7 +49,7 @@ private:
 
 private:
     const std::string sysname = "ImageStore"; // system name for logger
-    std::shared_ptr<const common::Config> config;
+    boost::filesystem::path imagesDirectory;
     boost::filesystem::path metadataFile;
 };
 

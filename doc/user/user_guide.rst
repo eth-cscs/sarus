@@ -477,6 +477,14 @@ displayed by the :program:`sarus images` command:
     $ sarus rmi load/library/my_debian
     removed load/library/my_debian/latest
 
+To remove images pulled by digest, append the digest to the image name using
+``@`` as separator:
+
+.. code-block::
+
+    $ sarus rmi ubuntu@sha256:dcc176d1ab45d154b767be03c703a35fe0df16cfb1cc7ea5dd3b6f9af99b6718
+    removed image index.docker.io/library/ubuntu@sha256:dcc176d1ab45d154b767be03c703a35fe0df16cfb1cc7ea5dd3b6f9af99b6718
+
 .. _user-environment:
 
 Environment
