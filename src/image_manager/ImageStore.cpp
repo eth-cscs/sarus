@@ -15,7 +15,6 @@
 #include <string>
 #include <stdexcept>
 
-#include <boost/optional/optional.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
@@ -111,30 +110,14 @@ namespace image_manager {
     std::vector<common::SarusImage> ImageStore::listImages() const
     {
         auto metadata = readRepositoryMetadata();
-
-        // make images
         auto images = std::vector<common::SarusImage>{};
 
         for (const auto& imageMetadata : metadata["images"].GetArray()) {
-            auto imageReference = common::ImageReference{
-                imageMetadata["server"].GetString(),
-                imageMetadata["namespace"].GetString(),
-                imageMetadata["image"].GetString(),
-                imageMetadata["tag"].GetString(),
-                imageMetadata["registryDigest"].GetString()};
-            auto image = common::SarusImage{
-                imageReference,
-                getImageID(imageMetadata),
-                imageMetadata["datasize"].GetString(),
-                imageMetadata["created"].GetString(),
-                boost::filesystem::path{imageMetadata["imagePath"].GetString()},
-                boost::filesystem::path{imageMetadata["metadataPath"].GetString()}
-            };
+            auto image = convertImageMetadataToSarusImage(imageMetadata);
             images.push_back(image);
         }
 
         printLog(boost::format("Successfully created list of images."), common::LogLevel::DEBUG);
-
         return images;
     }
 
@@ -179,6 +162,22 @@ namespace image_manager {
         return metadata;
     }
 
+    boost::optional<common::SarusImage> ImageStore::findImage(const common::ImageReference& reference) const {
+        printLog(boost::format("Looking for reference '%s' in storage") % reference, common::LogLevel::DEBUG);
+        boost::optional<common::SarusImage> image;
+
+        auto repositoryMetadata = readRepositoryMetadata();
+        auto imageMetadata = findImageMetadata(reference, repositoryMetadata);
+
+        if (imageMetadata) {
+            image = convertImageMetadataToSarusImage(*imageMetadata);
+        }
+
+        printLog(boost::format("Image for reference '%s' %s") % reference % (image ? "found" : "not found"),
+                 common::LogLevel::DEBUG);
+        return image;
+    }
+
     const rapidjson::Value* ImageStore::findImageMetadata(const common::ImageReference& reference, const rapidjson::Document& metadata) const {
         printLog(boost::format("Looking for reference '%s' in repository metadata") % reference, common::LogLevel::DEBUG);
         const rj::Value* imageMetadata = nullptr;
@@ -194,6 +193,24 @@ namespace image_manager {
         printLog(boost::format("Metadata for reference '%s' %s") % reference % (imageMetadata ? "found" : "not found"),
                  common::LogLevel::DEBUG);
         return imageMetadata;
+    }
+
+    common::SarusImage ImageStore::convertImageMetadataToSarusImage(const rapidjson::Value& imageMetadata) const {
+        auto imageReference = common::ImageReference{
+            imageMetadata["server"].GetString(),
+            imageMetadata["namespace"].GetString(),
+            imageMetadata["image"].GetString(),
+            imageMetadata["tag"].GetString(),
+            imageMetadata["registryDigest"].GetString()};
+        auto image = common::SarusImage{
+            imageReference,
+            getImageID(imageMetadata),
+            imageMetadata["datasize"].GetString(),
+            imageMetadata["created"].GetString(),
+            boost::filesystem::path{imageMetadata["imagePath"].GetString()},
+            boost::filesystem::path{imageMetadata["metadataPath"].GetString()}
+        };
+        return image;
     }
 
     rapidjson::Value ImageStore::createImageJSON(const common::SarusImage& image, rapidjson::MemoryPoolAllocator<>& allocator) const {

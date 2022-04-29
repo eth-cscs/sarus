@@ -33,8 +33,8 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "--verbose", "---run"]
-        actual_message = self._get_sarus_error_output(command)
-        self.assertTrue("'---run' is not a Sarus command" in actual_message)
+        expected_message = "'---run' is not a Sarus command"
+        self._check(command, expected_message)
 
     def test_command_help(self):
         command = ["sarus", "help", "--invalid-option"]
@@ -202,6 +202,19 @@ class TestErrorMessages(unittest.TestCase):
         expected_message = "Specified image index.docker.io/library/not-available-image:latest is not available"
         self._check(command, expected_message)
 
+        # Error message when running by digest and only corresponding tagged image is available
+        util.remove_image_if_necessary(is_centralized_repository=False,
+                                       image="quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d")
+        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/alpine:3.14")
+        command = ["sarus", "run", "quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d", "true"]
+        expected_message = "Specified image quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d is not available"
+        self._check(command, expected_message)
+
+        # Error message when running by tag+digest and only corresponding tagged image is available
+        command = ["sarus", "run", "quay.io/ethcscs/alpine:3.14@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d", "true"]
+        expected_message = "Specified image quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d is not available"
+        self._check(command, expected_message)
+
         command = ["sarus", "run", "--invalid-option", "quay.io/ethcscs/alpine", "true"]
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help run'"
         self._check(command, expected_message)
@@ -225,6 +238,7 @@ class TestErrorMessages(unittest.TestCase):
 
         command = ["sarus", "run", "--mount=src=/src,dst=/dst,type=bind,bind-propagation=slave", "quay.io/ethcscs/alpine", "true"]
         expected_message = "'bind-propagation' is not a valid bind mount option"
+        self._check(command, expected_message)
 
         sarus_ssh_dir = os.getenv("HOME") + "/.oci-hooks/ssh"
         shutil.rmtree(sarus_ssh_dir, ignore_errors=True) # remove ssh keys
@@ -247,7 +261,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "run", "quay.io/ethcscs/alpine", "invalid-command-2lk32ldk2"]
-        actual_message = self._get_sarus_error_output(command)
+        actual_message = util.get_sarus_error_output(command)
         self.assertTrue("container_linux.go" in actual_message)
         self.assertTrue("starting container process caused" in actual_message)
         self.assertTrue("invalid-command-2lk32ldk2" in actual_message)
@@ -337,25 +351,8 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
     def _check(self, command, expected_message):
-        actual_message = self._get_sarus_error_output(command)
+        actual_message = util.get_sarus_error_output(command)
         assert expected_message in actual_message
-
-    def _get_sarus_error_output(self, command):
-        with open(os.devnull, 'wb') as devnull:
-            proc = subprocess.run(command, stdout=devnull, stderr=subprocess.PIPE)
-            if proc.returncode == 0:
-                self.fail("Sarus didn't generate any error, but at least one was expected.")
-
-            stderr_without_trailing_whitespaces = proc.stderr.rstrip()
-            out = stderr_without_trailing_whitespaces.decode()
-
-        # filter out profiling messages
-        lines_filtered = []
-        for line in out.split('\n'):
-            if not line.startswith("profiling:"):
-                lines_filtered.append(line)
-
-        return '\n'.join(lines_filtered)
 
 if __name__ == "__main__":
     unittest.main()

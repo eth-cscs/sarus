@@ -27,6 +27,7 @@
 #include "cli/MountParser.hpp"
 #include "cli/DeviceParser.hpp"
 #include "cli/HelpMessage.hpp"
+#include "image_manager/ImageStore.hpp"
 #include "runtime/Runtime.hpp"
 #include "runtime/DeviceMount.hpp"
 
@@ -147,7 +148,8 @@ private:
             boost::program_options::store(parsed, values);
             boost::program_options::notify(values);
 
-            conf->imageReference = cli::utility::parseImageReference(positionalArgs.argv()[0]);
+            // Parse the image reference and normalize it for consistency with Docker, Podman, Buildah
+            conf->imageReference = cli::utility::parseImageReference(positionalArgs.argv()[0]).normalize();
             conf->useCentralizedRepository = values.count("centralized-repository");
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
             // the remaining arguments (after image) are all part of the command to be executed in the container
@@ -455,8 +457,17 @@ private:
         common::setFilesystemUid(conf->userIdentity);
 
         try {
-            if(!boost::filesystem::exists(conf->getImageFile())) {
+            auto imageStore = image_manager::ImageStore(conf);
+            auto image = imageStore.findImage(conf->imageReference);
+            if(!image) {
                 auto message = boost::format("Specified image %s is not available") % conf->imageReference;
+                cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
+                exit(EXIT_FAILURE);
+            }
+            if(!boost::filesystem::exists(image->imageFile)) {
+                auto message = boost::format("Storage inconsistency detected: image %s is available in the repository"
+                                             "metadata but its file does not exist at %s.\n"
+                                             "Please pull or load the image again.") % conf->imageReference % image->imageFile;
                 cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
                 exit(EXIT_FAILURE);
             }

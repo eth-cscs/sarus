@@ -116,7 +116,9 @@ def run_image_and_get_prettyname(is_centralized_repository, image):
         command = ["sarus", "run", image, "cat", "/etc/os-release"]
 
     lines = get_trimmed_output(command)
-    return lines[0].split("=")[1][1:-1]
+    for line in lines:
+        if line.startswith("PRETTY_NAME"):
+            return line.split("=")[1].strip('"')
 
 
 def run_command_in_container(is_centralized_repository, image, command, options_of_run_command=None, **subprocess_kwargs):
@@ -181,3 +183,21 @@ def get_trimmed_output(full_command, **subprocess_kwargs):
         raise
     trimmed_out = command_output_without_trailing_new_lines(out)
     return trimmed_out
+
+def get_sarus_error_output(command):
+    with open(os.devnull, 'wb') as devnull:
+        proc = subprocess.run(command, stdout=devnull, stderr=subprocess.PIPE)
+        if proc.returncode == 0:
+            import pytest
+            pytest.fail("Sarus didn't generate any error, but at least one was expected.")
+
+        stderr_without_trailing_whitespaces = proc.stderr.rstrip()
+        out = stderr_without_trailing_whitespaces.decode()
+
+    # filter out profiling messages
+    lines_filtered = []
+    for line in out.split('\n'):
+        if not line.startswith("profiling:"):
+            lines_filtered.append(line)
+
+    return '\n'.join(lines_filtered)

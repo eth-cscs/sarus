@@ -133,9 +133,9 @@ class TestGlibcHook(unittest.TestCase):
         self._mpi_command_line_option = None
 
     def test_container_without_glibc(self):
-        self.assertEqual(
-            util.run_image_and_get_prettyname(is_centralized_repository=False, image="quay.io/ethcscs/alpine:3.14"),
-            "Alpine Linux")
+        prettyname = util.run_image_and_get_prettyname(is_centralized_repository=False,
+                                                       image="quay.io/ethcscs/alpine:3.14")
+        assert prettyname.startswith("Alpine Linux")
 
     def test_no_injection_in_container_with_recent_glibc(self):
         self._glibc_command_line_option = True

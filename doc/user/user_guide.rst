@@ -446,6 +446,39 @@ command:
     fedora       latest       sha256:36af84ba69e21c9ef86a0424a090674c433b2b80c2462e57503886f1d823abe8   04d13a5c8de5   2022-03-25T13:17:57   50.03MB      index.docker.io
     ubuntu       <none>       sha256:dcc176d1ab45d154b767be03c703a35fe0df16cfb1cc7ea5dd3b6f9af99b6718   4f4768f23ea4   2022-03-25T13:21:40   26.41MB      index.docker.io
 
+Running images by digest
+------------------------
+
+To run images pulled by digest, append the digest to the image name using
+``@`` as separator:
+
+.. code-block::
+
+    $ sarus images --digests
+    REPOSITORY   TAG          DIGEST                                                                    IMAGE ID       CREATED               SIZE         SERVER
+    alpine       <none>       sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97   e3671980822d   2022-03-25T14:28:45   2.61MB       index.docker.io
+
+    $ sarus run alpine@sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97 cat /etc/os-release
+    NAME="Alpine Linux"
+    ID=alpine
+    VERSION_ID=3.15.2
+    PRETTY_NAME="Alpine Linux v3.15"
+    HOME_URL="https://alpinelinux.org/"
+    BUG_REPORT_URL="https://bugs.alpinelinux.org/"
+
+As with the :program:`sarus pull` command, if both tag and digest are specified
+the tag is ignored and the image is looked up using the digest:
+
+.. code-block::
+
+    $ sarus run alpine:1.0@sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97 cat /etc/os-release
+    NAME="Alpine Linux"
+    ID=alpine
+    VERSION_ID=3.15.2
+    PRETTY_NAME="Alpine Linux v3.15"
+    HOME_URL="https://alpinelinux.org/"
+    BUG_REPORT_URL="https://bugs.alpinelinux.org/"
+
 Removing images
 ---------------
 

@@ -35,4 +35,4 @@ class TestCommandLoad(unittest.TestCase):
 
         prettyname = util.run_image_and_get_prettyname(is_centralized_repository, "load/library/alpine:latest")
 
-        self.assertEqual(prettyname, "Alpine Linux")
+        assert prettyname.startswith("Alpine Linux")

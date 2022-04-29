@@ -93,6 +93,27 @@ class TestCommandPull(unittest.TestCase):
     def test_multiple_pulls_with_centralized_repository(self):
         self._test_multiple_pulls("quay.io/ethcscs/alpine:3.14", is_centralized_repository=True)
 
+    def test_pull_after_missing_image_file(self):
+        import pwd, pathlib
+        image = "quay.io/ethcscs/alpine:3.14"
+        util.pull_image_if_necessary(is_centralized_repository=False,
+                                     image=image)
+        with open(self.__class__._sarusjson_filename) as sarus_json:
+            config = json.load(sarus_json)
+            repo_base = config["localRepositoryBaseDir"]
+
+        username = pwd.getpwuid(os.geteuid()).pw_name
+        image_backing_file = pathlib.Path(repo_base, username, ".sarus/images/quay.io/ethcscs/alpine/3.14.squashfs")
+        image_backing_file.unlink()
+
+        error_message = util.get_sarus_error_output(["sarus", "run", image, "true"])
+        assert "Storage inconsistency detected" in error_message
+
+        util.pull_image(is_centralized_repository=False,
+                        image="quay.io/ethcscs/alpine:3.14")
+        assert util.run_image_and_get_prettyname(is_centralized_repository=False,
+                                                 image=image).startswith("Alpine Linux")
+
     def _test_command_pull(self, image, is_centralized_repository, expected_string=None):
         expected_image = expected_string if expected_string else image
 

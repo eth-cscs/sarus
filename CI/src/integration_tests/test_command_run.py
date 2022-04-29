@@ -67,16 +67,17 @@ class TestCommandRun(unittest.TestCase):
         self.assertEqual(processes[1]["comm"], "ps")
 
     def _test_command_run(self, is_centralized_repository):
-        util.pull_image_if_necessary(is_centralized_repository, "quay.io/ethcscs/alpine:3.14")
-        util.pull_image_if_necessary(is_centralized_repository, "quay.io/ethcscs/debian:buster")
-        util.pull_image_if_necessary(is_centralized_repository, "quay.io/ethcscs/centos:7")
-
-        self.assertEqual(util.run_image_and_get_prettyname(is_centralized_repository, "quay.io/ethcscs/alpine:3.14"),
-            "Alpine Linux")
-        self.assertEqual(util.run_image_and_get_prettyname(is_centralized_repository, "quay.io/ethcscs/debian:buster"),
-            "Debian GNU/Linux 10 (buster)")
-        self.assertEqual(util.run_image_and_get_prettyname(is_centralized_repository, "quay.io/ethcscs/centos:7"),
-            "CentOS Linux")
+        images = {"quay.io/ethcscs/alpine:3.14": "Alpine Linux",
+                  "quay.io/ethcscs/debian:buster": "Debian GNU/Linux",
+                  "quay.io/ethcscs/centos:7": "CentOS Linux",
+                  "quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d":
+                      "Alpine Linux",
+                  "quay.io/ethcscs/ubuntu:20.04@sha256:778fdd9f62a6d7c0e53a97489ab3db17738bc5c1acf09a18738a2a674025eae6":
+                      "Ubuntu"
+                 }
+        for reference, prettyname in images.items():
+            util.pull_image_if_necessary(is_centralized_repository, reference)
+            assert util.run_image_and_get_prettyname(is_centralized_repository, reference).startswith(prettyname)
 
     def _run_ps_in_container(self, with_private_pid_namespace, with_init_process):
         util.pull_image_if_necessary(is_centralized_repository=False, image=self.default_image)

@@ -23,4 +23,4 @@ class TestImageWithMaxPathLength(unittest.TestCase):
     def test_image_with_max_path_length(self):
         util.pull_image_if_necessary(is_centralized_repository=False, image=self._IMAGE_NAME)
         prettyname = util.run_image_and_get_prettyname(is_centralized_repository=False, image=self._IMAGE_NAME)
-        assert prettyname == "Alpine Linux"
+        assert prettyname.startswith("Alpine Linux")
