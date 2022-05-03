@@ -464,13 +464,7 @@ private:
                 cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
                 exit(EXIT_FAILURE);
             }
-            if(!boost::filesystem::exists(image->imageFile)) {
-                auto message = boost::format("Storage inconsistency detected: image %s is available in the repository"
-                                             "metadata but its file does not exist at %s.\n"
-                                             "Please pull or load the image again.") % conf->imageReference % image->imageFile;
-                cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
-                exit(EXIT_FAILURE);
-            }
+            verifyImageBackingFiles(*image);
         } catch(const std::exception& e) {
             SARUS_RETHROW_ERROR(e, "Failed to verify that image is available");
         }
@@ -478,6 +472,29 @@ private:
         common::setFilesystemUid(rootIdentity);
 
         cli::utility::printLog("Successfully verified that image is available", common::LogLevel::INFO);
+    }
+
+    void verifyImageBackingFiles(const common::SarusImage& image) const {
+        auto missing = std::vector<std::string>{};
+        if(!boost::filesystem::exists(image.imageFile)) {
+            missing.push_back(image.imageFile.string());
+        }
+        if(!boost::filesystem::exists(image.metadataFile)) {
+            missing.push_back(image.metadataFile.string());
+        }
+        if(!missing.empty()) {
+            auto message = boost::format("Storage inconsistency detected: image %s is listed in the repository "
+                                         "metadata but the following backing files are missing:\n%s\n"
+                                         "Attempting to remove image from metadata to resolve the inconsistency.\n")
+                                         % conf->imageReference % boost::algorithm::join(missing, "\n");
+            cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
+
+            auto imageManager = image_manager::ImageManager{conf};
+            imageManager.removeImage();
+
+            cli::utility::printLog("Please pull or load the image again.", common::LogLevel::GENERAL, std::cerr);
+            exit(EXIT_FAILURE);
+        }
     }
 
 private:

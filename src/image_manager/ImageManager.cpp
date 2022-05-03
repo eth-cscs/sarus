@@ -60,13 +60,23 @@ namespace image_manager {
         }
         printLog( boost::format("# image digest     : %s") % pullReference.digest, common::LogLevel::GENERAL);
 
+        auto storedImage = imageStore.findImage(pullReference);
+        if (storedImage && storedImage->reference.digest == pullReference.digest) {
+            printLog(boost::format("Image for %s is already available and up to date") % config->imageReference,
+                     common::LogLevel::GENERAL);
+            return;
+        }
+
+        printLog("Image not found in storage or stored image not up-to-date. Proceeding with pull...",
+                 common::LogLevel::INFO);
+
         // Re-normalize pullReference to always pull by digest internally.
         // This avoids inconsistencies in case the reference resolution done by Skopeo mismatches
         // with the registry digest found by Sarus
         auto ociImagePath = skopeoDriver.copyToOCIImage("docker", pullReference.normalize().string());
         processImage(OCIImage{config, ociImagePath}, pullReference);
 
-        printLog(boost::format("Successfully pulled image"), common::LogLevel::INFO);
+        printLog("Successfully pulled image", common::LogLevel::INFO);
     }
 
     /**
@@ -81,7 +91,7 @@ namespace image_manager {
         auto ociImagePath = skopeoDriver.copyToOCIImage("docker-archive", archive.string());
         processImage(OCIImage{config, ociImagePath}, config->imageReference);
 
-        printLog(boost::format("Successfully loaded image archive"), common::LogLevel::INFO);
+        printLog("Successfully loaded image archive", common::LogLevel::INFO);
     }
 
     /**
@@ -103,7 +113,7 @@ namespace image_manager {
         imageStore.removeImage(config->imageReference);
 
         printLog(boost::format("removed image %s") % config->imageReference, common::LogLevel::GENERAL);
-        printLog(boost::format("successfully removed image"), common::LogLevel::INFO);
+        printLog("successfully removed image", common::LogLevel::INFO);
     }
 
     void ImageManager::processImage(const OCIImage& image, const common::ImageReference& storageReference) {
@@ -193,8 +203,8 @@ namespace image_manager {
     void ImageManager::issueWarningIfIsCentralizedRepositoryAndIsNotRootUser() const {
         bool isRoot = config->userIdentity.uid == 0;
         if(config->useCentralizedRepository && !isRoot) {
-            auto message = boost::format("attempting to perform an operation on the"
-                " centralized repository without root privileges");
+            auto message = std::string{"attempting to perform an operation on the"
+                " centralized repository without root privileges"};
             printLog(message, common::LogLevel::WARN);
         }
     }

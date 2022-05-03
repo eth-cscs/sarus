@@ -66,6 +66,20 @@ class TestCommandPull(unittest.TestCase):
                                 is_centralized_repository=False,
                                 expected_string="quay.io/ethcscs/alpine:<none>@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d")
 
+    def test_command_pull_with_uptodate_image_in_local_repository(self):
+        self._test_command_pull_with_uptodate_image("quay.io/ethcscs/ubuntu:20.04", False)
+
+    def test_command_pull_with_uptodate_image_in_centralized_repository(self):
+        self._test_command_pull_with_uptodate_image("quay.io/ethcscs/ubuntu:20.04", True)
+
+    def test_command_pull_with_uptodate_image_by_digest(self):
+        self._test_command_pull_with_uptodate_image("quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d",
+                                                    False)
+
+    def test_command_pull_with_uptodate_image_by_tag_and_digest(self):
+        self._test_command_pull_with_uptodate_image("quay.io/ethcscs/alpine:3.14@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d",
+                                                    False)
+
     @unittest.skip("Not implemented yet")
     def test_command_pull_fails_with_insecure_registry(self):
         with self.assertRaises(subprocess.CalledProcessError):
@@ -122,6 +136,11 @@ class TestCommandPull(unittest.TestCase):
 
         util.pull_image_if_necessary(is_centralized_repository, image)
         self.assertTrue(util.is_image_available(is_centralized_repository, expected_image))
+
+    def _test_command_pull_with_uptodate_image(self, image, is_centralized_repository):
+        util.pull_image_if_necessary(is_centralized_repository, image)
+        output = util.pull_image(is_centralized_repository, image)
+        self.assertEqual(output[-1], f"Image for {image} is already available and up to date")
 
     # check that multiple pulls of the same image don't generate
     # multiple entries in the list of available images

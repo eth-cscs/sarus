@@ -89,7 +89,7 @@ def pull_image(is_centralized_repository, image):
         command = ["sarus", "pull", "--centralized-repository", image]
     else:
         command = ["sarus", "pull", image]
-    subprocess.check_call(command)
+    return get_trimmed_output(command)
 
 
 def remove_image_if_necessary(is_centralized_repository, image):

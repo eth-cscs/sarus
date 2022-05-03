@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The `sarus images` command now displays the image ID by default.
   The image ID, as defined by the OCI Image Specification, is the hash of the image's configuration JSON. More details [here](https://github.com/opencontainers/image-spec/blob/main/config.md#imageid)
+- The `sarus pull` command now skips the pull if the requested image is already available locally and up-to-date
 
 ### Fixed
 
