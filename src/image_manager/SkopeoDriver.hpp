@@ -44,6 +44,7 @@ private:
 private:
     boost::filesystem::path skopeoPath;
     boost::filesystem::path tempDir;
+    boost::filesystem::path cachePath;
     const std::string sysname = "SkopeoDriver";
 };
 

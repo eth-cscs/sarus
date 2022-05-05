@@ -377,6 +377,24 @@ expansion is not supported. However, the variables can be set to a single asteri
 to match all hosts. In case both variables are set, the lower case version
 is preferred.
 
+Download cache
+--------------
+
+During image pulls, Sarus stores individual image components (like filesystem
+layers and OCI configuration files) downloaded from registries in a cache
+directory, so they can be reused by subsequent pull commands.
+
+The location of the cache directory for the current user is displayed at the
+beginning of the :program:`sarus pull` command output, alongside image properties
+and other directories used by Sarus.
+The location of the cache can also be obtained from the
+:ref:`localRepositoryBaseDir <config-reference-localRepositoryBaseDir>` parameter
+in the ``sarus.json`` :doc:`configuration file </config/basic_configuration>`,
+using the following path format ``<localRepositoryBaseDir>/<username>/.sarus/cache``.
+
+The contents of the download cache can be deleted at any time to free up storage
+space.
+
 .. _user-load-archive:
 
 Loading images from tar archives

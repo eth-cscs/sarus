@@ -15,6 +15,7 @@
 #include <boost/algorithm/string/trim.hpp>
 
 #include "common/Error.hpp"
+#include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 
 
@@ -23,14 +24,23 @@ namespace image_manager {
 
 SkopeoDriver::SkopeoDriver(std::shared_ptr<const common::Config> config)
     : skopeoPath{config->json["skopeoPath"].GetString()},
-      tempDir{config->directories.temp}
+      tempDir{config->directories.temp},
+      cachePath{config->directories.cache}
 {}
 
 boost::filesystem::path SkopeoDriver::copyToOCIImage(const std::string& sourceTransport, const std::string& sourceReference) const {
     printLog( boost::format("Copying '%s' to OCI image") % sourceReference, common::LogLevel::INFO);
 
-    auto ociImagePath = common::makeUniquePathWithRandomSuffix(tempDir / "ociImage");
+    auto ociImagePath = common::makeUniquePathWithRandomSuffix(cachePath / "ociImages/image");
+    auto ociImageRAII = common::PathRAII{ociImagePath};
     printLog( boost::format("Creating temporary OCI image in: %s") % ociImagePath, common::LogLevel::DEBUG);
+    common::createFoldersIfNecessary(ociImagePath);
+
+    if (sourceTransport == "docker") {
+        auto imageBlobsPath = ociImagePath / "blobs";
+        boost::filesystem::create_symlink(cachePath/"blobs", imageBlobsPath);
+        printLog( boost::format("Symlinking blob cache %s to %s") % cachePath % imageBlobsPath, common::LogLevel::DEBUG);
+    }
 
     auto args = generateBaseArgs();
     args += common::CLIArguments{"copy",
@@ -50,6 +60,7 @@ boost::filesystem::path SkopeoDriver::copyToOCIImage(const std::string& sourceTr
     printLog(boost::format("Elapsed time on copy operation: %s [sec]") % elapsed, common::LogLevel::INFO);
     printLog(boost::format("Successfully created OCI image"), common::LogLevel::INFO);
 
+    ociImageRAII.release();
     return ociImagePath;
 }
 

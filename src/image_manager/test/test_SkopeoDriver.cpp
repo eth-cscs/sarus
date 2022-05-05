@@ -24,7 +24,6 @@ TEST_GROUP(SkopeoDriverTestGroup) {
 TEST(SkopeoDriverTestGroup, copyToOCIImage) {
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
-    boost::filesystem::remove_all(config->directories.cache);
 
     auto driver = image_manager::SkopeoDriver{config};
 
@@ -41,6 +40,8 @@ TEST(SkopeoDriverTestGroup, copyToOCIImage) {
             FAIL("Could not find OCI Image ref name inside index.json");
         }
         CHECK_EQUAL(imageRef, std::string{"sarus-oci-image"});
+        CHECK(boost::filesystem::is_symlink(ociImagePath / "blobs"));
+        CHECK(boost::filesystem::read_symlink(ociImagePath / "blobs") == config->directories.cache / "blobs");
         boost::filesystem::remove_all(ociImagePath);
     }
     // Docker archive
@@ -56,6 +57,7 @@ TEST(SkopeoDriverTestGroup, copyToOCIImage) {
             FAIL("Could not find OCI Image ref name inside index.json");
         }
         CHECK_EQUAL(imageRef, std::string{"sarus-oci-image"});
+        CHECK(boost::filesystem::is_directory(ociImagePath / "blobs"));
         boost::filesystem::remove_all(ociImagePath);
     }
 }
@@ -63,7 +65,6 @@ TEST(SkopeoDriverTestGroup, copyToOCIImage) {
 TEST(SkopeoDriverTestGroup, inspectRaw) {
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
-    boost::filesystem::remove_all(config->directories.cache);
 
     auto driver = image_manager::SkopeoDriver{config};
 

@@ -35,17 +35,22 @@ void Config::Directories::initialize(bool useCentralizedRepository, const common
                             common::LogLevel::DEBUG);
         repository = common::getCentralizedRepositoryDirectory(config);
         images = repository / "images";
+        common::createFoldersIfNecessary(images,config.userIdentity.uid, config.userIdentity.gid);
     }
     else {
         common::logMessage( boost::format("initializing CLI config's directories for local repository"),
                             common::LogLevel::DEBUG);
         repository = common::getLocalRepositoryDirectory(config);
         images = repository / "images";
+        common::createFoldersIfNecessary(images, config.userIdentity.uid, config.userIdentity.gid);
     }
 
     cache = repository / "cache";
+    common::createFoldersIfNecessary(cache, config.userIdentity.uid, config.userIdentity.gid);
+    common::createFoldersIfNecessary(cache / "ociImages", config.userIdentity.uid, config.userIdentity.gid);
+    common::createFoldersIfNecessary(cache / "blobs", config.userIdentity.uid, config.userIdentity.gid);
 
-    bool tempDirWasSpecifiedThroughCLI = tempFromCLI != "";
+    bool tempDirWasSpecifiedThroughCLI = !tempFromCLI.empty();
     if(tempDirWasSpecifiedThroughCLI) {
         temp = boost::filesystem::absolute(tempFromCLI);
     }
