@@ -12,11 +12,13 @@
 
 #include <chrono>
 
+#include <boost/regex.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
 #include "common/Error.hpp"
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
+#include "image_manager/Utility.hpp"
 
 
 namespace sarus {
@@ -26,7 +28,27 @@ SkopeoDriver::SkopeoDriver(std::shared_ptr<const common::Config> config)
     : skopeoPath{config->json["skopeoPath"].GetString()},
       tempDir{config->directories.temp},
       cachePath{config->directories.cache}
-{}
+{
+    authFileBasePath = config->directories.repository;
+
+    auto xdgRuntimeItr = config->commandRun.hostEnvironment.find("XDG_RUNTIME_DIR");
+    if (xdgRuntimeItr != config->commandRun.hostEnvironment.end()) {
+        if (boost::filesystem::is_directory(xdgRuntimeItr->second)) {
+            authFileBasePath = xdgRuntimeItr->second + "/sarus";
+        }
+        else {
+            printLog(boost::format("XDG_RUNTIME_DIR environment set to %s, but directory does not exist") % xdgRuntimeItr->second,
+                     common::LogLevel::DEBUG);
+        }
+    }
+    printLog( boost::format("Set authentication file base path to %s") % authFileBasePath, common::LogLevel::DEBUG);
+
+    authFilePath.clear();
+}
+
+SkopeoDriver::~SkopeoDriver() {
+    boost::filesystem::remove(authFilePath);
+}
 
 boost::filesystem::path SkopeoDriver::copyToOCIImage(const std::string& sourceTransport, const std::string& sourceReference) const {
     printLog( boost::format("Copying '%s' to OCI image") % sourceReference, common::LogLevel::INFO);
@@ -43,16 +65,18 @@ boost::filesystem::path SkopeoDriver::copyToOCIImage(const std::string& sourceTr
     }
 
     auto args = generateBaseArgs();
-    args += common::CLIArguments{"copy",
-                                 getTransportString(sourceTransport) + sourceReference,
+    args.push_back("copy");
+    if (!authFilePath.empty()){
+        args += common::CLIArguments{"--src-authfile", authFilePath.string()};
+    }
+    args += common::CLIArguments{getTransportString(sourceTransport) + sourceReference,
                                  "oci:"+ociImagePath.string()+":sarus-oci-image"};
 
     auto start = std::chrono::system_clock::now();
     auto status = common::forkExecWait(args);
     if(status != 0) {
-        auto message = boost::format("%s exited with code %d") % args % status;
-        printLog(message, common::LogLevel::INFO);
-        exit(status);
+        auto message = boost::format("Failed to copy '%s' to OCI image") % sourceReference;
+        SARUS_THROW_ERROR(message.str());
     }
     auto end = std::chrono::system_clock::now();
 
@@ -66,9 +90,12 @@ boost::filesystem::path SkopeoDriver::copyToOCIImage(const std::string& sourceTr
 
 rapidjson::Document SkopeoDriver::inspectRaw(const std::string& sourceTransport, const std::string& sourceReference) const {
     auto inspectOutput = std::string{};
-    auto args = generateBaseArgs();
-    args += common::CLIArguments{"inspect", "--raw",
-                                 getTransportString(sourceTransport) + sourceReference};
+
+    auto args = generateBaseArgs() + common::CLIArguments{"inspect", "--raw"};
+    if (!authFilePath.empty()){
+        args += common::CLIArguments{"--authfile", authFilePath.string()};
+    }
+    args.push_back(getTransportString(sourceTransport) + sourceReference);
 
     auto start = std::chrono::system_clock::now();
     try {
@@ -78,7 +105,6 @@ rapidjson::Document SkopeoDriver::inspectRaw(const std::string& sourceTransport,
         // Confirm skopeo failed because of image non existent or unauthorized access
         auto errorMessage = std::string(e.what());
         auto exitCodeString = std::string{"Process terminated with status 1"};
-        auto manifestErrorString = std::string{"Error reading manifest"};
 
         /**
          * Registries often respond differently to the same incorrect requests, making it very hard to
@@ -89,12 +115,22 @@ rapidjson::Document SkopeoDriver::inspectRaw(const std::string& sourceTransport,
          */
         auto deniedAccessString = std::string{"denied:"};
         auto unauthorizedAccessString = std::string{"unauthorized:"};
+        auto invalidCredentialsString = std::string{"invalid username/password:"};
+        auto manifestErrorString = std::string{"reading manifest"};
 
-        if(errorMessage.find(exitCodeString) != std::string::npos
-           && errorMessage.find(manifestErrorString) != std::string::npos) {
-            auto messageHeader = boost::format{"Failed to pull image '%s'"
-                                               "\nError reading manifest from registry."} % sourceReference;
+        if(errorMessage.find(exitCodeString) != std::string::npos) {
+            auto messageHeader = boost::format{"Failed to pull image '%s'"} % sourceReference;
             printLog(messageHeader, common::LogLevel::GENERAL, std::cerr);
+
+            if(errorMessage.find(invalidCredentialsString) != std::string::npos) {
+                auto message = boost::format{"Unable to retrieve auth token: invalid username or password provided."};
+                printLog(message, common::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(errorMessage, common::LogLevel::INFO);
+            }
+
+            if(errorMessage.find(manifestErrorString) != std::string::npos) {
+                printLog("Error reading manifest from registry.", common::LogLevel::GENERAL, std::cerr);
+            }
 
             if(errorMessage.find(unauthorizedAccessString) != std::string::npos
                || errorMessage.find(deniedAccessString) != std::string::npos) {
@@ -141,6 +177,25 @@ std::string SkopeoDriver::manifestDigest(const boost::filesystem::path& manifest
         digestOutput = digestOutput.substr(digestOutput.rfind('\n') + 1);
     }
     return digestOutput;
+}
+
+void SkopeoDriver::acquireAuthFile(const common::Config::Authentication& auth, const common::ImageReference& reference) {
+    printLog("Acquiring authentication file", common::LogLevel::INFO);
+
+    auto jsonPtrFormattedImageName = boost::regex_replace(reference.getFullName(), boost::regex("/"), "~1");
+    auto jsonPointer = boost::format("/auths/%s/auth") % jsonPtrFormattedImageName;
+
+    auto encodedCredentials = utility::base64Encode(auth.username + ":" + auth.password);
+
+    auto authJSON = rapidjson::Document{};
+    rapidjson::Pointer(jsonPointer.str().c_str()).Set(authJSON, encodedCredentials.c_str());
+
+    common::createFoldersIfNecessary(authFileBasePath);
+    authFilePath = authFileBasePath / "auth.json";
+    common::writeJSON(authJSON, authFilePath);
+    boost::filesystem::permissions(authFilePath, boost::filesystem::perms::owner_read | boost::filesystem::perms::owner_write);
+
+    printLog(boost::format("Successfully acquired authentication file %s") % authFilePath, common::LogLevel::INFO);
 }
 
 common::CLIArguments SkopeoDriver::generateBaseArgs() const {

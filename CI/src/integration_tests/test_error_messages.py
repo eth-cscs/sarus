@@ -157,11 +157,10 @@ class TestErrorMessages(unittest.TestCase):
                             "\nSee 'sarus help pull' (--login option)")
         self._check(command, expected_message)
 
-    @unittest.skip("Not implemented yet")
     def test_command_pull_authentication_options(self):
-        command = ["bash", "-c", "printf 'invalid-username\ninvalid-password' |sarus pull --login quay.io/ethcscs/private-example"]
-        expected_message = ("Authorization failed when retrieving token for image 'quay.io/ethcscs/private-example:latest'"
-                            "\nPlease check the entered credentials.")
+        command = ["bash", "-c", "printf 'invalid-username\ninvalid-password' | sarus pull --login quay.io/ethcscs/private-example"]
+        expected_message = ("Failed to pull image 'quay.io/ethcscs/private-example:latest'"
+                            "\nUnable to retrieve auth token: invalid username or password provided.")
         self._check(command, expected_message)
 
     def test_command_rmi(self):

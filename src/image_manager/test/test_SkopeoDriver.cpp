@@ -8,6 +8,8 @@
  *
  */
 
+#include <rapidjson/document.h>
+
 #include "common/Logger.hpp"
 #include "common/Utility.hpp"
 #include "image_manager/SkopeoDriver.hpp"
@@ -138,6 +140,79 @@ TEST(SkopeoDriverTestGroup, generateBaseArgs) {
     expectedArgs = common::CLIArguments{"/usr/bin/skopeo"};
     CHECK(skopeoArgs == expectedArgs);
     logger.setLevel(common::LogLevel::WARN);
+}
+
+
+TEST(SkopeoDriverTestGroup, acquireAuthFile) {
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = configRAII.config;
+
+    config->authentication.isAuthenticationNeeded = true;
+    config->authentication.username = "alice";
+    config->authentication.password = "Aw3s0m&_P@s5w0rD";
+
+    config->imageReference = common::ImageReference{"test.registry.io", "foo", "private-image", "latest", ""};
+
+    auto xdgRuntimeDir = config->directories.repository / "xdg_runtime_dir";
+
+    auto expectedAuthJSON = rapidjson::Document{};
+    rapidjson::Pointer("/auths/test.registry.io~1foo~1private-image/auth").Set(expectedAuthJSON, "YWxpY2U6QXczczBtJl9QQHM1dzByRA==");
+
+    auto expectedPermissions = boost::filesystem::perms::owner_read | boost::filesystem::perms::owner_write;
+
+    // create file in XDG_RUNTIME_DIR if defined and existing
+    {
+        common::createFoldersIfNecessary(xdgRuntimeDir);
+        config->commandRun.hostEnvironment["XDG_RUNTIME_DIR"] = xdgRuntimeDir.string();
+        auto expectedAuthFilePath = xdgRuntimeDir / "sarus/auth.json";
+
+        // Instantiate the SkopeoDriver object in another scope to check removal
+        // of the authFile by the destructor
+        {
+            CHECK_FALSE(boost::filesystem::exists(expectedAuthFilePath));
+
+            auto driver = image_manager::SkopeoDriver{config};
+            driver.acquireAuthFile(config->authentication, config->imageReference);
+
+            CHECK(boost::filesystem::exists(expectedAuthFilePath));
+            CHECK(boost::filesystem::status(expectedAuthFilePath).permissions() == expectedPermissions);
+            CHECK(common::readJSON(expectedAuthFilePath) == expectedAuthJSON);
+        }
+        CHECK_FALSE(boost::filesystem::exists(expectedAuthFilePath));
+    }
+    // create file in Sarus local repo if XDG_RUNTIME_DIR defined but not existing
+    {
+        boost::filesystem::remove_all(xdgRuntimeDir);
+        auto expectedAuthFilePath = config->directories.repository / "auth.json";
+        {
+            CHECK_FALSE(boost::filesystem::exists(expectedAuthFilePath));
+
+            auto driver = image_manager::SkopeoDriver{config};
+            driver.acquireAuthFile(config->authentication, config->imageReference);
+
+            CHECK(boost::filesystem::exists(expectedAuthFilePath));
+            CHECK(boost::filesystem::status(expectedAuthFilePath).permissions() == expectedPermissions);
+            CHECK(common::readJSON(expectedAuthFilePath) == expectedAuthJSON);
+        }
+        CHECK_FALSE(boost::filesystem::exists(expectedAuthFilePath));
+    }
+    // create file in Sarus local repo if XDG_RUNTIME_DIR not defined
+    {
+        common::createFoldersIfNecessary(xdgRuntimeDir);
+        config->commandRun.hostEnvironment.erase("XDG_RUNTIME_DIR");
+        auto expectedAuthFilePath = config->directories.repository / "auth.json";
+        {
+            CHECK_FALSE(boost::filesystem::exists(expectedAuthFilePath));
+
+            auto driver = image_manager::SkopeoDriver{config};
+            driver.acquireAuthFile(config->authentication, config->imageReference);
+
+            CHECK(boost::filesystem::exists(expectedAuthFilePath));
+            CHECK(boost::filesystem::status(expectedAuthFilePath).permissions() == expectedPermissions);
+            CHECK(common::readJSON(expectedAuthFilePath) == expectedAuthJSON);
+        }
+        CHECK_FALSE(boost::filesystem::exists(expectedAuthFilePath));
+    }
 }
 
 }}} // namespace

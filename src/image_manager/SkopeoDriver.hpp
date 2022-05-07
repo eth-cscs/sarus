@@ -18,6 +18,7 @@
 #include <boost/filesystem.hpp>
 
 #include "common/Config.hpp"
+#include "common/Lockfile.hpp"
 #include "common/LogLevel.hpp"
 #include "common/CLIArguments.hpp"
 
@@ -28,9 +29,11 @@ namespace image_manager {
 class SkopeoDriver {
 public:
     SkopeoDriver(std::shared_ptr<const common::Config> config);
+    ~SkopeoDriver();
     boost::filesystem::path copyToOCIImage(const std::string& sourceTransport, const std::string& sourceReference) const;
     rapidjson::Document inspectRaw(const std::string& sourceTransport, const std::string& sourceReference) const;
     std::string manifestDigest(const boost::filesystem::path& manifestPath) const;
+    void acquireAuthFile(const common::Config::Authentication& auth, const common::ImageReference& reference);
     common::CLIArguments generateBaseArgs() const;
 
 private:
@@ -45,6 +48,8 @@ private:
     boost::filesystem::path skopeoPath;
     boost::filesystem::path tempDir;
     boost::filesystem::path cachePath;
+    boost::filesystem::path authFileBasePath;
+    boost::filesystem::path authFilePath;
     const std::string sysname = "SkopeoDriver";
 };
 

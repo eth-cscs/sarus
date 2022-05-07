@@ -24,6 +24,7 @@ namespace utility {
 
 rapidjson::Document getCurrentOCIPlatform();
 std::string getPlatformDigestFromOCIIndex(const rapidjson::Document& index, const rapidjson::Document& targetPlatform);
+std::string base64Encode(const std::string& input);
 
 void printLog(const boost::format& message, common::LogLevel LogLevel,
               std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr);

@@ -102,6 +102,15 @@ TEST(ImageManagerUtilityTestGroup, getPlatformDigestFromOCIIndex) {
     }
 }
 
+TEST(ImageManagerUtilityTestGroup, base64Encode) {
+    CHECK(utility::base64Encode("") == "");
+    CHECK(utility::base64Encode("abc") == "YWJj");
+    CHECK(utility::base64Encode("abc1") == "YWJjMQ==");
+    CHECK(utility::base64Encode("ZyxWvut0987654") == "Wnl4V3Z1dDA5ODc2NTQ=");
+    CHECK(utility::base64Encode("username:password") == "dXNlcm5hbWU6cGFzc3dvcmQ=");
+    CHECK(utility::base64Encode("alice:Aw3s0m&_P@s5w0rD") == "YWxpY2U6QXczczBtJl9QQHM1dzByRA==");
+}
+
 }}} // namespace
 
 SARUS_UNITTEST_MAIN_FUNCTION();

@@ -53,6 +53,10 @@ namespace image_manager {
         //   tag at the storage level
         auto pullReference = config->imageReference.normalize();
 
+        if (config->authentication.isAuthenticationNeeded) {
+            skopeoDriver.acquireAuthFile(config->authentication, pullReference);
+        }
+
         // If pulling only with tag, attempt to complete the reference by retrieving
         // the digest from the remote registry, to be consistent with Docker behavior
         if (pullReference.digest.empty()) {

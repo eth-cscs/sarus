@@ -51,7 +51,7 @@ PathRAII::~PathRAII() {
 }
 
 const boost::filesystem::path& PathRAII::getPath() const {
-    return *path;
+    return path.value();
 }
 
 void PathRAII::release() {

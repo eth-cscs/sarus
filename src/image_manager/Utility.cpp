@@ -10,7 +10,11 @@
 
 #include "image_manager/Utility.hpp"
 
+#include <sstream>
+
 #include <boost/predef.h>
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
 
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
@@ -132,6 +136,24 @@ std::string getPlatformDigestFromOCIIndex(const rj::Document& index, const rj::D
         printLog(message, common::LogLevel::DEBUG);
     }
     return output;
+}
+
+std::string base64Encode(const std::string& input) {
+    namespace bai = boost::archive::iterators;
+    typedef std::string::const_iterator iterator_type;
+
+    // Retrieve 6 bit integers from a sequence of 8 bit bytes
+    // and convert binary values to base64 characters
+    typedef bai::base64_from_binary<bai::transform_width<iterator_type, 6, 8>> base64_enc;
+
+    std::stringstream ss;
+    std::copy(base64_enc(input.begin()), base64_enc(input.end()), std::ostream_iterator<char>(ss));
+
+    // Pad with '=' if the input string is not a multiple of 3
+    const std::string base64Padding[] = {"", "==","="};
+    ss << base64Padding[input.size() % 3];
+
+    return ss.str();
 }
 
 void printLog(const boost::format& message, common::LogLevel level,

@@ -34,9 +34,8 @@ void UmociDriver::unpack(const boost::filesystem::path& imagePath, const boost::
     auto start = std::chrono::system_clock::now();
     auto status = common::forkExecWait(args);
     if(status != 0) {
-        auto message = boost::format("%s exited with code %d") % args % status;
-        printLog(message, common::LogLevel::INFO);
-        exit(status);
+        auto message = boost::format("Failed to unpack OCI image %s") % imagePath;
+        SARUS_THROW_ERROR(message.str());
     }
     auto end = std::chrono::system_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / double(1000);
