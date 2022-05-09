@@ -239,16 +239,38 @@ Pulling images from private repositories
 ----------------------------------------
 
 Remote registries may host image repositories which are not public, but require
-credentials in order to access their content. To perform a pull from a private
-repository, use the ``--login`` option to the :program:`sarus pull` command and
-enter your credentials:
+credentials in order to access their content. To retrieve images from a private
+repository, the :program:`sarus pull` command offers several options.
+
+The ``--login`` option allows to enter credentials through an interactive
+prompt after launching the command:
 
 .. code-block:: bash
 
     $ srun -N 1 sarus pull --login <privateRepo>/<image>:<tag>
-    username    :user
-    password    :
+    username: user
+    password:
     ...
+
+``--login`` also supports piping to stdin, at the condition that user name and
+password are separated by a newline character:
+
+.. code-block:: bash
+
+    $ srun -N 1 printf '<user>\n<password>' | sarus pull --login <privateRepo>/<image>:<tag>
+
+The ``-u/--user`` option allows to provide the user name as part of the command
+line, while the ``--password-stdin`` option reads the password from stdin. These
+two options complement each other naturally:
+
+.. code-block:: bash
+
+    $ srun -N 1 cat passwordFile.txt | sarus pull --username <user> --password-stdin <privateRepo>/<image>:<tag>
+
+It is also possible to combine the ``-u/--user`` option with ``--login`` (for
+example to automatically populate the username field in the interactive prompt);
+on the other hand, the ``--password-stdin`` option cannot be used in conjunction
+with ``--login``.
 
 Managing the registry authentication file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

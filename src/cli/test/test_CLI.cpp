@@ -152,6 +152,9 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
         CHECK(conf->directories.tempFromCLI.empty() == true);
         CHECK(conf->useCentralizedRepository == false);
         CHECK(conf->enforceSecureServer == true);
+        CHECK(conf->authentication.isAuthenticationNeeded == false);
+        CHECK(conf->authentication.username.empty());
+        CHECK(conf->authentication.password.empty());
         CHECK(conf->imageReference.server == "index.docker.io");
         CHECK(conf->imageReference.repositoryNamespace == "library");
         CHECK(conf->imageReference.image == "ubuntu");
@@ -163,6 +166,9 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
         CHECK(conf->directories.tempFromCLI.empty() == true);
         CHECK(conf->useCentralizedRepository == true);
         CHECK(conf->enforceSecureServer == true);
+        CHECK(conf->authentication.isAuthenticationNeeded == false);
+        CHECK(conf->authentication.username.empty());
+        CHECK(conf->authentication.password.empty());
         CHECK(conf->imageReference.server == "index.docker.io");
         CHECK(conf->imageReference.repositoryNamespace == "library");
         CHECK(conf->imageReference.image == "ubuntu");
@@ -179,10 +185,23 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
             "my.own.server:5000/user/image:tag"});
         CHECK(conf->directories.temp.string() == customTempDir.getPath().string());
         CHECK(conf->enforceSecureServer == true);
+        CHECK(conf->authentication.isAuthenticationNeeded == false);
+        CHECK(conf->authentication.username.empty());
+        CHECK(conf->authentication.password.empty());
         CHECK(conf->imageReference.server == "my.own.server:5000");
         CHECK(conf->imageReference.repositoryNamespace == "user");
         CHECK(conf->imageReference.image == "image");
         CHECK(conf->imageReference.tag == "tag");
+    }
+    // username
+    {
+        auto conf = generateConfig({"pull", "--username", "alice", "ubuntu"});
+        CHECK(conf->authentication.isAuthenticationNeeded == true);
+        CHECK(conf->authentication.username == "alice");
+
+        conf = generateConfig({"pull", "-u", "bob", "ubuntu"});
+        CHECK(conf->authentication.isAuthenticationNeeded == true);
+        CHECK(conf->authentication.username == "bob");
     }
     // insecure registry
     {
@@ -190,6 +209,9 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
         CHECK(conf->directories.tempFromCLI.empty() == true);
         CHECK(conf->useCentralizedRepository == false);
         CHECK(conf->enforceSecureServer == false);
+        CHECK(conf->authentication.isAuthenticationNeeded == false);
+        CHECK(conf->authentication.username.empty());
+        CHECK(conf->authentication.password.empty());
         CHECK(conf->imageReference.server == "insecure.registry:5000");
         CHECK(conf->imageReference.repositoryNamespace == "user");
         CHECK(conf->imageReference.image == "image");

@@ -70,7 +70,13 @@ private:
             ("temp-dir",
                 boost::program_options::value<std::string>(&conf->directories.tempFromCLI),
                 "Temporary directory where the image is expanded")
-            ("login", "Enter user credentials for private repository")
+            ("login", "Enter user credentials for private registry from stdin. "
+                      "Cannot be used in conjunction with '--password-stdin'")
+            ("password-stdin", "Read password for private registry from stdin. "
+                      "Cannot be used in conjunction with '--login'")
+            ("username,u",
+                boost::program_options::value<std::string>(&username),
+                "Username for private repository")
             ("centralized-repository", "Use centralized repository instead of the local one");
     }
 
@@ -91,6 +97,20 @@ private:
                         .style(boost::program_options::command_line_style::unix_style)
                         .run(), values);
             boost::program_options::notify(values);
+
+            if(values.count("username")) {
+                conf->authentication.isAuthenticationNeeded = true;
+                validateUsername(username);
+                conf->authentication.username = username;
+            }
+
+            if(values.count("password-stdin")) {
+                if(values.count("login")) {
+                    SARUS_THROW_ERROR("The options '--password-stdin' and '--login' cannot be used together");
+                }
+                conf->authentication.isAuthenticationNeeded = true;
+                conf->authentication.password = readPasswordFromStdin();
+            }
 
             if(values.count("login")) {
                 conf->authentication.isAuthenticationNeeded = true;
@@ -128,32 +148,52 @@ private:
     /**
      * Get the username/password from user input, and store into config.
      */
-    static void readUserCredentialsFromCLI(common::Config::Authentication& authentication) {
+    void readUserCredentialsFromCLI(common::Config::Authentication& authentication) {
         cli::utility::printLog(boost::format("reading user credentials from CLI"), common::LogLevel::DEBUG);
 
         std::cout << "username: ";
-        std::getline(std::cin, authentication.username);
+        if (username.empty()) {
+            std::getline(std::cin, username);
 
-        if(authentication.username.empty()) {
-            SARUS_THROW_ERROR("failed to read username from CLI (empty username is not valid)");
+            validateUsername(username);
+            authentication.username = username;
+        }
+        else {
+            std::cout << username << std::endl;
         }
 
         std::cout << "password: ";
-        common::SetStdinEcho(false);  // disable echo
-        std::getline(std::cin, authentication.password);
-        common::SetStdinEcho(true);   // enable echo
+        authentication.password = readPasswordFromStdin();
         std::cout << std::endl;
 
-        if(authentication.password.empty()) {
-            SARUS_THROW_ERROR("failed to read user's password from CLI (empty password is not valid)");
+        cli::utility::printLog(boost::format("successfully read user credentials"), common::LogLevel::DEBUG);
+    }
+
+    void validateUsername(const std::string& username) {
+        if (username.empty()) {
+            auto message = std::string{"Invalid username: empty value provided"};
+            SARUS_THROW_ERROR(message);
+        }
+    }
+
+    std::string readPasswordFromStdin() {
+        auto password = std::string{};
+
+        common::SetStdinEcho(false);  // disable echo
+        std::getline(std::cin, password);
+        common::SetStdinEcho(true);   // enable echo
+
+        if(password.empty()) {
+            SARUS_THROW_ERROR("Failed to read password from stdin: empty value provided");
         }
 
-        cli::utility::printLog(boost::format("successfully read user credentials"), common::LogLevel::DEBUG);
+        return password;
     }
 
 private:
     boost::program_options::options_description optionsDescription{"Options"};
     std::shared_ptr<common::Config> conf;
+    std::string username;
 };
 
 }

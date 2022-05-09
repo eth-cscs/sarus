@@ -163,6 +163,24 @@ class TestErrorMessages(unittest.TestCase):
                             "\nUnable to retrieve auth token: invalid username or password provided.")
         self._check(command, expected_message)
 
+        command = command = ["sarus", "pull", "--username", "", "quay.io/ethcscs/private-example"]
+        expected_message = "Invalid username: empty value provided"
+        self._check(command, expected_message)
+
+        command = ["bash", "-c", "printf 'invalid-password' | sarus pull --username invalid-username --login quay.io/ethcscs/private-example"]
+        expected_message = ("Failed to pull image 'quay.io/ethcscs/private-example:latest'"
+                            "\nUnable to retrieve auth token: invalid username or password provided.")
+        self._check(command, expected_message)
+
+        command = command = ["sarus", "pull", "--password-stdin", "--login", "quay.io/ethcscs/private-example"]
+        expected_message = "The options '--password-stdin' and '--login' cannot be used together"
+        self._check(command, expected_message)
+
+        command = ["bash", "-c", "printf 'invalid-password' | sarus pull --username invalid-username --password-stdin quay.io/ethcscs/private-example"]
+        expected_message = ("Failed to pull image 'quay.io/ethcscs/private-example:latest'"
+                            "\nUnable to retrieve auth token: invalid username or password provided.")
+        self._check(command, expected_message)
+
     def test_command_rmi(self):
         command = ["sarus", "rmi", "--invalid-option", "quay.io/ethcscs/alpine"]
         expected_message = "unrecognised option '--invalid-option'\nSee 'sarus help rmi'"

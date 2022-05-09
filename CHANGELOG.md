@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added [Umoci](https://umo.ci/) as a dependency to unpack OCI images
 - Added support for pulling, running and removing images by digest
 - Added the `--digests` option to `sarus images` for displaying digests of locally available images
+- Added the `--username` and `--password-stdin` options to `sarus pull` for supplying authentication credentials directly on the command line.
+  More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#pulling-images-from-private-repositories)
 - Added support for labels defined in OCI image configurations
 
 ### Changed
