@@ -201,7 +201,7 @@ namespace image_manager {
             imageMetadata["namespace"].GetString(),
             imageMetadata["image"].GetString(),
             imageMetadata["tag"].GetString(),
-            imageMetadata["registryDigest"].GetString()};
+            getRegistryDigest(imageMetadata)};
         auto image = common::SarusImage{
             imageReference,
             getImageID(imageMetadata),
