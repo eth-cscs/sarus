@@ -29,7 +29,6 @@
 
 using namespace sarus;
 
-static void saveAndClearEnvironmentVariables(common::Config& config);
 static void dropPrivileges(const common::Config& config);
 static void getPrivileges();
 
@@ -52,7 +51,7 @@ int main(int argc, char* argv[]) {
         auto config = std::make_shared<sarus::common::Config>(sarusInstallationPrefixDir);
         config->program_start = program_start;
         runtime::SecurityChecks{config}.runSecurityChecks(sarusInstallationPrefixDir);
-        saveAndClearEnvironmentVariables(*config);
+        config->commandRun.hostEnvironment = common::parseEnvironmentVariables(environ);
 
 
         // Process command
@@ -78,22 +77,6 @@ int main(int argc, char* argv[]) {
     }
 
     return 0;
-}
-
-static void saveAndClearEnvironmentVariables(common::Config& config) {
-    config.commandRun.hostEnvironment = common::parseEnvironmentVariables(environ);
-
-    if(clearenv() != 0) {
-        SARUS_THROW_ERROR("Failed to clear host environment variables");
-    }
-
-    auto path = std::string{"/bin:/sbin:/usr/bin"};
-    int overwrite = 1;
-    if(setenv("PATH", path.c_str(), overwrite) != 0) {
-        auto message = boost::format("Failed to setenv(\"PATH\", %s, %d): %s")
-            % path.c_str() % overwrite % strerror(errno);
-        SARUS_THROW_ERROR(message.str());
-    }
 }
 
 static void dropPrivileges(const common::Config& config) {

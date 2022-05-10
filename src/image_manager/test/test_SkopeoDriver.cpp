@@ -113,7 +113,7 @@ TEST(SkopeoDriverTestGroup, manifestDigest) {
     common::Logger::getInstance().setLevel(common::LogLevel::WARN);
 }
 
-TEST(SkopeoDriverTestGroup, generateBaseArgs) {
+TEST(SkopeoDriverTestGroup, generateBaseArgs_verbosity) {
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
 
@@ -142,6 +142,76 @@ TEST(SkopeoDriverTestGroup, generateBaseArgs) {
     logger.setLevel(common::LogLevel::WARN);
 }
 
+TEST(SkopeoDriverTestGroup, generateBaseArgs_policy) {
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = configRAII.config;
+
+    auto customPolicyPath = config->json["prefixDir"].GetString() + std::string{"/etc/policy.json"};
+    common::createFileIfNecessary(customPolicyPath);
+    rapidjson::Pointer("/containersPolicy/path").Set(config->json, customPolicyPath.c_str());
+
+    auto homeMock = boost::filesystem::path{config->json["localRepositoryBaseDir"].GetString() + std::string{"/homeMock"}};
+    auto userPolicyMock = homeMock / ".config/containers/policy.json";
+    common::setEnvironmentVariable("HOME=" + homeMock.string());
+
+    /**
+     * The unit tests for `copy` and `inspect` commands already implicitly test
+     * detection and usage of the system default /etc/containers/policy.json file.
+     *
+     * Absence of the system default policy is not testable without acquiring
+     * superuser privileges and modifying the testing environment's /etc/containers
+     * directory, which is considered overkill for this test program.
+     *
+     * The remaining cases involving user-specific policy file and Sarus configuration
+     * enforcement are covered below.
+     */
+
+    // User-specific default policy file
+    {
+        common::createFileIfNecessary(userPolicyMock);
+
+        image_manager::SkopeoDriver driver{config};
+        auto skopeoArgs = driver.generateBaseArgs();
+        auto expectedArgs = common::CLIArguments{"/usr/bin/skopeo"};
+        CHECK(skopeoArgs == expectedArgs);
+    }
+    // Enforce custom path even with default file present
+    {
+        rapidjson::Pointer("/containersPolicy/enforce").Set(config->json, true);
+
+        image_manager::SkopeoDriver driver{config};
+        auto skopeoArgs = driver.generateBaseArgs();
+        auto expectedPolicyValue = customPolicyPath;
+        auto expectedArgs = common::CLIArguments{"/usr/bin/skopeo", "--policy", expectedPolicyValue};
+        CHECK(skopeoArgs == expectedArgs);
+    }
+    // Custom path configured to non-existent file
+    {
+        boost::filesystem::remove(customPolicyPath);
+        CHECK_THROWS(common::Error, image_manager::SkopeoDriver{config});
+    }
+}
+
+TEST(SkopeoDriverTestGroup, generateBaseArgs_registriesd) {
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = configRAII.config;
+    auto customRegistriesDPath = config->json["prefixDir"].GetString() + std::string{"/etc/registries.d"};
+    common::createFoldersIfNecessary(customRegistriesDPath);
+    rapidjson::Pointer("/containersRegistries.dPath").Set(config->json, customRegistriesDPath.c_str());
+
+    // Expected behavior
+    {
+        image_manager::SkopeoDriver driver{config};
+        auto skopeoArgs = driver.generateBaseArgs();
+        auto expectedArgs = common::CLIArguments{"/usr/bin/skopeo", "--registries.d", customRegistriesDPath};
+        CHECK(skopeoArgs == expectedArgs);
+    }
+    // Non-existent directory
+    {
+        boost::filesystem::remove(customRegistriesDPath);
+        CHECK_THROWS(common::Error, image_manager::SkopeoDriver{config});
+    }
+}
 
 TEST(SkopeoDriverTestGroup, acquireAuthFile) {
     auto configRAII = test_utility::config::makeConfig();
@@ -163,7 +233,7 @@ TEST(SkopeoDriverTestGroup, acquireAuthFile) {
     // create file in XDG_RUNTIME_DIR if defined and existing
     {
         common::createFoldersIfNecessary(xdgRuntimeDir);
-        config->commandRun.hostEnvironment["XDG_RUNTIME_DIR"] = xdgRuntimeDir.string();
+        common::setEnvironmentVariable("XDG_RUNTIME_DIR=" + xdgRuntimeDir.string());
         auto expectedAuthFilePath = xdgRuntimeDir / "sarus/auth.json";
 
         // Instantiate the SkopeoDriver object in another scope to check removal
@@ -199,7 +269,7 @@ TEST(SkopeoDriverTestGroup, acquireAuthFile) {
     // create file in Sarus local repo if XDG_RUNTIME_DIR not defined
     {
         common::createFoldersIfNecessary(xdgRuntimeDir);
-        config->commandRun.hostEnvironment.erase("XDG_RUNTIME_DIR");
+        unsetenv("XDG_RUNTIME_DIR");
         auto expectedAuthFilePath = config->directories.repository / "auth.json";
         {
             CHECK_FALSE(boost::filesystem::exists(expectedAuthFilePath));

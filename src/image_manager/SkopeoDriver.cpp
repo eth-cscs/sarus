@@ -12,6 +12,7 @@
 
 #include <chrono>
 
+#include <rapidjson/document.h>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
@@ -30,20 +31,50 @@ SkopeoDriver::SkopeoDriver(std::shared_ptr<const common::Config> config)
       cachePath{config->directories.cache}
 {
     authFileBasePath = config->directories.repository;
-
-    auto xdgRuntimeItr = config->commandRun.hostEnvironment.find("XDG_RUNTIME_DIR");
-    if (xdgRuntimeItr != config->commandRun.hostEnvironment.end()) {
-        if (boost::filesystem::is_directory(xdgRuntimeItr->second)) {
-            authFileBasePath = xdgRuntimeItr->second + "/sarus";
+    try {
+        auto xdgRuntimePath = boost::filesystem::path{common::getEnvironmentVariable("XDG_RUNTIME_DIR")};
+        if (boost::filesystem::is_directory(xdgRuntimePath)) {
+            authFileBasePath = xdgRuntimePath / "sarus";
         }
         else {
-            printLog(boost::format("XDG_RUNTIME_DIR environment set to %s, but directory does not exist") % xdgRuntimeItr->second,
+            printLog(boost::format("XDG_RUNTIME_DIR environment set to %s, but directory does not exist") % xdgRuntimePath,
                      common::LogLevel::DEBUG);
         }
     }
+    catch (common::Error& e) {}
     printLog( boost::format("Set authentication file base path to %s") % authFileBasePath, common::LogLevel::DEBUG);
 
     authFilePath.clear();
+
+    if (const rapidjson::Value* configPolicy = rapidjson::Pointer("/containersPolicy/path").Get(config->json)) {
+        if (!boost::filesystem::is_regular_file(configPolicy->GetString())) {
+            auto message = boost::format("Custom containers policy file '%s' configured in sarus.json is not a regular file. "
+                                         "Please contact your system administrator.\nDocumentation reference: "
+                                         "https://sarus.readthedocs.io/en/stable/config/configuration_reference.html"
+                                         "#containerspolicy-object-optional") % configPolicy->GetString();
+            SARUS_THROW_ERROR(message.str());
+        }
+        customPolicyPath = boost::filesystem::path(configPolicy->GetString());
+    }
+
+    if (const rapidjson::Value* configEnforcePolicy = rapidjson::Pointer("/containersPolicy/enforce").Get(config->json)) {
+        enforceCustomPolicy = configEnforcePolicy->GetBool();
+    }
+    else {
+        enforceCustomPolicy = false;
+    }
+
+    if (const rapidjson::Value* configRegistriesD = rapidjson::Pointer("/containersRegistries.dPath").Get(config->json)) {
+        if (!boost::filesystem::is_directory(configRegistriesD->GetString())) {
+            auto message = boost::format("Custom containers registries.d path '%s' configured in sarus.json is not a directory. "
+                                         "Please contact your system administrator.\nDocumentation reference: "
+                                         "https://sarus.readthedocs.io/en/stable/config/configuration_reference.html"
+                                         "#containersregistries-dpath-string-optional")
+                                        % configRegistriesD->GetString();
+            SARUS_THROW_ERROR(message.str());
+        }
+        customRegistriesDPath = boost::filesystem::path(configRegistriesD->GetString());
+    }
 }
 
 SkopeoDriver::~SkopeoDriver() {
@@ -206,6 +237,9 @@ common::CLIArguments SkopeoDriver::generateBaseArgs() const {
         args.push_back(verbosity);
     }
 
+    args += getPolicyOption();
+    args += getRegistriesDOption();
+
     return args;
 }
 
@@ -215,6 +249,37 @@ std::string SkopeoDriver::getVerbosityOption() const {
         return std::string{"--debug"};
     }
     return std::string{};
+}
+
+common::CLIArguments SkopeoDriver::getPolicyOption() const {
+    auto homePath = boost::filesystem::path{common::getEnvironmentVariable("HOME")};
+    auto userPolicyPath = homePath / ".config/containers/policy.json";
+    auto systemPolicyPath = boost::filesystem::path("/etc/containers/policy.json");
+
+    if (enforceCustomPolicy) {
+        return common::CLIArguments{"--policy", customPolicyPath.string()};
+    }
+    else if (boost::filesystem::exists(userPolicyPath)
+             || boost::filesystem::exists(systemPolicyPath)) {
+        return common::CLIArguments{};
+    }
+    else if (!customPolicyPath.empty()) {
+        return common::CLIArguments{"--policy", customPolicyPath.string()};
+    }
+    else {
+        SARUS_THROW_ERROR("Failed to detect default containers policy files and "
+                          "no fallback policy file defined in sarus.json. "
+                          "Please contact your system administrator.\nDocumentation reference: "
+                          "https://sarus.readthedocs.io/en/stable/config/configuration_reference.html"
+                          "#containerspolicy-object-optional")
+    }
+}
+
+common::CLIArguments SkopeoDriver::getRegistriesDOption() const {
+    if (!customRegistriesDPath.empty()) {
+        return common::CLIArguments{"--registries.d", customRegistriesDPath.string()};
+    }
+    return common::CLIArguments{};
 }
 
 std::string SkopeoDriver::getTransportString(const std::string& transport) const {

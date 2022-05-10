@@ -38,6 +38,8 @@ public:
 
 private:
     std::string getVerbosityOption() const;
+    common::CLIArguments getPolicyOption() const;
+    common::CLIArguments getRegistriesDOption() const;
     std::string getTransportString(const std::string& transport) const;
     void printLog(const boost::format &message, common::LogLevel,
                   std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
@@ -48,8 +50,11 @@ private:
     boost::filesystem::path skopeoPath;
     boost::filesystem::path tempDir;
     boost::filesystem::path cachePath;
+    boost::filesystem::path customPolicyPath;
+    boost::filesystem::path customRegistriesDPath;
     boost::filesystem::path authFileBasePath;
     boost::filesystem::path authFilePath;
+    bool enforceCustomPolicy;
     const std::string sysname = "SkopeoDriver";
 };
 

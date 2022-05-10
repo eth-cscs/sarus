@@ -38,6 +38,8 @@ Runtime::Runtime(std::shared_ptr<common::Config> config)
     , bundleConfig{config}
     , fdHandler{config}
 {
+    clearEnvironmentVariables();
+
     auto status = common::readFile("/proc/self/status");
     config->commandRun.cpuAffinity = common::getCpuAffinity();
 }
@@ -226,6 +228,20 @@ void Runtime::remountRootfsWithNoSuid() const {
         SARUS_THROW_ERROR(message.str());
     }
     utility::logMessage("Successfully remounted rootfs with MS_NOSUID", common::LogLevel::INFO);
+}
+
+void Runtime::clearEnvironmentVariables() const {
+    if(clearenv() != 0) {
+        SARUS_THROW_ERROR("Failed to clear host environment variables");
+    }
+
+    auto path = std::string{"/bin:/sbin:/usr/bin"};
+    int overwrite = 1;
+    if(setenv("PATH", path.c_str(), overwrite) != 0) {
+        auto message = boost::format("Failed to setenv(\"PATH\", %s, %d): %s")
+            % path.c_str() % overwrite % strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
 }
 
 } // namespace

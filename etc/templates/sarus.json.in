@@ -15,5 +15,9 @@
     "ramFilesystemType": "tmpfs",
     "siteMounts": [
         @SITE_MOUNTS@
-    ]
+    ],
+    "containersPolicy": {
+        "path": "@INSTALL_PATH@/etc/policy.json",
+        "enforce": false
+    }
 }

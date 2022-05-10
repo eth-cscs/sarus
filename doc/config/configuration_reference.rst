@@ -327,6 +327,50 @@ selinuxMountLabel (string, OPTIONAL)
 `SELinux <http://selinuxproject.org/page/Main_Page>`_ label which will be
 applied to the mounts performed by the OCI runtime into the container.
 
+containersPolicy (object, OPTIONAL)
+-----------------------------------
+The `containers-policy.json(5) <https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md>`_
+file (formally called the "signature verification policy file") is used by
+Skopeo and other container tools to define a set of policy requirements
+(for example trusted keys) which have to be satisfied in order to qualify a
+container image, or individual signatures of that image, as valid and secure
+to download.
+
+By default, a user-specific policy is read from ``${HOME}/.config/containers/policy.json``;
+if such file does not exists, the system-wide ``/etc/containers/policy.json``
+is used instead. This system-wide file is usually provided by the
+`containers-common <https://github.com/containers/common>`_ package.
+
+The ``containersPolicy`` object defines fallback and enforcement options for the
+policy file and supports the following fields:
+
+* ``path`` (string, REQUIRED): Absolute path to a fallback
+  `containers-policy.json(5) <https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md>`_
+  file, which will be passed by Sarus to Skopeo in case neither the user-specific
+  nor the system-wide default policy files exist. This allows to use a policy
+  also on systems which don't have the default files present on all nodes.
+  If no default file exists and the ``containersPolicy`` parameter is not defined,
+  Sarus throws an error.
+* ``enforce`` (bool, OPTIONAL): If true, always use the policy file at
+  ``containersPolicy/path``, even if any default file exists. This allows to
+  have a Sarus-specific policy different from the one(s) used by other tools
+  on the system.
+
+.. important::
+
+   Sarus installations come with a policy file at ``<prefixDir>/etc/policy.json``,
+   which is set as the starting value of ``containersPolicy/path``.
+   This policy file is very permissive and is in line with the defaults provided
+   by package managers for the most popular Linux distributions. It is intended
+   only as a starting point in case a system does not feature default policy files.
+
+containersRegistries.dPath (string, OPTIONAL)
+---------------------------------------------
+Absolute path to a `containers-registries.d(5) <https://github.com/containers/image/blob/main/docs/containers-registries.d.5.md>`_
+directory for registries configurations. If defined, this directory will be
+used by Skopeo instead of the default ``${HOME}/.config/containers/registries.d``
+or ``/etc/containers/registries.d`` directories.
+
 
 Example configuration file
 ==========================
@@ -390,4 +434,9 @@ Example configuration file
         "apparmorProfile": "sarus-default",
         "selinuxLabel": "system_u:system_r:svirt_sarus_t:s0:c124,c675",
         "selinuxMountLabel": "system_u:object_r:svirt_sarus_file_t:s0:c715,c811"
+        "containersPolicy": {
+            "path": "/opt/sarus/1.0.0/etc/policy.json",
+            "enforce": false
+        },
+        "containersRegistries.dPath": "/opt/sarus/1.0.0/etc/registries.d"
     }

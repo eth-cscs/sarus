@@ -113,6 +113,12 @@
         },
         "selinuxMountLabel": {
             "type": "string"
+        },
+        "containersPolicy": {
+            "$ref": "#/definitions/ContainersPolicy"
+        },
+        "containersRegistries.dPath": {
+            "$ref": "definitions.schema.json#/AbsolutePath"
         }
     },
     "required": [
@@ -199,6 +205,20 @@
             "items": {
                 "$ref": "#/definitions/Device"
             }
+        },
+        "ContainersPolicy": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "$ref": "definitions.schema.json#/AbsolutePath"
+                },
+                "enforce": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "path"
+            ]
         }
     }
 }
