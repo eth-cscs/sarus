@@ -30,6 +30,13 @@ SkopeoDriver::SkopeoDriver(std::shared_ptr<const common::Config> config)
       tempDir{config->directories.temp},
       cachePath{config->directories.cache}
 {
+    if (!boost::filesystem::is_regular_file(skopeoPath)) {
+        auto message = boost::format("The path to the Skopeo executable '%s' configured in sarus.json does not "
+                                     "lead to a regular file. "
+                                     "Please contact your system administrator.") % skopeoPath;
+        SARUS_THROW_ERROR(message.str());
+    }
+
     authFileBasePath = config->directories.repository;
     try {
         auto xdgRuntimePath = boost::filesystem::path{common::getEnvironmentVariable("XDG_RUNTIME_DIR")};

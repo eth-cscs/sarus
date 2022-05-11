@@ -12,12 +12,12 @@
 # but with cached dependencies already in this build image.
 # See utility_docker_functions.bash.
 #
-FROM alpine:3.14
+FROM alpine:3.15
 
 RUN apk update \
     && apk add bash sudo shadow tar rsync git cmake make gcc g++ autoconf \
                perl python3 linux-headers expat-dev expat-static squashfs-tools \
-               openssl-dev openssl-libs-static zlib-dev zlib-static
+               openssl-dev openssl-libs-static zlib-dev zlib-static go
 
 # Install dependencies
 COPY ./installation/install_dep_boost.bash /tmp/
@@ -31,6 +31,12 @@ RUN . /tmp/install_dep_runc.bash
 
 COPY ./installation/install_dep_tini.bash /tmp/
 RUN . /tmp/install_dep_tini.bash
+
+COPY ./installation/install_dep_skopeo.bash /tmp/
+RUN . /tmp/install_dep_skopeo.bash
+
+COPY ./installation/install_dep_umoci.bash /tmp/
+RUN . /tmp/install_dep_umoci.bash
 
 # Prepare user
 RUN adduser -h /home/docker -s /bin/bash -D  docker docker

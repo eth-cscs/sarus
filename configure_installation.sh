@@ -59,15 +59,21 @@ sed -i etc/sarus.json -e "s|@INSTALL_PATH@|${prefix_dir}|g"
 exit_on_error "failed to set INSTALL_PATH in etc/sarus.json"
 
 # configure SKOPEO_PATH
-skopeo_path=$(which skopeo)
-exit_on_error "failed to find skopeo binary. Is skopeo installed?"
+skopeo_path=${prefix_dir}/bin/skopeo
+if [ ! -e ${skopeo_path} ]; then
+    skopeo_path=$(which skopeo)
+    exit_on_error "failed to find skopeo binary. Is skopeo installed and available in \${PATH}?"
+fi
 echo "Found skopeo: ${skopeo_path}"
 sed -i etc/sarus.json -e "s|@SKOPEO_PATH@|${skopeo_path}|g"
 exit_on_error "failed to set SKOPEO_PATH in etc/sarus.json"
 
 # configure UMOCI_PATH
-umoci_path=$(which umoci)
-exit_on_error "failed to find umoci binary. Is umoci installed?"
+umoci_path=${prefix_dir}/bin/umoci.amd64
+if [ ! -e ${umoci_path} ]; then
+    umoci_path=$(which umoci)
+    exit_on_error "failed to find umoci binary. Is umoci installed and available in \${PATH}?"
+fi
 echo "Found umoci: ${umoci_path}"
 sed -i etc/sarus.json -e "s|@UMOCI_PATH@|${umoci_path}|g"
 exit_on_error "failed to set UMOCI_PATH in etc/sarus.json"

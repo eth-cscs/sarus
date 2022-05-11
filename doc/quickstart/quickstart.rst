@@ -2,11 +2,20 @@
 Quickstart
 **********
 
+This page provides instructions to quickly deploy Sarus using a standalone
+archive containing statically-linked binaries for the engine, the hooks and
+some dependency software.
+
+The content in this page is intended for those interested in installing and
+using Sarus without building the software beforehand.
+If you want to build Sarus from source or through the Spack package manager,
+please refer to the :doc:`Custom installation </install/index>` section.
+
 
 Install Sarus
 =============
 
-You can quickly install Sarus by following the simple steps below.
+You can install Sarus by following the steps below.
 
 1. Download the latest standalone Sarus archive from the official `GitHub Releases <https://github.com/eth-cscs/sarus/releases>`_:
 
@@ -15,7 +24,7 @@ You can quickly install Sarus by following the simple steps below.
        mkdir /opt/sarus
        cd /opt/sarus
        # Adjust url to your preferred version
-       wget https://github.com/eth-cscs/sarus/releases/download/1.0.1/sarus-Release.tar.gz
+       wget https://github.com/eth-cscs/sarus/releases/download/1.5.0/sarus-Release.tar.gz
 
 2. Extract Sarus in the installation directory:
 
@@ -29,7 +38,7 @@ You can quickly install Sarus by following the simple steps below.
 
    .. code-block:: bash
 
-       cd /opt/sarus/1.0.1-Release  # adapt folder name to actual version of Sarus
+       cd /opt/sarus/1.5.0-Release  # adapt folder name to actual version of Sarus
        sudo ./configure_installation.sh
 
    .. important::
@@ -39,27 +48,27 @@ You can quickly install Sarus by following the simple steps below.
        The configuration script requires the program ``mksquashfs`` to be installed
        on the system, which is typically available through the ``squashfs-tools`` package.
 
+       As explained by the output of the script, you need to persistently add Sarus to your
+       ``PATH``; one option is to add a line like "export PATH=/opt/sarus/bin:${PATH}" to
+       your ``.bashrc`` file.
+
        Also note that the configuration script will create a minimal working configuration.
        For enabling additional features, please refer to the :doc:`/config/configuration_reference`.
 
-   .. note::
-       You can refer to the section :doc:`Custom installation </install/index>`
-       if you want to build Sarus from source or from the Spack package manager.
-
-   .. important::
-      As explained by the output of the previous script, you need to persistently add Sarus to your
-      ``PATH``. I.e., something like adding "export PATH=/opt/sarus/bin:${PATH}" to your ``.bashrc``.
-
 4. Perform the :doc:`/install/post-installation`.
 
-   .. note::
-      The Sarus binary from the standalone archive looks for SSL certificates
-      into the ``/etc/ssl`` directory. Depending on the Linux distribution,
-      some certificates may be located in different directories. A possible
-      solution to expose the certificates to Sarus is a symlink. For example,
-      on CentOS 7 and Fedora 31::
+.. important::
+    The `Skopeo <https://github.com/containers/skopeo>`_ static binary included
+    in the Sarus standalone archive is intended for test and evaluation purposes
+    only!
 
-          sudo ln -s /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem /etc/ssl/cert.pem
+    Static builds of Skopeo are `not supported <https://github.com/containers/skopeo/blob/main/install.md#building-a-static-binary>`_
+    by Skopeo maintainers, and are unsuitable for production deployments.
+
+    For production uses, it is recommended to :ref:`configure Sarus <config-reference-skopeoPath>`
+    to use a dedicated, dynamically-linked Skopeo binary
+    (either `installed <https://github.com/containers/skopeo/blob/main/install.md>`_
+    through the package manager or built from source).
 
 
 Use Sarus
@@ -108,4 +117,4 @@ Below is an example of some basic usage of Sarus:
 
 .. note::
     You can refer to the section :doc:`User guides </user/index>`
-    for more information on how to use Sarus.
+    for more information about how to use Sarus.

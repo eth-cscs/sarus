@@ -93,6 +93,8 @@ contents should be modifiable only by the system administrators.
 
 Recommended value: ``/var/sarus/centralized_repository``
 
+.. _config-reference-skopeoPath:
+
 skopeoPath (string, REQUIRED)
 -----------------------------
 Absolute path to a trusted ``skopeo`` binary, which will be used to pull images

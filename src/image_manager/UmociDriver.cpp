@@ -21,7 +21,14 @@ namespace image_manager {
 
 UmociDriver::UmociDriver(std::shared_ptr<const common::Config> config)
     : umociPath{config->json["umociPath"].GetString()}
-{}
+{
+    if (!boost::filesystem::is_regular_file(umociPath)) {
+        auto message = boost::format("The path to the Umoci executable '%s' configured in sarus.json does not "
+                                     "lead to a regular file. "
+                                     "Please contact your system administrator.") % umociPath;
+        SARUS_THROW_ERROR(message.str());
+    }
+}
 
 void UmociDriver::unpack(const boost::filesystem::path& imagePath, const boost::filesystem::path& expansionPath) const {
     printLog( boost::format("Unpacking OCI image from %s into %s") % imagePath % expansionPath, common::LogLevel::DEBUG);
