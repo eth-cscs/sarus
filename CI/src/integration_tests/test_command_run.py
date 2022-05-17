@@ -87,7 +87,7 @@ class TestCommandRun(unittest.TestCase):
         if with_init_process:
             options += ["--init"]
         out = util.run_command_in_container(is_centralized_repository=False,
-                                            image=self.default_image,
+                                            image="quay.io/ethcscs/ubuntu:20.04",
                                             command=["ps", "-o", "pid,comm"],
                                             options_of_run_command=options)
         processes = []

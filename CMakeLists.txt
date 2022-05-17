@@ -30,13 +30,7 @@ message(STATUS "Enable SSH support: " ${ENABLE_SSH})
 find_package(RapidJSON REQUIRED)
 include_directories(${RapidJSON_INCLUDE_DIR})
 
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
-
-find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
-
-find_package(Boost REQUIRED COMPONENTS program_options system thread filesystem regex random)
+find_package(Boost REQUIRED COMPONENTS program_options filesystem regex)
 include_directories(${Boost_INCLUDE_DIRS})
 
 find_program(GIT_PATH git)

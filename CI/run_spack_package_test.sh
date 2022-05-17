@@ -2,7 +2,7 @@
 
 set -ex
 
-sarus_src_dir=/sarus-source
+export sarus_src_dir=/sarus-source
 
 # Setup Spack bash integration
 . ${SPACK_ROOT}/share/spack/setup-env.sh

@@ -71,8 +71,14 @@ exit_on_error "failed to set SKOPEO_PATH in etc/sarus.json"
 # configure UMOCI_PATH
 umoci_path=${prefix_dir}/bin/umoci.amd64
 if [ ! -e ${umoci_path} ]; then
-    umoci_path=$(which umoci)
-    exit_on_error "failed to find umoci binary. Is umoci installed and available in \${PATH}?"
+    if [ ! -z "$(which umoci)" ]; then
+        umoci_path=$(which umoci)
+    elif [ -e "/usr/local/bin/umoci" ]; then
+        umoci_path="/usr/local/bin/umoci"
+    else
+        false
+        exit_on_error "failed to find umoci binary. Is umoci installed and available in \${PATH}?"
+    fi
 fi
 echo "Found umoci: ${umoci_path}"
 sed -i etc/sarus.json -e "s|@UMOCI_PATH@|${umoci_path}|g"

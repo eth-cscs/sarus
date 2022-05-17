@@ -4,9 +4,9 @@ set -ex
 # Install packages
 sudo yum install -y epel-release
 sudo yum install -y centos-release-scl-rh
-sudo yum install -y devtoolset-8-gcc-c++ glibc-static sudo curl wget rsync which \
-    make bzip2 autoconf automake libtool squashfs-tools libcap-devel cmake3 \
-    zlib-devel zlib-static openssl-devel expat-devel git ca-certificates \
+sudo yum install -y devtoolset-11-gcc-c++ glibc-static sudo curl wget rsync which \
+    make bzip2 autoconf automake libtool git squashfs-tools cmake3 ca-certificates \
+    zlib-devel zlib-static runc tini-static skopeo \
     python3 python3-pip python3-setuptools
 sudo yum clean all
 sudo rm -rf /var/cache/yum
@@ -15,17 +15,23 @@ sudo rm -rf /var/cache/yum
 sudo ln -s /usr/bin/cmake3 /usr/bin/cmake
 sudo ln -s /usr/bin/ctest3 /usr/bin/ctest
 
-# Enable devtoolset-8 to use GCC 8.3.1
-source /opt/rh/devtoolset-8/enable
+# Enable devtoolset-11 to use GCC 11.2.1
+source /opt/rh/devtoolset-11/enable
+
+# The following dependencies are not provided via the system's package manager
+# and should be installed manually:
+# - Boost Libraries >= 1.60.0
+# - RapidJSON commit 00dbcf2 or later
+# - Umoci
 
 # DOCS: END
 
 mkdir -p /home/docker
 
-echo "source scl_source enable devtoolset-8" >> /root/.bashrc
-echo "source scl_source enable devtoolset-8" >> /root/.profile
-echo "source scl_source enable devtoolset-8" >> /home/docker/.bashrc
-echo "source scl_source enable devtoolset-8" >> /home/docker/.profile
+echo "source scl_source enable devtoolset-11" >> /root/.bashrc
+echo "source scl_source enable devtoolset-11" >> /root/.profile
+echo "source scl_source enable devtoolset-11" >> /home/docker/.bashrc
+echo "source scl_source enable devtoolset-11" >> /home/docker/.profile
 
 echo 'export PATH=/usr/local/bin:${PATH}' >> /root/.bashrc
 echo 'export PATH=/usr/local/bin:${PATH}' >> /root/.profile

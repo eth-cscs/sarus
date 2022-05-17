@@ -10,85 +10,123 @@ Operating System
 * `util-linux <https://github.com/karelzak/util-linux>`_ >= 2.20 (these utilities are usually bundled with the Linux distribution itself;
   v2.20 was released in August 2011)
 * The following kernel modules loaded:
+
   * loop
   * squashfs
   * overlayfs
 
-These requirements are tracked by the `CI/check_host.sh <https://github.com/eth-cscs/sarus/blob/master/CI/check_host.sh>` script.
+These requirements are tracked by the `CI/check_host.sh <https://github.com/eth-cscs/sarus/blob/master/CI/check_host.sh>`_ script.
 
-Software
-========
 
 .. _requirements-packages:
 
 System packages
----------------
+===============
 
-For Debian-based systems (tested on Debian 10, Ubuntu 18.04 and Ubuntu 20.04):
+The required packages for building Sarus are listed below for a selection of
+popular Linux distributions. Please note that, depending on the distribution,
+not all dependencies might be available through the system's package manager,
+or some dependencies might be provided in versions not supported by Sarus.
+Please follow the :ref:`manual installation <requirements-manual-installation>`
+instructions for such dependencies.
 
-.. literalinclude:: ../../CI/installation/install_packages_ubuntu:20.04.sh
+**OpenSUSE Leap 15.3**:
+
+.. literalinclude:: ../../CI/installation/install_packages_opensuseleap:15.3.sh
    :language: bash
    :start-after: set -ex
    :end-before: # DOCS: END
 
-For CentOS 7:
+**CentOS 7**:
 
 .. literalinclude:: ../../CI/installation/install_packages_centos:7.sh
    :language: bash
    :start-after: set -ex
    :end-before: # DOCS: END
 
-Python 3 is required if you are interested to also run the integration tests:
+**Fedora 35**:
 
-.. code-block:: bash
+.. literalinclude:: ../../CI/installation/install_packages_fedora:35.sh
+   :language: bash
+   :start-after: set -ex
+   :end-before: # DOCS: END
 
-    # Debian/Ubuntu
-    $ sudo apt-get install python3 python3-pip python3-setuptools
+**Debian 11**:
 
-    # CentOS
-    $ sudo yum install python3 python3-pip python3-setuptools
+.. literalinclude:: ../../CI/installation/install_packages_debian:11.sh
+   :language: bash
+   :start-after: set -ex
+   :end-before: # DOCS: END
 
-    # All platforms, after installing Python + pip
-    $ pip3 install setuptools
-    $ pip3 install pytest gcovr pexpect
+**Ubuntu 21.10**:
 
-.. note::
-    If you plan to install Sarus using the Spack package manager, you can skip
-    the rest of this page, since the remaining dependencies will be installed by
-    Spack itself.
+.. literalinclude:: ../../CI/installation/install_packages_ubuntu:21.10.sh
+   :language: bash
+   :start-after: set -ex
+   :end-before: # DOCS: END
+
+**Ubuntu 20.04**:
+
+.. literalinclude:: ../../CI/installation/install_packages_ubuntu:20.04.sh
+   :language: bash
+   :start-after: set -ex
+   :end-before: # DOCS: END
 
 
-Additional dependencies
------------------------
+.. _requirements-manual-installation:
 
-* `Boost libraries <https://www.boost.org/>`_ >= 1.60.x (recommended 1.77.x)
-* `RapidJSON <http://rapidjson.org/index.html>`_ commit 00dbcf2
+Manual installation
+===================
 
-.. important::
-    The recommended versions are the ones routinely used for build
-    integration and testing, thus guaranteed to work.
+This section provides instructions to install some notable Sarus dependencies
+which might not be available through the system's package manager, or might
+be provided in a versions not supported by Sarus.
 
-As the specific software versions listed above may not be provided by the system
-package manager, we suggest to install from source:
+Boost libraries
+---------------
+
+`Boost libraries <https://www.boost.org/>`_ are required to be version **1.60.x**
+or later. The recommended version, which is used routinely for build
+integration and testing, is **1.77.x**.
 
 .. note::
     The following instructions will default to ``/usr/local`` as the installation
-    prefix. To install to a specific location, use the ``--prefix`` option for
-    the Boost libraries.
+    prefix. To install to a specific location, use the ``--prefix`` option of
+    the `b2` builder/installer tool.
 
 .. literalinclude:: ../../CI/installation/install_dep_boost.bash
    :language: bash
    :start-after: set -ex
 
+RapidJSON
+---------
+
+`RapidJSON <http://rapidjson.org/index.html>`_ is required to be from commit 00dbcf2
+or later:
+
 .. literalinclude:: ../../CI/installation/install_dep_rapidjson.bash
    :language: bash
    :start-after: set -ex
 
-.. note::
-    Should you have trouble pointing to a specific version of Boost when
-    building the C++ REST SDK, use the ``-DBOOST_ROOT`` CMake option with the
-    prefix directory to your Boost installation.
+Skopeo
+------
 
+`Skopeo <https://github.com/containers/skopeo>`_ is used to acquire images and
+their metadata from a variety of sources. Versions **1.7.0 or later** are
+recommended for improved performance when pulling or loading images.
+
+Up-to-date instructions about building Skopeo from source are available on the
+project's `GitHub repository <https://github.com/containers/skopeo/blob/main/install.md#building-from-source>`_.
+
+Umoci
+-----
+
+Umoci is used to unpack OCI images' filesystem contents before converting them
+into the SquashFS format:
+
+.. literalinclude:: ../../CI/installation/install_dep_boost.bash
+   :language: bash
+   :start-after: set -ex
 
 .. _requirements-oci-runtime:
 
@@ -134,3 +172,15 @@ project's GitHub page:
 
 Alternatively, you can follow the instructions to `build from source
 <https://github.com/krallin/tini#building-tini>`__.
+
+
+Python packages for integration tests
+=====================================
+
+The following Python 3 packages are required if you are interested to also run
+the integration tests:
+
+.. code-block:: bash
+
+    $ pip3 install setuptools
+    $ pip3 install pytest gcovr pexpect

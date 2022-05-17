@@ -3,21 +3,18 @@
 set -ex
 
 # Install packages
-sudo zypper install -y gcc-c++ glibc-static wget which git gzip bzip2 \
-    make autoconf automake libtool squashfs libcap-devel cmake \
-    zlib-devel zlib-devel-static libopenssl-devel libexpat-devel \
-    runc tini-static \
-    libboost_atomic1_75_0-devel \
-    libboost_chrono1_75_0-devel \
+sudo zypper install -y gcc-c++ glibc-static wget which git gzip bzip2 tar \
+    make autoconf automake squashfs cmake zlib-devel zlib-devel-static \
+    runc tini-static skopeo umoci \
     libboost_filesystem1_75_0-devel \
-    libboost_random1_75_0-devel \
     libboost_regex1_75_0-devel \
-    libboost_system1_75_0-devel \
-    libboost_thread1_75_0-devel \
     libboost_program_options1_75_0-devel \
-    libboost_date_time1_75_0-devel \
     python3 python3-pip python3-setuptools
 sudo zypper clean --all
+
+# The following dependencies are not provided via the system's package manager
+# and should be installed manually:
+# - RapidJSON commit 00dbcf2 or later
 
 # DOCS: END
 

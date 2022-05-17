@@ -279,8 +279,7 @@ class TestErrorMessages(unittest.TestCase):
 
         command = ["sarus", "run", "quay.io/ethcscs/alpine", "invalid-command-2lk32ldk2"]
         actual_message = util.get_sarus_error_output(command)
-        self.assertTrue("container_linux.go" in actual_message)
-        self.assertTrue("starting container process caused" in actual_message)
+        self.assertTrue("level=error" in actual_message)
         self.assertTrue("invalid-command-2lk32ldk2" in actual_message)
         self.assertTrue("executable file not found in $PATH\"" in actual_message)
 

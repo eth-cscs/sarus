@@ -10,15 +10,9 @@ cd /tmp && \
     mv boost_1_77_0 src && cd src && \
     ./bootstrap.sh && \
     sudo ./b2 -j$(nproc) \
-        --with-atomic \
-        --with-chrono \
         --with-filesystem \
-        --with-random \
         --with-regex \
-        --with-system \
-        --with-thread \
         --with-program_options \
-        --with-date_time \
         install && \
     cd ${pwd_bak} && \
     rm -rf /tmp/boost

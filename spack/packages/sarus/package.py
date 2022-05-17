@@ -59,12 +59,17 @@ class Sarus(CMakePackage):
                         'Also downloads and builds internally the CppUTest framework.')
 
     depends_on('wget', type='build')
-    depends_on('expat', type='build')
+    depends_on('expat', when='@:1.4.2')
+    depends_on('zlib', when='+ssh')
     depends_on('squashfs', type=('build', 'run'))
-    depends_on('boost@1.65.0: cxxstd=11')
+    depends_on('boost@1.65.0: cxxstd=11 +program_options +regex +filesystem')
     depends_on('cpprestsdk@2.10.0:', when='@:1.4.2')
     depends_on('libarchive@3.4.1:', when='@:1.4.2')
     depends_on('rapidjson@00dbcf2', type='build')
+    depends_on("runc@:1.0.3", type=('build', 'run'))
+    depends_on("tini", type=('build', 'run'))
+    depends_on("skopeo", type=('build', 'run'), when='@1.5.0:')
+    depends_on("umoci", type=('build', 'run'), when='@1.5.0:')
 
     # autoconf is required to build Dropbear for the SSH hook
     depends_on('autoconf', type='build')
@@ -83,24 +88,8 @@ class Sarus(CMakePackage):
         with working_dir(self.build_directory):
             make(*self.install_targets)
             mkdirp(prefix.var.OCIBundleDir)
-            self.install_runc(spec, prefix)
-            self.install_tini(spec, prefix)
             if '+configure_installation' in spec:
                 self.configure_installation(spec, prefix)
-
-    def install_runc(self, spec, prefix):
-        wget = which('wget')
-        runc_url = 'https://github.com/opencontainers/runc/releases/download/v1.0.3/runc.amd64'
-        runc_install_path = prefix.bin + '/runc.amd64'
-        wget('-O', runc_install_path, runc_url)
-        set_executable(runc_install_path)
-
-    def install_tini(self, spec, prefix):
-        wget = which('wget')
-        tini_url = 'https://github.com/krallin/tini/releases/download/v0.18.0/tini-static-amd64'
-        tini_install_path = prefix.bin + '/tini-static-amd64'
-        wget('-O', tini_install_path, tini_url)
-        set_executable(tini_install_path)
 
     def configure_installation(selfself, spec, prefix):
         import subprocess

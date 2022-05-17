@@ -19,20 +19,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added support for the optional `containersRegistries.dPath` parameter in the `sarus.json` configuration file.
   More details [here](https://sarus.readthedocs.io/en/stable/config/configuration_reference.html#containersregistries-dpath-string-optional).
 - Added support for labels defined in OCI image configurations
+- Added CI unit and integration tests from source on Ubuntu 21.10, Debian 11 and Fedora 35
 
 ### Changed
 
 - The `sarus images` command now displays the image ID by default.
   The image ID, as defined by the OCI Image Specification, is the hash of the image's configuration JSON. More details [here](https://github.com/opencontainers/image-spec/blob/main/config.md#imageid)
 - The `sarus pull` command now skips the pull if the requested image is already available locally and up-to-date
+- zlib is no longer a dependency of Sarus itself, but remains a dependency of the Dropbear software used by the SSH hook
 - Updated the build environment of the Sarus static standalone package to Alpine Linux 3.15
 
 ### Fixed
 
 ### Removed
 
-- Removed dependency on cpprestsdk
-- Removed dependency on libarchive
+- Removed dependencies on cpprestsdk, libarchive, OpenSSL, libcap, and libexpat
+- Removed CI unit and integration tests from source on Ubuntu 18.04, Debian 10 and Fedora 34
 
 ### Security
 

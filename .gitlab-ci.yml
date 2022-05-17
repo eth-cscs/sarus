@@ -125,17 +125,10 @@ centos7:
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
-fedora34:
+fedora35:
   extends: .from_source
   script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH fedora:34 fedora:34
-    - sarus-build-images
-    - sarus-build-from-scratch-and-test
-
-ubuntu18.04:
-  extends: .from_source
-  script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH ubuntu:18.04 ubuntu:18.04
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH fedora:35 fedora:35
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
@@ -146,10 +139,17 @@ ubuntu20.04:
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
-debian10:
+ubuntu21.10:
   extends: .from_source
   script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH debian:10 debian:10
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH ubuntu:21.10 ubuntu:21.10
+    - sarus-build-images
+    - sarus-build-from-scratch-and-test
+
+debian11:
+  extends: .from_source
+  script:
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH debian:11 debian:11
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
@@ -163,7 +163,7 @@ opensuseleap15.3:
 address_sanitizer:
   extends: .from_source
   script:
-    - . ./CI/utility_docker_functions.bash Debug gcc-asan.cmake $(pwd) $HOST_CACHES_PATH debian:10 debian:10
+    - . ./CI/utility_docker_functions.bash Debug gcc-asan.cmake $(pwd) $HOST_CACHES_PATH debian:11 debian:11
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
@@ -203,13 +203,13 @@ spack_fedora34:
   before_script:
     - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-fedora34 spack-fedora34
 
-spack_opensuseleap15.2:
+spack_opensuseleap15:
   extends: .spack_package
   only:
     - web
     - schedules
   before_script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-opensuseleap15.2 spack-opensuseleap15.2
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-opensuseleap15 spack-opensuseleap15
 
 publish_images:
   stage: publish_images

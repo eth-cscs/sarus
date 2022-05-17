@@ -3,15 +3,15 @@ set -ex
 
 # OS-specific installation of "sudo"
 os=$1
-if   [ "$os" == "ubuntu:18.04" ]; then
+if [ "$os" == "ubuntu:20.04" ]; then
     apt-get update && apt-get install -y sudo
-elif [ "$os" == "ubuntu:20.04" ]; then
+elif [ "$os" == "ubuntu:21.10" ]; then
     apt-get update && apt-get install -y sudo
-elif [ "$os" == "debian:10" ]; then
+elif [ "$os" == "debian:11" ]; then
     apt-get update && apt-get install -y sudo
 elif [ "$os" == "centos:7" ]; then
     yum install -y sudo
-elif [ "$os" == "fedora:34" ]; then
+elif [ "$os" == "fedora:35" ]; then
     dnf install -y sudo
 elif [ "$os" == "opensuseleap:15.3" ]; then
     zypper install -y sudo

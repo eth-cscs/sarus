@@ -28,24 +28,26 @@ TEST(UmociDriverTestGroup, generateBaseArgs) {
     auto driver = image_manager::UmociDriver{config};
     auto& logger = common::Logger::getInstance();
 
+    auto expectedUmociPath = std::string(config->json["umociPath"].GetString());
+
     logger.setLevel(common::LogLevel::DEBUG);
     auto umociArgs = driver.generateBaseArgs();
-    auto expectedArgs = common::CLIArguments{"/usr/bin/umoci", "--log=debug"};
+    auto expectedArgs = common::CLIArguments{expectedUmociPath, "--log=debug"};
     CHECK(umociArgs == expectedArgs);
 
     logger.setLevel(common::LogLevel::INFO);
     umociArgs = driver.generateBaseArgs();
-    expectedArgs = common::CLIArguments{"/usr/bin/umoci", "--log=info"};
+    expectedArgs = common::CLIArguments{expectedUmociPath, "--log=info"};
     CHECK(umociArgs == expectedArgs);
 
     logger.setLevel(common::LogLevel::WARN);
     umociArgs = driver.generateBaseArgs();
-    expectedArgs = common::CLIArguments{"/usr/bin/umoci", "--log=error"};
+    expectedArgs = common::CLIArguments{expectedUmociPath, "--log=error"};
     CHECK(umociArgs == expectedArgs);
 
     logger.setLevel(common::LogLevel::ERROR);
     umociArgs = driver.generateBaseArgs();
-    expectedArgs = common::CLIArguments{"/usr/bin/umoci", "--log=error"};
+    expectedArgs = common::CLIArguments{expectedUmociPath, "--log=error"};
     CHECK(umociArgs == expectedArgs);
 }
 

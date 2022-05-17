@@ -16,26 +16,16 @@ FROM alpine:3.15
 
 RUN apk update \
     && apk add bash sudo shadow tar rsync git cmake make gcc g++ autoconf \
-               perl python3 linux-headers expat-dev expat-static squashfs-tools \
-               openssl-dev openssl-libs-static zlib-dev zlib-static go
+               python3 linux-headers go squashfs-tools zlib-dev zlib-static
 
 # Install dependencies
-COPY ./installation/install_dep_boost.bash /tmp/
+COPY ./installation/ /tmp/
+
 RUN . /tmp/install_dep_boost.bash
-
-COPY ./installation/install_dep_rapidjson.bash /tmp/
 RUN . /tmp/install_dep_rapidjson.bash
-
-COPY ./installation/install_dep_runc.bash /tmp/
 RUN . /tmp/install_dep_runc.bash
-
-COPY ./installation/install_dep_tini.bash /tmp/
 RUN . /tmp/install_dep_tini.bash
-
-COPY ./installation/install_dep_skopeo.bash /tmp/
-RUN . /tmp/install_dep_skopeo.bash
-
-COPY ./installation/install_dep_umoci.bash /tmp/
+RUN . /tmp/install_dep_skopeo_static.bash
 RUN . /tmp/install_dep_umoci.bash
 
 # Prepare user

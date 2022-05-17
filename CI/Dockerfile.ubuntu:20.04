@@ -16,7 +16,9 @@ FROM ubuntu:20.04
 COPY ./installation/ /tmp/
 RUN /tmp/install_sudo.sh ubuntu:20.04
 RUN /tmp/install_packages_ubuntu:20.04.sh
-RUN /tmp/install_dependencies.bash
+RUN bash -i -c "/tmp/install_dep_rapidjson.bash"
+RUN bash -i -c "/tmp/install_dep_runc.bash"
+RUN pip3 install -r /tmp/requirements_tests.txt
 
 RUN useradd -m docker \
     && echo 'docker:docker' | chpasswd \

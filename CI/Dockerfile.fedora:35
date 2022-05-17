@@ -11,12 +11,15 @@
 # Docker Image used to build Sarus from its source,
 # but with cached dependencies already in this image.
 #
-FROM debian:10
+FROM fedora:35
 
 COPY ./installation/ /tmp/
-RUN /tmp/install_sudo.sh debian:10
-RUN /tmp/install_packages_debian:10.sh
-RUN /tmp/install_dependencies.bash
+RUN /tmp/install_sudo.sh fedora:35
+RUN /tmp/install_packages_fedora:35.sh
+RUN bash -i -c "/tmp/install_dep_rapidjson.bash"
+RUN bash -i -c "/tmp/install_dep_runc.bash"
+RUN bash -i -c "/tmp/install_dep_umoci.bash"
+RUN pip3 install -r /tmp/requirements_tests.txt
 
 RUN useradd -m docker \
     && echo 'docker:docker' | chpasswd \

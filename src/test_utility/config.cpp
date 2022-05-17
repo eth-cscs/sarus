@@ -94,11 +94,24 @@ static void populateJSON(rj::Document& document) {
                           " adding the path where mksquashfs is installed.");
     }
 
+    if(boost::filesystem::exists("/usr/bin/umoci")) {
+        document.AddMember( "umociPath",
+                            rj::Value{"/usr/bin/umoci", allocator},
+                            allocator);
+    }
+    else if(boost::filesystem::exists("/usr/local/bin/umoci")) {
+        document.AddMember( "umociPath",
+                            rj::Value{"/usr/local/bin/umoci", allocator},
+                            allocator);
+    }
+    else {
+        SARUS_THROW_ERROR("Failed to find umoci on the system."
+                          " Hint: either install the system package or extend this test code"
+                          " adding the path where umoci is installed.");
+    }
+
     document.AddMember( "skopeoPath",
                         rj::Value{"/usr/bin/skopeo", allocator},
-                        allocator);
-    document.AddMember( "umociPath",
-                        rj::Value{"/usr/bin/umoci", allocator},
                         allocator);
     document.AddMember( "initPath",
                         rj::Value{"/usr/bin/init-program", allocator},
