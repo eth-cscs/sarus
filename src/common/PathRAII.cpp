@@ -43,7 +43,7 @@ PathRAII& PathRAII::operator=(PathRAII&& rhs) {
 PathRAII::~PathRAII() {
     if(path && boost::filesystem::exists(*path)) {
         // Ensure the path contents can be removed by enforcing owner write and exec permissions.
-        // This is needed when using PathRAII for OCI image expansion directories, because
+        // This is needed when using PathRAII for unpacked OCI image files, because
         // some images (e.g. Fedora) contain files without owner write or search perms
         setFilesAsRemovableByOwner();
         boost::filesystem::remove_all(*path);

@@ -29,7 +29,7 @@ namespace image_manager {
 class UmociDriver {
 public:
     UmociDriver(std::shared_ptr<const common::Config> config);
-    void unpack(const boost::filesystem::path& imagePath, const boost::filesystem::path& expansionPath) const;
+    void unpack(const boost::filesystem::path& imagePath, const boost::filesystem::path& unpackPath) const;
     common::CLIArguments generateBaseArgs() const;
 
 private:

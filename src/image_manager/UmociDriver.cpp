@@ -30,13 +30,13 @@ UmociDriver::UmociDriver(std::shared_ptr<const common::Config> config)
     }
 }
 
-void UmociDriver::unpack(const boost::filesystem::path& imagePath, const boost::filesystem::path& expansionPath) const {
-    printLog( boost::format("Unpacking OCI image from %s into %s") % imagePath % expansionPath, common::LogLevel::DEBUG);
+void UmociDriver::unpack(const boost::filesystem::path& imagePath, const boost::filesystem::path& unpackPath) const {
+    printLog( boost::format("Unpacking OCI image from %s into %s") % imagePath % unpackPath, common::LogLevel::DEBUG);
 
     auto args = generateBaseArgs();
     args += common::CLIArguments{"raw", "unpack", "--rootless",
                                  "--image", imagePath.string()+":sarus-oci-image",
-                                 expansionPath.string()};
+                                 unpackPath.string()};
 
     auto start = std::chrono::system_clock::now();
     auto status = common::forkExecWait(args);

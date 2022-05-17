@@ -69,7 +69,7 @@ private:
         optionsDescription.add_options()
             ("temp-dir",
                 boost::program_options::value<std::string>(&conf->directories.tempFromCLI),
-                "Temporary directory where the image is expanded")
+                "Temporary directory where the image is unpacked")
             ("login", "Enter user credentials for private registry from stdin. "
                       "Cannot be used in conjunction with '--password-stdin'")
             ("password-stdin", "Read password for private registry from stdin. "

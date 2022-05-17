@@ -474,9 +474,9 @@ The image is now ready to use. Notice that the origin server for the image has
 been labeled ``load`` to indicate this image has been loaded from an archive.
 
 Similarly to :program:`sarus pull`, we recommend to load tar archives from
-compute nodes. Should you run out of space while expanding the image,
+compute nodes. Should you run out of space while unpacking the image,
 :program:`sarus load` also accepts the ``--temp-dir`` option to specify an
-alternative expansion directory.
+alternative unpacking directory.
 
 As with images from 3rd party registries, to use or remove loaded images you
 need to enter the image descriptor (repository[:tag]) as displayed by the

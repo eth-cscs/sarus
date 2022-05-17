@@ -29,10 +29,10 @@ TEST(SquashfsImageTestGroup, testSquashfsImage) {
     common::PathRAII repository{config.directories.repository};
     boost::filesystem::remove_all(repository.getPath());
 
-    common::PathRAII expandedImage{common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-expandedImage")};
-    common::createFoldersIfNecessary(expandedImage.getPath());
+    common::PathRAII unpackedImage{common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-unpackedImage")};
+    common::createFoldersIfNecessary(unpackedImage.getPath());
 
-    SquashfsImage{config, expandedImage.getPath(), config.getImageFile()};
+    SquashfsImage{config, unpackedImage.getPath(), config.getImageFile()};
 
     CHECK(boost::filesystem::exists(config.getImageFile()));
 }

@@ -63,8 +63,9 @@ Recommended value: ``/opt/sarus/<version>/etc/hooks.d``
 
 tempDir (string, REQUIRED)
 --------------------------
-Absolute path to the directory where Sarus will create a temporary folder
-to expand layers when pulling and loading images
+Absolute path to the directory where Sarus will create temporary files and
+folders for various purposes, like unpacking filesystem layers when pulling
+and loading images.
 
 Recommended value: ``/tmp``
 

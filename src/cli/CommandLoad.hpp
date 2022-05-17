@@ -68,7 +68,7 @@ private:
     void initializeOptionsDescription() {
         optionsDescription.add_options()
             ("temp-dir",   boost::program_options::value<std::string>(&conf->directories.tempFromCLI),
-                "Temporary directory where the image is expanded")
+                "Temporary directory where the image is unpacked")
             ("centralized-repository", "Use centralized repository instead of the local one");
     }
 

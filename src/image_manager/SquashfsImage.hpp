@@ -25,7 +25,7 @@ namespace image_manager {
 class SquashfsImage {
 public:
     SquashfsImage(  const common::Config& config,
-                    const boost::filesystem::path& expandedImage,
+                    const boost::filesystem::path& unpackedImage,
                     const boost::filesystem::path& pathOfImage);
     boost::filesystem::path getPathOfImage() const;
 
