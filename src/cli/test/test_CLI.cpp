@@ -151,7 +151,6 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
         auto conf = generateConfig({"pull", "ubuntu"});
         CHECK(conf->directories.tempFromCLI.empty() == true);
         CHECK(conf->useCentralizedRepository == false);
-        CHECK(conf->enforceSecureServer == true);
         CHECK(conf->authentication.isAuthenticationNeeded == false);
         CHECK(conf->authentication.username.empty());
         CHECK(conf->authentication.password.empty());
@@ -165,7 +164,6 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
         auto conf = generateConfig({"pull", "--centralized-repository", "ubuntu"});
         CHECK(conf->directories.tempFromCLI.empty() == true);
         CHECK(conf->useCentralizedRepository == true);
-        CHECK(conf->enforceSecureServer == true);
         CHECK(conf->authentication.isAuthenticationNeeded == false);
         CHECK(conf->authentication.username.empty());
         CHECK(conf->authentication.password.empty());
@@ -184,7 +182,6 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
             "--temp-dir="+customTempDir.getPath().string(),
             "my.own.server:5000/user/image:tag"});
         CHECK(conf->directories.temp.string() == customTempDir.getPath().string());
-        CHECK(conf->enforceSecureServer == true);
         CHECK(conf->authentication.isAuthenticationNeeded == false);
         CHECK(conf->authentication.username.empty());
         CHECK(conf->authentication.password.empty());
@@ -202,20 +199,6 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
         conf = generateConfig({"pull", "-u", "bob", "ubuntu"});
         CHECK(conf->authentication.isAuthenticationNeeded == true);
         CHECK(conf->authentication.username == "bob");
-    }
-    // insecure registry
-    {
-        auto conf = generateConfig({"pull", "insecure.registry:5000/user/image:tag"});
-        CHECK(conf->directories.tempFromCLI.empty() == true);
-        CHECK(conf->useCentralizedRepository == false);
-        CHECK(conf->enforceSecureServer == false);
-        CHECK(conf->authentication.isAuthenticationNeeded == false);
-        CHECK(conf->authentication.username.empty());
-        CHECK(conf->authentication.password.empty());
-        CHECK(conf->imageReference.server == "insecure.registry:5000");
-        CHECK(conf->imageReference.repositoryNamespace == "user");
-        CHECK(conf->imageReference.image == "image");
-        CHECK(conf->imageReference.tag == "tag");
     }
 }
 

@@ -387,7 +387,7 @@ is preferred.
 
     https_proxy=https://proxy.example.com:3128
 
-When pulling from a registry which is configured as :ref:`insecure <config-reference-insecureRegistries>`,
+When pulling from a registry which is configured as insecure,
 the ``http_proxy`` environment variable is looked up for a proxy hostname.
 Only the lower case version of ``http_proxy`` is used because of
 `security reasons <https://everything.curl.dev/usingcurl/proxies/env#http_proxy-in-lower-case-only>`_
@@ -411,6 +411,78 @@ in order to be effective. Use of an asterisk (``\*``) as a wildcard for hostname
 expansion is not supported. However, the variables can be set to a single asterisk
 to match all hosts. In case both variables are set, the lower case version
 is preferred.
+
+Pulling images from insecure registries
+---------------------------------------
+
+Images from remote registries are downloaded through
+`Skopeo <https://github.com/containers/skopeo>`_, which by default uses secure
+connections and the TLS protocol.
+
+To enable image pulls from a registry unable to provide the required TLS
+certificates, the registry must be declared as "insecure" in a `registry
+configuration file <https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md>`_
+for container tools.
+
+The main registry configuration file for a given user is located in
+``${HOME}/.config/containers/registries.conf``; if such file does not exist,
+``/etc/containers/registries.conf`` is used instead.
+
+In addition to the main file, specific drop-in configuration files can be
+created in ``${HOME}/.config/containers/registries.conf.d`` or in
+``/etc/containers/registries.conf.d``. Drop-in configuration files are loaded
+after the main configuration, and their values will overwrite any previous setting.
+For more details about drop-in configuration directories, please refer to the
+`containers-registries.conf.d(5) <https://github.com/containers/image/blob/main/docs/containers-registries.conf.d.5.md>`_
+manpage.
+
+The following example shows how to create a drop-in registry configuration file
+defining an insecure registry located at ``localhost:5000``:
+
+.. code-block:: bash
+
+    $ mkdir -p ${HOME}/.config/containers/registries.conf.d
+    $ cat <<EOF > ${HOME}/.config/containers/registries.conf.d/insecure-localhost.conf
+    > [[registry]]
+    > prefix = "localhost:5000"
+    > insecure = true
+    > location = "localhost:5000"
+    > EOF
+
+Notice the ``insecure = true`` setting. For the full details about the format
+and the available settings of a container registry configuration file, please
+refer to the `containers-registries.conf(5)
+<https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md>`_
+manpage.
+
+Once an insecure registry has been entered in a configuration file, it is
+possible to pull images from it:
+
+.. code-block:: bash
+
+    $ sarus pull localhost:5000/library/alpine
+    # image            : localhost:5000/library/alpine:latest
+    # cache directory  : "/home/docker/.sarus/cache"
+    # temp directory   : "/tmp"
+    # images directory : "/home/docker/.sarus/images"
+    # image digest     : sha256:e7d88de73db3d3fd9b2d63aa7f447a10fd0220b7cbf39803c803f2af9ba256b3
+    Getting image source signatures
+    Copying blob 59bf1c3509f3 done
+    Copying config d539cd357a done
+    Writing manifest to image destination
+    Storing signatures
+    > unpacking OCI image
+    > make squashfs image: "/home/docker/.sarus/images/localhost:5000/library/alpine/latest.squashfs"
+
+    $ sarus images
+    REPOSITORY                      TAG          IMAGE ID       CREATED               SIZE         SERVER
+    localhost:5000/library/alpine   latest       d539cd357acb   2022-03-15T17:24:08   2.61MB       localhost:5000
+
+.. warning::
+
+    Please note that the use of insecure registries represents a significant
+    security risk, and as such should only be used in exceptional cases such as
+    local testing.
 
 Download cache
 --------------

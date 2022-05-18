@@ -70,9 +70,9 @@ private:
             ("temp-dir",
                 boost::program_options::value<std::string>(&conf->directories.tempFromCLI),
                 "Temporary directory where the image is unpacked")
-            ("login", "Enter user credentials for private registry from stdin. "
+            ("login", "Enter user credentials for private repository from stdin. "
                       "Cannot be used in conjunction with '--password-stdin'")
-            ("password-stdin", "Read password for private registry from stdin. "
+            ("password-stdin", "Read password for private repository from stdin. "
                       "Cannot be used in conjunction with '--login'")
             ("username,u",
                 boost::program_options::value<std::string>(&username),
@@ -119,7 +119,6 @@ private:
 
             conf->imageReference = cli::utility::parseImageReference(positionalArgs.argv()[0]);
             conf->useCentralizedRepository = values.count("centralized-repository");
-            conf->enforceSecureServer = !serverIsAllowedInsecure(conf->imageReference.server);
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
         }
         catch (std::exception& e) {
@@ -129,20 +128,6 @@ private:
         }
 
         cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
-    }
-
-    bool serverIsAllowedInsecure(std::string server) {
-        if (!conf->json.HasMember("insecureRegistries")) {
-            return false;
-        }
-
-        for (const auto& insecureServer : conf->json["insecureRegistries"].GetArray()) {
-            if (insecureServer.GetString() == server) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**

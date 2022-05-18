@@ -33,6 +33,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
+- Removed the `insecureRegistries` parameter from `sarus.json` and the built-in support for insecure registries.
+  Access to insecure registries via Skopeo must now be enabled through containers-registries.conf(5) files.
+  More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#pulling-images-from-insecure-registries)
 - Removed dependencies on cpprestsdk, libarchive, OpenSSL, libcap, and libexpat
 - Removed CI unit and integration tests from source on Ubuntu 18.04, Debian 10 and Fedora 34
 
