@@ -98,7 +98,7 @@ private:
             // Image digests in Sarus are meant as the digests by which images are stored in remote registries.
             // Thus, it's incorrect for loaded images to have digests associated with them
             if (!conf->imageReference.digest.empty()) {
-                SARUS_THROW_ERROR("Destination image ID must not contain a digest when loading the image from a file");
+                SARUS_THROW_ERROR("Destination image reference must not contain a digest when loading the image from a file");
             }
 
             conf->useCentralizedRepository = values.count("centralized-repository");

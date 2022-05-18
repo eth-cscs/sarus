@@ -85,15 +85,15 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "load", "archive.tar", "///"]
-        expected_message = ("Invalid image ID '///'\nSee 'sarus help load'")
+        expected_message = ("Invalid image reference '///'\nSee 'sarus help load'")
         self._check(command, expected_message)
 
         command = ["sarus", "load", "archive.tar", "target-image@sha256:778fdd9f62a6d7c0e53a97489ab3db17738bc5c1acf09a18738a2a674025eae6"]
-        expected_message = ("Destination image ID must not contain a digest when loading the image from a file\nSee 'sarus help load'")
+        expected_message = ("Destination image reference must not contain a digest when loading the image from a file\nSee 'sarus help load'")
         self._check(command, expected_message)
 
         command = ["sarus", "load", "archive.tar", "target-image:latest@sha256:778fdd9f62a6d7c0e53a97489ab3db17738bc5c1acf09a18738a2a674025eae6"]
-        expected_message = ("Destination image ID must not contain a digest when loading the image from a file\nSee 'sarus help load'")
+        expected_message = ("Destination image reference must not contain a digest when loading the image from a file\nSee 'sarus help load'")
         self._check(command, expected_message)
 
         command = ["sarus", "load", "--temp-dir=/invalid-dir", "archive.tar", "quay.io/ethcscs/alpine"]
@@ -122,7 +122,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "pull", "///"]
-        expected_message = ("Invalid image ID '///'\nSee 'sarus help pull'")
+        expected_message = ("Invalid image reference '///'\nSee 'sarus help pull'")
         self._check(command, expected_message)
 
         command = ["sarus", "pull", "invalid-image-1kds710dkj"]
@@ -199,7 +199,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "rmi", "///"]
-        expected_message = "Invalid image ID '///'\nSee 'sarus help rmi'"
+        expected_message = "Invalid image reference '///'\nSee 'sarus help rmi'"
         self._check(command, expected_message)
 
         command = ["sarus", "rmi", "invalid-image-9as7302j"]
@@ -212,7 +212,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "run", "///", "true"]
-        expected_message = "Invalid image ID '///'\nSee 'sarus help run'"
+        expected_message = "Invalid image reference '///'\nSee 'sarus help run'"
         self._check(command, expected_message)
 
         command = ["sarus", "run", "not-available-image", "true"]

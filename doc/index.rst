@@ -47,7 +47,7 @@ Publications
    user/index
    developer/index
    cookbook/index
-
+   glossary
 
 
 Indices and tables

@@ -80,8 +80,8 @@ bool isValidCLIInputImageReference(const std::string& imageReference) {
 common::ImageReference parseImageReference(const common::CLIArguments& imageArgs) {
     if(imageArgs.argc() != 1) {
         auto message = boost::format(
-            "Invalid image ID %s\n"
-            "The image ID is expected to be a single token without options") % imageArgs;
+            "Invalid image reference %s\n"
+            "The image reference is expected to be a single token without options") % imageArgs;
         SARUS_THROW_ERROR(message.str());
     }
 
@@ -92,7 +92,7 @@ common::ImageReference parseImageReference(const common::CLIArguments& imageArgs
  * Parse the input reference of a container image
  */
 common::ImageReference parseImageReference(const std::string &input) {
-    printLog( boost::format("Parsing image ID from string: %s") % input, common::LogLevel::DEBUG);
+    printLog( boost::format("Parsing image reference from string: %s") % input, common::LogLevel::DEBUG);
 
     auto server              = std::string{};
     auto repositoryNamespace = std::string{};
@@ -101,8 +101,8 @@ common::ImageReference parseImageReference(const std::string &input) {
     auto digest              = std::string{};
 
     if(!isValidCLIInputImageReference(input)) {
-        auto message = boost::format("Invalid image ID '%s'\n"
-                                     "Image IDs are not allowed to contain the sequence '..'") % input;
+        auto message = boost::format("Invalid image reference '%s'\n"
+                                     "Image references are not allowed to contain the sequence '..'") % input;
         SARUS_THROW_ERROR(message.str());
     }
 
@@ -130,12 +130,12 @@ common::ImageReference parseImageReference(const std::string &input) {
         }
     }
     else {
-        auto message = boost::format("Invalid image ID '%s'") % input;
+        auto message = boost::format("Invalid image reference '%s'") % input;
         SARUS_THROW_ERROR(message.str());
     }
 
     auto imageReference = common::ImageReference{server, repositoryNamespace, image, tag, digest};
-    printLog(boost::format("Successfully parsed image ID %s") % imageReference, common::LogLevel::DEBUG);
+    printLog(boost::format("Successfully parsed image reference %s") % imageReference, common::LogLevel::DEBUG);
 
     return imageReference;
 }
