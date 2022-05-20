@@ -3,7 +3,7 @@ Overview
 ********
 
 Sarus is a tool for High-Performance Computing (HPC) systems that provides a
-user-friendly way to instantiate feature-rich containers from Docker images. It
+user-friendly way to instantiate feature-rich containers from OCI images. It
 has been designed to address the unique requirements of HPC installations, such
 as: native performance from dedicated hardware, improved security due to the
 multi-tenant nature of the systems, support for network parallel filesystems and
@@ -31,13 +31,25 @@ Sarus architecture
    Sarus architecture diagram
 
 The workflows supported by Sarus are implemented through the interaction of
-several software components. The **CLI** component processes the program
+several software components.
+
+The **CLI** component processes the program
 arguments entered through the command line and calls other components to perform
-the actions requested by the user. The **Image Manager** component is
-responsible for importing container images onto the system (usually by
-downloading them from a remote registry), converting the images to Sarus's own
-format, storing them on local system repositories, and querying the contents of
-such repositories. The **Runtime** component creates and executes containers,
+the actions requested by the user.
+
+The **Image Manager** component is responsible for:
+
+* coordinating the import of container images onto the system (making use of
+  utilities like `Skopeo <https://github.com/containers/skopeo>`_ and
+  `Umoci <https://umo.ci>`_);
+
+* converting imported images to Sarus' own format;
+
+* storing images on local system repositories;
+
+* querying the contents of local repositories.
+
+The **Runtime** component creates and executes containers,
 first by setting up a bundle according to the OCI Runtime Specification: such
 bundle is made of a root filesystem directory for the container and a JSON
 configuration file. After preparing the bundle, the Runtime component will call
@@ -55,38 +67,39 @@ Importing container images
 ==========================
 
 One of the first actions a user will perform with a fresh Sarus installation
-is getting some container images on the system. This is usually
-accomplished by retrieving the images from a remote cloud registry (e.g. `Docker
-Hub <https://hub.docker.com>`_) using the :program:`sarus pull` command.
+is getting some container images in a form readily usable by the program.
+This is accomplished by either:
 
-Sarus is able to communicate with registries using the Docker Registry HTTP API
-V2 protocol or the OCI Distribution Specification API protocol. After contacting
-the registry, Sarus obtains the `image manifest
-<https://github.com/opencontainers/image-spec/blob/master/manifest.md>`_, a file
-providing the list of `filesystem layers
-<https://docs.docker.com/storage/storagedriver/#images-and-layers>`_ and
-metadata which constitute the image. Sarus uses multiple parallel threads to
-download the layers as compressed archives in a **cache** directory. This
-download cache will be looked-up by Sarus during subsequent pull commands to
-determine if a compressed layer has already been downloaded and can be reused.
+* retrieving images from a remote registry
+  (e.g. `Docker Hub <https://hub.docker.com>`_) using the :program:`sarus pull`
+  command
 
-Once the filesystem layers of a container image are all present on the system,
-they are uncompressed and expanded in a :ref:`temporary directory
-<config-reference-tempDir>` created by Sarus for this purpose. The various
-layers are then squashed together, resulting in a *flattened* image using the
-`squashfs <https://en.wikipedia.org/wiki/SquashFS>`_ format. A metadata file is
-also generated from a subset of the OCI image configuration. Flattening the image
-improves the I/O performance of the container, as detailed below in
-:ref:`overview-instantiation-rootfs`. It also has the benefit of reducing the
-size of the images on disk, by merging the topmost layer with the underlying ones.
+* loading images from local :program:`tar` archives using the
+  :program:`sarus load` command.
 
-When pulling images from the cloud is inconvenient or undesirable, the
-:program:`sarus load` command can be used to load a container image from a local
-:program:`tar` file. In this case, the image manifest and compressed filesystem
-layers are not downloaded but extracted from the :program:`tar` archive itself.
-The process then continues as described above.
+Sarus imports images through `Skopeo <https://github.com/containers/skopeo>`_,
+a highly versatile utility able to perform operations on image repositories,
+transfer container images and convert them between different formats.
+Skopeo is instructed to retrieve the image data (whether located on a remote
+registry or in a local file) and transform it into an OCI image directory,
+that is a directory structured according to the `OCI Image Specification
+<https://github.com/opencontainers/image-spec>`_.
 
-After the squashfs image and the metadata file are generated, Sarus copies them
+Once the container image is available in such a standard format, the image
+filesystem is *unpacked* into a plain :ref:`temporary directory <config-reference-tempDir>`
+using `Umoci <https://umo.ci>`_. Umoci is a utility to create, modify and
+interact with OCI images, serving also as a reference implementation of
+the OCI Image Specification. The unpack operation has the additional effect of
+reducing the final size of Sarus images on disk, by merging together layers and
+potentially duplicated data.
+
+The image filesystem contents are then squashed together, obtaining a
+*flattened* image in the `SquashFS <https://en.wikipedia.org/wiki/SquashFS>`_
+format. A metadata file is also generated from a subset of the OCI image
+configuration. Squashing the image improves the I/O performance of the container,
+as detailed below in :ref:`overview-instantiation-rootfs`.
+
+After the SquashFS image and the metadata file are generated, Sarus copies them
 into the local user repository, described in the next section.
 
 Local system repositories
@@ -99,14 +112,16 @@ named after users are located. Sarus will look for a local repository in the
 ``<base path>/<user name>/.sarus`` path. If a repository does not exist, a new,
 empty one is created.
 
-A local repository is a directory containing at least:
+A Sarus local repository is a directory containing at least:
 
-* the *cache* directory for the downloaded image layers;
+* the *cache* directory for downloaded image data: this directory is used
+  by Sarus to store downloaded individual image components (like filesystem layers
+  and OCI configuration files), so they can be reused by subsequent pull commands;
 * the *images* directory for Sarus images: inside this directory, images are
   stored in a hierarchy with the format ``<registry server>/<repository>/<image
   name>``, designed to replicate the structure of the strings used to
   identify images. At the end of a pull or load process, Sarus copies the
-  image squashfs and metadata files into the last folder of the hierarchy,
+  image SquashFS and metadata files into the last folder of the hierarchy,
   named after the image, and sets the names of both files to match the image tag;
 * the *metadata.json* file indexing the contents of the images folder
 
@@ -167,14 +182,14 @@ The root filesystem for the container is assembled in a :ref:`dedicated
 directory <config-reference-rootfsFolder>` inside the OCI bundle location
 through several steps:
 
-1. The squashfs file corresponding to the image requested by the user is mounted as
+1. The SquashFS file corresponding to the image requested by the user is mounted as
 a *loop device* on the configured rootfs mount point. The loop mount allows
 access to the image filesystem as if it resided on a real block device (i.e. a
 storage drive). Since Sarus images are likely to be stored on network parallel
 filesystems, reading multiple different files from the image [#f1]_ causes the
 thrashing of filesystem metadata, and consequently a significant performance
 degradation. Loop mounting the image prevents metadata thrashing and improves
-caching behavior, as all container instances access a single squashfs file on
+caching behavior, as all container instances access a single SquashFS file on
 the parallel filesystem. The effectiveness of this approach has already been
 demonstrated by Shifter [ShifterCUG2015]_.
 
