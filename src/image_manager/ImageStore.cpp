@@ -231,6 +231,10 @@ namespace image_manager {
             ret.AddMember(  "tag",
                             rj::Value{image.reference.tag.c_str(), allocator},
                             allocator);
+            // for forward compatibility of Sarus 1.4.2 and earlier versions
+            ret.AddMember(  "digest",
+                            rj::Value{"", allocator},
+                            allocator);
             ret.AddMember(  "registryDigest",
                             rj::Value{image.reference.digest.c_str(), allocator},
                             allocator);
