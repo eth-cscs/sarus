@@ -45,7 +45,7 @@ public:
 
     void execute() override {
         auto imageManager = image_manager::ImageManager{conf};
-        imageManager.loadImage(conf->archivePath);
+        imageManager.loadImage(sourceFormat, conf->archivePath);
     }
 
     bool requiresRootPrivileges() const override {
@@ -60,23 +60,27 @@ public:
         auto printer = cli::HelpMessage()
             .setUsage("sarus load [OPTIONS] FILE NAME[:TAG]")
             .setDescription(getBriefDescription())
-            .setOptionsDescription(optionsDescription);
+            .setOptionsDescription(visibleOptionsDescription);
         std::cout << printer;
     }
 
 private:
     void initializeOptionsDescription() {
-        optionsDescription.add_options()
+        visibleOptionsDescription.add_options()
             ("temp-dir",   boost::program_options::value<std::string>(&conf->directories.tempFromCLI),
                 "Temporary directory where the image is unpacked")
             ("centralized-repository", "Use centralized repository instead of the local one");
+        hiddenOptionsDescription.add_options()
+            ("source-format", boost::program_options::value<std::string>(&sourceFormat)->default_value("docker-archive"),
+                "Format of the source archive");
+        allOptionsDescription.add(visibleOptionsDescription).add(hiddenOptionsDescription);
     }
 
     void parseCommandArguments(const common::CLIArguments& args) {
         cli::utility::printLog( boost::format("parsing CLI arguments of load command"), common::LogLevel::DEBUG);
 
         common::CLIArguments nameAndOptionArgs, positionalArgs;
-        std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
+        std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, allOptionsDescription);
 
         // the load command expects exactly two positional arguments
         cli::utility::validateNumberOfPositionalArguments(positionalArgs, 2, 2, "load");
@@ -85,7 +89,7 @@ private:
             boost::program_options::variables_map values;
             boost::program_options::store(
                 boost::program_options::command_line_parser(nameAndOptionArgs.argc(), nameAndOptionArgs.argv())
-                        .options(optionsDescription)
+                        .options(allOptionsDescription)
                         .style(boost::program_options::command_line_style::unix_style)
                         .run(), values);
             boost::program_options::notify(values);
@@ -123,8 +127,11 @@ private:
     }
 
 private:
-    boost::program_options::options_description optionsDescription{"Options"};
+    boost::program_options::options_description allOptionsDescription{};
+    boost::program_options::options_description visibleOptionsDescription{"Options"};
+    boost::program_options::options_description hiddenOptionsDescription{};
     std::shared_ptr<common::Config> conf;
+    std::string sourceFormat;
 };
 
 }

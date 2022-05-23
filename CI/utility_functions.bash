@@ -130,7 +130,7 @@ build_sarus_archive() {
     cp /usr/local/bin/tini-static-amd64 ${prefix_dir}/bin || true
     cp /usr/local/bin/runc.amd64 ${prefix_dir}/bin || true
     cp /usr/local/bin/skopeo ${prefix_dir}/bin || true
-    cp /usr/local/bin/umoci.amd64 ${prefix_dir}/bin || true
+    cp /usr/local/bin/umoci ${prefix_dir}/bin || true
 
     # Tar archive
     cd ${prefix_dir}/.. && tar cz --owner=root --group=root --file=../${archive_name} *

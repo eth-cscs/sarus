@@ -86,13 +86,13 @@ namespace image_manager {
     /**
      * Load the container archive image, and add to the repository
      */
-    void ImageManager::loadImage(const boost::filesystem::path& archive) {
+    void ImageManager::loadImage(const std::string& format, const boost::filesystem::path& archive) {
         issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled();
         issueWarningIfIsCentralizedRepositoryAndIsNotRootUser();
 
         printLog(boost::format("Loading image archive %s") % archive, common::LogLevel::INFO);
 
-        auto ociImagePath = skopeoDriver.copyToOCIImage("docker-archive", archive.string());
+        auto ociImagePath = skopeoDriver.copyToOCIImage(format, archive.string());
         processImage(OCIImage{config, ociImagePath}, config->imageReference);
 
         printLog("Successfully loaded image archive", common::LogLevel::INFO);

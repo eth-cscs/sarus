@@ -29,7 +29,7 @@ class ImageManager {
 public:        
     ImageManager(std::shared_ptr<const common::Config> config);
     void pullImage();
-    void loadImage(const boost::filesystem::path& archive);
+    void loadImage(const std::string& format, const boost::filesystem::path& archive);
     void removeImage();
     std::vector<common::SarusImage> listImages() const;
 

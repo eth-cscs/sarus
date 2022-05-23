@@ -69,7 +69,7 @@ sed -i etc/sarus.json -e "s|@SKOPEO_PATH@|${skopeo_path}|g"
 exit_on_error "failed to set SKOPEO_PATH in etc/sarus.json"
 
 # configure UMOCI_PATH
-umoci_path=${prefix_dir}/bin/umoci.amd64
+umoci_path=${prefix_dir}/bin/umoci
 if [ ! -e ${umoci_path} ]; then
     if [ ! -z "$(which umoci)" ]; then
         umoci_path=$(which umoci)
