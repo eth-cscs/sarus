@@ -16,10 +16,6 @@ sudo DEBIAN_FRONTEND=noninteractive \
 sudo apt-get clean
 sudo rm -rf /var/lib/apt/lists/*
 
-# The following dependencies are not provided via the system's package manager
-# and should be installed manually:
-# - RapidJSON commit 00dbcf2 or later
-
 # DOCS: END
 
 mkdir -p /home/docker

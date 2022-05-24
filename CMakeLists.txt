@@ -27,8 +27,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 message(STATUS "Installation directory: " ${CMAKE_INSTALL_PREFIX})
 message(STATUS "Enable SSH support: " ${ENABLE_SSH})
 
-find_package(RapidJSON REQUIRED)
-include_directories(${RapidJSON_INCLUDE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/dep/rapidjson/include)
 
 find_package(Boost REQUIRED COMPONENTS program_options filesystem regex)
 include_directories(${Boost_INCLUDE_DIRS})

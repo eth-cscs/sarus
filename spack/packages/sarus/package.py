@@ -33,19 +33,19 @@ class Sarus(CMakePackage):
     url      = "https://github.com/eth-cscs/sarus/archive/1.4.2.tar.gz"
     git      = "https://github.com/eth-cscs/sarus.git"
 
-    version('develop', branch='develop')
-    version('master',  branch='master')
-    version('1.4.2',   tag='1.4.2')
-    version('1.4.1',   tag='1.4.1')
-    version('1.4.0',   tag='1.4.0')
-    version('1.3.3',   tag='1.3.3')
-    version('1.3.2',   tag='1.3.2')
-    version('1.3.1',   tag='1.3.1')
-    version('1.3.0',   tag='1.3.0')
-    version('1.2.0',   tag='1.2.0')
-    version('1.1.0',   tag='1.1.0')
-    version('1.0.1',   tag='1.0.1')
-    version('1.0.0',   tag='1.0.0')
+    version('develop', branch='develop', submodules=True)
+    version('master',  branch='master', submodules=True)
+    version("1.4.2", commit="13af2723b5c1cd1890d056af715946596f7ff2c6")
+    version("1.4.1", commit="a73f6ca9cafb768f3132cfcef8c826af34eeff94")
+    version("1.4.0", commit="c6190faf45d5e0ff5348c70c2d4b1e49b2e01039")
+    version("1.3.3", commit="f2c000caf3d6a89ea019c70e2703da46799b0e9c")
+    version("1.3.2", commit="ac6a1b8708ec402bbe810812d8af41d1b7bf1860")
+    version("1.3.1", commit="5117a0da8d2171c4bf9ebc6835e0dd6b73812930")
+    version("1.3.0", commit="f52686fa942d5fc2b1302011e9a081865285357b")
+    version("1.2.0", commit="16d27c0c10366dcaa0c72c6ec72331b6e4e6884d")
+    version("1.1.0", commit="ed5b640a45ced6f6a7a2a9d295d3d6c6106f39c3")
+    version("1.0.1", commit="abb8c314a196207204826f7b60e5064677687405")
+    version("1.0.0", commit="d913b1d0ef3729f9f41ac5bd06dd5615c407ced4")
 
     variant('ssh', default=True,
             description='Build and install the SSH hook and custom SSH software '
@@ -65,7 +65,7 @@ class Sarus(CMakePackage):
     depends_on('boost@1.65.0: cxxstd=11 +program_options +regex +filesystem')
     depends_on('cpprestsdk@2.10.0:', when='@:1.4.2')
     depends_on('libarchive@3.4.1:', when='@:1.4.2')
-    depends_on('rapidjson@00dbcf2', type='build')
+    depends_on('rapidjson@00dbcf2', type='build', when='@:1.4.2')
     depends_on("runc@:1.0.3", type=('build', 'run'))
     depends_on("tini", type=('build', 'run'))
     depends_on("skopeo", type=('build', 'run'), when='@1.5.0:')

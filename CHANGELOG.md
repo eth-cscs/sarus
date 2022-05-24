@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   More details [here](https://sarus.readthedocs.io/en/stable/config/configuration_reference.html#containersregistries-dpath-string-optional).
 - Added support for labels defined in OCI image configurations
 - Added CI unit and integration tests from source on Ubuntu 21.10, Debian 11 and Fedora 35
+- Added git submodule for RapidJSON (commit fcb23c2dbf) to simplify dependency management and build process
 
 ### Changed
 

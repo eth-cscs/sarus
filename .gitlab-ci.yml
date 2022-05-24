@@ -16,6 +16,7 @@ stages:
   - full_test
 
 variables:
+  GIT_SUBMODULE_STRATEGY: normal
   HOST_CACHES_PATH: /var/lib/gitlab-runner/cache/ids/sarus
 
 get_credentials:

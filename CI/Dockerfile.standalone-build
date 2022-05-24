@@ -22,7 +22,6 @@ RUN apk update \
 COPY ./installation/ /tmp/
 
 RUN . /tmp/install_dep_boost.bash
-RUN . /tmp/install_dep_rapidjson.bash
 RUN . /tmp/install_dep_runc.bash
 RUN . /tmp/install_dep_tini.bash
 RUN . /tmp/install_dep_skopeo_static.bash

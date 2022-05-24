@@ -12,9 +12,5 @@ sudo zypper install -y gcc-c++ glibc-static wget which git gzip bzip2 tar \
     python3 python3-pip python3-setuptools
 sudo zypper clean --all
 
-# The following dependencies are not provided via the system's package manager
-# and should be installed manually:
-# - RapidJSON commit 00dbcf2 or later
-
 # DOCS: END
 

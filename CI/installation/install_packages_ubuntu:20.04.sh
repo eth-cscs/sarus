@@ -26,7 +26,6 @@ sudo rm -rf /var/lib/apt/lists/*
 
 # The following dependencies are not provided via the system's package manager
 # and should be installed manually:
-# - RapidJSON commit 00dbcf2 or later
 # - Runc version 1.0.3
 
 # DOCS: END

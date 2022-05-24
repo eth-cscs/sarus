@@ -98,16 +98,6 @@ integration and testing, is **1.77.x**.
    :language: bash
    :start-after: set -ex
 
-RapidJSON
----------
-
-`RapidJSON <http://rapidjson.org/index.html>`_ is required to be from commit 00dbcf2
-or later:
-
-.. literalinclude:: ../../CI/installation/install_dep_rapidjson.bash
-   :language: bash
-   :start-after: set -ex
-
 Skopeo
 ------
 
@@ -124,7 +114,7 @@ Umoci
 Umoci is used to unpack OCI images' filesystem contents before converting them
 into the SquashFS format:
 
-.. literalinclude:: ../../CI/installation/install_dep_boost.bash
+.. literalinclude:: ../../CI/installation/install_dep_umoci.bash
    :language: bash
    :start-after: set -ex
 

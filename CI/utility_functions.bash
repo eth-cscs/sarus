@@ -47,7 +47,6 @@ build_sarus() {
 
     # DOCS: Configure and build
     cmake -DCMAKE_TOOLCHAIN_FILE=${build_dir}/../cmake/toolchain_files/${toolchain_file} \
-        -DCMAKE_PREFIX_PATH="/usr/local/include/rapidjson" \
         -DCMAKE_BUILD_TYPE=${build_type} \
         -DCMAKE_INSTALL_PREFIX=${install_dir} \
         ..
@@ -91,7 +90,6 @@ build_sarus_archive() {
     local git_description=$(git describe --tags --dirty || echo "git_version_not_available")
     local prefix_dir=${build_dir}/install/${git_description}-${build_type}
     cmake   -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/${toolchain_file} \
-            -DCMAKE_PREFIX_PATH="/usr/local/include/rapidjson" \
             -DCMAKE_BUILD_TYPE=${build_type} \
             -DBUILD_STATIC=TRUE \
             -DENABLE_TESTS_WITH_VALGRIND=FALSE \

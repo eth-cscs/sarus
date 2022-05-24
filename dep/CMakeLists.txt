@@ -1,4 +1,3 @@
-
 # CppUTest
 if(${ENABLE_UNIT_TESTS})
     set(cpputest_file ${CMAKE_CURRENT_BINARY_DIR}/cpputest/lib/libCppUTest.a)

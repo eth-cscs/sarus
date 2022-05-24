@@ -20,7 +20,7 @@ check_git_repo() {
     cp -rT $sarus_src_dir /home/docker/sarus-git
     mkdir -p /home/docker/sarus-git/build
     cd /home/docker/sarus-git/build
-    cmake   -DCMAKE_PREFIX_PATH="/opt/boost/1_65_0;/usr/local/include/rapidjson" \
+    cmake   -DCMAKE_PREFIX_PATH="/opt/boost/1_65_0" \
             -DBUILD_STATIC=TRUE \
             .. \
             > cmake_stdout.txt

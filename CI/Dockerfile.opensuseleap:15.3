@@ -16,7 +16,6 @@ FROM opensuse/leap:15.3
 COPY ./installation/ /tmp/
 RUN /tmp/install_sudo.sh opensuseleap:15.3
 RUN /tmp/install_packages_opensuseleap:15.3.sh
-RUN bash -i -c "/tmp/install_dep_rapidjson.bash"
 RUN pip3 install -r /tmp/requirements_tests.txt
 
 RUN groupadd docker \

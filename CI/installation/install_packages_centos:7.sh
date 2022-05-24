@@ -21,7 +21,6 @@ source /opt/rh/devtoolset-11/enable
 # The following dependencies are not provided via the system's package manager
 # and should be installed manually:
 # - Boost Libraries >= 1.60.0
-# - RapidJSON commit 00dbcf2 or later
 # - Umoci
 
 # DOCS: END

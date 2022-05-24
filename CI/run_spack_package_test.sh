@@ -12,7 +12,7 @@ export SPACK_LOCAL_REPO=${SPACK_ROOT}/var/spack/repos/cscs
 spack repo create ${SPACK_LOCAL_REPO}
 spack repo add ${SPACK_LOCAL_REPO}
 
-# Import Spack packages for Cpprestsdk, RapidJSON and Sarus
+# Import Spack packages for Sarus
 cp -r $sarus_src_dir/spack/packages/* ${SPACK_LOCAL_REPO}/packages/
 
 # Create mirror with local sources
