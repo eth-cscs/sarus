@@ -8,7 +8,11 @@ Sarus can be installed in three alternative ways:
     - :ref:`Using the Spack package manager <installation-spack>`
     - :ref:`Installing from source <installation-source>`
 
-When installing from source or with Spack, make sure that the :doc:`required
+This page documents installations using Spack or from source.
+These installation methods allow more control and customization over how Sarus
+is built.
+
+When installing from source, make sure that the :doc:`required
 dependencies </install/requirements>` are available on the system.
 
 Whichever procedure you choose, please also read the page about

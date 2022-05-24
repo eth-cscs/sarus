@@ -2,6 +2,14 @@
 Requirements
 ************
 
+This page documents the requirements and dependencies needed by Sarus.
+It serves both as a general reference and as preliminary step to performing
+installations from source.
+
+The Spack package manager is able to build or retrieve software dependencies on
+its own: as such, when using Spack, the only requirements to satisfy from this
+page are those related to the operating system.
+
 
 Operating System
 ================
@@ -80,7 +88,7 @@ Manual installation
 
 This section provides instructions to install some notable Sarus dependencies
 which might not be available through the system's package manager, or might
-be provided in a versions not supported by Sarus.
+be provided in a version not supported by Sarus.
 
 Boost libraries
 ---------------
