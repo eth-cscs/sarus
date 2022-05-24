@@ -234,8 +234,9 @@ run_distributed_tests() {
     local sarus_archive=$1; shift || error "${FUNCNAME}: missing sarus_archive argument"
     local cache_oci_hooks_dir=$1; shift || error "${FUNCNAME}: missing cache_oci_hooks_dir argument"
     local cache_local_repo_dir=$1; shift || error "${FUNCNAME}: missing cache_local_repo_dir argument"
+    local container_image=$1; shift || error "${FUNCNAME}: missing container_image argument"
 
-    ${sarus_source_dir_on_host}/CI/run_integration_tests_for_virtual_cluster.sh ${sarus_archive} ${cache_oci_hooks_dir} ${cache_local_repo_dir}
+    ${sarus_source_dir_on_host}/CI/run_integration_tests_for_virtual_cluster.sh ${sarus_archive} ${cache_oci_hooks_dir} ${cache_local_repo_dir} ${container_image}
     fail_on_error "Distributed tests in virtual cluster failed"
 }
 

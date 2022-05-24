@@ -12,6 +12,7 @@ cd $script_dir
 artifact_name=$1; shift || error "missing artifact_name argument"
 cached_oci_hooks_dir=$1; shift || error "missing cache_oci_hooks_dir argument"
 cached_local_repo_dir=$1; shift || error "missing cached_local_repo_dir argument"
+container_image=$1; shift || error "missing container_image argument"
 
 virtual_cluster_dir=
 
@@ -50,7 +51,8 @@ adapt_docker_compose_file() {
     sed -i $virtual_cluster_dir/docker-compose.yml -e "s/@host_gid@/$(id -g)/g" && \
     sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@cached_oci_hooks_dir@#${cached_oci_hooks_dir}#g" && \
     sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@cached_local_repo_dir@#${cached_local_repo_dir}#g" && \
-    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@artifact_name@#${artifact_name}#g"
+    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@artifact_name@#${artifact_name}#g" && \
+    sed -i $virtual_cluster_dir/docker-compose.yml -e "s#@container_image@#${container_image}#g"
     fail_on_error "failed to adapt docker-compose.yml"
 }
 

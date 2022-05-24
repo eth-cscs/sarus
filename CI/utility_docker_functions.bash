@@ -190,7 +190,7 @@ sarus-dtest() {
     local cache_local_repo_dir=$(_cache_local_repo_dir ${cache_dir_host})
     mkdir -p ${cache_local_repo_dir}
 
-    run_distributed_tests ${sarus_source_dir_host} ${sarus_archive} ${cache_oci_hooks_dir} ${cache_local_repo_dir}
+    run_distributed_tests ${sarus_source_dir_host} ${sarus_archive} ${cache_oci_hooks_dir} ${cache_local_repo_dir} ${image_run}
     fail_on_error "${FUNCNAME}: failed"
 }
 
