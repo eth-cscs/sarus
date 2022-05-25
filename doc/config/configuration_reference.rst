@@ -375,8 +375,8 @@ Example configuration file
         "securityChecks": true,
         "OCIBundleDir": "/var/sarus/OCIBundleDir",
         "rootfsFolder": "rootfs",
-        "prefixDir": "/opt/sarus/1.0.0",
-        "hooksDir": "/opt/sarus/1.0.0/etc/hooks.d",
+        "prefixDir": "/opt/sarus/1.5.0",
+        "hooksDir": "/opt/sarus/1.5.0/etc/hooks.d",
         "tempDir": "/tmp",
         "localRepositoryBaseDir": "/home",
         "centralizedRepositoryDir": "/var/sarus/centralized_repository",
@@ -424,13 +424,13 @@ Example configuration file
                 "/opt"
             ]
         },
-        "seccompProfile": "/opt/sarus/1.0.0/etc/seccomp/default.json",
+        "seccompProfile": "/opt/sarus/1.5.0/etc/seccomp/default.json",
         "apparmorProfile": "sarus-default",
         "selinuxLabel": "system_u:system_r:svirt_sarus_t:s0:c124,c675",
         "selinuxMountLabel": "system_u:object_r:svirt_sarus_file_t:s0:c715,c811"
         "containersPolicy": {
-            "path": "/opt/sarus/1.0.0/etc/policy.json",
+            "path": "/opt/sarus/1.5.0/etc/policy.json",
             "enforce": false
         },
-        "containersRegistries.dPath": "/opt/sarus/1.0.0/etc/registries.d"
+        "containersRegistries.dPath": "/opt/sarus/1.5.0/etc/registries.d"
     }

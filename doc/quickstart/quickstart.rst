@@ -49,7 +49,7 @@ You can install Sarus by following the steps below.
        on the system, which is typically available through the ``squashfs-tools`` package.
 
        As explained by the output of the script, you need to persistently add Sarus to your
-       ``PATH``; one option is to add a line like "export PATH=/opt/sarus/bin:${PATH}" to
+       ``PATH``; one option is to add a line like ``export PATH=/opt/sarus/bin:${PATH}`` to
        your ``.bashrc`` file.
 
        Also note that the configuration script will create a minimal working configuration.
@@ -92,28 +92,30 @@ Below is an example of some basic usage of Sarus:
 .. code-block:: bash
 
     $ sarus pull alpine
-    # image            : index.docker.io/library/alpine/latest
-    # cache directory  : "/home/user/.sarus/cache"
+    # image            : index.docker.io/library/alpine:latest
+    # cache directory  : "/home/docker/.sarus/cache"
     # temp directory   : "/tmp"
-    # images directory : "/home/user/.sarus/images"
-    > save image layers ...
-    > pulling        : sha256:9d48c3bd43c520dc2784e868a780e976b207cbf493eaff8c6596eb871cbd9609
-    > completed      : sha256:9d48c3bd43c520dc2784e868a780e976b207cbf493eaff8c6596eb871cbd9609
-    > expanding image layers ...
-    > extracting     : "/home/user/.sarus/cache/sha256:9d48c3bd43c520dc2784e868a780e976b207cbf493eaff8c6596eb871cbd9609.tar"
-    > make squashfs image: "/home/user/.sarus/images/index.docker.io/library/alpine/latest.squashfs"
+    # images directory : "/home/docker/.sarus/images"
+    # image digest     : sha256:4ff3ca91275773af45cb4b0834e12b7eb47d1c18f770a0b151381cd227f4c253
+    Getting image source signatures
+    Copying blob 2408cc74d12b done
+    Copying config a366738a18 done
+    Writing manifest to image destination
+    Storing signatures
+    > unpacking OCI image
+    > making squashfs image: "/home/docker/.sarus/images/index.docker.io/library/alpine/latest.squashfs"
 
     $ sarus images
     REPOSITORY   TAG          IMAGE ID       CREATED               SIZE         SERVER
-    alpine       latest       65e50dd72f89   2019-08-21T16:07:06   2.59MB       index.docker.io
+    alpine       latest       a366738a1861   2022-05-25T09:19:59   2.59MB       index.docker.io
 
     $ sarus run alpine cat /etc/os-release
     NAME="Alpine Linux"
     ID=alpine
-    VERSION_ID=3.10.2
-    PRETTY_NAME="Alpine Linux v3.10"
+    VERSION_ID=3.16.0
+    PRETTY_NAME="Alpine Linux v3.16"
     HOME_URL="https://alpinelinux.org/"
-    BUG_REPORT_URL="https://bugs.alpinelinux.org/"
+    BUG_REPORT_URL="https://gitlab.alpinelinux.org/alpine/aports/-/issues"
 
 .. note::
     You can refer to the section :doc:`User guides </user/index>`

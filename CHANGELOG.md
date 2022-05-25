@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [1.5.0]
 
 ### Added
 
@@ -29,8 +29,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The `sarus pull` command now skips the pull if the requested image is already available locally and up-to-date
 - zlib is no longer a dependency of Sarus itself, but remains a dependency of the Dropbear software used by the SSH hook
 - Updated the build environment of the Sarus static standalone package to Alpine Linux 3.15
-
-### Fixed
 
 ### Removed
 

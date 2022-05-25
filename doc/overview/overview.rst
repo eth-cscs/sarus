@@ -72,7 +72,7 @@ This is accomplished by either:
 
 * retrieving images from a remote registry
   (e.g. `Docker Hub <https://hub.docker.com>`_) using the :program:`sarus pull`
-  command
+  command;
 
 * loading images from local :program:`tar` archives using the
   :program:`sarus load` command.

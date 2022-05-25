@@ -319,12 +319,11 @@ image.
 Digests are useful to increase clarity and reproducibility in container workflows
 by allowing to reference exact software stack versions.
 
-As defined by the
-`OCI Image Specification <https://github.com/opencontainers/image-spec/blob/main/descriptor.md#digests>`,
-digests take the form of a string using the ``<algorithm>:<encoded>``
-pattern. The ``algorithm`` portion indicates the cryptographic algorithm
-used for the digest, while the ``encoded`` portion represents the result of
-the hash function.
+As `defined <https://github.com/opencontainers/image-spec/blob/main/descriptor.md#digests>`_
+by the OCI Image Specification, digests take the form of a string using the
+``<algorithm>:<encoded>`` pattern. The ``algorithm`` portion indicates the
+cryptographic algorithm used for the digest, while the ``encoded`` portion
+represents the result of the hash function.
 
 To pull an image by digest, append the digest to the image name using ``@`` as
 separator:
@@ -509,7 +508,7 @@ First, save an image to a tar archive using Docker *on your workstation*:
     124M debian.tar
 
 Then, transfer the archive to the HPC system and use the :program:`sarus load`
-command, followed by the archive filename and the descriptor you want to give to
+command, followed by the archive filename and the reference you want to give to
 the Sarus image:
 
 .. code-block:: bash
@@ -538,8 +537,8 @@ compute nodes. Should you run out of space while unpacking the image,
 alternative unpacking directory.
 
 As with images from 3rd party registries, to use or remove loaded images you
-need to enter the image descriptor (repository[:tag]) as displayed by the
-:program:`sarus images` command in the first two columns.
+need to enter the image reference as displayed by the :program:`sarus images`
+command in the first two columns (repository[:tag]).
 
 Displaying image digests
 ------------------------
@@ -610,7 +609,7 @@ rmi` command:
     REPOSITORY   TAG          IMAGE ID       CREATED      SIZE         SERVER
 
 To remove images pulled from 3rd party registries or images loaded from local
-tar archives you need to enter the image descriptor (repository[:tag]) as
+tar archives you need to enter the image reference as
 displayed by the :program:`sarus images` command:
 
 .. code-block:: bash
@@ -764,8 +763,10 @@ The following example demonstrates the use of a custom read-only bind mount.
     use the FUSE option ``allow_root`` when creating the mount point.
     For example, when creating an `EncFS <https://vgough.github.io/encfs/>`_ filesystem:
 
-        ``$ encfs -o allow_root --nocache $PWD/encfs.enc/ /tmp/encfs.dec/``
-        ``$ sarus run -t --mount=type=bind,src=/tmp/encfs.dec,dst=/var/tmp/encfs ubuntu ls -l /var/tmp``
+    .. code-block:: bash
+
+        $ encfs -o allow_root --nocache $PWD/encfs.enc/ /tmp/encfs.dec/
+        $ sarus run -t --mount=type=bind,src=/tmp/encfs.dec,dst=/var/tmp/encfs ubuntu ls -l /var/tmp
 
     It is possible to pass ``allow_root`` if the option ``user_allow_other`` is defined in
     ``/etc/fuse.conf``, as stated in the `FUSE manpage <https://man7.org/linux/man-pages/man8/fuse.8.html>`_.
