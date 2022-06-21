@@ -31,7 +31,7 @@ public:
     SkopeoDriver(std::shared_ptr<const common::Config> config);
     ~SkopeoDriver();
     boost::filesystem::path copyToOCIImage(const std::string& sourceTransport, const std::string& sourceReference) const;
-    rapidjson::Document inspectRaw(const std::string& sourceTransport, const std::string& sourceReference) const;
+    std::string inspectRaw(const std::string& sourceTransport, const std::string& sourceReference) const;
     std::string manifestDigest(const boost::filesystem::path& manifestPath) const;
     void acquireAuthFile(const common::Config::Authentication& auth, const common::ImageReference& reference);
     common::CLIArguments generateBaseArgs() const;

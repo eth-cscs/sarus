@@ -56,6 +56,10 @@ class TestCommandPull(unittest.TestCase):
         self._test_command_pull("ubuntu:20.04",
                                 is_centralized_repository=False)
 
+    def test_command_pull_with_buildah_image(self):
+        self._test_command_pull("quay.io/ethcscs/alpine:buildah",
+                                is_centralized_repository=False)
+
     def test_command_pull_by_digest(self):
         self._test_command_pull("quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d",
                                 is_centralized_repository=False,

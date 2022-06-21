@@ -152,23 +152,27 @@ namespace image_manager {
     std::string ImageManager::retrieveRegistryDigest(const std::string& transport, const common::ImageReference& targetReference) const {
         auto imageDigest = std::string{};
         auto inspectOutput = skopeoDriver.inspectRaw(transport, targetReference.string());
+        auto inspectOutputJson = common::parseJSON(inspectOutput);
 
-        auto mediaTypeItr =  inspectOutput.FindMember("mediaType");
-        if (mediaTypeItr == inspectOutput.MemberEnd()) {
-            auto message = boost::format("Failed to pull image '%s'\n"
-                                         "Unknown manifest media type returned by remote registry."
-                                         "The 'mediaType' property could not be found") % targetReference;
-            SARUS_THROW_ERROR(message.str());
+        auto mediaType = std::string{};
+        auto mediaTypeItr = inspectOutputJson.FindMember("mediaType");
+        if (mediaTypeItr != inspectOutputJson.MemberEnd()) {
+            mediaType = std::string{mediaTypeItr->value.GetString()};
+        }
+        else {
+            printLog("Unable to find media type of manifest returned by remote registry."
+                     "Assuming OCI Image Manifest V1 (application/vnd.oci.image.manifest.v1+json)",
+                     common::LogLevel::INFO);
+            mediaType = std::string{"application/vnd.oci.image.manifest.v1+json"};
         }
 
-        auto mediaType = std::string{mediaTypeItr->value.GetString()};
         // If we have a recognized manifest type, the image digest is the sha256 digest of the manifest
         if (mediaType == "application/vnd.oci.image.manifest.v1+json"
             || mediaType == "application/vnd.docker.distribution.manifest.v2+json"
             || mediaType == "application/vnd.docker.distribution.manifest.v1+json") {
             printLog("Computing image digest from raw manifest", common::LogLevel::INFO);
             auto manifestFile = common::PathRAII(common::makeUniquePathWithRandomSuffix(config->directories.temp / "sarusPullManifest"));
-            common::writeJSON(inspectOutput, manifestFile.getPath());
+            common::writeTextFile(inspectOutput, manifestFile.getPath());
             imageDigest = skopeoDriver.manifestDigest(manifestFile.getPath());
         }
         // If we have an OCI index or Docker manifest list (aka "fat manifest"), retrieve the digest
@@ -177,7 +181,7 @@ namespace image_manager {
                  || mediaType == "application/vnd.docker.distribution.manifest.list.v2+json") {
             printLog("Retrieving image digest from OCI index or Docker manifest list", common::LogLevel::INFO);
             auto platform = utility::getCurrentOCIPlatform();
-            imageDigest = utility::getPlatformDigestFromOCIIndex(inspectOutput, platform);
+            imageDigest = utility::getPlatformDigestFromOCIIndex(inspectOutputJson, platform);
             if (imageDigest.empty()) {
                 printLog("Unable to retrieve registry digest for image being pulled. Attempting to continue with empty digest",
                          common::LogLevel::WARN);

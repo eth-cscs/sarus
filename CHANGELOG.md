@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Changed
+
+- If the image manifest obtained from a registry during a pull does not feature the `mediaType` property, Sarus now attempts to process the manifest as an OCI Manifest V1 instead of failing with an error.
+
+### Fixed
+
+- Fixed an issue in the generation of manifest digests, where the digest result was incorrectly influenced by JSON formatting
+
+
 ## [1.5.0]
 
 ### Added
@@ -37,8 +48,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#pulling-images-from-insecure-registries)
 - Removed dependencies on cpprestsdk, libarchive, OpenSSL, libcap, and libexpat
 - Removed CI unit and integration tests from source on Ubuntu 18.04, Debian 10 and Fedora 34
-
-### Security
 
 
 ## [1.4.2]

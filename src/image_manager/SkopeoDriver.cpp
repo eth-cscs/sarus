@@ -125,8 +125,7 @@ boost::filesystem::path SkopeoDriver::copyToOCIImage(const std::string& sourceTr
     ociImageRAII.release();
     return ociImagePath;
 }
-
-rapidjson::Document SkopeoDriver::inspectRaw(const std::string& sourceTransport, const std::string& sourceReference) const {
+std::string SkopeoDriver::inspectRaw(const std::string& sourceTransport, const std::string& sourceReference) const {
     auto inspectOutput = std::string{};
 
     auto args = generateBaseArgs() + common::CLIArguments{"inspect", "--raw"};
@@ -195,7 +194,8 @@ rapidjson::Document SkopeoDriver::inspectRaw(const std::string& sourceTransport,
     if (common::Logger::getInstance().getLevel() == common::LogLevel::DEBUG) {
         inspectOutput = inspectOutput.substr(inspectOutput.find("{"));
     }
-    return common::parseJSON(inspectOutput);
+    printLog(boost::format("Raw inspect filtered output: %s") % inspectOutput, common::LogLevel::DEBUG);
+    return inspectOutput;
 }
 
 std::string SkopeoDriver::manifestDigest(const boost::filesystem::path& manifestPath) const {
@@ -203,6 +203,8 @@ std::string SkopeoDriver::manifestDigest(const boost::filesystem::path& manifest
         auto message = boost::format("Path of manifest to digest %s does not lead to a regular file") % manifestPath;
         SARUS_THROW_ERROR(message.str());
     }
+
+    printLog(boost::format("Manifest to digest: %s") % common::readFile(manifestPath), common::LogLevel::DEBUG);
 
     auto args = generateBaseArgs() + common::CLIArguments{"manifest-digest", manifestPath.string()};
     auto digestOutput = common::executeCommand(args.string());

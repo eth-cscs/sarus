@@ -71,7 +71,7 @@ TEST(SkopeoDriverTestGroup, inspectRaw) {
     auto driver = image_manager::SkopeoDriver{config};
 
     auto imageReference = std::string{"quay.io/ethcscs/alpine:3.14"};
-    auto expectedManifest = common::readJSON(boost::filesystem::path{__FILE__}.parent_path() / "expected_inspect_raw_manifest.json");
+    auto expectedManifest = common::readFile(boost::filesystem::path{__FILE__}.parent_path() / "expected_inspect_raw_manifest.json");
 
     auto returnedManifest = driver.inspectRaw("docker", imageReference);
     CHECK(returnedManifest == expectedManifest);
