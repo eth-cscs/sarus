@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - If the image manifest obtained from a registry during a pull does not feature the `mediaType` property, Sarus now attempts to process the manifest as an OCI Manifest V1 instead of failing with an error.
+- Updated recommended libnvidia-container version to 1.10.0
+- Updated recommended NVIDIA Container Toolkit version to 1.10.0
 
 ### Fixed
 
