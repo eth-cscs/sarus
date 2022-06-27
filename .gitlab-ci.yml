@@ -180,35 +180,28 @@ spack_ubuntu18.04:
   before_script:
     - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-ubuntu18.04 spack-ubuntu18.04
 
-spack_debian10:
+.scheduled_spack_package:
   extends: .spack_package
   only:
-    - web
     - schedules
+
+spack_debian10:
+  extends: .scheduled_spack_package
   before_script:
     - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-debian10 spack-debian10
 
 spack_centos7:
-  extends: .spack_package
-  only:
-    - web
-    - schedules
+  extends: .scheduled_spack_package
   before_script:
     - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-centos7 spack-centos7
 
 spack_fedora34:
-  extends: .spack_package
-  only:
-    - web
-    - schedules
+  extends: .scheduled_spack_package
   before_script:
     - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-fedora34 spack-fedora34
 
 spack_opensuseleap15:
-  extends: .spack_package
-  only:
-    - web
-    - schedules
+  extends: .scheduled_spack_package
   before_script:
     - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-opensuseleap15 spack-opensuseleap15
 
