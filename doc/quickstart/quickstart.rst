@@ -93,9 +93,9 @@ Below is an example of some basic usage of Sarus:
 
     $ sarus pull alpine
     # image            : index.docker.io/library/alpine:latest
-    # cache directory  : "/home/docker/.sarus/cache"
+    # cache directory  : "/home/user/.sarus/cache"
     # temp directory   : "/tmp"
-    # images directory : "/home/docker/.sarus/images"
+    # images directory : "/home/user/.sarus/images"
     # image digest     : sha256:4ff3ca91275773af45cb4b0834e12b7eb47d1c18f770a0b151381cd227f4c253
     Getting image source signatures
     Copying blob 2408cc74d12b done
@@ -103,7 +103,7 @@ Below is an example of some basic usage of Sarus:
     Writing manifest to image destination
     Storing signatures
     > unpacking OCI image
-    > making squashfs image: "/home/docker/.sarus/images/index.docker.io/library/alpine/latest.squashfs"
+    > making squashfs image: "/home/user/.sarus/images/index.docker.io/library/alpine/latest.squashfs"
 
     $ sarus images
     REPOSITORY   TAG          IMAGE ID       CREATED               SIZE         SERVER
