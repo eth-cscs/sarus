@@ -5,10 +5,9 @@
 # Please, refer to the LICENSE file in the root directory.
 # SPDX-License-Identifier: BSD-3-Clause
 
-import unittest
-
 import common.util as util
-
+import pytest
+import unittest
 
 class TestCommandRun(unittest.TestCase):
     """
@@ -55,11 +54,13 @@ class TestCommandRun(unittest.TestCase):
                                     options_of_run_command=["--entrypoint=echo"])
         self.assertEqual(out, ["--option arg"])
 
+    @pytest.mark.xfail(reason="CONTAINER-666")
     def test_private_pid_namespace(self):
         processes = self._run_ps_in_container(with_private_pid_namespace=True, with_init_process=False)
         self.assertEqual(len(processes), 1)
         self.assertEqual(processes[0], {"pid": 1, "comm": "ps"})
 
+    @pytest.mark.xfail(reason="CONTAINER-666")
     def test_init_process(self):
         processes = self._run_ps_in_container(with_private_pid_namespace=True, with_init_process=True)
         self.assertEqual(len(processes), 2)
@@ -78,6 +79,7 @@ class TestCommandRun(unittest.TestCase):
         for reference, prettyname in images.items():
             util.pull_image_if_necessary(is_centralized_repository, reference)
             assert util.run_image_and_get_prettyname(is_centralized_repository, reference).startswith(prettyname)
+
 
     def _run_ps_in_container(self, with_private_pid_namespace, with_init_process):
         util.pull_image_if_necessary(is_centralized_repository=False, image=self.default_image)

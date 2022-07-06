@@ -24,7 +24,7 @@ check_git_repo() {
     fail_on_error "failed to run CMake on git repo"
     log "    Config successful, checking version string"
     version_from_cmake=$(cat cmake_stdout.txt | grep "Sarus version" | awk -F ": " '{print $2}')
-    version_from_git=$(git describe --tags --dirty)
+    version_from_git=$(git describe --tags --dirty --always)
     log "    Version from CMake: ${version_from_cmake}"
     log "    Version from git : ${version_from_git}"
     [ "$version_from_git" == "$version_from_cmake" ]

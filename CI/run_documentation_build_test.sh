@@ -38,7 +38,7 @@ check_git_repo() {
     log "Building documentation from git repository"
     cp -rT $sarus_src_dir /home/docker/sarus-git
     cd /home/docker/sarus-git/doc
-    version_from_git=$(git describe --tags --dirty)
+    version_from_git=$(git describe --tags --dirty --always)
     check_docs ${version_from_git}
 }
 

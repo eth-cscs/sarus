@@ -87,7 +87,7 @@ build_sarus_archive() {
 
     mkdir -p ${build_dir} && cd ${build_dir}
 
-    local git_description=$(git describe --tags --dirty || echo "git_version_not_available")
+    local git_description=$(git describe --tags --dirty --always || echo "git_version_not_available")
     local prefix_dir=${build_dir}/install/${git_description}-${build_type}
     cmake   -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain_files/${toolchain_file} \
             -DCMAKE_BUILD_TYPE=${build_type} \

@@ -12,7 +12,7 @@ jobs:
       - name: Check Version and Docs
         shell: bash
         run: |
-          git clone --depth 1 --recursive --shallow-submodules https://github.com/eth-cscs/sarus && cd sarus
+          git clone --branch ${GITHUB_REF_NAME} --depth 1 --recursive --shallow-submodules https://github.com/eth-cscs/sarus && cd sarus
           . CI/utility_docker_functions.bash
           sarus-build-images
           sarus-check-version-and-docs $(pwd)

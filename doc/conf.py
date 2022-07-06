@@ -27,7 +27,7 @@ author = 'Swiss National Supercomputing Centre'
 # Retrieve the version string
 # Search git repo for added information about untagged snapshots
 try:
-    full_version = subprocess.check_output(["git", "describe", '--tags'],
+    full_version = subprocess.check_output(["git", "describe", '--tags', '--dirty', '--always'],
                                            universal_newlines=True)
 except:
     full_version = "VERSION-NOT-AVAILABLE"

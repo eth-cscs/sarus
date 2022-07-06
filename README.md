@@ -2,7 +2,7 @@
 
 [![License: BSD 3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Documentation](https://readthedocs.org/projects/sarus/badge/?version=latest)](https://sarus.readthedocs.io/en/latest/?badge=latest)
-[![Integration](https://github.com/eth-cscs/sarus/actions/workflows/integration.yml/badge.svg)](https://github.com/eth-cscs/sarus/actions/workflows/integration.yml)
+[![Integration](https://github.com/eth-cscs/sarus/actions/workflows/integration.yml/badge.svg?event=push)](https://github.com/eth-cscs/sarus/actions/workflows/integration.yml)
 
 Sarus is a software to run Linux containers on High Performance Computing
 environments. Its development has been driven by the specific requirements of

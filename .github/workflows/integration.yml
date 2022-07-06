@@ -24,7 +24,7 @@ jobs:
       - name: Build and Test
         shell: bash
         run: |
-          git clone --depth 1 --recursive --shallow-submodules https://github.com/eth-cscs/sarus && cd sarus
+          git clone --branch ${GITHUB_REF_NAME} --depth 1 --recursive --shallow-submodules https://github.com/eth-cscs/sarus && cd sarus
           CI/check_host.sh
           . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $(pwd)/cache standalone-build standalone-run
           sarus-build-images
