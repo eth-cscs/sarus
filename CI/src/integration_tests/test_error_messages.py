@@ -126,7 +126,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "pull", "invalid-image-1kds710dkj"]
-        expected_message = ("Failed to pull image 'index.docker.io/library/invalid-image-1kds710dkj:latest'"
+        expected_message = ("Failed to pull image 'docker.io/library/invalid-image-1kds710dkj:latest'"
                             "\nError reading manifest from registry."
                             "\nThe image may be private or not present in the remote registry."
                             "\nDid you perform a login with the proper credentials?"
@@ -142,7 +142,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "pull", "ethcscs/private-example"]
-        expected_message = ("Failed to pull image 'index.docker.io/ethcscs/private-example:latest'"
+        expected_message = ("Failed to pull image 'docker.io/ethcscs/private-example:latest'"
                             "\nError reading manifest from registry."
                             "\nThe image may be private or not present in the remote registry."
                             "\nDid you perform a login with the proper credentials?"
@@ -203,7 +203,7 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "rmi", "invalid-image-9as7302j"]
-        expected_message = "Cannot find image 'index.docker.io/library/invalid-image-9as7302j:latest'"
+        expected_message = "Cannot find image 'docker.io/library/invalid-image-9as7302j:latest'"
         self._check(command, expected_message)
 
     def test_command_run(self):
@@ -216,20 +216,23 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "run", "not-available-image", "true"]
-        expected_message = "Specified image index.docker.io/library/not-available-image:latest is not available"
-        self._check(command, expected_message)
+        default_server_expected_message = ("Image docker.io/library/not-available-image:latest is not available. "
+                                           "Attempting to look for equivalent image in index.docker.io server repositories")
+        legacy_default_server_expected_message = "Image index.docker.io/library/not-available-image:latest is not available"
+        self._check(command, default_server_expected_message)
+        self._check(command, legacy_default_server_expected_message)
 
         # Error message when running by digest and only corresponding tagged image is available
         util.remove_image_if_necessary(is_centralized_repository=False,
                                        image="quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d")
         util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/alpine:3.14")
         command = ["sarus", "run", "quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d", "true"]
-        expected_message = "Specified image quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d is not available"
+        expected_message = "Image quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d is not available"
         self._check(command, expected_message)
 
         # Error message when running by tag+digest and only corresponding tagged image is available
         command = ["sarus", "run", "quay.io/ethcscs/alpine:3.14@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d", "true"]
-        expected_message = "Specified image quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d is not available"
+        expected_message = "Image quay.io/ethcscs/alpine@sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d is not available"
         self._check(command, expected_message)
 
         command = ["sarus", "run", "--invalid-option", "quay.io/ethcscs/alpine", "true"]

@@ -92,7 +92,7 @@ Below is an example of some basic usage of Sarus:
 .. code-block:: bash
 
     $ sarus pull alpine
-    # image            : index.docker.io/library/alpine:latest
+    # image            : docker.io/library/alpine:latest
     # cache directory  : "/home/user/.sarus/cache"
     # temp directory   : "/tmp"
     # images directory : "/home/user/.sarus/images"
@@ -103,11 +103,11 @@ Below is an example of some basic usage of Sarus:
     Writing manifest to image destination
     Storing signatures
     > unpacking OCI image
-    > making squashfs image: "/home/user/.sarus/images/index.docker.io/library/alpine/latest.squashfs"
+    > making squashfs image: "/home/user/.sarus/images/docker.io/library/alpine/latest.squashfs"
 
     $ sarus images
     REPOSITORY   TAG          IMAGE ID       CREATED               SIZE         SERVER
-    alpine       latest       a366738a1861   2022-05-25T09:19:59   2.59MB       index.docker.io
+    alpine       latest       a366738a1861   2022-05-25T09:19:59   2.59MB       docker.io
 
     $ sarus run alpine cat /etc/os-release
     NAME="Alpine Linux"

@@ -29,6 +29,7 @@ struct ImageReference {
     std::string getUniqueKey() const;
     ImageReference normalize() const;
 
+    static const std::string LEGACY_DEFAULT_SERVER;
     static const std::string DEFAULT_SERVER;
     static const std::string DEFAULT_REPOSITORY_NAMESPACE;
     static const std::string DEFAULT_TAG;

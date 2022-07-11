@@ -65,7 +65,10 @@ class TestCommandImages(unittest.TestCase):
     def _test_command_images(self, is_centralized_repository):
         expected_header = ["REPOSITORY", "TAG", "IMAGE", "ID", "CREATED", "SIZE", "SERVER"]
 
-        # import image (with fixed digest)
+        # pull image from default registry
+        util.pull_image_if_necessary(is_centralized_repository, "alpine")
+
+        # load image (with fixed digest)
         image_archive = os.path.dirname(os.path.abspath(__file__)) + "/saved_image.tar"
         util.load_image(is_centralized_repository, image_archive, self._IMAGE_NAME)
 
@@ -73,7 +76,13 @@ class TestCommandImages(unittest.TestCase):
         actual_header = self._header_in_output_of_images_command(is_centralized_repository)
         self.assertEqual(actual_header, expected_header)
 
-        # imported image
+        # pulled image from default registry
+        image_output = self._image_in_output_of_images_command(is_centralized_repository, False, "alpine", "latest", "")
+        self.assertEqual(image_output[0], "alpine")
+        self.assertEqual(image_output[1], "latest")
+        self.assertEqual(image_output[5], "docker.io")
+
+        # loaded image
         image_output = self._image_in_output_of_images_command(is_centralized_repository, False, "load/library/loaded_image", "latest", "")
         self.assertEqual(image_output[0], "load/library/loaded_image")
         self.assertEqual(image_output[1], "latest")

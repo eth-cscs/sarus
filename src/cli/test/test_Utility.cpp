@@ -45,21 +45,21 @@ TEST(CLIUtilityTestGroup, parseImageReference) {
     auto imageReference = common::ImageReference{};
 
     imageReference = cli::utility::parseImageReference("image");
-    CHECK_EQUAL(imageReference.server, std::string{"index.docker.io"});
+    CHECK_EQUAL(imageReference.server, std::string{"docker.io"});
     CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"library"});
     CHECK_EQUAL(imageReference.image, std::string{"image"});
     CHECK_EQUAL(imageReference.tag, std::string{"latest"});
     CHECK_EQUAL(imageReference.digest, std::string{""});
 
     imageReference = cli::utility::parseImageReference("image:tag");
-    CHECK_EQUAL(imageReference.server, std::string{"index.docker.io"});
+    CHECK_EQUAL(imageReference.server, std::string{"docker.io"});
     CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"library"});
     CHECK_EQUAL(imageReference.image, std::string{"image"});
     CHECK_EQUAL(imageReference.tag, std::string{"tag"});
     CHECK_EQUAL(imageReference.digest, std::string{""});
 
     imageReference = cli::utility::parseImageReference("namespace/image:tag");
-    CHECK_EQUAL(imageReference.server, std::string{"index.docker.io"});
+    CHECK_EQUAL(imageReference.server, std::string{"docker.io"});
     CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace"});
     CHECK_EQUAL(imageReference.image, std::string{"image"});
     CHECK_EQUAL(imageReference.tag, std::string{"tag"});
@@ -72,6 +72,7 @@ TEST(CLIUtilityTestGroup, parseImageReference) {
     CHECK_EQUAL(imageReference.tag, std::string{"tag"});
     CHECK_EQUAL(imageReference.digest, std::string{""});
 
+    // Nested namespaces
     imageReference = cli::utility::parseImageReference("server/namespace0/namespace1/image:tag");
     CHECK_EQUAL(imageReference.server, std::string{"server"});
     CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace0/namespace1"});
@@ -79,6 +80,7 @@ TEST(CLIUtilityTestGroup, parseImageReference) {
     CHECK_EQUAL(imageReference.tag, std::string{"tag"});
     CHECK_EQUAL(imageReference.digest, std::string{""});
 
+    // Image with digest
     imageReference = cli::utility::parseImageReference("server/namespace/image@sha256:d4ff818577bc193b309b355b02ebc9220427090057b54a59e73b79bdfe139b83");
     CHECK_EQUAL(imageReference.server, std::string{"server"});
     CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace"});
@@ -86,6 +88,7 @@ TEST(CLIUtilityTestGroup, parseImageReference) {
     CHECK_EQUAL(imageReference.tag, std::string{""});
     CHECK_EQUAL(imageReference.digest, std::string{"sha256:d4ff818577bc193b309b355b02ebc9220427090057b54a59e73b79bdfe139b83"});
 
+    // Image with tag+digest
     imageReference = cli::utility::parseImageReference("server/namespace/image:tag@sha256:d4ff818577bc193b309b355b02ebc9220427090057b54a59e73b79bdfe139b83");
     CHECK_EQUAL(imageReference.server, std::string{"server"});
     CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace"});

@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Changed the default registry to `docker.io`.
+  When the server is not entered as part of the image reference, the `sarus run` command first looks under `docker.io` repositories and, if the image is not available, falls back to images under the previous default server (`index.docker.io`). This is done to preserve compatibility with existing workflows.
+  The `sarus images` and `sarus rmi` commands treat images from `index.docker.io` as images from a 3rd party registry.
 - If the image manifest obtained from a registry during a pull does not feature the `mediaType` property, Sarus now attempts to process the manifest as an OCI Manifest V1 instead of failing with an error.
 - Updated recommended libnvidia-container version to 1.10.0
 - Updated recommended NVIDIA Container Toolkit version to 1.10.0
@@ -16,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - Fixed an issue in the generation of manifest digests, where the digest result was incorrectly influenced by JSON formatting
+- Fixed an inconsistency with Skopeo which was preventing to pull private images from Docker Hub
 
 
 ## [1.5.0]

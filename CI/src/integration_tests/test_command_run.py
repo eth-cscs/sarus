@@ -23,6 +23,11 @@ class TestCommandRun(unittest.TestCase):
     def test_command_run_with_centralized_repository(self):
         self._test_command_run(is_centralized_repository=True)
 
+    def test_fallback_on_legacy_default_server(self):
+        util.remove_image_if_necessary(is_centralized_repository=False, image="alpine")
+        util.pull_image_if_necessary(is_centralized_repository=False, image="index.docker.io/library/alpine")
+        assert util.run_image_and_get_prettyname(is_centralized_repository=False, image="alpine").startswith("Alpine Linux")
+
     def test_workdir(self):
         util.pull_image_if_necessary(is_centralized_repository=True, image=self.default_image)
 

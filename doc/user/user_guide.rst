@@ -153,7 +153,7 @@ You can use :program:`sarus images` to list the images available on the system:
 
     $ sarus images
     REPOSITORY                 TAG       IMAGE ID       CREATED               SIZE         SERVER
-    <repo name>/hello-python   1.0       6bc9d2cd1831   2018-01-19T09:43:04   40.16MB      index.docker.io
+    <repo name>/hello-python   1.0       6bc9d2cd1831   2018-01-19T09:43:04   40.16MB      docker.io
 
 4. Run the image at scale with Sarus
 ------------------------------------
@@ -331,7 +331,7 @@ separator:
 .. code-block:: bash
 
     $ sarus pull debian@sha256:039f72a400b48c272c6348f0a3f749509b18e611901a21379abc7eb6edd53392
-    # image            : index.docker.io/library/debian@sha256:039f72a400b48c272c6348f0a3f749509b18e611901a21379abc7eb6edd53392
+    # image            : docker.io/library/debian@sha256:039f72a400b48c272c6348f0a3f749509b18e611901a21379abc7eb6edd53392
     # cache directory  : "/home/<user>/.sarus/cache"
     # temp directory   : "/tmp"
     # images directory : "/home/<user>/.sarus/images"
@@ -342,7 +342,7 @@ separator:
     Writing manifest to image destination
     Storing signatures
     > unpacking OCI image
-    > make squashfs image: "/home/<user>/.sarus/images/index.docker.io/library/debian/sha256-039f72a400b48c272c6348f0a3f749509b18e611901a21379abc7eb6edd53392.squashfs"
+    > make squashfs image: "/home/<user>/.sarus/images/docker.io/library/debian/sha256-039f72a400b48c272c6348f0a3f749509b18e611901a21379abc7eb6edd53392.squashfs"
 
 It is possible to combine tag and digest in the argument of the :program:`sarus pull`
 command. In this case, Sarus proceeds to pull the image indicated by the digest
@@ -352,7 +352,7 @@ tools like Docker, Podman and Buildah:
 .. code-block::
 
     $ sarus pull alpine:3.15.2@sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97
-    # image            : index.docker.io/library/alpine:3.15.2@sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97
+    # image            : docker.io/library/alpine:3.15.2@sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97
     # cache directory  : "/home/<user>/.sarus/cache"
     # temp directory   : "/tmp"
     # images directory : "/home/<user>/.sarus/images"
@@ -363,7 +363,7 @@ tools like Docker, Podman and Buildah:
     Writing manifest to image destination
     Storing signatures
     > unpacking OCI image
-    > make squashfs image: "/home/<user>/.sarus/images/index.docker.io/library/alpine/sha256-73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97.squashfs"
+    > make squashfs image: "/home/<user>/.sarus/images/docker.io/library/alpine/sha256-73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97.squashfs"
 
 Even if the tag is ignored by the pull, it can still serve as a visual aid for
 for users writing or reading the command, helping to understand what image the
@@ -553,9 +553,9 @@ command:
 
     $ sarus images --digests
     REPOSITORY   TAG          DIGEST                                                                    IMAGE ID       CREATED               SIZE         SERVER
-    alpine       latest       sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97   e3671980822d   2022-03-25T13:17:13   2.61MB       index.docker.io
-    fedora       latest       sha256:36af84ba69e21c9ef86a0424a090674c433b2b80c2462e57503886f1d823abe8   04d13a5c8de5   2022-03-25T13:17:57   50.03MB      index.docker.io
-    ubuntu       <none>       sha256:dcc176d1ab45d154b767be03c703a35fe0df16cfb1cc7ea5dd3b6f9af99b6718   4f4768f23ea4   2022-03-25T13:21:40   26.41MB      index.docker.io
+    alpine       latest       sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97   e3671980822d   2022-03-25T13:17:13   2.61MB       docker.io
+    fedora       latest       sha256:36af84ba69e21c9ef86a0424a090674c433b2b80c2462e57503886f1d823abe8   04d13a5c8de5   2022-03-25T13:17:57   50.03MB      docker.io
+    ubuntu       <none>       sha256:dcc176d1ab45d154b767be03c703a35fe0df16cfb1cc7ea5dd3b6f9af99b6718   4f4768f23ea4   2022-03-25T13:21:40   26.41MB      docker.io
 
 Running images by digest
 ------------------------
@@ -567,7 +567,7 @@ To run images pulled by digest, append the digest to the image name using
 
     $ sarus images --digests
     REPOSITORY   TAG          DIGEST                                                                    IMAGE ID       CREATED               SIZE         SERVER
-    alpine       <none>       sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97   e3671980822d   2022-03-25T14:28:45   2.61MB       index.docker.io
+    alpine       <none>       sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97   e3671980822d   2022-03-25T14:28:45   2.61MB       docker.io
 
     $ sarus run alpine@sha256:73c155696fe65b68696e6ea24088693546ac468b3e14542f23f0efbde289cc97 cat /etc/os-release
     NAME="Alpine Linux"
@@ -600,10 +600,10 @@ rmi` command:
 
     $ sarus images
     REPOSITORY       TAG          IMAGE ID       CREATED               SIZE         SERVER
-    library/debian   latest       6bc9d2cd1831   2018-01-31T14:11:27   40.17MB      index.docker.io
+    library/debian   latest       6bc9d2cd1831   2018-01-31T14:11:27   40.17MB      docker.io
 
     $ sarus rmi debian:latest
-    removed index.docker.io/library/debian/latest
+    removed docker.io/library/debian/latest
 
     $ sarus images
     REPOSITORY   TAG          IMAGE ID       CREATED      SIZE         SERVER
@@ -627,7 +627,7 @@ To remove images pulled by digest, append the digest to the image name using
 .. code-block::
 
     $ sarus rmi ubuntu@sha256:dcc176d1ab45d154b767be03c703a35fe0df16cfb1cc7ea5dd3b6f9af99b6718
-    removed image index.docker.io/library/ubuntu@sha256:dcc176d1ab45d154b767be03c703a35fe0df16cfb1cc7ea5dd3b6f9af99b6718
+    removed image docker.io/library/ubuntu@sha256:dcc176d1ab45d154b767be03c703a35fe0df16cfb1cc7ea5dd3b6f9af99b6718
 
 .. _user-environment:
 

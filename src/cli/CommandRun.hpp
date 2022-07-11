@@ -450,7 +450,7 @@ private:
     }
 
     void verifyThatImageIsAvailable() const {
-        cli::utility::printLog( boost::format("Verifying that image %s is available") % conf->getImageFile(),
+        cli::utility::printLog( boost::format("Verifying that image %s is available") % conf->imageReference,
                                 common::LogLevel::INFO);
         // switch to user filesystem identity to make sure we can access images on root_squashed filesystems
         auto rootIdentity = common::UserIdentity{};
@@ -459,8 +459,15 @@ private:
         try {
             auto imageStore = image_manager::ImageStore(conf);
             auto image = imageStore.findImage(conf->imageReference);
+            if(!image && conf->imageReference.server == common::ImageReference::DEFAULT_SERVER) {
+                auto message = boost::format("Image %s is not available. Attempting to look for equivalent image in %s server repositories")
+                                             % conf->imageReference % common::ImageReference::LEGACY_DEFAULT_SERVER;
+                cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
+                conf->imageReference.server = common::ImageReference::LEGACY_DEFAULT_SERVER;
+                image = imageStore.findImage(conf->imageReference);
+            }
             if(!image) {
-                auto message = boost::format("Specified image %s is not available") % conf->imageReference;
+                auto message = boost::format("Image %s is not available") % conf->imageReference;
                 cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
                 exit(EXIT_FAILURE);
             }
@@ -471,7 +478,8 @@ private:
 
         common::setFilesystemUid(rootIdentity);
 
-        cli::utility::printLog("Successfully verified that image is available", common::LogLevel::INFO);
+        cli::utility::printLog(boost::format("Successfully verified that image %s is available") % conf->imageReference,
+                               common::LogLevel::INFO);
     }
 
     void verifyImageBackingFiles(const common::SarusImage& image) const {

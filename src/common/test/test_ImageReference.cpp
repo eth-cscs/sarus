@@ -43,7 +43,7 @@ TEST(ImageReferenceTestGroup, string) {
                                  "image",
                                  common::ImageReference::DEFAULT_TAG,
                                  ""};
-    CHECK_EQUAL(ref.string(), std::string{"index.docker.io/library/image:latest"});
+    CHECK_EQUAL(ref.string(), std::string{"docker.io/library/image:latest"});
 
     // all members
     ref = common::ImageReference{"server", "namespace", "image", "tag", "sha256:1234567890abcdef"};

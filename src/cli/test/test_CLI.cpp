@@ -154,7 +154,7 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
         CHECK(conf->authentication.isAuthenticationNeeded == false);
         CHECK(conf->authentication.username.empty());
         CHECK(conf->authentication.password.empty());
-        CHECK(conf->imageReference.server == "index.docker.io");
+        CHECK(conf->imageReference.server == "docker.io");
         CHECK(conf->imageReference.repositoryNamespace == "library");
         CHECK(conf->imageReference.image == "ubuntu");
         CHECK(conf->imageReference.tag == "latest");
@@ -167,7 +167,7 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
         CHECK(conf->authentication.isAuthenticationNeeded == false);
         CHECK(conf->authentication.username.empty());
         CHECK(conf->authentication.password.empty());
-        CHECK(conf->imageReference.server == "index.docker.io");
+        CHECK(conf->imageReference.server == "docker.io");
         CHECK(conf->imageReference.repositoryNamespace == "library");
         CHECK(conf->imageReference.image == "ubuntu");
         CHECK(conf->imageReference.tag == "latest");
@@ -207,7 +207,7 @@ TEST(CLITestGroup, generated_config_for_CommandRmi) {
     {
         auto conf = generateConfig({"rmi", "ubuntu"});
         CHECK_EQUAL(conf->useCentralizedRepository, false);
-        CHECK_EQUAL(conf->imageReference.server, std::string{"index.docker.io"});
+        CHECK_EQUAL(conf->imageReference.server, std::string{"docker.io"});
         CHECK_EQUAL(conf->imageReference.repositoryNamespace, std::string{"library"});
         CHECK_EQUAL(conf->imageReference.image, std::string{"ubuntu"});
         CHECK_EQUAL(conf->imageReference.tag, std::string{"latest"});
@@ -216,7 +216,7 @@ TEST(CLITestGroup, generated_config_for_CommandRmi) {
     {
         auto conf = generateConfig({"rmi", "--centralized-repository", "ubuntu"});
         CHECK_EQUAL(conf->useCentralizedRepository, true);
-        CHECK_EQUAL(conf->imageReference.server, std::string{"index.docker.io"});
+        CHECK_EQUAL(conf->imageReference.server, std::string{"docker.io"});
         CHECK_EQUAL(conf->imageReference.repositoryNamespace, std::string{"library"});
         CHECK_EQUAL(conf->imageReference.image, std::string{"ubuntu"});
         CHECK_EQUAL(conf->imageReference.tag, std::string{"latest"});
@@ -227,7 +227,7 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
     // empty values
     {
         auto conf = generateConfig({"run", "image"});
-        CHECK_EQUAL(conf->imageReference.server, std::string{"index.docker.io"});
+        CHECK_EQUAL(conf->imageReference.server, std::string{"docker.io"});
         CHECK_EQUAL(conf->imageReference.repositoryNamespace, std::string{"library"});
         CHECK_EQUAL(conf->imageReference.image, std::string{"image"});
         CHECK_EQUAL(conf->imageReference.tag, std::string{"latest"});
@@ -366,7 +366,7 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
         CHECK_EQUAL(conf->commandRun.userEnvironment.size(), 1);
         CHECK_EQUAL(conf->commandRun.userEnvironment["CONTAINER"], std::string{"sarus"});
         CHECK_EQUAL(conf->commandRun.mounts.size(), 2); // 1 site mount + 1 user mount
-        CHECK_EQUAL(conf->imageReference.server, std::string{"index.docker.io"});
+        CHECK_EQUAL(conf->imageReference.server, std::string{"docker.io"});
         CHECK_EQUAL(conf->imageReference.repositoryNamespace, std::string{"library"});
         CHECK_EQUAL(conf->imageReference.image, std::string{"ubuntu"});
         CHECK_EQUAL(conf->imageReference.tag, std::string{"latest"});

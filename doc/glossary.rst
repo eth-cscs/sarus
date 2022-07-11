@@ -93,7 +93,7 @@ used in the scope of Sarus and throughout its documentation.
         image belongs. This component is similar to a URL, but does not contain a
         protocol specifier; it can specify a port number, separated by a colon
         (for example ``test.registry.io:5000``). When a ``server`` component is
-        not specified in the command line, Sarus defaults to ``index.docker.io``
+        not specified in the command line, Sarus defaults to ``docker.io``
         (Docker Hub).
 
         The ``namespace`` component represents a namespace which may exist within

@@ -22,7 +22,8 @@
 namespace sarus {
 namespace common {
 
-const std::string ImageReference::DEFAULT_SERVER{"index.docker.io"};
+const std::string ImageReference::LEGACY_DEFAULT_SERVER{"index.docker.io"};
+const std::string ImageReference::DEFAULT_SERVER{"docker.io"};
 const std::string ImageReference::DEFAULT_REPOSITORY_NAMESPACE{"library"};
 const std::string ImageReference::DEFAULT_TAG{"latest"};
 
