@@ -48,7 +48,8 @@ version = full_version.split('-')[0]
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx_markdown_builder'
+    'sphinx_markdown_builder',
+    'sphinx_tabs.tabs'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -77,6 +78,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'venv']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
+
+sphinx_tabs_valid_builders = ['linkcheck']
+sphinx_tabs_disable_tab_closing = True
 
 
 # -- Options for HTML output -------------------------------------------------

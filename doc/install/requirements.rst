@@ -38,40 +38,42 @@ or some dependencies might be provided in versions not supported by Sarus.
 Please follow the :ref:`manual installation <requirements-manual-installation>`
 instructions for such dependencies.
 
-**OpenSUSE Leap 15.3**:
+.. tabs::
 
-.. literalinclude:: ../../CI/installation/install_packages_opensuseleap:15.3.sh
-   :language: bash
-   :start-after: set -ex
-   :end-before: # DOCS: END
+    .. group-tab:: OpenSUSE Leap 15.3
 
-**CentOS 7**:
+        .. literalinclude:: ../../CI/installation/install_packages_opensuseleap:15.3.sh
+           :language: bash
+           :start-after: set -ex
+           :end-before: # DOCS: END
 
-.. literalinclude:: ../../CI/installation/install_packages_centos:7.sh
-   :language: bash
-   :start-after: set -ex
-   :end-before: # DOCS: END
+    .. group-tab:: CentOS 7
 
-**Fedora 35**:
+        .. literalinclude:: ../../CI/installation/install_packages_centos:7.sh
+           :language: bash
+           :start-after: set -ex
+           :end-before: # DOCS: END
 
-.. literalinclude:: ../../CI/installation/install_packages_fedora:35.sh
-   :language: bash
-   :start-after: set -ex
-   :end-before: # DOCS: END
+    .. group-tab:: Fedora 35
 
-**Debian 11**:
+        .. literalinclude:: ../../CI/installation/install_packages_fedora:35.sh
+           :language: bash
+           :start-after: set -ex
+           :end-before: # DOCS: END
 
-.. literalinclude:: ../../CI/installation/install_packages_debian:11.sh
-   :language: bash
-   :start-after: set -ex
-   :end-before: # DOCS: END
+    .. group-tab:: Debian 11
 
-**Ubuntu 22.04**:
+        .. literalinclude:: ../../CI/installation/install_packages_debian:11.sh
+           :language: bash
+           :start-after: set -ex
+           :end-before: # DOCS: END
 
-.. literalinclude:: ../../CI/installation/install_packages_ubuntu:22.04.sh
-   :language: bash
-   :start-after: set -ex
-   :end-before: # DOCS: END
+    .. group-tab:: Ubuntu 22.04
+
+        .. literalinclude:: ../../CI/installation/install_packages_ubuntu:22.04.sh
+           :language: bash
+           :start-after: set -ex
+           :end-before: # DOCS: END
 
 
 .. _requirements-manual-installation:
