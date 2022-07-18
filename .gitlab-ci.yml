@@ -23,7 +23,8 @@ get_credentials:
   image: vault:latest
   stage: prepare_pipeline
   tags:
-    - docker
+    - Fulen
+    - K8s
   script:
     - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=c4k-ci jwt=$CI_JOB_JWT)"
     - if [[ ${#VAULT_TOKEN} -lt 3 ]]; then echo "ERROR, Vault token empty"; exit 1; fi
@@ -92,7 +93,8 @@ artifact_store:
   stage: artifact_store
   image: releases-docker.jfrog.io/jfrog/jfrog-cli
   tags:
-    - docker
+    - Fulen
+    - K8s
   script:
     - NAME="sarus-Release-${CI_COMMIT_TAG}.tar.gz"
     - echo ">>> Performing upload ${NAME} to ${JFROG_URL}"
