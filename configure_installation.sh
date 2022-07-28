@@ -150,7 +150,7 @@ echo "Successfully configured etc/sarus.json."
 
 # create OCI hooks in etc/hooks.d
 if [ -e etc/hooks.d ]; then
-    for file_json_in in $(cd etc/hooks.d && ls *.json.in); do
+    for file_json_in in $(find etc/hooks.d/ -name *.json.in -printf "%f\n"); do
         file_json=$(basename ${file_json_in} .in)
         echo "Configuring etc/hooks.d/"${file_json}
 
