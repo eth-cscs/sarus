@@ -10,7 +10,7 @@ cd /tmp && \
     cd skopeo/ && \
     git checkout v1.7.0 && \
     export CGO_ENABLED=0 && \
-    make BUILDTAGS=containers_image_openpgp GO_DYN_FLAGS= bin/skopeo
+    make BUILDTAGS=containers_image_openpgp GO_DYN_FLAGS= bin/skopeo && \
     chmod 755 bin/skopeo && \
     sudo mv bin/skopeo /usr/local/bin/ && \
     sudo chown root:root /usr/local/bin/skopeo && \

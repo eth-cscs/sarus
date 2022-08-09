@@ -73,6 +73,9 @@ def _get_host_glibc_libs():
         libs.append("/usr/lib64/libnsl.so.2")
         # Fedora does not install by default libnss_hesiod.so.2 at least since Fedora 28 (could be earlier)
         libs.remove(os.path.join(_get_glibc_path(), "libnss_hesiod.so.2"))
+    if _get_distro_id() == "ubuntu" and float(_get_distro_version_id()) >= 22.04:
+        libs.remove(os.path.join(_get_glibc_path(), "libSegFault.so"))
+        libs.append("/lib/x86_64-linux-gnu/libsigsegv.so.2")
     return libs
 
 class TestGlibcHook(unittest.TestCase):
@@ -96,9 +99,9 @@ class TestGlibcHook(unittest.TestCase):
     def _pull_docker_images(cls):
         util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/alpine:3.14") # no glibc
         util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/centos:6") # glibc 2.12
-        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/fedora:35") # assumption: glibc >= host's glibc
+        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/fedora:36") # assumption: glibc >= host's glibc
         # based on fedora - assumption: glibc >= host's glibc
-        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry_f35")
+        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry_f36")
 
     @classmethod
     def _enable_hook(cls):
@@ -139,13 +142,13 @@ class TestGlibcHook(unittest.TestCase):
 
     def test_no_injection_in_container_with_recent_glibc(self):
         self._glibc_command_line_option = True
-        self._container_image = "quay.io/ethcscs/fedora:35"
+        self._container_image = "quay.io/ethcscs/fedora:36"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert not hashes
 
     def test_no_injection_in_container_with_recent_glibc_and_nonexisting_ldcache_entry(self):
         self._glibc_command_line_option = True
-        self._container_image = "quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry_f35"
+        self._container_image = "quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry_f36"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert not hashes
 

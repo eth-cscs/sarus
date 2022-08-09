@@ -45,8 +45,8 @@ services:
       . /sarus-source/CI/utility_functions.bash
       && change_uid_gid_of_docker_user @host_uid@ @host_gid@
       && /etc/init.d/munge start
-      && touch /etc/slurm/gres.conf
-      && slurmd -L /var/log/slurm/slurmd
+      && touch /etc/slurm/gres.conf && echo Starting slurmd
+      && slurmd -L /var/log/slurm/slurmd && echo Going to sleep
       && sleep infinity"
 
   # Docker compose allows to automatically scale a service, i.e. spawn additional instances
@@ -74,8 +74,8 @@ services:
       . /sarus-source/CI/utility_functions.bash
       && change_uid_gid_of_docker_user @host_uid@ @host_gid@
       && /etc/init.d/munge start
-      && touch /etc/slurm/gres.conf
-      && slurmd -L /var/log/slurm/slurmd
+      && touch /etc/slurm/gres.conf && echo Starting slurmd
+      && slurmd -L /var/log/slurm/slurmd && echo Going to sleep
       && sleep infinity"
 
 volumes:

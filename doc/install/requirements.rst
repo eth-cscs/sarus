@@ -66,16 +66,9 @@ instructions for such dependencies.
    :start-after: set -ex
    :end-before: # DOCS: END
 
-**Ubuntu 21.10**:
+**Ubuntu 22.04**:
 
-.. literalinclude:: ../../CI/installation/install_packages_ubuntu:21.10.sh
-   :language: bash
-   :start-after: set -ex
-   :end-before: # DOCS: END
-
-**Ubuntu 20.04**:
-
-.. literalinclude:: ../../CI/installation/install_packages_ubuntu:20.04.sh
+.. literalinclude:: ../../CI/installation/install_packages_ubuntu:22.04.sh
    :language: bash
    :start-after: set -ex
    :end-before: # DOCS: END

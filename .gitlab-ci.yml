@@ -135,17 +135,10 @@ fedora35:
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
-ubuntu20.04:
+ubuntu22.04:
   extends: .from_source
   script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH ubuntu:20.04 ubuntu:20.04
-    - sarus-build-images
-    - sarus-build-from-scratch-and-test
-
-ubuntu21.10:
-  extends: .from_source
-  script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH ubuntu:21.10 ubuntu:21.10
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH ubuntu:22.04 ubuntu:22.04
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 

@@ -17,7 +17,7 @@ class TestContainerIsWritable(unittest.TestCase):
 
     _IMAGE_NAME = "quay.io/ethcscs/alpine"
 
-    def test_image_with_max_path_length(self):
+    def test_container_is_writable(self):
         util.pull_image_if_necessary(is_centralized_repository=False, image=self._IMAGE_NAME)
         util.run_command_in_container(is_centralized_repository=False, image=self._IMAGE_NAME, command=["touch", "/file"])
         util.run_command_in_container(is_centralized_repository=False, image=self._IMAGE_NAME, command=["touch", "/etc/file"])

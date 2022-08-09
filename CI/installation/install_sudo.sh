@@ -3,17 +3,15 @@ set -ex
 
 # OS-specific installation of "sudo"
 os=$1
-if [ "$os" == "ubuntu:20.04" ]; then
+if [[ "$os" == ubuntu:* ]]; then
     apt-get update && apt-get install -y sudo
-elif [ "$os" == "ubuntu:21.10" ]; then
+elif [[ "$os" == debian:* ]]; then
     apt-get update && apt-get install -y sudo
-elif [ "$os" == "debian:11" ]; then
-    apt-get update && apt-get install -y sudo
-elif [ "$os" == "centos:7" ]; then
+elif [[ "$os" == centos:* ]]; then
     yum install -y sudo
-elif [ "$os" == "fedora:35" ]; then
+elif [[ "$os" == fedora:* ]]; then
     dnf install -y sudo
-elif [ "$os" == "opensuseleap:15.3" ]; then
+elif [[ "$os" == opensuseleap:* ]]; then
     zypper install -y sudo
 else
     echo "Unsupported OS specified"

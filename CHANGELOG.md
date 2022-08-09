@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Updated recommended runc version to 1.1.3
+- Updated CI tests from source for Ubuntu 21.10 -> 22.04
+
+### Removed
+
+- Removed CI unit and integration tests from source on Ubuntu 20.04
 
 
 ## [1.5.1]

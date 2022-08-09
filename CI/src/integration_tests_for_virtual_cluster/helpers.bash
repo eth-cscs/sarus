@@ -28,7 +28,6 @@ MpiDefault=none
 SlurmctldPidFile=/var/run/slurmctld.pid
 SlurmdPidFile=/var/run/slurmd.pid
 ProctrackType=proctrack/pgid
-CacheGroups=0
 ReturnToService=0
 SlurmctldTimeout=300
 SlurmdTimeout=300
@@ -38,7 +37,6 @@ KillWait=30
 Waittime=0
 SchedulerType=sched/backfill
 SelectType=select/linear
-FastSchedule=1
 # LOGGING
 SlurmctldDebug=3
 SlurmdDebug=3

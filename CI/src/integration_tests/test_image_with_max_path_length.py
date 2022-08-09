@@ -6,6 +6,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import unittest
+import pytest
 
 import common.util as util
 
@@ -20,6 +21,8 @@ class TestImageWithMaxPathLength(unittest.TestCase):
 
     _IMAGE_NAME = "quay.io/ethcscs/sarus-integration-tests:image-with-max-path-length"
 
+    @pytest.mark.xfail(reason="Incurs in 'no file descriptors available' errors in some CI host."
+                              "Pending further investigation. Reference: CONTAINER-669")
     def test_image_with_max_path_length(self):
         util.pull_image_if_necessary(is_centralized_repository=False, image=self._IMAGE_NAME)
         prettyname = util.run_image_and_get_prettyname(is_centralized_repository=False, image=self._IMAGE_NAME)
