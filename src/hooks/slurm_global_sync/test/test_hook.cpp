@@ -61,8 +61,8 @@ void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir,
 }
 
 TEST(SlurmGlobalSyncTestGroup, test_hook_disabled) {
-    sarus::common::setEnvironmentVariable("PASSWD_FILE=" + passwdFile.string());
-    sarus::common::setEnvironmentVariable("HOOK_BASE_DIR=" + syncBaseDir.string());
+    sarus::common::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
+    sarus::common::setEnvironmentVariable("HOOK_BASE_DIR", syncBaseDir.string());
 
     bool generateSlurmEnvironmentVariables = false;
     createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser,
@@ -73,8 +73,8 @@ TEST(SlurmGlobalSyncTestGroup, test_hook_disabled) {
 }
 
 TEST(SlurmGlobalSyncTestGroup, test_high_level_synchronization) {
-    sarus::common::setEnvironmentVariable("PASSWD_FILE=" + passwdFile.string());
-    sarus::common::setEnvironmentVariable("HOOK_BASE_DIR=" + syncBaseDir.string());
+    sarus::common::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
+    sarus::common::setEnvironmentVariable("HOOK_BASE_DIR", syncBaseDir.string());
     createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser);
     test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
 
@@ -90,8 +90,8 @@ TEST(SlurmGlobalSyncTestGroup, test_high_level_synchronization) {
 }
 
 TEST(SlurmGlobalSyncTestGroup, test_internals) {
-    sarus::common::setEnvironmentVariable("PASSWD_FILE=" + passwdFile.string());
-    sarus::common::setEnvironmentVariable("HOOK_BASE_DIR=" + syncBaseDir.string());
+    sarus::common::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
+    sarus::common::setEnvironmentVariable("HOOK_BASE_DIR", syncBaseDir.string());
     createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser);
     test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
 

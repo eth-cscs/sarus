@@ -99,10 +99,10 @@ public:
         sarus::common::executeCommand(setupDropbearCommand.str());
 
         // hook's environment variables
-        sarus::common::setEnvironmentVariable("HOOK_BASE_DIR=" + sshKeysBaseDir.string());
-        sarus::common::setEnvironmentVariable("PASSWD_FILE=" + passwdFile.string());
-        sarus::common::setEnvironmentVariable("DROPBEAR_DIR=" + dropbearDirInHost.getPath().string());
-        sarus::common::setEnvironmentVariable("SERVER_PORT=" + std::to_string(serverPort));
+        sarus::common::setEnvironmentVariable("HOOK_BASE_DIR", sshKeysBaseDir.string());
+        sarus::common::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
+        sarus::common::setEnvironmentVariable("DROPBEAR_DIR", dropbearDirInHost.getPath().string());
+        sarus::common::setEnvironmentVariable("SERVER_PORT", std::to_string(serverPort));
 
         createConfigJSON();
 

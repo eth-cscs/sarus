@@ -92,18 +92,14 @@ std::string getEnvironmentVariable(const std::string& key) {
     return p;
 }
 
-void setEnvironmentVariable(const std::string& variable) {
-    std::string key;
-    std::string value;
-    std::tie(key, value) = parseEnvironmentVariable(variable);
+void setEnvironmentVariable(const std::string& key, const std::string& value) {
     int overwrite = 1;
-
     if(setenv(key.c_str(), value.c_str(), overwrite) != 0) {
         auto message = boost::format("Failed to setenv(%s, %s, %d): %s")
             % key % value % overwrite % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
-    logMessage(boost::format("Put environment variable %s") % variable, common::LogLevel::DEBUG);
+    logMessage(boost::format("Set environment variable %s=%s") % key % value, common::LogLevel::DEBUG);
 }
 
 std::string removeWhitespaces(const std::string& s) {

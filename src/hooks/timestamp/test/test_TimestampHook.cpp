@@ -69,7 +69,7 @@ TEST(TimestampTestGroup, test_existing_file) {
 
     // Set the expected message
     auto expectedMessage = std::string{"unit test"};
-    sarus::common::setEnvironmentVariable("TIMESTAMP_HOOK_MESSAGE=" + expectedMessage);
+    sarus::common::setEnvironmentVariable("TIMESTAMP_HOOK_MESSAGE", expectedMessage);
 
     // Create and call hook
     auto hook = TimestampHook{};
@@ -96,7 +96,7 @@ TEST(TimestampTestGroup, test_non_existing_file) {
 
     // Set the expected message
     auto expectedMessage = std::string{"unit test"};
-    sarus::common::setEnvironmentVariable("TIMESTAMP_HOOK_MESSAGE=" + expectedMessage);
+    sarus::common::setEnvironmentVariable("TIMESTAMP_HOOK_MESSAGE", expectedMessage);
 
     // Create and call hook
     auto hook = TimestampHook{};

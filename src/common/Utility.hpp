@@ -39,7 +39,7 @@ namespace common {
 std::unordered_map<std::string, std::string> parseEnvironmentVariables(char** env);
 std::tuple<std::string, std::string> parseEnvironmentVariable(const std::string& variable);
 std::string getEnvironmentVariable(const std::string& key);
-void setEnvironmentVariable(const std::string& variable);
+void setEnvironmentVariable(const std::string& key, const std::string& value);
 std::string removeWhitespaces(const std::string&);
 std::string replaceString(std::string &buf, const std::string& from, const std::string& to);
 std::string eraseFirstAndLastDoubleQuote(const std::string& buf);

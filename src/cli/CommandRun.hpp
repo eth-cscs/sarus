@@ -416,10 +416,10 @@ private:
         cli::utility::printLog( "Checking that the user has SSH keys",
                                 common::LogLevel::INFO);
 
-        common::setEnvironmentVariable("HOOK_BASE_DIR=" + std::string{conf->json["localRepositoryBaseDir"].GetString()});
+        common::setEnvironmentVariable("HOOK_BASE_DIR", conf->json["localRepositoryBaseDir"].GetString());
 
         auto passwdFile = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "etc/passwd";
-        common::setEnvironmentVariable("PASSWD_FILE=" + passwdFile.string());
+        common::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
 
         auto args = common::CLIArguments{
             std::string{ conf->json["prefixDir"].GetString() } + "/bin/ssh_hook",

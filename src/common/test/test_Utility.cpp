@@ -51,13 +51,12 @@ TEST(UtilityTestGroup, parseEnvironmentVariables) {
 TEST(UtilityTestGroup, getEnvironmentVariable) {
     auto testKey = std::string{"SARUS_UNITTEST_GETVAR"};
     auto testValue = std::string{"dummy"};
-    auto testVariable = std::string{"SARUS_UNITTEST_GETVAR=dummy"};
 
     // test with variable unset
     CHECK_THROWS(common::Error, common::getEnvironmentVariable(testKey));
 
     // test with variable set
-    common::setEnvironmentVariable(testVariable);
+    common::setEnvironmentVariable(testKey, testValue);
     auto fallbackValue = std::string("fallback");
     CHECK_EQUAL(common::getEnvironmentVariable(testKey), testValue);
 }
@@ -65,14 +64,13 @@ TEST(UtilityTestGroup, getEnvironmentVariable) {
 TEST(UtilityTestGroup, setEnvironmentVariable) {
     auto testKey = std::string{"SARUS_UNITTEST_SETVAR"};
     auto testValue = std::string{"dummy"};
-    auto testVariable = std::string{"SARUS_UNITTEST_SETVAR=dummy"};
 
     // test with variable not set
     if (unsetenv(testKey.c_str()) != 0) {
         auto message = boost::format("Error un-setting the variable used by the test: %s") % strerror(errno);
         FAIL(message.str().c_str());
     }
-    common::setEnvironmentVariable(testVariable);
+    common::setEnvironmentVariable(testKey, testValue);
     char *envValue = getenv(testKey.c_str());
     if (envValue == nullptr) {
         auto message = boost::format("Error getting the test variable from the environment");
@@ -81,9 +79,8 @@ TEST(UtilityTestGroup, setEnvironmentVariable) {
     CHECK_EQUAL(std::string(envValue), testValue);
 
     // test overwrite with variable set
-    testVariable = std::string{"SARUS_UNITTEST_SETVAR=overwrite_dummy"};
     testValue = std::string{"overwrite_dummy"};
-    common::setEnvironmentVariable(testVariable);
+    common::setEnvironmentVariable(testKey, testValue);
     envValue = getenv(testKey.c_str());
     if (envValue == nullptr) {
         auto message = boost::format("Error getting the test variable from the environment");

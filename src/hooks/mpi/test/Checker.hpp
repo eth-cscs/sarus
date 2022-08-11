@@ -106,10 +106,10 @@ private:
         createLibraries();
         setupDynamicLinkerInContainer();
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
-        sarus::common::setEnvironmentVariable("LDCONFIG_PATH=ldconfig");
-        sarus::common::setEnvironmentVariable("MPI_LIBS=" + sarus::common::makeColonSeparatedListOfPaths(hostMpiLibs));
-        sarus::common::setEnvironmentVariable("MPI_DEPENDENCY_LIBS=" + sarus::common::makeColonSeparatedListOfPaths(hostDependencyLibs));
-        sarus::common::setEnvironmentVariable("BIND_MOUNTS=" + sarus::common::makeColonSeparatedListOfPaths(bindMounts));
+        sarus::common::setEnvironmentVariable("LDCONFIG_PATH", "ldconfig");
+        sarus::common::setEnvironmentVariable("MPI_LIBS", sarus::common::makeColonSeparatedListOfPaths(hostMpiLibs));
+        sarus::common::setEnvironmentVariable("MPI_DEPENDENCY_LIBS", sarus::common::makeColonSeparatedListOfPaths(hostDependencyLibs));
+        sarus::common::setEnvironmentVariable("BIND_MOUNTS", sarus::common::makeColonSeparatedListOfPaths(bindMounts));
     }
 
     void createLibraries() const {

@@ -130,11 +130,10 @@ private:
         sarus::common::writeJSON(doc, bundleDir / "config.json");
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
-        sarus::common::setEnvironmentVariable("LDD_PATH=" + (boost::filesystem::current_path() / "mocks/lddMockEqual").string());
-        sarus::common::setEnvironmentVariable("LDCONFIG_PATH=ldconfig");
-        sarus::common::setEnvironmentVariable("READELF_PATH=readelf");
-        sarus::common::setEnvironmentVariable("GLIBC_LIBS="
-            + sarus::common::makeColonSeparatedListOfPaths(hostLibs));
+        sarus::common::setEnvironmentVariable("LDD_PATH", (boost::filesystem::current_path() / "mocks/lddMockEqual").string());
+        sarus::common::setEnvironmentVariable("LDCONFIG_PATH", "ldconfig");
+        sarus::common::setEnvironmentVariable("READELF_PATH", "readelf");
+        sarus::common::setEnvironmentVariable("GLIBC_LIBS", sarus::common::makeColonSeparatedListOfPaths(hostLibs));
 
         sarus::common::createFoldersIfNecessary(rootfsDir / "tmp",
                                                 doc["process"]["user"]["uid"].GetInt(),

@@ -39,11 +39,11 @@ public:
     }
 
     void execute() override {
-        common::setEnvironmentVariable("HOOK_BASE_DIR=" + std::string{conf->json["localRepositoryBaseDir"].GetString()});
+        common::setEnvironmentVariable("HOOK_BASE_DIR", conf->json["localRepositoryBaseDir"].GetString());
         auto passwdFile = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "etc/passwd";
-        common::setEnvironmentVariable("PASSWD_FILE=" + passwdFile.string());
+        common::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
         auto dropbearDir = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "dropbear";
-        common::setEnvironmentVariable("DROPBEAR_DIR=" + dropbearDir.string());
+        common::setEnvironmentVariable("DROPBEAR_DIR", dropbearDir.string());
 
         auto sshHook = boost::filesystem::path{conf->json["prefixDir"].GetString()} / "bin/ssh_hook";
         auto args = common::CLIArguments{sshHook.string(), "keygen"};

@@ -152,7 +152,7 @@ TEST(SkopeoDriverTestGroup, generateBaseArgs_policy) {
 
     auto homeMock = boost::filesystem::path{config->json["localRepositoryBaseDir"].GetString() + std::string{"/homeMock"}};
     auto userPolicyMock = homeMock / ".config/containers/policy.json";
-    common::setEnvironmentVariable("HOME=" + homeMock.string());
+    common::setEnvironmentVariable("HOME", homeMock.string());
 
     /**
      * The unit tests for `copy` and `inspect` commands already implicitly test
@@ -233,7 +233,7 @@ TEST(SkopeoDriverTestGroup, acquireAuthFile) {
     // create file in XDG_RUNTIME_DIR if defined and existing
     {
         common::createFoldersIfNecessary(xdgRuntimeDir);
-        common::setEnvironmentVariable("XDG_RUNTIME_DIR=" + xdgRuntimeDir.string());
+        common::setEnvironmentVariable("XDG_RUNTIME_DIR", xdgRuntimeDir.string());
         auto expectedAuthFilePath = xdgRuntimeDir / "sarus/auth.json";
 
         // Instantiate the SkopeoDriver object in another scope to check removal
