@@ -212,6 +212,7 @@ void logProcessUserAndGroupIdentifiers() {
 
 std::string executeCommand(const std::string& command) {
     auto commandWithRedirection = command + " 2>&1"; // stderr-to-stdout redirection necessary because popen only reads stdout
+    logMessage(boost::format("Executing command '%s'") % commandWithRedirection, common::LogLevel::DEBUG);
 
     FILE* pipe = popen(commandWithRedirection.c_str(), "r");
     if(!pipe) {
@@ -257,7 +258,7 @@ std::string executeCommand(const std::string& command) {
 
 int forkExecWait(const common::CLIArguments& args,
                  const boost::optional<std::function<void()>>& preExecActions) {
-    logMessage(boost::format("Executing %s") % args, common::LogLevel::DEBUG);
+    logMessage(boost::format("Forking and executing '%s'") % args, common::LogLevel::DEBUG);
 
     // fork and execute
     auto pid = fork();

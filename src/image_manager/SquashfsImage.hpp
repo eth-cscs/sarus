@@ -24,9 +24,13 @@ namespace image_manager {
  */
 class SquashfsImage {
 public:
-    SquashfsImage(  const common::Config& config,
-                    const boost::filesystem::path& unpackedImage,
-                    const boost::filesystem::path& pathOfImage);
+    static common::CLIArguments generateMksquashfsArgs(const common::Config& config,
+                                                       const boost::filesystem::path& sourcePath,
+                                                       const boost::filesystem::path& destinationPath);
+
+    SquashfsImage(const common::Config& config,
+                  const boost::filesystem::path& unpackedImage,
+                  const boost::filesystem::path& pathOfImage);
     boost::filesystem::path getPathOfImage() const;
 
 private:

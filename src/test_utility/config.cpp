@@ -77,6 +77,9 @@ static void populateJSON(rj::Document& document) {
     document.AddMember( "ramFilesystemType",
                         rj::Value{"ramfs"},
                         allocator);
+    document.AddMember( "mksquashfsOptions",
+                        rj::Value{"-comp gzip -Xcompression-level 6"},
+                        allocator);
 
     if(boost::filesystem::exists("/usr/bin/mksquashfs")) {
         document.AddMember( "mksquashfsPath",

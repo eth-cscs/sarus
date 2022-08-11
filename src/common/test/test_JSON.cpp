@@ -38,6 +38,7 @@ TEST(JSONTestGroup, validFile) {
     CHECK_EQUAL(config->json["skopeoPath"].GetString(), std::string("/usr/bin/skopeo"));
     CHECK_EQUAL(config->json["umociPath"].GetString(), std::string("/usr/bin/umoci"));
     CHECK_EQUAL(config->json["mksquashfsPath"].GetString(), std::string("/usr/sbin/mksquashfs"));
+    CHECK_EQUAL(config->json["mksquashfsOptions"].GetString(), std::string("-comp gzip -processors 4 -Xcompression-level 6"));
     CHECK_EQUAL(config->json["initPath"].GetString(), std::string("/opt/sarus/bin/init"));
     CHECK_EQUAL(config->json["runcPath"].GetString(), std::string("/usr/bin/runc.amd64"));
     CHECK_EQUAL(config->json["ramFilesystemType"].GetString(), std::string("tmpfs"));

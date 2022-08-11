@@ -93,8 +93,7 @@ class TestCommandPull(unittest.TestCase):
     def test_pull_after_missing_image_file(self):
         import pwd, pathlib
         image = "quay.io/ethcscs/alpine:3.14"
-        util.pull_image_if_necessary(is_centralized_repository=False,
-                                     image=image)
+        util.pull_image_if_necessary(is_centralized_repository=False, image=image)
         with open(self.__class__._sarusjson_filename) as sarus_json:
             config = json.load(sarus_json)
             repo_base = config["localRepositoryBaseDir"]
@@ -106,10 +105,29 @@ class TestCommandPull(unittest.TestCase):
         error_message = util.get_sarus_error_output(["sarus", "run", image, "true"])
         assert "Storage inconsistency detected" in error_message
 
-        util.pull_image(is_centralized_repository=False,
-                        image="quay.io/ethcscs/alpine:3.14")
+        util.pull_image(is_centralized_repository=False, image=image)
         assert util.run_image_and_get_prettyname(is_centralized_repository=False,
                                                  image=image).startswith("Alpine Linux")
+
+    def test_pull_with_custom_mksquashfs_options(self):
+        image = "quay.io/ethcscs/alpine:3.14"
+        util.remove_image_if_necessary(is_centralized_repository=False, image=image)
+
+        # Create new sarus.json with custom mksquashfs options
+        with open(self.__class__._sarusjson_filename) as sarus_json:
+            config = json.load(sarus_json)
+            config["mksquashfsOptions"] = "-comp lz4 -processors 2"
+        with open("sarus.json.dummy", 'w') as f:
+            json.dump(config,f)
+        subprocess.check_output(
+            ["sudo", "cp", "sarus.json.dummy", self.__class__._sarusjson_filename])
+        os.remove("sarus.json.dummy")
+
+        # Check that image can be pulled and run
+        util.pull_image(is_centralized_repository=False, image=image)
+        assert util.run_image_and_get_prettyname(is_centralized_repository=False,
+                                                 image=image).startswith("Alpine Linux")
+        util.remove_image_if_necessary(is_centralized_repository=False, image=image)
 
     def _test_command_pull(self, image, is_centralized_repository, expected_string=None):
         expected_image = expected_string if expected_string else image

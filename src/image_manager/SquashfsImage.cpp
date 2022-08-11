@@ -21,9 +21,20 @@
 namespace sarus {
 namespace image_manager {
 
-SquashfsImage::SquashfsImage(   const common::Config& config,
-                                const boost::filesystem::path& unpackedImage,
-                                const boost::filesystem::path& pathOfImage)
+common::CLIArguments SquashfsImage::generateMksquashfsArgs(const common::Config& config,
+                                                           const boost::filesystem::path& sourcePath,
+                                                           const boost::filesystem::path& destinationPath) {
+    auto mksquashfsPath = boost::filesystem::path(config.json["mksquashfsPath"].GetString());
+    auto args = common::CLIArguments{mksquashfsPath.string(), sourcePath.string(), destinationPath.string()};
+    if (const rapidjson::Value* configOpts = rapidjson::Pointer("/mksquashfsOptions").Get(config.json)) {
+        args.push_back(configOpts->GetString());
+    }
+    return args;
+}
+
+SquashfsImage::SquashfsImage(const common::Config& config,
+                             const boost::filesystem::path& unpackedImage,
+                             const boost::filesystem::path& pathOfImage)
     : pathOfImage{pathOfImage}
 {
     auto pathTemp = common::PathRAII{common::makeUniquePathWithRandomSuffix(pathOfImage)};
@@ -34,11 +45,11 @@ SquashfsImage::SquashfsImage(   const common::Config& config,
         common::LogLevel::INFO);
 
     auto start = std::chrono::system_clock::now();
-
     
-    boost::filesystem::path mksquashfsPath(config.json["mksquashfsPath"].GetString());
-    auto mksquashfsCommand = mksquashfsPath.string() + " " + unpackedImage.string() + " " + pathTemp.getPath().string();
-    common::executeCommand(mksquashfsCommand);
+    auto args = generateMksquashfsArgs(config, unpackedImage, pathTemp.getPath());
+    auto mksquashfsOutput = common::executeCommand(args.string());
+    log(boost::format("mksquashfs output:\n%s") % mksquashfsOutput, common::LogLevel::DEBUG);
+
     boost::filesystem::rename(pathTemp.getPath(), pathOfImage); // atomically create/replace squashfs file
     pathTemp.release();
 

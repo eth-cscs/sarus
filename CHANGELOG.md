@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Added support for passing command-line options to `mksquashfs` through the `mksquashfsOptions` parameter in the `sarus.json` configuration file
+
 ### Changed
 
 - Updated recommended runc version to 1.1.3

@@ -106,11 +106,25 @@ umociPath (string, REQUIRED)
 Absolute path to a trusted ``umoci`` binary, which will be used to unpack image
 contents before converting them to SquashFS format.
 
+.. _config-reference-mksquashfsPath:
+
 mksquashfsPath (string, REQUIRED)
 ---------------------------------
 Absolute path to trusted ``mksquashfs`` binary.
 This executable must satisfy the :ref:`security requirements
 <post-installation-permissions-security>` for critical files and directories.
+
+mksquashfsOptions (string, OPTIONAL)
+------------------------------------
+String with whitespace-separated command line options which will be passed to
+the binary at :ref:`mksquashfsPath <config-reference-mksquashfsPath>` when
+creating SquashFS-based images.
+This parameter can be used, for example, to control the compression algorithm,
+the compression level, or the number of processors used by ``mksquashfs``.
+Please refer to the help message or manpage of your ``mksquashfs`` installation
+for the exact list of options available.
+The following online manpage can serve as a general reference:
+`mksquashfs(1) <https://www.mankier.com/1/mksquashfs>`_.
 
 .. _config-reference-initPath:
 
@@ -383,6 +397,7 @@ Example configuration file
         "skopeoPath": "/usr/bin/skopeo",
         "umociPath": "/usr/bin/umoci",
         "mksquashfsPath": "/usr/sbin/mksquashfs",
+        "mksquashfsOptions": "-comp gzip -processors 4 -Xcompression-level 6",
         "runcPath": "/usr/local/sbin/runc.amd64",
         "ramFilesystemType": "tmpfs",
         "siteMounts": [

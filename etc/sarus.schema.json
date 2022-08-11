@@ -37,6 +37,9 @@
         "mksquashfsPath": {
             "$ref": "definitions.schema.json#/AbsolutePath"
         },
+        "mksquashfsOptions": {
+            "type": "string"
+        },
         "initPath": {
             "$ref": "definitions.schema.json#/AbsolutePath"
         },

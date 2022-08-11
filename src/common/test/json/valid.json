@@ -8,6 +8,7 @@
     "skopeoPath": "/usr/bin/skopeo",
     "umociPath": "/usr/bin/umoci",
     "mksquashfsPath": "/usr/sbin/mksquashfs",
+    "mksquashfsOptions": "-comp gzip -processors 4 -Xcompression-level 6",
     "initPath": "/opt/sarus/bin/init",
     "runcPath": "/usr/bin/runc.amd64",
     "ramFilesystemType": "tmpfs",
