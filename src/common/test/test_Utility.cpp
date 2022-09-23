@@ -8,6 +8,7 @@
  *
  */
 
+#include <array>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/fsuid.h>

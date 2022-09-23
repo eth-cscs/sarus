@@ -40,23 +40,30 @@ instructions for such dependencies.
 
 .. tabs::
 
-    .. group-tab:: OpenSUSE Leap 15.3
+    .. group-tab:: OpenSUSE Leap 15.4
 
-        .. literalinclude:: ../../CI/installation/install_packages_opensuseleap:15.3.sh
+        .. literalinclude:: ../../CI/installation/install_packages_opensuseleap:15.4.sh
            :language: bash
            :start-after: set -ex
            :end-before: # DOCS: END
 
-    .. group-tab:: CentOS 7
+    .. group-tab:: Rocky Linux 8
 
-        .. literalinclude:: ../../CI/installation/install_packages_centos:7.sh
+        .. literalinclude:: ../../CI/installation/install_packages_rocky:8.sh
            :language: bash
            :start-after: set -ex
            :end-before: # DOCS: END
 
-    .. group-tab:: Fedora 35
+    .. group-tab:: Rocky Linux 9
 
-        .. literalinclude:: ../../CI/installation/install_packages_fedora:35.sh
+        .. literalinclude:: ../../CI/installation/install_packages_rocky:9.sh
+           :language: bash
+           :start-after: set -ex
+           :end-before: # DOCS: END
+
+    .. group-tab:: Fedora 36
+
+        .. literalinclude:: ../../CI/installation/install_packages_fedora:36.sh
            :language: bash
            :start-after: set -ex
            :end-before: # DOCS: END

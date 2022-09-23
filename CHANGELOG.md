@@ -9,15 +9,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Added support for passing command-line options to `mksquashfs` through the `mksquashfsOptions` parameter in the `sarus.json` configuration file
+- Added CI unit and integration tests from source on Rocky Linux 8 and 9
 
 ### Changed
 
 - Updated recommended runc version to 1.1.3
-- Updated CI tests from source for Ubuntu 21.10 -> 22.04
+- Updated CI tests from source on Ubuntu (21.10 -> 22.04), Fedora (35 -> 36) and OpenSUSE Leap (15.3 -> 15.4)
 
 ### Removed
 
-- Removed CI unit and integration tests from source on Ubuntu 20.04
+- Removed CI tests from source on Ubuntu 20.04 and CentOS 7
 
 
 ## [1.5.1]

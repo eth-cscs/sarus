@@ -11,24 +11,20 @@
 # Docker Image used to build Sarus from its source,
 # but with cached dependencies already in this image.
 #
-FROM opensuse/leap:15.3
+FROM rockylinux:8
 
 COPY ./installation/ /tmp/
-RUN /tmp/install_sudo.sh opensuseleap:15.3
-RUN /tmp/install_packages_opensuseleap:15.3.sh
+RUN /tmp/install_sudo.sh rocky:8
+RUN /tmp/install_packages_rocky:8.sh
+RUN bash -i -c "/tmp/install_dep_umoci.bash"
 RUN pip3 install -r /tmp/requirements_tests.txt
 
-RUN groupadd docker \
-    && useradd -m -g docker docker \
+RUN useradd -m docker \
     && echo 'docker:docker' | chpasswd \
     && chown docker:docker /home/docker \
-    && echo 'docker ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+    && echo 'docker ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers \
+    && echo PATH=${PATH}:/usr/local/bin >> /home/docker/.bashrc
 USER docker
 WORKDIR /home/docker
-
-# /etc/profile removes *sbin locations from PATH for non-root users
-# Modify .bashrc to find /sbin/ldconfig even after test scripts do a
-# 'sudo -u docker --login'
-RUN echo 'PATH=${PATH}:/usr/local/sbin:/usr/sbin:/sbin' >> .bashrc
 
 CMD ["/bin/bash"]

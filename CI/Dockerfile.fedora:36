@@ -11,12 +11,12 @@
 # Docker Image used to build Sarus from its source,
 # but with cached dependencies already in this image.
 #
-FROM centos:7
+FROM fedora:36
 
 COPY ./installation/ /tmp/
-RUN /tmp/install_sudo.sh centos:7
-RUN /tmp/install_packages_centos:7.sh
-RUN bash -i -c "/tmp/install_dep_boost.bash"
+RUN /tmp/install_sudo.sh fedora:36
+RUN /tmp/install_packages_fedora:36.sh
+RUN bash -i -c "/tmp/install_dep_runc.bash"
 RUN bash -i -c "/tmp/install_dep_umoci.bash"
 RUN pip3 install -r /tmp/requirements_tests.txt
 

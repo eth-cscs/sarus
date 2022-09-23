@@ -121,17 +121,24 @@ coverage:
     - . ./CI/utility_docker_functions.bash Debug gcc-gcov.cmake $(pwd) $HOST_CACHES_PATH standalone-build standalone-run
     - sarus-build-and-test
 
-centos7:
+rocky8:
   extends: .from_source
   script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH centos:7 centos:7
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH rocky:8 rocky:8
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
-fedora35:
+rocky9:
   extends: .from_source
   script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH fedora:35 fedora:35
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH rocky:9 rocky:9
+    - sarus-build-images
+    - sarus-build-from-scratch-and-test
+
+fedora36:
+  extends: .from_source
+  script:
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH fedora:36 fedora:36
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
@@ -149,10 +156,10 @@ debian11:
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
-opensuseleap15.3:
+opensuseleap15.4:
   extends: .from_source
   script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH opensuseleap:15.3 opensuseleap:15.3
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH opensuseleap:15.4 opensuseleap:15.4
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 

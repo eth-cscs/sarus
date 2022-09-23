@@ -39,32 +39,24 @@ Spack is discussed in :ref:`this subsection<installation-spack-nonroot>`.
 
 .. note::
     A static version of glibc is required to build the Dropbear software for the
-    SSH hook. On CentOS 7, Fedora and and OpenSUSE Leap systems, such library
+    SSH hook. On Rocky Linux, Fedora and and OpenSUSE Leap systems, such library
     is provided separately from common development tools::
 
-        # CentOS 7
-        yum install glibc-static
+        # Rocky Linux 8
+        dnf install -y dnf-plugins-core epel-release
+        dnf config-manager --set-enabled powertools
+        dnf install -y gcc gcc-c++ glibc-static
+
+        # Rocky Linux 9
+        dnf install -y dnf-plugins-core epel-release
+        dnf config-manager --set-enabled crb
+        dnf install -y gcc gcc-c++ glibc-static
 
         # Fedora
         dnf install glibc-static
 
         # OpenSUSE Leap
         zypper install glibc-devel-static
-
-.. note::
-    On CentOS 7, the default GCC 4.8.5 compiler is not suitable for building
-    Sarus. We advise to use a more recent compiler, for example one from
-    Developer Toolset 7, 8 or 9::
-
-        # Install GCC 8.3.1 through devtoolset-8
-        yum install centos-release-scl-rh
-        yum install devtoolset-8-gcc-c++
-
-        # Enable devtoolset-8 to set gcc 8.3.1 as default compiler
-        source /opt/rh/devtoolset-8/enable
-
-        # Detect the new compiler with Spack
-        spack compiler find
 
 The installation procedure with Spack follows below.
 If you are not performing these actions as the root user, prefix each ``spack``

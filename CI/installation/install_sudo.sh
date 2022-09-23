@@ -7,7 +7,7 @@ if [[ "$os" == ubuntu:* ]]; then
     apt-get update && apt-get install -y sudo
 elif [[ "$os" == debian:* ]]; then
     apt-get update && apt-get install -y sudo
-elif [[ "$os" == centos:* ]]; then
+elif [[ "$os" == rocky:* ]]; then
     yum install -y sudo
 elif [[ "$os" == fedora:* ]]; then
     dnf install -y sudo
