@@ -23,7 +23,8 @@ RUN useradd -m docker \
     && echo 'docker:docker' | chpasswd \
     && chown docker:docker /home/docker \
     && echo 'docker ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers \
-    && echo PATH=${PATH}:/usr/local/bin >> /home/docker/.bashrc
+    && echo 'export PATH=${PATH}:/usr/local/bin' >> /home/docker/.bashrc \
+    && echo 'export PATH=${PATH}:/usr/local/bin' >> /root/.bashrc
 USER docker
 WORKDIR /home/docker
 

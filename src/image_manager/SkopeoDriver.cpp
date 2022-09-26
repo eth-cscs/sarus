@@ -192,7 +192,7 @@ std::string SkopeoDriver::inspectRaw(const std::string& sourceTransport, const s
     // but prevent the output from being converted to JSON.
     // Exclude the Skopeo debug lines and only return the JSON output
     if (common::Logger::getInstance().getLevel() == common::LogLevel::DEBUG) {
-        inspectOutput = inspectOutput.substr(inspectOutput.find("{"));
+        inspectOutput = inspectOutput.substr(inspectOutput.rfind("\n{")+1);
     }
     printLog(boost::format("Raw inspect filtered output: %s") % inspectOutput, common::LogLevel::DEBUG);
     return inspectOutput;
