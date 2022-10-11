@@ -253,7 +253,8 @@ std::string executeCommand(const std::string& command) {
 }
 
 int forkExecWait(const common::CLIArguments& args,
-                 const boost::optional<std::function<void()>>& preExecActions) {
+                 const boost::optional<std::function<void()>>& preExecChildActions,
+                 const boost::optional<std::function<void(int)>>& postForkParentActions) {
     logMessage(boost::format("Forking and executing '%s'") % args, common::LogLevel::DEBUG);
 
     // fork and execute
@@ -266,14 +267,17 @@ int forkExecWait(const common::CLIArguments& args,
 
     bool isChild = pid == 0;
     if(isChild) {
-        if(preExecActions) {
-            (*preExecActions)();
+        if(preExecChildActions) {
+            (*preExecChildActions)();
         }
         execvp(args.argv()[0], args.argv());
         auto message = boost::format("Failed to execvp subprocess %s: %s") % args % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
     else {
+        if(postForkParentActions) {
+            (*postForkParentActions)(pid);
+        }
         int status;
         do {
             if(waitpid(pid, &status, 0) == -1) {

@@ -1,4 +1,5 @@
 pytest
 pexpect
+psutil
 setuptools
 gcovr

@@ -411,7 +411,7 @@ export dockerfile_build=Dockerfile.${1-"standalone-build"}
 export image_build=ethcscs/sarus-ci-$(_replace_invalid_chars ${1-"standalone-build"}):$(_git_branch); shift || true
 export dockerfile_run=Dockerfile.${1-"standalone-run"}
 export image_run=ethcscs/sarus-ci-$(_replace_invalid_chars ${1-"standalone-run"}):$(_git_branch); shift || true
-export spack_distros=(ubuntu18.04 debian10 centos7 fedora34 opensuseleap15.2)
+export spack_distros=(ubuntu18.04 debian10 centos7 fedora34 opensuseleap15)
 export spack_repo_base=ethcscs/sarus-ci-spack
 
 echo "INITIALIZED $(basename "${BASH_SOURCE[0]}") with:"

@@ -13,9 +13,13 @@
 #include <type_traits>
 #include <cerrno>
 #include <cstring>
+#include <functional>
 #include <sched.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/mount.h>
+#include <sys/prctl.h>
+
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -78,8 +82,25 @@ void Runtime::executeContainer() const {
                                      "--preserve-fds", extraFileDescriptors,
                                      containerID};
 
+    // prepare a pre-exec function for the forked process (i.e. the OCI runtime)
+    // to set a parent-death signal, in the attempt to gracefully terminate the container
+    // and cleanup should the Sarus process receive a SIGKILL or die unexpectedly in another way.
+    auto setParentDeathSignal = [] (pid_t parentPid) {
+        if(prctl(PR_SET_PDEATHSIG, SIGHUP) == -1) {
+            auto message = boost::format("Failed to set parent death signal in subprocess for OCI runtime");
+            SARUS_THROW_ERROR(message.str());
+        }
+        // check if the parent already exited before the prctl() call
+        if (getppid() != parentPid) {
+            auto message = boost::format("Sarus main process died immediately after forking subprocess for OCI runtime");
+            SARUS_THROW_ERROR(message.str());
+        }
+    };
+
     // execute runc
-    auto status = common::forkExecWait(args);
+    auto status = common::forkExecWait(args,
+                                       std::function<void()>{std::bind(setParentDeathSignal, getpid())},
+                                       std::function<void(pid_t)>{utility::setupSignalProxying});
     if(status != 0) {
         auto message = boost::format("%s exited with code %d") % args % status;
         utility::logMessage(message, common::LogLevel::INFO);

@@ -48,7 +48,8 @@ void setFilesystemUid(const common::UserIdentity&);
 void logProcessUserAndGroupIdentifiers();
 std::string executeCommand(const std::string& command);
 int forkExecWait(const common::CLIArguments& args,
-                 const boost::optional<std::function<void()>>& preExecActions = {});
+                 const boost::optional<std::function<void()>>& preExecChildActions = {},
+                 const boost::optional<std::function<void(int)>>& postForkParentActions = {});
 void redirectStdoutToFile(const boost::filesystem::path& file);
 void SetStdinEcho(bool);
 std::string getHostname();
