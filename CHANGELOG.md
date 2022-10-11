@@ -21,6 +21,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Removed CI tests from source on Ubuntu 20.04 and CentOS 7
 
+### Security
+
+- The executable pointed by the `mksquashfsPath` parameter in the `sarus.json` configuration file has been excluded from the security checks.
+  The `mksquashfs` utility is only used by `sarus pull` and `sarus load` commands, which already run without privileges.
+
 
 ## [1.5.1]
 

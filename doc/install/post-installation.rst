@@ -40,7 +40,6 @@ The files checked for the security conditions are:
 
   - ``sarus.json`` in Sarus's configuration directory ``<sarus install prefix>/etc``.
   - ``sarus.schema.json`` in Sarus's configuration directory ``<sarus install prefix>/etc``.
-  - The ``mksquashfs`` utility pointed by ``mksquashfsPath`` in ``sarus.json``.
   - The init binary pointed by ``initPath`` in ``sarus.json``.
   - The OCI-compliant runtime pointed by ``runcPath`` in ``sarus.json``.
   - All the OCI hooks JSON files in the ``hooksDir`` directory specified in ``sarus.json``.

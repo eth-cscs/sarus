@@ -184,6 +184,7 @@ def get_trimmed_output(full_command, **subprocess_kwargs):
     trimmed_out = command_output_without_trailing_new_lines(out)
     return trimmed_out
 
+
 def get_sarus_error_output(command):
     with open(os.devnull, 'wb') as devnull:
         proc = subprocess.run(command, stdout=devnull, stderr=subprocess.PIPE)
@@ -201,3 +202,8 @@ def get_sarus_error_output(command):
             lines_filtered.append(line)
 
     return '\n'.join(lines_filtered)
+
+
+def assert_sarus_raises_error_containing_text(command, text):
+    sarus_output = get_sarus_error_output(command)
+    assert text in sarus_output, 'Sarus generated an error, but it did not contain the expected text "{}".'.format(text)

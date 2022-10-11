@@ -65,17 +65,8 @@ class TestDeviceBaseClass(unittest.TestCase):
         return out == ["PASS"]
 
     def _assert_sarus_raises_error_containing_text(self, sarus_options, container_args, text):
-        sarus_output = self._get_sarus_error_output(sarus_options, container_args)
-        assert text in sarus_output, 'Sarus generated an error, but it did not contain the expected text "{}".'.format(text)
-
-    def _get_sarus_error_output(self, sarus_options, container_args):
-        command = ["sarus", "run"] + sarus_options +[self.__class__.container_image] + container_args
-        try:
-            subprocess.check_output(command, stderr=subprocess.STDOUT)
-            raise Exception(
-                "Sarus didn't generate any error, but at least one was expected.")
-        except subprocess.CalledProcessError as ex:
-            return ex.output.decode()
+        command = ["sarus", "run"] + sarus_options + [self.__class__.container_image] + container_args
+        util.assert_sarus_raises_error_containing_text(command, text)
 
 
 @pytest.mark.asroot

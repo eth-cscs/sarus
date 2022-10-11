@@ -14,6 +14,8 @@ import shutil
 import subprocess
 import unittest
 
+import common.util as util
+
 
 CONFIG_FILENAME = "/opt/sarus/default/etc/sarus.json"
 SCHEMA_FILENAME = "/opt/sarus/default/etc/sarus.schema.json"
@@ -40,6 +42,10 @@ class TestSecurityChecks(unittest.TestCase):
         # To make sure these tests start from a sane default state
         self._sarus_foo()
 
+    def tearDown(self):
+        # To make sure these tests are not altering config files permissions
+        self._sarus_foo()
+
     def test_untamperable_config(self):
         self._check_untamperable(CONFIG_FILENAME)
 
@@ -57,11 +63,9 @@ class TestSecurityChecks(unittest.TestCase):
             self._check_untamperable(SCHEMA_FILENAME)
 
     def test_untamperable_binaries(self):
-        MKSQ_PATH = self._get_parameter_from_config_file("mksquashfsPath")
         INIT_PATH = self._get_parameter_from_config_file("initPath")
         RUNC_PATH = self._get_parameter_from_config_file("runcPath")
 
-        self._check_untamperable(MKSQ_PATH)
         self._check_untamperable(INIT_PATH)
         self._check_untamperable(RUNC_PATH)
 
@@ -78,19 +82,6 @@ class TestSecurityChecks(unittest.TestCase):
             conf = json.load(conf_file)
             return conf[parameter]
 
-    def _assert_raises(self, command, expected_message_content):
-            actual_message = self._get_sarus_error_output(command)
-            assert expected_message_content in actual_message
-
-    def _get_sarus_error_output(self, command):
-        with open(os.devnull, 'wb') as devnull:
-            proc = subprocess.run(command, stdout=devnull, stderr=subprocess.PIPE)
-            if proc.returncode == 0:
-                self.fail("Sarus didn't generate any error, but at least one was expected.")
-
-        stderr_without_trailing_whitespaces = proc.stderr.rstrip()
-        return stderr_without_trailing_whitespaces.decode()
-
     def _sarus_foo(self):
         """
         Performs the simplest Sarus action so Security Checks are run.
@@ -106,18 +97,16 @@ class TestSecurityChecks(unittest.TestCase):
             entry = os.path.basename(path)
 
         with changed_owner(path, NONROOT_ID, NONROOT_ID):
-            self._assert_raises(SARUS_FOO_CMD, '{}" must be owned by root'.format(entry))
+            util.assert_sarus_raises_error_containing_text(SARUS_FOO_CMD,
+                                                           '{}" must be owned by root'.format(entry))
 
         with changed_permissions(path, stat.S_IWGRP):
-            self._assert_raises(SARUS_FOO_CMD, '{}" cannot be group- or world-writable'.format(entry))
+            util.assert_sarus_raises_error_containing_text(SARUS_FOO_CMD,
+                                                           '{}" cannot be group- or world-writable'.format(entry))
 
         with changed_permissions(path, stat.S_IWOTH):
-            self._assert_raises(SARUS_FOO_CMD, '{}" cannot be group- or world-writable'.format(entry))
-
-
-    def tearDown(self):
-        # To make sure these tests are not altering config files permissions
-        self._sarus_foo()
+            util.assert_sarus_raises_error_containing_text(SARUS_FOO_CMD,
+                                                           '{}" cannot be group- or world-writable'.format(entry))
 
 
 @contextmanager

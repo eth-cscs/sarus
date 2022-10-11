@@ -56,7 +56,6 @@ void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& 
 }
 
 void SecurityChecks::checkThatBinariesInSarusJsonAreUntamperable() const {
-    checkThatPathIsUntamperable(config->json["mksquashfsPath"].GetString());
     checkThatPathIsUntamperable(config->json["initPath"].GetString());
     checkThatPathIsUntamperable(config->json["runcPath"].GetString());
 }
