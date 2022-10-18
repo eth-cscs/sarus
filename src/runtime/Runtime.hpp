@@ -35,6 +35,7 @@ private:
     void copyEtcFilesIntoRootfs() const;
     void mountInitProgramIntoRootfsIfNecessary() const;
     void performCustomMounts() const;
+    void performExtraMounts() const;
     void performDeviceMounts() const;
     void remountRootfsWithNoSuid() const;
     void clearEnvironmentVariables() const;

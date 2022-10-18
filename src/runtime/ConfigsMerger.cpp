@@ -39,9 +39,17 @@ boost::filesystem::path ConfigsMerger::getWorkdirInContainer() const {
 std::unordered_map<std::string, std::string> ConfigsMerger::getEnvironmentInContainer() const {
     auto env = config->commandRun.hostEnvironment;
     for(const auto& kv : metadata.env) {
-        env[kv.first] = kv.second;
+        if (!boost::starts_with(kv.first, "PMIX_")) {
+            env[kv.first] = kv.second;
+        }
     }
     setNvidiaEnvironmentVariables(config->commandRun.hostEnvironment, env);
+
+    if (const rapidjson::Value* pmixSupport = rapidjson::Pointer("/enablePMIxv3Support").Get(config->json)) {
+        if (pmixSupport->GetBool()) {
+            setPMIxMcaEnvironmentVariables(config->commandRun.hostEnvironment, env);
+        }
+    }
 
     if(config->commandRun.addInitProcess) {
         env["TINI_SUBREAPER"] = "1";
@@ -181,6 +189,31 @@ void ConfigsMerger::setNvidiaEnvironmentVariables(const std::unordered_map<std::
         containerEnvironment.erase("CUDA_VISIBLE_DEVICES");
         containerEnvironment.erase("NVIDIA_VISIBLE_DEVICES");
         containerEnvironment.erase("NVIDIA_DRIVER_CAPABILITIES");
+    }
+}
+
+void ConfigsMerger::setPMIxMcaEnvironmentVariables(const std::unordered_map<std::string, std::string>& hostEnvironment,
+                                                std::unordered_map<std::string, std::string>& containerEnvironment
+                                                ) const {
+    auto pmixVar = hostEnvironment.find("PMIX_PTL_MODULE");
+    auto pmixMCAVar = hostEnvironment.find("PMIX_MCA_ptl");
+    if ((pmixVar != hostEnvironment.cend() && !pmixVar->second.empty())
+         && (pmixMCAVar == hostEnvironment.cend() || pmixMCAVar->second.empty())) {
+        containerEnvironment["PMIX_MCA_ptl"] = pmixVar->second;
+    }
+
+    pmixVar = hostEnvironment.find("PMIX_SECURITY_MODE");
+    pmixMCAVar = hostEnvironment.find("PMIX_MCA_psec");
+    if ((pmixVar != hostEnvironment.cend() && !pmixVar->second.empty())
+         && (pmixMCAVar == hostEnvironment.cend() || pmixMCAVar->second.empty())) {
+        containerEnvironment["PMIX_MCA_psec"] = pmixVar->second;
+    }
+
+    pmixVar = hostEnvironment.find("PMIX_GDS_MODULE");
+    pmixMCAVar = hostEnvironment.find("PMIX_MCA_gds");
+    if ((pmixVar != hostEnvironment.cend() && !pmixVar->second.empty())
+         && (pmixMCAVar == hostEnvironment.cend() || pmixMCAVar->second.empty())) {
+        containerEnvironment["PMIX_MCA_gds"] = pmixVar->second;
     }
 }
 

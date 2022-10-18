@@ -119,6 +119,9 @@
         },
         "containersRegistries.dPath": {
             "$ref": "definitions.schema.json#/AbsolutePath"
+        },
+        "enablePMIxv3Support": {
+            "type": "boolean"
         }
     },
     "required": [

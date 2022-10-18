@@ -58,6 +58,7 @@ void Runtime::setupOCIBundle() {
     copyEtcFilesIntoRootfs();
     mountInitProgramIntoRootfsIfNecessary();
     performCustomMounts();
+    performExtraMounts();
     performDeviceMounts();
     remountRootfsWithNoSuid();
     fdHandler.preservePMIFdIfAny();
@@ -226,6 +227,11 @@ void Runtime::mountInitProgramIntoRootfsIfNecessary() const {
     }
 }
 
+/**
+ * "Custom mounts" are those defined by users through the CLI ("user mounts") and by the system
+ * administrator through the configuration file ("site mounts"). They represent a mean of arbitrary
+ * container customization.
+ */
 void Runtime::performCustomMounts() const {
     utility::logMessage("Performing custom mounts", common::LogLevel::INFO);
     for(const auto& mount : config->commandRun.mounts) {
@@ -234,6 +240,31 @@ void Runtime::performCustomMounts() const {
     utility::logMessage("Successfully performed custom mounts", common::LogLevel::INFO);
 }
 
+/**
+ * "Extra mounts" are feature-dependent mounts which may happen automatically (i.e. without direct control
+ * by users or system administrators), but are not part of basic container setup.
+ */
+void Runtime::performExtraMounts() const {
+    utility::logMessage("Performing extra mounts", common::LogLevel::INFO);
+    if (const rapidjson::Value* pmixSupport = rapidjson::Pointer("/enablePMIxv3Support").Get(config->json)) {
+        if (pmixSupport->GetBool()) {
+            for(const auto& mount : utility::generatePMIxMounts(config)) {
+                mount->performMount();
+            }
+        }
+    }
+    utility::logMessage("Successfully performed custom mounts", common::LogLevel::INFO);
+}
+
+/**
+ * "Device mounts" are similar to custom mounts in that they are requested by users or system administrators,
+ * however they are grouped separately because, in addition to the mount of the device file, they also require
+ * to whitelist the device in the devices cgroup.
+ * The whitelisting is delegated to the OCI runtime by entering devices in the bundle config (see OCIBundleConfig class).
+ * The OCI Runtime spec states that the runtime MAY supply devices on its own, using the method it prefers:
+ * https://github.com/opencontainers/runtime-spec/blob/v1.0.2/config-linux.md#devices
+ * We bind mount device files here to have more direct control, in a similar fashion to what is done for /dev.
+ */
 void Runtime::performDeviceMounts() const {
     utility::logMessage("Performing device mounts", common::LogLevel::INFO);
     for(const auto& mount : config->commandRun.deviceMounts) {

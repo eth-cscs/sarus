@@ -9,8 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Added support for passing command-line options to `mksquashfs` through the `mksquashfsOptions` parameter in the `sarus.json` configuration file
-- Added CI unit and integration tests from source on Rocky Linux 8 and 9
 - Added explicit forwarding of standard signals from engine to OCI runtime
+- Added experimental support for the PMIx v3 interface. Given its experimental nature, this feature has to be enabled through a parameter in the `sarus.json` configuration file.
+- Added CI unit and integration tests from source on Rocky Linux 8 and 9
 
 ### Changed
 

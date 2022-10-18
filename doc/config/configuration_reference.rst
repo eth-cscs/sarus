@@ -379,6 +379,17 @@ directory for registries configurations. If defined, this directory will be
 used by Skopeo instead of the default ``${HOME}/.config/containers/registries.d``
 or ``/etc/containers/registries.d`` directories.
 
+.. _config-reference-PMIxv3:
+
+enablePMIxv3Support (bool, OPTIONAL) (experimental)
+---------------------------------------------------
+Enable experimental support for propagating a PMIx v3 context into the container.
+If support is enabled and use of PMIx is detected during container creation,
+Sarus will perform additional bind mounts and ensure specific environment variables
+used by the PMIx v3 interface are set.
+
+Default value: False
+
 
 Example configuration file
 ==========================

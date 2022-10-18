@@ -77,9 +77,7 @@ TEST(ConfigsMergerTestGroup, environment) {
     {
         rj::Value environmentValue(rj::kObjectType);
         rj::Value setValue(rj::kObjectType);
-        setValue.AddMember("SARUS_CONFIG_SET",
-                           rj::Value{"config_set_value", allocator},
-                           allocator);
+        setValue.AddMember("SARUS_CONFIG_SET", "config_set_value", allocator);
         environmentValue.AddMember("set", setValue, allocator);
         config->json.AddMember("environment", environmentValue, allocator);
 
@@ -93,13 +91,9 @@ TEST(ConfigsMergerTestGroup, environment) {
     // config file prepend/append
     {
         rj::Value prependValue(rj::kObjectType);
-        prependValue.AddMember("SARUS_CONFIG_PREPEND_APPEND",
-                               rj::Value{"config_prepend_value", allocator},
-                               allocator);
+        prependValue.AddMember("SARUS_CONFIG_PREPEND_APPEND", "config_prepend_value", allocator);
         rj::Value appendValue(rj::kObjectType);
-        appendValue.AddMember("SARUS_CONFIG_PREPEND_APPEND",
-                              rj::Value{"config_append_value", allocator},
-                              allocator);
+        appendValue.AddMember("SARUS_CONFIG_PREPEND_APPEND", "config_append_value", allocator);
         config->json["environment"].AddMember("prepend", prependValue, allocator);
         config->json["environment"].AddMember("append", appendValue, allocator);
 
@@ -136,9 +130,7 @@ TEST(ConfigsMergerTestGroup, environment) {
     // cli overrides all
     {
         rj::Value setValue(rj::kObjectType);
-        setValue.AddMember("SARUS_CONFIG_SET",
-                           rj::Value{"config_set_value", allocator},
-                           allocator);
+        setValue.AddMember("SARUS_CONFIG_SET", "config_set_value", allocator);
         config->json["environment"].AddMember("set", setValue, allocator);
 
         config->commandRun.hostEnvironment = {{"SARUS_CONFIG_SET", "HOST_VALUE"}};
@@ -243,6 +235,60 @@ TEST(ConfigsMergerTestGroup, nvidia_environment) {
         metadata.env = {{"NVIDIA_VISIBLE_DEVICES", "all"}};
         checkNvidiaEnvironmentVariables(ConfigsMerger{config, metadata}.getEnvironmentInContainer(),
                                     "3,1,5", "1,0,2");
+    }
+}
+
+TEST(ConfigsMergerTestGroup, pmix_environment) {
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = configRAII.config;
+    config->json.AddMember("enablePMIxv3Support", true, config->json.GetAllocator());
+    auto metadata = common::ImageMetadata{};
+
+    // Set variables
+    {
+        config->commandRun.hostEnvironment = {{"PMIX_PTL_MODULE", "pmix_ptl"}, {"PMIX_SECURITY_MODE", "pmix_security"},
+                {"PMIX_GDS_MODULE", "pmix_gds"}};
+        auto env = ConfigsMerger{config, metadata}.getEnvironmentInContainer();
+
+        CHECK(env.at("PMIX_MCA_ptl") == std::string("pmix_ptl"));
+        CHECK(env.at("PMIX_MCA_psec") == std::string("pmix_security"));
+        CHECK(env.at("PMIX_MCA_gds") == std::string("pmix_gds"));
+    }
+
+    // Overwrite image variables
+    {
+        config->commandRun.hostEnvironment = {{"PMIX_SERVER_TMPDIR", "pmix_tmpdir"}, {"PMIX_PTL_MODULE", "pmix_ptl"},
+                {"PMIX_SECURITY_MODE", "pmix_security"}, {"PMIX_GDS_MODULE", "pmix_gds"}};
+        metadata.env =  {{"PMIX_SERVER_TMPDIR", "image_tmpdir"}, {"PMIX_PTL_MODULE", "image_ptl"},
+                {"PMIX_SECURITY_MODE", "image_security"}, {"PMIX_GDS_MODULE", "image_gds"}, {"PMIX_iamge_only", "value"}};
+        auto env = ConfigsMerger{config, metadata}.getEnvironmentInContainer();
+
+        CHECK(env.at("PMIX_SERVER_TMPDIR") == std::string("pmix_tmpdir"));
+        CHECK(env.at("PMIX_MCA_ptl") == std::string("pmix_ptl"));
+        CHECK(env.at("PMIX_MCA_psec") == std::string("pmix_security"));
+        CHECK(env.at("PMIX_MCA_gds") == std::string("pmix_gds"));
+        CHECK(env.find("PMIX_image_only") == env.end());
+    }
+
+    // Skip unset or empty variables
+    {
+        config->commandRun.hostEnvironment = {{"PMIX_PTL_MODULE", "pmix_ptl"}, {"PMIX_GDS_MODULE", ""}};
+        auto env = ConfigsMerger{config, metadata}.getEnvironmentInContainer();
+
+        CHECK(env.at("PMIX_MCA_ptl") == std::string("pmix_ptl"));
+        CHECK(env.find("PMIX_MCA_psec") == env.end());
+        CHECK(env.find("PMIX_MCA_gds") == env.end());
+    }
+
+    // Do not modify PMIX_MCA variables if existing and non-empty
+    {
+        config->commandRun.hostEnvironment ={{"PMIX_PTL_MODULE", "pmix_ptl"}, {"PMIX_SECURITY_MODE", "pmix_security"},
+                {"PMIX_GDS_MODULE", "pmix_gds"}, {"PMIX_MCA_ptl", "mca_ptl"}, {"PMIX_MCA_psec", ""}};
+        auto env = ConfigsMerger{config, metadata}.getEnvironmentInContainer();
+
+        CHECK(env.at("PMIX_MCA_ptl") == std::string("mca_ptl"));
+        CHECK(env.at("PMIX_MCA_psec") == std::string("pmix_security"));
+        CHECK(env.at("PMIX_MCA_gds") == std::string("pmix_gds"));
     }
 }
 

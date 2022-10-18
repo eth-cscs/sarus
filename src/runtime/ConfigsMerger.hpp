@@ -43,6 +43,9 @@ private:
     void setNvidiaEnvironmentVariables(
             const std::unordered_map<std::string, std::string>& hostEnvironment,
             std::unordered_map<std::string, std::string>& containerEnvironment) const;
+    void setPMIxMcaEnvironmentVariables(
+            const std::unordered_map<std::string, std::string>& hostEnvironment,
+            std::unordered_map<std::string, std::string>& containerEnvironment) const;
 };
 
 }

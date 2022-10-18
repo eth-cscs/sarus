@@ -11,11 +11,17 @@
 #include "Utility.hpp"
 
 #include <signal.h>
+#include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
+#include <boost/algorithm/string.hpp>
+
+#include "common/Error.hpp"
+#include "common/Utility.hpp"
+
 
 namespace sarus {
 namespace runtime {
 namespace utility {
-
 
 class SignalProxy{
 public:
@@ -24,7 +30,7 @@ public:
         if (kill(target, signo) == -1) {
             if (errno == ESRCH) {
                 auto message = boost::format("Could not forward signal %d to OCI runtime (PID %d): process does not exist") % signo % target;
-                logMessage(message, common::LogLevel::DEBUG);
+                utility::logMessage(message, common::LogLevel::DEBUG);
 
                 // Restore the default signal handler and forward the signal to this process so it's not lost
                 signal(signo, SIG_DFL);
@@ -32,7 +38,7 @@ public:
             }
             else {
                 auto message = boost::format("Error forwarding signal %d to OCI runtime (PID %d): %s") % signo % target % strerror(errno);
-                logMessage(message, common::LogLevel::ERROR);
+                utility::logMessage(message, common::LogLevel::ERROR);
             }
         }
      };
@@ -106,19 +112,83 @@ void setupSignalProxying(const pid_t childPid) {
         if (sigaction(signalNumber, &proxyAction, nullptr) == -1) {
             auto message = boost::format("Error setting up forwarding for signal %d to OCI runtime (PID %d): %s")
                 % signalNumber % childPid % strerror(errno);
-            logMessage(message, common::LogLevel::WARN);
+            utility::logMessage(message, common::LogLevel::WARN);
         }
     }
 };
 
+std::vector<std::unique_ptr<runtime::Mount>> generatePMIxMounts(std::shared_ptr<const common::Config> config) {
+    auto mounts = std::vector<std::unique_ptr<runtime::Mount>>{};
+    auto& hostEnvironment = config->commandRun.hostEnvironment;
+
+    auto pmixServerPath = boost::filesystem::path{};
+    auto pmixServerVar = hostEnvironment.find("PMIX_SERVER_TMPDIR");
+    if (pmixServerVar != hostEnvironment.cend()) {
+        utility::logMessage(boost::format("Found PMIX_SERVER_TMPDIR=%s") % pmixServerVar->second, common::LogLevel::DEBUG);
+        pmixServerPath = boost::filesystem::path(pmixServerVar->second);
+        mounts.push_back(std::unique_ptr<runtime::Mount>{new runtime::Mount{pmixServerPath, pmixServerPath, MS_REC|MS_PRIVATE, config}});
+    }
+    else {
+        utility::logMessage("Could not find PMIX_SERVER_TMPDIR env variable", common::LogLevel::DEBUG);
+    }
+
+    auto slurmMpiType = hostEnvironment.find("SLURM_MPI_TYPE");
+    if (slurmMpiType != hostEnvironment.cend()) {
+        boost::smatch matches;
+        if (boost::regex_match(slurmMpiType->second, matches, boost::regex{"^pmix*"})) {
+            try {
+                auto slurmConfig = common::executeCommand("scontrol show config");
+                auto slurmJobId  = hostEnvironment.at("SLURM_JOB_ID");
+                auto slurmJobUid = hostEnvironment.at("SLURM_JOB_UID");
+                auto slurmStepId = hostEnvironment.at("SLURM_STEP_ID");
+
+                if (boost::regex_match(slurmConfig, matches, boost::regex{"SlurmdSpoolDir\s*=\s(.*)"})) {
+                    utility::logMessage(boost::format("Found SlurmdSpoolDir=%s") % matches[1], common::LogLevel::DEBUG);
+                    auto slurmSpoolPath = boost::filesystem::path(matches[1]);
+                    auto slurmPmixPath = slurmSpoolPath / (boost::format("pmix.%s.%s") % slurmJobId % slurmStepId).str();
+                    // Check that the path under Slurm's spool dir is not equal or child of the PMIx server tempdir
+                    // we have already scheduled for mounting
+                    auto relativePath = boost::filesystem::relative(slurmPmixPath, pmixServerPath);
+                    if (relativePath.empty() || boost::starts_with(relativePath.string(), std::string(".."))) {
+                        mounts.push_back(std::unique_ptr<runtime::Mount>{new runtime::Mount{slurmPmixPath, slurmPmixPath, MS_REC|MS_PRIVATE, config}});
+                    }
+                    else {
+                        utility::logMessage("Slurm PMIx directory for job step is equal or child of PMIX_SERVER_TMPDIR. Skipping mount",
+                                            common::LogLevel::DEBUG);
+                    }
+                }
+
+                if (boost::regex_match(slurmConfig, matches, boost::regex{"TmpFS\s*=\s(.*)"})) {
+                    utility::logMessage(boost::format("Found Slurm TmpFS=%s") % matches[1], common::LogLevel::DEBUG);
+                    auto slurmTmpFS = boost::filesystem::path(matches[1]);
+                    auto mountPath = slurmTmpFS / (boost::format("spmix_appdir_%s_%s.%s") % slurmJobUid % slurmJobId % slurmStepId).str();
+                    if (boost::filesystem::exists(mountPath)) {
+                        mounts.push_back(std::unique_ptr<runtime::Mount>{new runtime::Mount{mountPath, mountPath, MS_REC|MS_PRIVATE, config}});
+                    }
+                    else{
+                        mountPath = slurmTmpFS / (boost::format("spmix_appdir_%s.%s") % slurmJobId % slurmStepId).str();
+                        mounts.push_back(std::unique_ptr<runtime::Mount>{new runtime::Mount{mountPath, mountPath, MS_REC|MS_PRIVATE, config}});
+                    }
+                }
+            }
+            catch (common::Error& e) {
+                auto message = boost::format("Error generating Slurm-specific PMIx v3 mounts: %s.\nAttempting to continue...") % e.what();
+                utility::logMessage(message, common::LogLevel::WARN);
+            }
+        }
+    }
+
+    return mounts;
+}
+
 void logMessage(const boost::format& message, common::LogLevel level,
                 std::ostream& out, std::ostream& err) {
-    logMessage(message.str(), level, out, err);
+    utility::logMessage(message.str(), level, out, err);
 }
 
 void logMessage(const std::string& message, common::LogLevel level,
                 std::ostream& out, std::ostream& err) {
-    auto subsystemName = "runtime";
+    auto subsystemName = "Runtime";
     common::Logger::getInstance().log(message, subsystemName, level, out, err);
 }
 
