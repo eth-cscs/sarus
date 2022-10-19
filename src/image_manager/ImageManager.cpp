@@ -71,7 +71,7 @@ namespace image_manager {
             return;
         }
 
-        printLog("Image not found in storage or stored image not up-to-date. Proceeding with pull...",
+        printLog("Image not found in local repository or image not up-to-date. Proceeding with pull...",
                  common::LogLevel::INFO);
 
         // Re-normalize pullReference to always pull by digest internally.
@@ -117,18 +117,17 @@ namespace image_manager {
         imageStore.removeImage(config->imageReference);
 
         printLog(boost::format("removed image %s") % config->imageReference, common::LogLevel::GENERAL);
-        printLog("successfully removed image", common::LogLevel::INFO);
     }
 
     void ImageManager::processImage(const OCIImage& image, const common::ImageReference& storageReference) {
         auto metadata = image.getMetadata();
-        auto metadataFile = imageStore.getMetadataFileOfImage(storageReference);
+        auto metadataFile = imageStore.getImageMetadataFile(storageReference);
         metadata.write(metadataFile);
         auto metadataRAII = common::PathRAII{metadataFile};
 
         auto unpackedImage = image.unpack();
 
-        auto squashfsImagePath = imageStore.getImageFile(storageReference);
+        auto squashfsImagePath = imageStore.getImageSquashfsFile(storageReference);
         auto squashfs = SquashfsImage{*config, unpackedImage.getPath(), squashfsImagePath};
         auto squashfsRAII = common::PathRAII{squashfs.getPathOfImage()};
 

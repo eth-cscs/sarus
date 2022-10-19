@@ -49,6 +49,12 @@ class TestCommandImages(unittest.TestCase):
                                           expected_tag="7",
                                           expected_digest="sha256:e4ca2ed0202e76be184e75fb26d14bf974193579039d5573fb2348664deef76e")
 
+    def test_cleanup_image_without_backing_file(self):
+        image = "quay.io/ethcscs/alpine:3.14"
+        util.pull_image_if_necessary(is_centralized_repository=False, image=image)
+        util.remove_image_backing_file(image)
+        assert not util.is_image_available(is_centralized_repository=False, target_image=image)
+
     def _test_command_images_digests(self, image, expected_name, expected_tag, expected_digest):
         expected_header = ["REPOSITORY", "TAG", "DIGEST", "IMAGE", "ID", "CREATED", "SIZE", "SERVER"]
         actual_header = self._header_in_output_of_images_command(is_centralized_repository=False, print_digests=True)

@@ -72,6 +72,19 @@ class TestCommandRun(unittest.TestCase):
         self.assertEqual(processes[0], {"pid": 1, "comm": "init"})
         self.assertEqual(processes[1]["comm"], "ps")
 
+    def test_cleanup_image_without_backing_file(self):
+        util.pull_image_if_necessary(is_centralized_repository=False, image=self.default_image)
+        util.remove_image_backing_file(self.default_image)
+
+        command = ["sarus", "run", self.default_image, "true"]
+        output = util.get_sarus_error_output(command)
+        assert f"Image {self.default_image} is not available" in output
+
+        # Check we can run after pulling again
+        util.pull_image(is_centralized_repository=False, image=self.default_image)
+        assert util.run_image_and_get_prettyname(is_centralized_repository=False,
+                                                 image=self.default_image).startswith("Alpine Linux")
+
     def _test_command_run(self, is_centralized_repository):
         images = {"quay.io/ethcscs/alpine:3.14": "Alpine Linux",
                   "quay.io/ethcscs/debian:buster": "Debian GNU/Linux",

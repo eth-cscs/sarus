@@ -18,52 +18,79 @@
 #include "image_manager/ImageStore.hpp" 
 #include "test_utility/unittest_main_function.hpp"
 
-using namespace sarus;
+namespace sarus {
+namespace image_manager {
+namespace test {
 
 TEST_GROUP(ImageStoreTestGroup) {
+    test_utility::config::ConfigRAII configRAII = test_utility::config::makeConfig();;
+    image_manager::ImageStore imageStore = image_manager::ImageStore{ configRAII.config };
+    std::vector<common::ImageReference> refVector{};
+    std::vector<common::SarusImage> imageVector{};
+
+    void setup()
+    {
+        auto helloWorldRef    = common::ImageReference{"index.docker.io", "library", "hello-world", "latest", "sha256:hello-world-digest"};
+        auto alpineTaglessRef = common::ImageReference{"index.docker.io", "library", "alpine", "", "sha256:alpine-tagless-digest"};
+        auto alpineLatestRef  = common::ImageReference{"index.docker.io", "library", "alpine", "latest", "sha256:alpine-latest-digest"};
+        auto quayUbuntuRef    = common::ImageReference{"quay.io", "ethcscs", "ubuntu", "20.04", "sha256:quayio-ubuntu-digest"};
+        std::string dummyID = "1234567890abcdef";
+        time_t currentTime = time_t(nullptr);
+
+        refVector = std::vector<common::ImageReference>{helloWorldRef, alpineTaglessRef, alpineLatestRef, quayUbuntuRef};
+        for (const auto& ref : refVector) {
+            imageVector.push_back(common::SarusImage{
+                                      ref,
+                                      dummyID,
+                                      common::SarusImage::createSizeString(size_t(1024)),
+                                      common::SarusImage::createTimeString(currentTime),
+                                      imageStore.getImageSquashfsFile(ref),
+                                      imageStore.getImageMetadataFile(ref)
+                                  });
+        }
+    }
 };
 
-TEST(ImageStoreTestGroup, test_ImageStore) {
-    auto configRAII = test_utility::config::makeConfig();
-    configRAII.config->imageReference = {"index.docker.io", "library", "hello-world", "latest", "sha256:1234567890abcdef"};
+void addImageHarness(const image_manager::ImageStore& imageStore, const common::SarusImage& image) {
+    imageStore.addImage(image);
+    common::createFileIfNecessary(image.imageFile);
+    common::createFileIfNecessary(image.metadataFile);
+}
 
-    auto imageStore = image_manager::ImageStore{ configRAII.config };
+TEST(ImageStoreTestGroup, addListRemove) {
+    // add images and check repo metadata has been correctly populated
+    for (const auto& image : imageVector) {
+        addImageHarness(imageStore, image);
+    }
+    CHECK(boost::filesystem::exists(imageStore.getRepositoryMetadataFile()));
+    CHECK(imageStore.listImages() == imageVector);
 
-    std::string dummyID = "a9561eb1b190625c9adb5a9513e72c4dedafc1cb2d4c5236c9a6957ec7dfd5a9";
-    time_t currentTime = time_t(nullptr);
+    // automatically remove an image without backing file
+    boost::filesystem::remove(imageVector.back().imageFile);
+    imageVector.pop_back();
+    refVector.pop_back();
+    CHECK(imageStore.listImages() == imageVector);
 
-    auto image = common::SarusImage{
-        configRAII.config->imageReference,
-        dummyID,
-        common::SarusImage::createSizeString(size_t(1024)),
-        common::SarusImage::createTimeString(currentTime),
-        imageStore.getImageFile(configRAII.config->imageReference),
-        imageStore.getMetadataFileOfImage(configRAII.config->imageReference)};
-
-    // clean repository
-    boost::filesystem::remove_all(configRAII.config->directories.repository);
-    common::createFoldersIfNecessary(configRAII.config->directories.repository);
+    // remove all remaining images
+    for (const auto& ref : refVector) {
+        imageStore.removeImage(ref);
+    }
     CHECK(imageStore.listImages().empty());
 
-    // add image
-    imageStore.addImage(image);
-    CHECK(boost::filesystem::exists(imageStore.getMetadataFile()));
-    auto expectedImages = std::vector<common::SarusImage>{ image };
-    CHECK(imageStore.listImages() == expectedImages);
-
-    // add same image another time
-    imageStore.addImage(image);
-    CHECK(boost::filesystem::exists(imageStore.getMetadataFile()));
-    CHECK(imageStore.listImages() == expectedImages);
-
-    // remove image
-    imageStore.removeImage(configRAII.config->imageReference);
-    CHECK(imageStore.listImages().empty());
+    // re-fill the repository and add an existing image another time
+    // Note that addImage() does not care whether an image exists or not, it will always go through
+    // removing a previously existing entry and pushing a new element to the back of the repository metadata.
+    // Thus, if we re-add the first image, the repository metadata array will "rotate" of 1 position
+    for (const auto& image : imageVector) {
+        addImageHarness(imageStore, image);
+    }
+    CHECK(imageStore.listImages() == imageVector);
+    addImageHarness(imageStore, imageVector[0]);
+    CHECK(imageStore.listImages().back() == imageVector[0]);
+    CHECK(imageStore.listImages().front() == imageVector[1]);
 }
 
 TEST(ImageStoreTestGroup, getImageID) {
-    auto configRAII = test_utility::config::makeConfig();
-    auto imageStore = image_manager::ImageStore{ configRAII.config };
     auto document = rapidjson::Document{};
     auto allocator = document.GetAllocator();
 
@@ -83,42 +110,11 @@ TEST(ImageStoreTestGroup, getImageID) {
 }
 
 TEST(ImageStoreTestGroup, findImage) {
-    auto configRAII = test_utility::config::makeConfig();
-    auto imageStore = image_manager::ImageStore{ configRAII.config };
-
-    // clean repository
-    boost::filesystem::remove_all(configRAII.config->directories.repository);
-    common::createFoldersIfNecessary(configRAII.config->directories.repository);
-    CHECK(imageStore.listImages().empty());
-
-    // generate image objects
-    auto helloWorldRef    = common::ImageReference{"index.docker.io", "library", "hello-world", "latest", "sha256:hello-world-digest"};
-    auto alpineTaglessRef = common::ImageReference{"index.docker.io", "library", "alpine", "", "sha256:alpine-tagless-digest"};
-    auto alpineLatestRef  = common::ImageReference{"index.docker.io", "library", "alpine", "latest", "sha256:alpine-latest-digest"};
-    auto quayUbuntuRef    = common::ImageReference{"quay.io", "ethcscs", "ubuntu", "20.04", "sha256:quayio-ubuntu-digest"};
-
-    std::string dummyID = "1234567890abcdef";
-    time_t currentTime = time_t(nullptr);
-
-    auto refVector = std::vector<common::ImageReference>{helloWorldRef, alpineTaglessRef, alpineLatestRef, quayUbuntuRef};
-    auto imageVector = std::vector<common::SarusImage>{};
-
-    for (const auto& ref : refVector) {
-        imageVector.push_back(common::SarusImage{
-                                  ref,
-                                  dummyID,
-                                  common::SarusImage::createSizeString(size_t(1024)),
-                                  common::SarusImage::createTimeString(currentTime),
-                                  imageStore.getImageFile(ref),
-                                  imageStore.getMetadataFileOfImage(ref)
-                              });
-    }
-
-    // add images
+    // add images and create dummy backing files
     for (const auto& image : imageVector) {
-        imageStore.addImage(image);
+        addImageHarness(imageStore, image);
     }
-    CHECK(boost::filesystem::exists(imageStore.getMetadataFile()));
+    CHECK(boost::filesystem::exists(imageStore.getRepositoryMetadataFile()));
     CHECK(imageStore.listImages().size() == imageVector.size());
 
     // look for available images
@@ -133,6 +129,12 @@ TEST(ImageStoreTestGroup, findImage) {
 
     // look an available tagged image by digest
     CHECK_FALSE(imageStore.findImage({"index.docker.io", "library", "alpine", "", "sha256:alpine-latest-digest"}));
+
+    // automatically remove an image without backing file
+    boost::filesystem::remove(imageVector.back().imageFile);
+    CHECK_FALSE(imageStore.findImage(refVector.back()));
 }
+
+}}} // namespace
 
 SARUS_UNITTEST_MAIN_FUNCTION();

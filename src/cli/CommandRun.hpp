@@ -259,7 +259,8 @@ private:
             std::string name, value;
             try {
                 std::tie(name, value) = common::parseEnvironmentVariable(variable);
-            } catch(common::Error& e) {
+            }
+            catch(common::Error& e) {
                 auto message = boost::format("Environment variable requested from CLI '%s' does not feature '=' separator. "
                                              "Treating string as variable name and attempting to source value from host "
                                              "environment") % variable;
@@ -277,7 +278,8 @@ private:
                     cli::utility::printLog(message, common::LogLevel::INFO);
                     continue;
                 }
-            } catch(std::exception& e) {
+            }
+            catch(std::exception& e) {
                 auto message = boost::format("Error parsing environment variable requested from CLI '%s': %s")
                                % variable % e.what();
                 cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
@@ -330,7 +332,8 @@ private:
                 }
                 maps.push_back(std::move(map));
             }
-        } catch(const std::exception& e) {
+        }
+        catch(const std::exception& e) {
             SARUS_RETHROW_ERROR(e, "Failed to convert JSON mount entry to map");
         }
 
@@ -471,8 +474,8 @@ private:
                 cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
                 exit(EXIT_FAILURE);
             }
-            verifyImageBackingFiles(*image);
-        } catch(const std::exception& e) {
+        }
+        catch(const std::exception& e) {
             SARUS_RETHROW_ERROR(e, "Failed to verify that image is available");
         }
 
@@ -480,29 +483,6 @@ private:
 
         cli::utility::printLog(boost::format("Successfully verified that image %s is available") % conf->imageReference,
                                common::LogLevel::INFO);
-    }
-
-    void verifyImageBackingFiles(const common::SarusImage& image) const {
-        auto missing = std::vector<std::string>{};
-        if(!boost::filesystem::exists(image.imageFile)) {
-            missing.push_back(image.imageFile.string());
-        }
-        if(!boost::filesystem::exists(image.metadataFile)) {
-            missing.push_back(image.metadataFile.string());
-        }
-        if(!missing.empty()) {
-            auto message = boost::format("Storage inconsistency detected: image %s is listed in the repository "
-                                         "metadata but the following backing files are missing:\n%s\n"
-                                         "Attempting to remove image from metadata to resolve the inconsistency.\n")
-                                         % conf->imageReference % boost::algorithm::join(missing, "\n");
-            cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
-
-            auto imageManager = image_manager::ImageManager{conf};
-            imageManager.removeImage();
-
-            cli::utility::printLog("Please pull or load the image again.", common::LogLevel::GENERAL, std::cerr);
-            exit(EXIT_FAILURE);
-        }
     }
 
 private:

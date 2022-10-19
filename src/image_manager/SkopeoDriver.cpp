@@ -48,7 +48,7 @@ SkopeoDriver::SkopeoDriver(std::shared_ptr<const common::Config> config)
                      common::LogLevel::DEBUG);
         }
     }
-    catch (common::Error& e) {}
+    catch (common::Error& e) {}  // common::getEnvironmentVariable() throws if searched variable is not set
     printLog( boost::format("Set authentication file base path to %s") % authFileBasePath, common::LogLevel::DEBUG);
 
     authFilePath.clear();

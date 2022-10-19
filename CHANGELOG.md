@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- The `sarus run` and `sarus images` commands now automatically remove images missing the internal SquashFS or metadata file, and report them as not available.
 - Updated recommended runc version to 1.1.3
 - Updated CI tests from source on Ubuntu (21.10 -> 22.04), Fedora (35 -> 36) and OpenSUSE Leap (15.3 -> 15.4)
 

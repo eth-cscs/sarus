@@ -102,6 +102,16 @@ def remove_image_if_necessary(is_centralized_repository, image):
     subprocess.check_call(command)
 
 
+def remove_image_backing_file(image):
+    import json, pwd, pathlib
+    with open(os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/sarus.json") as sarus_json:
+        config = json.load(sarus_json)
+        repo_base = config["localRepositoryBaseDir"]
+    username = pwd.getpwuid(os.geteuid()).pw_name
+    image_backing_file = pathlib.Path(repo_base, username, f".sarus/images/{image.replace(':', '/')}.squashfs")
+    image_backing_file.unlink()
+
+
 def generate_ssh_keys(overwrite=False):
     command = ["sarus", "ssh-keygen"]
     if overwrite:
