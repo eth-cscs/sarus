@@ -9,7 +9,6 @@ import unittest
 import subprocess
 import os
 import shutil
-import json
 
 import common.util as util
 
@@ -92,6 +91,7 @@ def _get_host_glibc_libs():
         libs.append("/lib/x86_64-linux-gnu/libsigsegv.so.2")
     return libs
 
+
 class TestGlibcHook(unittest.TestCase):
     """
     These tests verify that the host Glibc libraries are properly brought into the container.
@@ -111,15 +111,14 @@ class TestGlibcHook(unittest.TestCase):
 
     @classmethod
     def _pull_docker_images(cls):
-        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/alpine:3.14") # no glibc
-        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/centos:6") # glibc 2.12
-        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/fedora:36") # assumption: glibc >= host's glibc
+        util.pull_image_if_necessary(is_centralized_repository=False, image=util.ALPINE_IMAGE)            # no glibc
+        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/centos:6")   # glibc 2.12
+        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/fedora:36")  # assumption: glibc >= host's glibc
         # based on fedora - assumption: glibc >= host's glibc
         util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry_f36")
 
     @classmethod
     def _enable_hook(cls):
-        # create OCI hook's config file
         hook = dict()
         hook["version"] = "1.0.0"
         hook["hook"] = dict()
@@ -134,12 +133,7 @@ class TestGlibcHook(unittest.TestCase):
         hook["when"]["annotations"] = {"^com.hooks.glibc.enabled$": "^true$"}
         hook["stages"] = ["prestart"]
 
-        with open("hook_config.json.tmp", 'w') as f:
-            f.write(json.dumps(hook))
-
-        subprocess.check_output(["sudo", "mv", "hook_config.json.tmp", cls._OCIHOOK_CONFIG_FILE])
-        subprocess.check_output(["sudo", "chown", "root:root", cls._OCIHOOK_CONFIG_FILE])
-        subprocess.check_output(["sudo", "chmod", "644", cls._OCIHOOK_CONFIG_FILE])
+        util.create_hook_file(hook, cls._OCIHOOK_CONFIG_FILE)
 
     @classmethod
     def _disable_hook(cls):
@@ -151,7 +145,7 @@ class TestGlibcHook(unittest.TestCase):
 
     def test_container_without_glibc(self):
         prettyname = util.run_image_and_get_prettyname(is_centralized_repository=False,
-                                                       image="quay.io/ethcscs/alpine:3.14")
+                                                       image=util.ALPINE_IMAGE)
         assert prettyname.startswith("Alpine Linux")
 
     def test_no_injection_in_container_with_recent_glibc(self):

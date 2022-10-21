@@ -15,7 +15,7 @@ class TestContainerIsWritable(unittest.TestCase):
     This test checks that the container's rootfs is writable.
     """
 
-    _IMAGE_NAME = "quay.io/ethcscs/alpine"
+    _IMAGE_NAME = util.ALPINE_IMAGE
 
     def test_container_is_writable(self):
         util.pull_image_if_necessary(is_centralized_repository=False, image=self._IMAGE_NAME)

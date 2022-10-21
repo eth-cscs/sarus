@@ -34,7 +34,7 @@ class TestCommandRmi(unittest.TestCase):
     def test_command_rmi_without_backing_file(self):
         self._test_command_rmi(is_centralized_repository=False, remove_backing_file=True)
 
-    def _test_command_rmi(self, is_centralized_repository, image="quay.io/ethcscs/alpine:latest",
+    def _test_command_rmi(self, is_centralized_repository, image=util.ALPINE_IMAGE,
                           expected_string=None, remove_backing_file=False):
         expected_image = expected_string if expected_string else image
 

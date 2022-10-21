@@ -8,7 +8,6 @@
 import unittest
 import subprocess
 import os
-import json
 import re
 
 import common.util as util
@@ -19,11 +18,12 @@ class TestHookStdoutStderr(unittest.TestCase):
     This test checks that a hook can successfully log messages to stdout and stderr.
     """
 
+    CONTAINER_IMAGE = util.ALPINE_IMAGE
     _OCIHOOK_CONFIG_FILE = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/hooks.d/stdout_stderr_test.json"
 
     @classmethod
     def setUpClass(cls):
-        util.pull_image_if_necessary(is_centralized_repository=False, image="quay.io/ethcscs/alpine:latest")
+        util.pull_image_if_necessary(is_centralized_repository=False, image=cls.CONTAINER_IMAGE)
         cls._enable_hook()
 
     @classmethod
@@ -32,7 +32,6 @@ class TestHookStdoutStderr(unittest.TestCase):
 
     @classmethod
     def _enable_hook(cls):
-        # create OCI hook's config file
         hook = dict()
         hook["version"] = "1.0.0"
         hook["hook"] = dict()
@@ -40,12 +39,7 @@ class TestHookStdoutStderr(unittest.TestCase):
         hook["when"] = {"always": True}
         hook["stages"] = ["prestart"]
 
-        with open("hook_config.json.tmp", 'w') as f:
-            f.write(json.dumps(hook))
-
-        subprocess.check_output(["sudo", "mv", "hook_config.json.tmp", cls._OCIHOOK_CONFIG_FILE])
-        subprocess.check_output(["sudo", "chown", "root:root", cls._OCIHOOK_CONFIG_FILE])
-        subprocess.check_output(["sudo", "chmod", "644", cls._OCIHOOK_CONFIG_FILE])
+        util.create_hook_file(hook, cls._OCIHOOK_CONFIG_FILE)
 
     @classmethod
     def _disable_hook(cls):
@@ -82,25 +76,15 @@ class TestHookStdoutStderr(unittest.TestCase):
             r"^\[\d+.\d+\] \[.+\] \[stdout_stderr_test_hook\] \[WARN\] hook's WARN log message$",
             r"^\[\d+.\d+\] \[.+\] \[stdout_stderr_test_hook\] \[ERROR\] hook's ERROR log message$",
         ]
-        stderr = self._get_sarus_stderr()
-        self._check_output_matches(stderr, expected)
+        stderr = util.get_sarus_error_output(["sarus", "run", self.CONTAINER_IMAGE, "true"],
+                                             fail_expected=False)
+        self._check_output_matches(stderr.split('\n'), expected)
 
     def _get_sarus_stdout(self, verbose_option=None):
-        command = ["sarus", "run", "quay.io/ethcscs/alpine:latest", "true"]
+        command = ["sarus", "run", self.CONTAINER_IMAGE, "true"]
         if verbose_option is not None:
-            command = command[0:1] + [verbose_option] + command[1:]
-        stdout = subprocess.check_output(command).decode()
-        return stdout.rstrip().split('\n') # remove trailing whitespaces
-
-    def _get_sarus_stderr(self):
-        command = ["sarus", "run", "quay.io/ethcscs/alpine:latest", "true"]
-        with open(os.devnull, 'wb') as devnull:
-            proc = subprocess.run(command,
-                                  stdout=devnull,
-                                  stderr=subprocess.PIPE)
-        assert proc.returncode == 0, "An error occurred while executing Sarus"
-
-        return proc.stderr.decode().rstrip().split('\n')
+            command.insert(1, verbose_option)
+        return util.get_trimmed_output(command)
 
     def _check_output_matches(self, actuals, expecteds):
         assert len(expecteds) > 0

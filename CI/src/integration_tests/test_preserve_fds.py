@@ -17,7 +17,7 @@ class TestPreserveFDS(unittest.TestCase):
     additional file descriptors (i.e. not including stdio) available to the calling process.
     """
 
-    _IMAGE_NAME = "quay.io/ethcscs/debian:buster"
+    _IMAGE_NAME = util.UBUNTU_IMAGE
 
     def test_preserve_fds(self):
         test_file = open("/tmp/test1", "w+")

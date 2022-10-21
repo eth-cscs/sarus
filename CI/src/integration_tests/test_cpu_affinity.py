@@ -6,8 +6,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import unittest
-import sys
-import subprocess
 import re
 
 import common.util as util
@@ -20,11 +18,10 @@ class TestCpuAffinity(unittest.TestCase):
     """
 
     def test_cpu_affinity(self):
-        image = "quay.io/ethcscs/alpine:3.14"
+        image = util.ALPINE_IMAGE
         util.pull_image_if_necessary(is_centralized_repository=False, image=image)
 
-        command = ["cat", "/proc/self/status"]
-        out = util.command_output_without_trailing_new_lines(subprocess.check_output(command).decode())
+        out = util.get_trimmed_output(["cat", "/proc/self/status"])
         host_cpus_allowed_list = self._parse_cpus_allowed_list(out)
         only_one_cpu_available = len(host_cpus_allowed_list) == 1
 
@@ -37,7 +34,7 @@ class TestCpuAffinity(unittest.TestCase):
 
         command = ["taskset", "--cpu-list", cpu,
                    "sarus", "run", image, "cat", "/proc/self/status"]
-        out = util.command_output_without_trailing_new_lines(subprocess.check_output(command).decode())
+        out = util.get_trimmed_output(command)
         container_cpus_allowed_list = self._parse_cpus_allowed_list(out)
 
         self.assertEqual(container_cpus_allowed_list, cpu)
@@ -49,7 +46,7 @@ class TestCpuAffinity(unittest.TestCase):
         raise Exception("invalid input: no CPUs allowed list found in the input text")
 
     def _parse_first_cpu(self, cpus_allowed_list):
-        m = re.match(r"([0-9]+)[,-].*", cpus_allowed_list)
+        m = re.match(r"(\d+)[,-].*", cpus_allowed_list)
         cpu = m.group(1)
         assert len(cpu) > 0 and cpu.isdigit()
         return cpu

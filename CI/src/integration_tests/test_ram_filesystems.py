@@ -6,65 +6,28 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import unittest
-import subprocess
-import os
-import json
 
 import common.util as util
 
 
-class TestRamFilesystem(unittest.TestCase):
+class TestRamFilesystems(unittest.TestCase):
     """
-    Base class for rootfs in-memory filesystems testing.
+    These tests verify that containers can run using different in-memory filesystems for the OCI bundle.
     """
-    _SARUS_CONFIG_FILE = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/sarus.json"
-    _CONTAINER_IMAGE = "quay.io/ethcscs/alpine:3.14"
+    _CONTAINER_IMAGE = util.ALPINE_IMAGE
 
     @classmethod
     def setUpClass(cls):
         util.pull_image_if_necessary(is_centralized_repository=False, image=cls._CONTAINER_IMAGE)
-        cls._enable_hook()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls._disable_hook()
-
-    @classmethod
-    def _enable_hook(cls):
-        # make backup of config file
-        subprocess.call(["sudo", "cp", cls._SARUS_CONFIG_FILE, cls._SARUS_CONFIG_FILE + ".bak"])
-
-        # Modify config file
-        with open(cls._SARUS_CONFIG_FILE, 'r') as f:
-            data = f.read().replace('\n', '')
-        config = json.loads(data)
-        config["ramFilesystemType"] = cls._FILESYSTEM_TYPE
-        data = json.dumps(config)
-        with open("sarus.json.dummy", 'w') as f:
-            f.write(data)
-        subprocess.check_output(["sudo", "cp", "sarus.json.dummy", cls._SARUS_CONFIG_FILE])
-        os.remove("sarus.json.dummy")
-
-    @classmethod
-    def _disable_hook(cls):
-        subprocess.call(["sudo", "mv", cls._SARUS_CONFIG_FILE + ".bak", cls._SARUS_CONFIG_FILE])
-
-class TestRamfs(TestRamFilesystem):
-    """
-    These tests verify that containers can run using ramfs as filesystem for the OCI bundle.
-    """
-    _FILESYSTEM_TYPE = "ramfs"
-
-    def test_ramfs(self):
-        prettyname = util.run_image_and_get_prettyname(False, "quay.io/ethcscs/alpine:3.14")
-        assert prettyname.startswith("Alpine Linux")
-
-class TestTmpfs(TestRamFilesystem):
-    """
-    These tests verify that containers can run using tmpfs as filesystem for the OCI bundle.
-    """
-    _FILESYSTEM_TYPE = "tmpfs"
 
     def test_tmpfs(self):
-        prettyname = util.run_image_and_get_prettyname(False, "quay.io/ethcscs/alpine:3.14")
+        with util.custom_sarus_json({"ramFilesystemType": "tmpfs"}):
+            self._run_test()
+
+    def test_ramfs(self):
+        with util.custom_sarus_json({"ramFilesystemType": "ramfs"}):
+            self._run_test()
+
+    def _run_test(self):
+        prettyname = util.run_image_and_get_prettyname(False, self._CONTAINER_IMAGE)
         assert prettyname.startswith("Alpine Linux")

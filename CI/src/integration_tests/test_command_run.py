@@ -9,13 +9,14 @@ import common.util as util
 import pytest
 import unittest
 
+
 class TestCommandRun(unittest.TestCase):
     """
     These tests verify that the available images are run correctly,
     i.e. the Linux's pretty name inside the container is correct.
     """
 
-    default_image = "quay.io/ethcscs/alpine:3.14"
+    DEFAULT_IMAGE = util.ALPINE_IMAGE
 
     def test_command_run_with_local_repository(self):
         self._test_command_run(is_centralized_repository=False)
@@ -29,34 +30,34 @@ class TestCommandRun(unittest.TestCase):
         assert util.run_image_and_get_prettyname(is_centralized_repository=False, image="alpine").startswith("Alpine Linux")
 
     def test_workdir(self):
-        util.pull_image_if_necessary(is_centralized_repository=True, image=self.default_image)
+        util.pull_image_if_necessary(is_centralized_repository=True, image=self.DEFAULT_IMAGE)
 
         # default workdir
         out = util.run_command_in_container(is_centralized_repository=False,
-                                    image=self.default_image,
-                                    command=["pwd"],
-                                    options_of_run_command=None)
+                                            image=self.DEFAULT_IMAGE,
+                                            command=["pwd"],
+                                            options_of_run_command=None)
         self.assertEqual(out, ["/"])
         # custom workdir
         out = util.run_command_in_container(is_centralized_repository=False,
-                                    image=self.default_image,
-                                    command=["pwd"],
-                                    options_of_run_command=["--workdir=/etc"])
+                                            image=self.DEFAULT_IMAGE,
+                                            command=["pwd"],
+                                            options_of_run_command=["--workdir=/etc"])
         self.assertEqual(out, ["/etc"])
         # custom non-exising workdir (sarus automatically creates it)
         out = util.run_command_in_container(is_centralized_repository=False,
-                                    image=self.default_image,
-                                    command=["pwd"],
-                                    options_of_run_command=["--workdir=/non-exising-dir-2931"])
+                                            image=self.DEFAULT_IMAGE,
+                                            command=["pwd"],
+                                            options_of_run_command=["--workdir=/non-exising-dir-2931"])
         self.assertEqual(out, ["/non-exising-dir-2931"])
 
     def test_entrypoint_with_option_arguments(self):
-        util.pull_image_if_necessary(is_centralized_repository=True, image=self.default_image)
+        util.pull_image_if_necessary(is_centralized_repository=True, image=self.DEFAULT_IMAGE)
 
         out = util.run_command_in_container(is_centralized_repository=False,
-                                    image=self.default_image,
-                                    command=["--option", "arg"],
-                                    options_of_run_command=["--entrypoint=echo"])
+                                            image=self.DEFAULT_IMAGE,
+                                            command=["--option", "arg"],
+                                            options_of_run_command=["--entrypoint=echo"])
         self.assertEqual(out, ["--option arg"])
 
     @pytest.mark.xfail(reason="CONTAINER-666")
@@ -73,17 +74,17 @@ class TestCommandRun(unittest.TestCase):
         self.assertEqual(processes[1]["comm"], "ps")
 
     def test_cleanup_image_without_backing_file(self):
-        util.pull_image_if_necessary(is_centralized_repository=False, image=self.default_image)
-        util.remove_image_backing_file(self.default_image)
+        util.pull_image_if_necessary(is_centralized_repository=False, image=self.DEFAULT_IMAGE)
+        util.remove_image_backing_file(self.DEFAULT_IMAGE)
 
-        command = ["sarus", "run", self.default_image, "true"]
+        command = ["sarus", "run", self.DEFAULT_IMAGE, "true"]
         output = util.get_sarus_error_output(command)
-        assert f"Image {self.default_image} is not available" in output
+        assert f"Image {self.DEFAULT_IMAGE} is not available" in output
 
         # Check we can run after pulling again
-        util.pull_image(is_centralized_repository=False, image=self.default_image)
+        util.pull_image(is_centralized_repository=False, image=self.DEFAULT_IMAGE)
         assert util.run_image_and_get_prettyname(is_centralized_repository=False,
-                                                 image=self.default_image).startswith("Alpine Linux")
+                                                 image=self.DEFAULT_IMAGE).startswith("Alpine Linux")
 
     def _test_command_run(self, is_centralized_repository):
         images = {"quay.io/ethcscs/alpine:3.14": "Alpine Linux",
@@ -98,9 +99,8 @@ class TestCommandRun(unittest.TestCase):
             util.pull_image_if_necessary(is_centralized_repository, reference)
             assert util.run_image_and_get_prettyname(is_centralized_repository, reference).startswith(prettyname)
 
-
     def _run_ps_in_container(self, with_private_pid_namespace, with_init_process):
-        util.pull_image_if_necessary(is_centralized_repository=False, image=self.default_image)
+        util.pull_image_if_necessary(is_centralized_repository=False, image=self.DEFAULT_IMAGE)
         options = []
         if with_private_pid_namespace:
             options += ['--pid=private']
@@ -115,6 +115,6 @@ class TestCommandRun(unittest.TestCase):
             pid, comm = line.split()
             processes.append({"pid": int(pid), "comm": comm})
 
-        processes.sort(key = lambda process: process["pid"]) # sort by pid in ascending order
+        processes.sort(key=lambda process: process["pid"])  # sort by pid in ascending order
 
         return processes

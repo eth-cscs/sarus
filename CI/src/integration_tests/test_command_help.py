@@ -6,8 +6,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import unittest
-import subprocess
-
 
 import common.util as util
 
@@ -18,7 +16,6 @@ class TestCommandHelp(unittest.TestCase):
         self._test_command_help(command=["sarus", "help"])
 
     def _test_command_help(self, command):
-        out = subprocess.check_output(command).decode()
-        lines = util.command_output_without_trailing_new_lines(out)
+        lines = util.get_trimmed_output(command)
         self.assertGreater(len(lines), 1)
         self.assertEqual(lines[0], "Usage: sarus COMMAND")

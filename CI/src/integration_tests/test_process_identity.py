@@ -18,7 +18,7 @@ class TestProcessIdentity(unittest.TestCase):
     Notice that here we refer specifically to the ids of the *process*, not those found inside /etc/groups.
     """
 
-    _IMAGE_NAME = "quay.io/ethcscs/alpine"
+    _IMAGE_NAME = util.ALPINE_IMAGE
 
     def test_process_identity(self):
         host_uid = os.getuid()
@@ -43,12 +43,6 @@ class TestProcessIdentity(unittest.TestCase):
                                                command=["id", "-G"])
         container_supplementary_gids = {int(group) for group in output[0].split()}
 
-        # Checks
         self.assertEqual(host_uid, container_uid)
         self.assertEqual(host_gid, container_gid)
         self.assertEqual(host_supplementary_gids, container_supplementary_gids)
-
-
-if __name__ == "__main__":
-
-    TestProcessIdentity().test_process_identity()

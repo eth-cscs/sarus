@@ -10,7 +10,6 @@ import subprocess
 import os
 import shutil
 import tempfile
-import json
 import pytest
 
 import common.util as util
@@ -24,8 +23,8 @@ class TestMPIHook(unittest.TestCase):
 
     _SITE_LIBS_PREFIX = tempfile.mkdtemp()
 
-    _HOST_MPI_LIBS = { "libmpi.so.12.5.5", "libmpich.so.12.5.5" }
-    _HOST_MPI_DEPENDENCY_LIBS = { "libdependency0.so", "libdependency1.so" }
+    _HOST_MPI_LIBS = {"libmpi.so.12.5.5", "libmpich.so.12.5.5"}
+    _HOST_MPI_DEPENDENCY_LIBS = {"libdependency0.so", "libdependency1.so"}
 
     _CI_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     _DUMMY_LIB_PATH = _CI_DIR + "/dummy_libs/lib_dummy_0.so"
@@ -35,11 +34,11 @@ class TestMPIHook(unittest.TestCase):
     def setUpClass(cls):
         cls._pull_docker_images()
         cls._create_site_resources()
-        cls._enable_hook()
+        cls._enable_hook(cls._generate_hook_config())
 
     @classmethod
     def tearDownClass(cls):
-        cls._undo_create_site_resources()
+        cls._remove_site_resources()
         cls._disable_hook()
 
     @classmethod
@@ -69,39 +68,36 @@ class TestMPIHook(unittest.TestCase):
             subprocess.call(["cp", cls._DUMMY_LIB_PATH, lib_path])
 
     @classmethod
-    def _undo_create_site_resources(cls):
-        subprocess.call(["rm", "-r", cls._SITE_LIBS_PREFIX])
+    def _remove_site_resources(cls):
+        shutil.rmtree(cls._SITE_LIBS_PREFIX)
 
     @classmethod
-    def _enable_hook(cls):
-        mpi_libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_LIBS]
-        mpi_dependency_libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_DEPENDENCY_LIBS]
-
-        # create OCI hook's config file
-        hook = dict()
-        hook["version"] = "1.0.0"
-        hook["hook"] = dict()
-        hook["hook"]["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/mpi_hook"
-        hook["hook"]["env"] = [
-            "LDCONFIG_PATH=" + shutil.which("ldconfig"),
-            "MPI_LIBS=" + ":".join(mpi_libs),
-            "MPI_DEPENDENCY_LIBS=" + ":".join(mpi_dependency_libs),
-        ]
-
-        hook["when"] = dict()
-        hook["when"]["annotations"] = {"^com.hooks.mpi.enabled$": "^true$"}
-        hook["stages"] = ["prestart"]
-
-        with open("hook_config.json.tmp", 'w') as f:
-            f.write(json.dumps(hook))
-
-        subprocess.check_output(["sudo", "mv", "hook_config.json.tmp", cls._OCIHOOK_CONFIG_FILE])
-        subprocess.check_output(["sudo", "chown", "root:root", cls._OCIHOOK_CONFIG_FILE])
-        subprocess.check_output(["sudo", "chmod", "644", cls._OCIHOOK_CONFIG_FILE])
+    def _enable_hook(cls, hook_config):
+        util.create_hook_file(hook_config, cls._OCIHOOK_CONFIG_FILE)
 
     @classmethod
     def _disable_hook(cls):
         subprocess.call(["sudo", "rm", cls._OCIHOOK_CONFIG_FILE])
+
+    @classmethod
+    def _generate_hook_config(cls):
+        mpi_libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_LIBS]
+        mpi_dependency_libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_DEPENDENCY_LIBS]
+
+        hook_config = dict()
+        hook_config["version"] = "1.0.0"
+        hook_config["hook"] = dict()
+        hook_config["hook"]["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/mpi_hook"
+        hook_config["hook"]["env"] = [
+            "LDCONFIG_PATH=" + shutil.which("ldconfig"),
+            "MPI_LIBS=" + ":".join(mpi_libs),
+            "MPI_DEPENDENCY_LIBS=" + ":".join(mpi_dependency_libs),
+        ]
+        hook_config["when"] = dict()
+        hook_config["when"]["annotations"] = {"^com.hooks.mpi.enabled$": "^true$"}
+        hook_config["stages"] = ["prestart"]
+
+        return hook_config
 
     def setUp(self):
         self._mpi_command_line_option = None
@@ -130,7 +126,7 @@ class TestMPIHook(unittest.TestCase):
         self._mpi_command_line_option = True
         self._container_image = "quay.io/ethcscs/sarus-integration-tests:mpich_minor_incompatible"
         self._assert_sarus_raises_mpi_warning_containing_text(
-            text = "Partial ABI compatibility detected", expected_occurrences=2)
+            text="Partial ABI compatibility detected", expected_occurrences=2)
         hashes = self._get_hashes_of_host_libs_in_container()
         number_of_expected_mounts = len(self._HOST_MPI_LIBS) + len(self._HOST_MPI_DEPENDENCY_LIBS)
         assert hashes.count(self._HOST_LIB_HASH) == number_of_expected_mounts
@@ -138,20 +134,17 @@ class TestMPIHook(unittest.TestCase):
     def test_mpich_major_incompatible(self):
         self._mpi_command_line_option = True
         self._container_image = "quay.io/ethcscs/sarus-integration-tests:mpich_major_incompatible"
-        self._assert_sarus_raises_mpi_error_containing_text(
-            text = "not ABI compatible with container's MPI library")
+        self._assert_sarus_raises_mpi_error_containing_text("not ABI compatible with container's MPI library")
 
     def test_container_without_mpi_libraries(self):
         self._mpi_command_line_option = True
         self._container_image = "quay.io/ethcscs/sarus-integration-tests:no_mpi_libraries"
-        self._assert_sarus_raises_mpi_error_containing_text(
-            text = "No MPI libraries found in the container")
+        self._assert_sarus_raises_mpi_error_containing_text("No MPI libraries found in the container")
 
     def test_container_without_mpi_libraries_and_nonexisting_ldcache_entry(self):
         self._mpi_command_line_option = True
         self._container_image = "quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry_f35"
-        self._assert_sarus_raises_mpi_error_containing_text(
-            text = "No MPI libraries found in the container")
+        self._assert_sarus_raises_mpi_error_containing_text("No MPI libraries found in the container")
 
     def _get_hashes_of_host_libs_in_container(self):
         options = []
@@ -163,25 +156,14 @@ class TestMPIHook(unittest.TestCase):
         return hashes
 
     def _assert_sarus_raises_mpi_error_containing_text(self, text):
-        assert text in self._get_sarus_error_output(), 'Sarus didn\'t generate an MPI error containing the text "{}", but one was expected.'.format(text)
+        command = ["sarus", "run", "--mpi", self._container_image, "true"]
+        util.assert_sarus_raises_error_containing_text(command, text)
 
     def _assert_sarus_raises_mpi_warning_containing_text(self, text, expected_occurrences):
-        output = self._get_sarus_warn_output()
-        number_of_occurrences = sum(["[WARN]" in line and text in line for line in output])
+        command = ["sarus", "run", "--mpi", self._container_image, "true"]
+        output = util.get_sarus_error_output(command, fail_expected=False)
+        number_of_occurrences = sum(["[WARN]" in line and text in line for line in output.split('\n')])
         assert number_of_occurrences == expected_occurrences, 'Sarus didn\'t generate the expected MPI warnings containing the text "{}".'.format(text)
-
-    def _get_sarus_error_output(self):
-        command = ["sarus", "run", "--mpi", self._container_image, "true"]
-        try:
-            subprocess.check_output(command, stderr=subprocess.STDOUT)
-            raise Exception("Sarus didn't generate any error, but at least one was expected.")
-        except subprocess.CalledProcessError as ex:
-            return ex.output.decode()
-
-    def _get_sarus_warn_output(self):
-        command = ["sarus", "run", "--mpi", self._container_image, "true"]
-        out = subprocess.check_output(command, stderr=subprocess.STDOUT).decode()
-        return util.command_output_without_trailing_new_lines(out)
 
 
 @pytest.mark.asroot
@@ -191,12 +173,14 @@ class TestMPIHookDevices(unittest.TestCase):
     for rw access in the container devices cgroup.
     """
     DEVICE_FILENAME = "/dev/test0"
+    CONTAINER_IMAGE = "quay.io/ethcscs/sarus-integration-tests:mpich_compatible"
 
     @classmethod
     def setUpClass(cls):
-        TestMPIHook.setUpClass()
+        util.pull_image_if_necessary(is_centralized_repository=False, image=cls.CONTAINER_IMAGE)
+        TestMPIHook._create_site_resources()
         cls._create_device_file()
-        cls._add_device_to_hook_config()
+        TestMPIHook._enable_hook(cls._generate_hook_config_with_device())
 
     @classmethod
     def tearDownClass(cls):
@@ -211,18 +195,10 @@ class TestMPIHookDevices(unittest.TestCase):
         os.mknod(cls.DEVICE_FILENAME, device_mode, device_id)
 
     @classmethod
-    def _add_device_to_hook_config(cls):
-        with open(TestMPIHook._OCIHOOK_CONFIG_FILE) as json_file:
-            hook = json.load(json_file)
-
-        hook["hook"]["env"].append("BIND_MOUNTS=/dev/test0:/var/opt:/var/lib")
-
-        with open("hook_config.json.tmp", 'w') as f:
-            f.write(json.dumps(hook))
-
-        subprocess.check_output(["sudo", "mv", "hook_config.json.tmp", TestMPIHook._OCIHOOK_CONFIG_FILE])
-        subprocess.check_output(["sudo", "chown", "root:root", TestMPIHook._OCIHOOK_CONFIG_FILE])
-        subprocess.check_output(["sudo", "chmod", "644", TestMPIHook._OCIHOOK_CONFIG_FILE])
+    def _generate_hook_config_with_device(cls):
+        hook_config = TestMPIHook._generate_hook_config()
+        hook_config["hook"]["env"].append("BIND_MOUNTS=/dev/test0:/var/opt:/var/lib")
+        return hook_config
 
     def test_whitelist_device(self):
         devices_list = self._get_devices_list_from_cgroup_in_container()
@@ -230,6 +206,6 @@ class TestMPIHookDevices(unittest.TestCase):
 
     def _get_devices_list_from_cgroup_in_container(self):
         return util.run_command_in_container(is_centralized_repository=False,
-                                             image="quay.io/ethcscs/sarus-integration-tests:mpich_compatible",
+                                             image=self.CONTAINER_IMAGE,
                                              command=["cat", "/sys/fs/cgroup/devices/devices.list"],
                                              options_of_run_command=["--mpi"])

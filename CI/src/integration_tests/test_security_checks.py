@@ -53,7 +53,7 @@ class TestSecurityChecks(unittest.TestCase):
         self._check_untamperable(SCHEMA_FILENAME)
 
     def test_disabled_security_checks(self):
-        with disabled_security_checks():
+        with util.custom_sarus_json({"securityChecks": False}):
             # some tamperable locations are OK...
             with changed_owner("/opt/sarus/default/bin/", NONROOT_ID, NONROOT_ID):
                 self._sarus_foo()
@@ -131,21 +131,3 @@ def changed_permissions(path, mod):
         yield
     finally:
         os.chmod(path, old_mod)
-
-
-@contextmanager
-def disabled_security_checks():
-    shutil.copy2(CONFIG_FILENAME, CONFIG_FILENAME+".testbak")
-    with open(CONFIG_FILENAME) as conf_file:
-        conf_content = json.load(conf_file)
-    try:
-        with open(CONFIG_FILENAME, "w") as conf_file:
-            conf_content['securityChecks'] = False
-            json.dump(conf_content, conf_file)
-        yield
-    finally:
-        shutil.move(CONFIG_FILENAME+".testbak", CONFIG_FILENAME)
-
-
-if __name__ == '__main__':
-    unittest.main()

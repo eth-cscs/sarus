@@ -6,7 +6,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import unittest
-import subprocess
 import os
 import re
 
@@ -50,7 +49,7 @@ class TestCommandImages(unittest.TestCase):
                                           expected_digest="sha256:e4ca2ed0202e76be184e75fb26d14bf974193579039d5573fb2348664deef76e")
 
     def test_cleanup_image_without_backing_file(self):
-        image = "quay.io/ethcscs/alpine:3.14"
+        image = util.ALPINE_IMAGE
         util.pull_image_if_necessary(is_centralized_repository=False, image=image)
         util.remove_image_backing_file(image)
         assert not util.is_image_available(is_centralized_repository=False, target_image=image)

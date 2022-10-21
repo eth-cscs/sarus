@@ -6,10 +6,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import unittest
-import subprocess
 import os
 import shutil
-import json
 
 import common.util as util
 
@@ -20,11 +18,11 @@ class TestSiteMounts(unittest.TestCase):
     correctly bind-mounts the requested directories into the container.
     """
 
+    CONTAINER_IMAGE = util.UBUNTU_IMAGE
     TEST_FILES = {"/test_sitefs/": ["a.txt", "b.md", "c.py", "subdir/d.cpp", "subdir/e.pdf"],
                   "/test_resources/": ["f.txt", "g.md", "h.py", "subdir/i.cpp", "subdir/j.pdf"],
                   "/test_files/test_dir/": ["k.txt", "m.md", "l.py", "subdir/m.cpp", "subdir/n.pdf"],
                   "/dev/test_site_mount/": ["testdev0"]}
-
     CHECK_TEMPLATE = ("for fname in {files}; do"
                       "    if [ ! -f $fname ]; then"
                       "         echo \"FAIL\"; "
@@ -34,15 +32,19 @@ class TestSiteMounts(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        util.pull_image_if_necessary(is_centralized_repository=False, image=cls.CONTAINER_IMAGE)
         cls._create_source_directories()
-        cls._modify_sarusjson_file()
-        cls.container_image = "quay.io/ethcscs/ubuntu:20.04"
-        util.pull_image_if_necessary(is_centralized_repository=False, image=cls.container_image)
+
+        site_mounts = []
+        for destination_path in cls.TEST_FILES.keys():
+            source_path = os.getcwd() + destination_path
+            site_mounts.append({"type": "bind", "source": source_path, "destination": destination_path})
+        util.modify_sarus_json({"siteMounts": site_mounts})
 
     @classmethod
     def tearDownClass(cls):
         cls._remove_source_directories()
-        cls._restore_sarusjson_file()
+        util.restore_sarus_json()
 
     @classmethod
     def _create_source_directories(cls):
@@ -58,37 +60,6 @@ class TestSiteMounts(unittest.TestCase):
             source_dir = "{}/{}".format(os.getcwd(), dir.split("/")[1])
             shutil.rmtree(source_dir)
 
-    @classmethod
-    def _modify_sarusjson_file(cls):
-        cls._sarusjson_filename = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/sarus.json"
-
-        # Create backup
-        subprocess.check_output(["sudo", "cp", cls._sarusjson_filename, cls._sarusjson_filename+'.bak'])
-
-        # Build site mounts
-        sitemounts = []
-        for destination_path in cls.TEST_FILES.keys():
-            source_path = os.getcwd() + destination_path
-            sitemounts.append({"type": "bind", "source": source_path, "destination": destination_path})
-
-        # Modify config file
-        with open(cls._sarusjson_filename, 'r') as f:
-            data = f.read().replace('\n', '')
-        config = json.loads(data)
-        config["siteMounts"] = sitemounts
-        data = json.dumps(config)
-        with open("sarus.json.dummy", 'w') as f:
-            f.write(data)
-        subprocess.check_output(["sudo", "cp", "sarus.json.dummy", cls._sarusjson_filename])
-        os.remove("sarus.json.dummy")
-
-    @classmethod
-    def _restore_sarusjson_file(cls):
-        subprocess.check_output(["sudo", "cp", cls._sarusjson_filename+'.bak', cls._sarusjson_filename])
-
-    def setUp(self):
-        pass
-
     def test_sitefs_mounts(self):
         expected_files = []
         for dir,files in self.TEST_FILES.items():
@@ -97,14 +68,10 @@ class TestSiteMounts(unittest.TestCase):
 
     def _files_exist_in_container(self, file_paths, sarus_options):
         file_names = ['"{}"'.format(fpath) for fpath in file_paths]
-        check_script = self.__class__.CHECK_TEMPLATE.format(files=" ".join(file_names))
+        check_script = self.CHECK_TEMPLATE.format(files=" ".join(file_names))
         command = ["bash", "-c"] + [check_script]
         out = util.run_command_in_container(is_centralized_repository=False,
-                                            image=self.__class__.container_image,
+                                            image=self.CONTAINER_IMAGE,
                                             command=command,
                                             options_of_run_command=sarus_options)
         return out == ["PASS"]
-
-
-if __name__ == "__main__":
-    unittest.main()

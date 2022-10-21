@@ -7,8 +7,14 @@
 
 import os
 import re
+import json
 import shutil
 import subprocess
+from contextlib import contextmanager
+
+
+ALPINE_IMAGE = "quay.io/ethcscs/alpine:3.14"
+UBUNTU_IMAGE = "quay.io/ethcscs/ubuntu:20.04"
 
 
 def command_output_without_trailing_new_lines(out):
@@ -78,6 +84,11 @@ def is_image_available(is_centralized_repository, target_image):
     return False
 
 
+# Since the `sarus pull` command does not pull if the image is up-to-date, the `pull_image_if_necessary` function might
+# seem redundant with `pull_image`.
+# However, `pull_image`, delegating everything to the Sarus command, performs a `skopeo inspect` command to obtain the
+# image digest before checking the availability of the image.
+# Instead, `pull_image_if_necessary` checks the output of `sarus images`, which is several seconds faster.
 def pull_image_if_necessary(is_centralized_repository, image):
     if is_image_available(is_centralized_repository, image):
         return
@@ -195,13 +206,12 @@ def get_trimmed_output(full_command, **subprocess_kwargs):
     return trimmed_out
 
 
-def get_sarus_error_output(command):
+def get_sarus_error_output(command, fail_expected=True):
     with open(os.devnull, 'wb') as devnull:
         proc = subprocess.run(command, stdout=devnull, stderr=subprocess.PIPE)
-        if proc.returncode == 0:
+        if proc.returncode == 0 and fail_expected:
             import pytest
             pytest.fail("Sarus didn't generate any error, but at least one was expected.")
-
         stderr_without_trailing_whitespaces = proc.stderr.rstrip()
         out = stderr_without_trailing_whitespaces.decode()
 
@@ -217,3 +227,59 @@ def get_sarus_error_output(command):
 def assert_sarus_raises_error_containing_text(command, text):
     sarus_output = get_sarus_error_output(command)
     assert text in sarus_output, 'Sarus generated an error, but it did not contain the expected text "{}".'.format(text)
+
+
+sarus_json_filename = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/sarus.json"
+sarus_json_backup = sarus_json_filename+".bak"
+
+
+def modify_sarus_json(new_parameters):
+    if os.geteuid() == 0:
+        backup_sarus_json()
+        with open(sarus_json_filename, 'r+') as f:
+            config = json.load(f)
+            config.update(new_parameters)
+            f.seek(0)
+            json.dump(config, f)
+            f.truncate()
+    else:
+        backup_sarus_json()
+        with open(sarus_json_filename, 'r') as f:
+            config = json.load(f)
+        config.update(new_parameters)
+        with open("sarus.json.tmp", 'w') as f:
+            json.dump(config, f, indent=4)
+        subprocess.check_output(["sudo", "cp", "sarus.json.tmp", sarus_json_filename])
+        os.remove("sarus.json.tmp")
+
+
+def backup_sarus_json():
+    if os.geteuid() == 0:
+        shutil.copy2(sarus_json_filename, sarus_json_backup)
+    else:
+        subprocess.check_output(["sudo", "cp", sarus_json_filename, sarus_json_backup])
+
+
+def restore_sarus_json():
+    if os.geteuid() == 0:
+        shutil.move(sarus_json_backup, sarus_json_filename)
+    else:
+        # We can use "mv" (and not "cp + rm") because we assume the backup file is already root-owned
+        subprocess.check_output(["sudo", "mv", sarus_json_backup, sarus_json_filename])
+
+
+@contextmanager
+def custom_sarus_json(new_parameters):
+    try:
+        modify_sarus_json(new_parameters)
+        yield
+    finally:
+        restore_sarus_json()
+
+
+def create_hook_file(hook_config, file_path):
+    with open("hook_config.json.tmp", 'w') as f:
+        json.dump(hook_config, f)
+    subprocess.check_output(["sudo", "bash", "-c", f"mv hook_config.json.tmp {file_path}"
+                                                   f"&& chown root:root {file_path}"
+                                                   f"&& chmod 644 {file_path}"])
