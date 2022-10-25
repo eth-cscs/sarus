@@ -123,18 +123,18 @@ sed -i etc/sarus.json -e "s|@RUNC_PATH@|${runc_path}|g"
 exit_on_error "failed to set RUNC_PATH in etc/sarus.json"
 
 # configure repository dirs
-sed -i etc/sarus.json -e "s|@LOCAL_REPO_DIR@|/home|g"
+local_repo_path=${SARUS_LOCAL_REPO_BASE_DIR:-/home}
+echo "Setting local repository base directory to: ${local_repo_path}"
+sed -i etc/sarus.json -e "s|@LOCAL_REPO_DIR@|${local_repo_path}|g"
 exit_on_error "failed to set LOCAL_REPO_DIR in etc/sarus.json"
-sed -i etc/sarus.json -e "s|@CENTRAL_REPO_DIR@|/var/sarus/centralized_repository|g"
+
+central_repo_path=${SARUS_CENTRALIZED_REPO_DIR:-/var/sarus/centralized_repository}
+echo "Setting centralized repository directory to: ${central_repo_path}"
+sed -i etc/sarus.json -e "s|@CENTRAL_REPO_DIR@|${central_repo_path}|g"
 exit_on_error "failed to set CENTRAL_REPO_DIR in etc/sarus.json"
 
 # configure sitemounts
-sed -i etc/sarus.json -e 's|@SITE_MOUNTS@|{ \
-                                            "type": "bind", \
-                                            "source": "/home", \
-                                            "destination": "/home", \
-                                            "flags": {} \
-                                          }|g'
+sed -i etc/sarus.json -e 's|@SITE_MOUNTS@||g'
 exit_on_error "failed to set SITE_MOUNTS in etc/sarus.json"
 
 # issue warning about tmpfs filesystem on Cray CLE <7
@@ -160,7 +160,7 @@ if [ -e etc/hooks.d ]; then
         sed -i etc/hooks.d/${file_json} -e "s|@INSTALL_PATH@|${prefix_dir}|g"
         exit_on_error "failed to set INSTALL_PATH in etc/hooks.d/${file_json}"
 
-        sed -i etc/hooks.d/${file_json} -e "s|@HOOK_BASE_DIR@|/home|g"
+        sed -i etc/hooks.d/${file_json} -e "s|@HOOK_BASE_DIR@|${local_repo_path}|g"
         exit_on_error "failed to set HOOK_BASE_DIR in etc/hooks.d/${file_json}"
     done
 fi

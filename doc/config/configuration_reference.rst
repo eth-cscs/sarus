@@ -44,7 +44,7 @@ prefixDir (string, REQUIRED)
 Absolute path to the base directory where Sarus has been installed.
 This path is used to find all needed Sarus-specific utilities.
 
-Recommended value: ``/opt/sarus/<version>``
+Example value: ``/opt/sarus/<version>``
 
 .. _config-reference-hooksDir:
 
@@ -57,7 +57,7 @@ Sarus will process the JSON files in *hooksDir* and generate the configuration
 file of the OCI bundle accordingly. The hooks will effectively be called by
 the OCI-compliant runtime specified by :ref:`runcPath <config-reference-runcPath>`.
 
-Recommended value: ``/opt/sarus/<version>/etc/hooks.d``
+Example value: ``/opt/sarus/<version>/etc/hooks.d``
 
 .. _config-reference-tempDir:
 
@@ -77,7 +77,7 @@ Absolute base path to individual user directories, where Sarus will create
 (if necessary) and access local image repositories. The repositories will be
 located in ``<localRepositoryBaseDir>/<user name>/.sarus``.
 
-Recommended value: ``/home``
+Example value: ``/home``
 
 .. _config-reference-centralizedRepositoryDir:
 
@@ -92,7 +92,7 @@ licensing agreements).
 The centralized repository is meant to be read-only for regular users, and its
 contents should be modifiable only by the system administrators.
 
-Recommended value: ``/var/sarus/centralized_repository``
+Example value: ``/var/sarus/centralized_repository``
 
 .. _config-reference-skopeoPath:
 

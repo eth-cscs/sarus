@@ -38,21 +38,37 @@ in ``/opt/sarus``) with the corresponding output:
     Successfully created cached passwd database
     Creating cached group database
     Successfully created cached group database
+    Setting ownership of etc/sarus.schema.json
+    Successfully set ownership of etc/sarus.schema.json
     Configuring etc/sarus.json
+    Found skopeo: /usr/bin/skopeo
+    Found umoci: /usr/bin/umoci
+    Found mksquashfs: /usr/bin/mksquashfs
+    Found init program: /usr/bin/tini
+    Found runc: /usr/local/bin/runc
+    Setting local repository base directory to: /home
+    Setting centralized repository directory to: /var/sarus/centralized_repository
     Successfully configured etc/sarus.json.
+    Configuring etc/hooks.d/07-ssh-hook.json
+    Configuring etc/hooks.d/09-slurm-global-sync-hook.json
     To execute sarus commands run first:
-    export PATH=/opt/sarus/bin:${PATH}
+    export PATH=/opt/sarus/default/bin:${PATH}
     To persist that for future sessions, consider adding the previous line to your .bashrc or equivalent file
+
+Custom values for the
+:ref:`local repositories base directory <config-reference-localRepositoryBaseDir>`
+and the
+:ref:`centralized image repository <config-reference-centralizedRepositoryDir>`
+can be specified by setting the ``SARUS_LOCAL_REPO_BASE_DIR`` and
+``SARUS_CENTRALIZED_REPO_DIR`` environment variables, respectively.
+For example:
+
+.. code-block:: bash
+
+    $ sudo SARUS_LOCAL_REPO_BASE_DIR=/users SARUS_CENTRALIZED_REPO_DIR=/sarus_centralized_repository /opt/sarus/configure_installation.sh
 
 The configuration script is the recommended way to finalize any installation of
 Sarus, regardless of the installation method chosen.
-
-.. note::
-
-   Usually it is not  necessary to manually run the configuration script after
-   installing Sarus through the Spack package manager.
-   Unless instructed differently, the Spack package already uses the script
-   internally to create a starting configuration.
 
 Please note that ``configure_installation.sh`` will only create a baseline
 configuration. To enable more advanced features of Sarus, *sarus.json* should

@@ -10,18 +10,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Added support for passing command-line options to `mksquashfs` through the `mksquashfsOptions` parameter in the `sarus.json` configuration file
 - Added explicit forwarding of standard signals from engine to OCI runtime
-- Added experimental support for the PMIx v3 interface. Given its experimental nature, this feature has to be enabled through a parameter in the `sarus.json` configuration file.
+- Added experimental support for the PMIx v3 interface. Given its experimental nature, this feature has to be enabled through a parameter in the `sarus.json` configuration file
 - Added CI unit and integration tests from source on Rocky Linux 8 and 9
 
 ### Changed
 
-- The `sarus run` and `sarus images` commands now automatically remove images missing the internal SquashFS or metadata file, and report them as not available.
+- The `sarus run` and `sarus images` commands now automatically remove images missing the internal SquashFS or metadata file, and report them as not available
 - The MPI hook and Glibc hook no longer enter the container PID namespace
 - The Slurm Global Sync hook and the Timestamp hook no longer enter any container namespace
 - Updated recommended runc version to 1.1.3
 - Updated recommended libnvidia-container version to 1.11.0
 - Updated recommended NVIDIA Container Toolkit version to 1.11.0
 - Updated documentation about the NVIDIA Container Toolkit to refer more specifically to the NVIDIA Container Runtime hook
+- The `configure_installation.sh` script can now acquire custom values for the local and/or centralized repository paths from environment variables.
+  More details [here](https://sarus.readthedocs.io/en/stable/config/basic_configuration.html#using-the-configure-installation-script)
 - Updated CI tests from source on Ubuntu (21.10 -> 22.04), Fedora (35 -> 36) and OpenSUSE Leap (15.3 -> 15.4)
 
 ### Removed
@@ -31,7 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Security
 
 - The executable pointed by the `mksquashfsPath` parameter in the `sarus.json` configuration file has been excluded from the security checks.
-  The `mksquashfs` utility is only used by `sarus pull` and `sarus load` commands, which already run without privileges.
+  The `mksquashfs` utility is only used by `sarus pull` and `sarus load` commands, which already run without privileges
 
 
 ## [1.5.1]
