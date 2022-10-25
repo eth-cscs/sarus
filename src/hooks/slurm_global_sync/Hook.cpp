@@ -31,7 +31,6 @@ Hook::Hook() {
     log("Initializing hook", sarus::common::LogLevel::INFO);
 
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
-    hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
 
     log("Successfully initialized hook", sarus::common::LogLevel::INFO);

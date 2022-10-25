@@ -35,7 +35,7 @@ GlibcHook::GlibcHook() {
     logMessage("Initializing hook", sarus::common::LogLevel::INFO);
 
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
-    sarus::hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
+    hooks::common::utility::enterMountNamespaceOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
     parseEnvironmentVariables();
 

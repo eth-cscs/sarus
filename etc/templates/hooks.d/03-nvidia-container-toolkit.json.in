@@ -1,8 +1,8 @@
 {
     "version": "1.0.0",
     "hook": {
-        "path": "@NVIDIA_TOOLKIT_PATH@/nvidia-container-toolkit",
-        "args": ["nvidia-container-toolkit", "-config=@NVIDIA_TOOLKIT_PATH@/config.toml", "prestart"],
+        "path": "@NVIDIA_TOOLKIT_PATH@/nvidia-container-runtime-hook",
+        "args": ["nvidia-container-runtime-hook", "-config=@NVIDIA_TOOLKIT_PATH@/config.toml", "prestart"],
         "env": [
             "PATH=@LIBNVIDIA_CONTAINER_PATH@/bin",
             "LD_LIBRARY_PATH=@LIBNVIDIA_CONTAINER_PATH@/lib"

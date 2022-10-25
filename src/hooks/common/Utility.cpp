@@ -105,11 +105,14 @@ static void enterNamespace(const boost::filesystem::path& namespaceFile) {
     }
 }
 
-void enterNamespacesOfProcess(pid_t pid) {
+void enterMountNamespaceOfProcess(pid_t pid) {
     {
         auto file = boost::format("/proc/%s/ns/mnt") % pid;
         enterNamespace(file.str());
     }
+}
+
+void enterPidNamespaceOfProcess(pid_t pid) {
     {
         auto file = boost::format("/proc/%s/ns/pid") % pid;
         enterNamespace(file.str());

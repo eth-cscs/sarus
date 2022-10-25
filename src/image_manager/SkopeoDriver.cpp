@@ -188,12 +188,11 @@ std::string SkopeoDriver::inspectRaw(const std::string& sourceTransport, const s
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / double(1000);
     printLog(boost::format("Elapsed time on raw inspect operation: %s [sec]") % elapsed, common::LogLevel::INFO);
 
-    // The Skopeo debug messages are useful to be embedded in an exception message,
+    // The Skopeo debug/warning messages are useful to be embedded in an exception message,
     // but prevent the output from being converted to JSON.
-    // Exclude the Skopeo debug lines and only return the JSON output
-    if (common::Logger::getInstance().getLevel() == common::LogLevel::DEBUG) {
-        inspectOutput = inspectOutput.substr(inspectOutput.rfind("\n{")+1);
-    }
+    // Exclude the extra lines from Skopeo and only return the JSON output
+    inspectOutput = inspectOutput.substr(inspectOutput.rfind("\n{")+1);
+
     printLog(boost::format("Raw inspect filtered output: %s") % inspectOutput, common::LogLevel::DEBUG);
     return inspectOutput;
 }

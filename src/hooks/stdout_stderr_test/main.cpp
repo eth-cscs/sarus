@@ -20,7 +20,6 @@ int main(int argc, char* argv[]) {
     boost::filesystem::path bundleDir;
     pid_t pidOfContainer;
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
-    hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     auto json = sarus::common::readJSON(bundleDir / "config.json");
     hooks::common::utility::applyLoggingConfigIfAvailable(json);
 

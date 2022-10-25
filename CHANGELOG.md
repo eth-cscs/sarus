@@ -16,7 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - The `sarus run` and `sarus images` commands now automatically remove images missing the internal SquashFS or metadata file, and report them as not available.
+- The MPI hook and Glibc hook no longer enter the container PID namespace
+- The Slurm Global Sync hook and the Timestamp hook no longer enter any container namespace
 - Updated recommended runc version to 1.1.3
+- Updated recommended libnvidia-container version to 1.11.0
+- Updated recommended NVIDIA Container Toolkit version to 1.11.0
+- Updated documentation about the NVIDIA Container Toolkit to refer more specifically to the NVIDIA Container Runtime hook
 - Updated CI tests from source on Ubuntu (21.10 -> 22.04), Fedora (35 -> 36) and OpenSUSE Leap (15.3 -> 15.4)
 
 ### Removed

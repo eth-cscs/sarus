@@ -29,7 +29,8 @@ namespace utility {
 void applyLoggingConfigIfAvailable(const rapidjson::Document&);
 std::tuple<boost::filesystem::path, pid_t> parseStateOfContainerFromStdin();
 std::unordered_map<std::string, std::string> parseEnvironmentVariablesFromOCIBundle(const boost::filesystem::path&);
-void enterNamespacesOfProcess(pid_t);
+void enterMountNamespaceOfProcess(pid_t);
+void enterPidNamespaceOfProcess(pid_t pid);
 void validatedBindMount(const boost::filesystem::path& from, const boost::filesystem::path& to,
         const sarus::common::UserIdentity& userIdentity, const boost::filesystem::path& bundleDir, const boost::filesystem::path& rootfsDir);
 std::tuple<boost::filesystem::path, boost::filesystem::path> findSubsystemMountPaths(const std::string& subsystemName,

@@ -82,7 +82,8 @@ void SshHook::startSshDaemon() {
     dropbearDirInHost = sarus::common::getEnvironmentVariable("DROPBEAR_DIR");
     serverPort = std::stoi(sarus::common::getEnvironmentVariable("SERVER_PORT"));
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
-    hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
+    hooks::common::utility::enterMountNamespaceOfProcess(pidOfContainer);
+    hooks::common::utility::enterPidNamespaceOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
     username = getUsername(uidOfUser);
     sshKeysDirInHost = getSshKeysDirInHost(username);

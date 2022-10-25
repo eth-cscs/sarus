@@ -24,7 +24,6 @@ namespace timestamp {
 
 void TimestampHook::activate() {
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
-    sarus::hooks::common::utility::enterNamespacesOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
     if(!isHookEnabled) {
         return;
