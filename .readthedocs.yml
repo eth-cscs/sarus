@@ -13,7 +13,7 @@ build:
   jobs:
     pre_install:
       # https://docs.readthedocs.io/en/stable/build-customization.html#avoid-having-a-dirty-git-index
-      - git update-index --assume-unchanged environment.yml doc/conf.py
+      - git update-index --assume-unchanged doc/conf.py
 
 # Build documentation in the doc/ directory with Sphinx
 sphinx:
