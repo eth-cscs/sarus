@@ -272,7 +272,7 @@ rj::Value OCIBundleConfig::makeMemberMounts() const {
 }
 
 rj::Value OCIBundleConfig::makeMemberLinux() const {
-    auto linux = rj::Value{rj::kObjectType};
+    auto linuxV = rj::Value{rj::kObjectType};
     // resources
     {
         auto resources = rj::Value{rj::kObjectType};
@@ -318,7 +318,7 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
 
         resources.AddMember("cpu", cpu, *allocator);
         resources.AddMember("devices", devices, *allocator);
-        linux.AddMember("resources", resources, *allocator);
+        linuxV.AddMember("resources", resources, *allocator);
     }
     // namespaces
     {
@@ -334,10 +334,10 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
             namespaces.PushBack(pid, *allocator);
         }
 
-        linux.AddMember("namespaces", namespaces, *allocator);
+        linuxV.AddMember("namespaces", namespaces, *allocator);
     }
     // rootfsPropagation
-    linux.AddMember("rootfsPropagation", rj::Value("slave"), *allocator);
+    linuxV.AddMember("rootfsPropagation", rj::Value("slave"), *allocator);
     // maskedPaths
     {
         auto paths = rj::Value{rj::kArrayType};
@@ -348,7 +348,7 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
         paths.PushBack("/proc/sched_debug", *allocator);
         paths.PushBack("/sys/firmware", *allocator);
         paths.PushBack("/proc/scsi", *allocator);
-        linux.AddMember("maskedPaths", paths, *allocator);
+        linuxV.AddMember("maskedPaths", paths, *allocator);
     }
     // readonlyPaths
     {
@@ -359,7 +359,7 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
         paths.PushBack("/proc/irq", *allocator);
         paths.PushBack("/proc/sys", *allocator);
         paths.PushBack("/proc/sysrq-trigger", *allocator);
-        linux.AddMember("readonlyPaths", paths, *allocator);
+        linuxV.AddMember("readonlyPaths", paths, *allocator);
     }
     // seccomp
     {
@@ -385,18 +385,18 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
                                              "Please contact your system administrator.") % e.what();
                 SARUS_RETHROW_ERROR(e, message.str());
             }
-            linux.AddMember("seccomp", seccompProfile, *allocator);
+            linuxV.AddMember("seccomp", seccompProfile, *allocator);
         }
     }
     // mountLabel
     {
         if(config->json.HasMember("selinuxMountLabel")) {
-            linux.AddMember("mountLabel",
+            linuxV.AddMember("mountLabel",
                             rj::Value{config->json["selinuxMountLabel"].GetString(), *allocator},
                             *allocator);
         }
     }
-    return linux;
+    return linuxV;
 }
 
 rj::Value OCIBundleConfig::makeMemberHooks() const {
