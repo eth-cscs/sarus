@@ -120,6 +120,9 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getBundleAnnotations
     if(config->commandRun.useMPI) {
         annotations["com.hooks.glibc.enabled"] = "true";
         annotations["com.hooks.mpi.enabled"] = "true";
+        if(config->commandRun.mpiType) {
+            annotations["com.hooks.mpi.type"] = *config->commandRun.mpiType;
+        }
     }
 
     if(config->commandRun.enableSSH) {
@@ -130,6 +133,12 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getBundleAnnotations
     using IntType = typename std::underlying_type<common::LogLevel>::type;
     auto level = static_cast<IntType>(common::Logger::getInstance().getLevel());
     annotations["com.hooks.logging.level"] = std::to_string(level);
+
+    utility::logMessage("OCI annotations:", common::LogLevel::DEBUG);
+    for (const auto& annotation : annotations) {
+        utility::logMessage(boost::format("    %s = %s") % std::get<0>(annotation) % std::get<1>(annotation),
+                            common::LogLevel::DEBUG);
+    }
 
     return annotations;
 }

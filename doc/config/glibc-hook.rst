@@ -33,8 +33,8 @@ the need of additional dependencies. Sarus's installation scripts will also
 automatically install the hook in the ``$CMAKE_INSTALL_PREFIX/bin`` directory.
 In short, no specific action is required to install the glibc hook.
 
-Sarus configuration
-=====================
+Hook configuration
+==================
 
 The program is meant to be run as a **prestart** hook and does not accept
 arguments, but its actions are controlled through a few environment variables:

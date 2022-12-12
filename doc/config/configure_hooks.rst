@@ -14,7 +14,7 @@ features and specialized resources within container instances.
 
 To enable the use of hooks in Sarus, the :ref:`hooksDir <config-reference-hooksDir>` directory specified
 in *sarus.json* must be populated with `OCI hook JSON configuration files
-<https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_.
+<https://github.com/containers/common/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_.
 Sarus currently supports the OCI hook schema version 1.0.0.
 
 Sarus parses the JSON files in :ref:`hooksDir <config-reference-hooksDir>` (subdirectories excluded) and,

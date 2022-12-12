@@ -379,6 +379,28 @@ directory for registries configurations. If defined, this directory will be
 used by Skopeo instead of the default ``${HOME}/.config/containers/registries.d``
 or ``/etc/containers/registries.d`` directories.
 
+.. _config-reference-defaultMPIType:
+
+defaultMPIType (string, OPTIONAL)
+---------------------------------
+Default value which will be set in the ``com.hooks.mpi.type=<value>`` bundle
+annotation when the ``--mpi`` option of :program:`sarus run` is used without
+an accompanying ``--mpi-type`` option providing an explicit MPI type.
+
+In practice, this parameter identifies the default MPI-related hook when
+:ref:`multiple hooks are configured <mpi-hook-config-annotations-cli>` with a
+``com.hooks.mpi.type=<value>`` condition, and enables users to just use ``--mpi``
+to access the default MPI support mechanism configured for the system.
+This parameter also provides compatibility with workflows which do not use the
+``--mpi-type`` option for reasons of portability or legacy.
+
+If this parameter is not defined and the command line does not feature the
+``--mpi-type`` option, the ``com.hooks.mpi.type=<value>`` annotation is not set.
+This could fit the case of a system where only a single MPI hook is configured.
+
+Refer to :ref:`this section <mpi-hook-config-annotations-cli>` for more details
+about the interaction between command line options, annotations, and hook selection.
+
 .. _config-reference-PMIxv3:
 
 enablePMIxv3Support (bool, OPTIONAL) (experimental)
@@ -459,4 +481,5 @@ Example configuration file
             "enforce": false
         },
         "containersRegistries.dPath": "/opt/sarus/1.5.2/etc/registries.d"
+        "defaultMPIType": "mpich"
     }

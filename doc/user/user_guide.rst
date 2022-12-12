@@ -1109,6 +1109,18 @@ MPI support can be launched by passing the ``--mpi`` option to the
 
     $ srun -N 16 -n 16 sarus run --mpi <repo name>/<image name> <mpi_application>
 
+If multiple hooks are configured in the system, the ``--mpi-type`` option of
+:program:`sarus run` can be used to choose a specific hook, for example:
+
+.. code-block:: bash
+
+    $ srun -N 16 -n 16 sarus run --mpi-type=mpich-libfabric <repo name>/<image name> <mpi_application>
+
+When multiple hooks are configured, the system administrator has the capability
+to define one of them as the default, which could be accessed through just the
+``--mpi`` option. This provides compatibility with workflows which do not use
+the ``--mpi-type`` option for reasons of portability or legacy.
+
 .. _user-nvidia-hook:
 
 NVIDIA GPU support

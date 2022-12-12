@@ -301,7 +301,7 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
         auto& config = configRAII.config;
         auto expectedAnnotations = std::unordered_map<std::string, std::string>{
             {"com.test.dummy_key", "dummy_value"},
-            {"com.hooks.logging.level", "2"},
+            {"com.hooks.logging.level", "2"}
         };
         CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
     }
@@ -313,7 +313,7 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
         auto expectedAnnotations = std::unordered_map<std::string, std::string>{
             {"com.test.dummy_key", "dummy_value"},
             {"com.hooks.logging.level", "2"},
-            {"com.hooks.glibc.enabled", "true"},
+            {"com.hooks.glibc.enabled", "true"}
         };
         CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
     }
@@ -326,7 +326,19 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
             {"com.test.dummy_key", "dummy_value"},
             {"com.hooks.logging.level", "2"},
             {"com.hooks.glibc.enabled", "true"},
+            {"com.hooks.mpi.enabled", "true"}
+        };
+        CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
+
+        // Explicit MPI type
+        config->commandRun.useMPI = true;
+        config->commandRun.mpiType = "mpi0";
+        expectedAnnotations = std::unordered_map<std::string, std::string>{
+            {"com.test.dummy_key", "dummy_value"},
+            {"com.hooks.logging.level", "2"},
+            {"com.hooks.glibc.enabled", "true"},
             {"com.hooks.mpi.enabled", "true"},
+            {"com.hooks.mpi.type", "mpi0"}
         };
         CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
     }
@@ -339,7 +351,7 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
             {"com.test.dummy_key", "dummy_value"},
             {"com.hooks.logging.level", "2"},
             {"com.hooks.slurm-global-sync.enabled", "true"},
-            {"com.hooks.ssh.enabled", "true"},
+            {"com.hooks.ssh.enabled", "true"}
         };
         CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
     }
@@ -351,7 +363,7 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
         auto expectedAnnotations = std::unordered_map<std::string, std::string>{
             {"com.test.dummy_key", "dummy_value"},
             {"com.hooks.logging.level", "2"},
-            {"com.test.image.key", "image_value"},
+            {"com.test.image.key", "image_value"}
         };
         CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
         metadata.labels.erase("com.test.image.key");
@@ -363,7 +375,7 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
         auto& config = configRAII.config;
         auto expectedAnnotations = std::unordered_map<std::string, std::string>{
             {"com.test.dummy_key", "dummy_value"},
-            {"com.hooks.logging.level", "2"},
+            {"com.hooks.logging.level", "2"}
         };
         auto annot = ConfigsMerger{config, metadata}.getBundleAnnotations();
         CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));

@@ -101,8 +101,8 @@ Ubuntu, Debian, OpenSUSE Leap, and distributions based on the YUM/DNF package ma
     $ sudo mkdir /etc/nvidia-container-runtime/
     $ sudo cp <NVIDIA Container Toolkit git repo>/config/config.toml.opensuse-leap /etc/nvidia-container-runtime/config.toml
 
-Sarus configuration
-===================
+Configuration
+=============
 
 The NVIDIA Container Runtime hook is meant to run as a **prestart** hook. It
 also expects to receive its own name/location as the first program argument, and

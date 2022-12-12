@@ -116,7 +116,12 @@ private:
             ("mount",
                 boost::program_options::value<std::vector<std::string>>(&conf->commandRun.userMounts),
                 "Mount custom files and directories into the container")
-            ("mpi,m", "Enable MPI support. Implies '--glibc'")
+            ("mpi,m", "Enable native MPI support. Implies '--glibc'")
+            ("mpi-type",
+                boost::program_options::value<std::string>(&mpiType),
+                "Enable MPI support for a specific MPI implementation. If no value is supplied, "
+                "Sarus will use the default configured by the administrator. "
+                "Implies '--mpi' and '--glibc'")
             ("pid",
                 boost::program_options::value<std::string>(&pid),
                 "Set the PID namespace mode for the container. Supported values: 'host', 'private'. "
@@ -180,8 +185,20 @@ private:
                 conf->commandRun.addInitProcess = false;
             }
 
-            if(values.count("mpi")) {
+            if(values.count("mpi-type")) {
                 conf->commandRun.useMPI = true;
+                if(mpiType.empty()) {
+                    SARUS_THROW_ERROR("Empty value provided for --mpi-type option");
+                }
+                else{
+                    conf->commandRun.mpiType = mpiType;
+                }
+            }
+            else if(values.count("mpi")) {
+                conf->commandRun.useMPI = true;
+                if(conf->json.HasMember("defaultMPIType")) {
+                    conf->commandRun.mpiType = conf->json["defaultMPIType"].GetString();
+                }
             }
             else {
                 conf->commandRun.useMPI = false;
@@ -491,6 +508,7 @@ private:
     std::shared_ptr<common::Config> conf;
     std::vector<std::string> deviceMounts;
     std::string entrypoint;
+    std::string mpiType;
     std::string pid;
     std::string workdir;
 };

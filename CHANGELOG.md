@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Added
+
+- Added the `--mpi-type` option to `sarus run` for selecting an MPI hook among those configured by the system administrator
+- Added support for the optional `defaultMPIType` parameter in the `sarus.json` configuration file. More details [here](https://sarus.readthedocs.io/en/stable/config/configuration_reference.html#defaultmpitype-string-optional).
+
 ## [1.5.2]
 
 ### Added

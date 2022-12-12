@@ -240,6 +240,7 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
         CHECK_EQUAL(conf->commandRun.enableGlibcReplacement, 0);
         CHECK_EQUAL(conf->commandRun.enableSSH, false);
         CHECK_EQUAL(conf->commandRun.allocatePseudoTTY, false);
+        CHECK_FALSE(conf->commandRun.mpiType);
         CHECK(conf->commandRun.execArgs.argc() == 0);
     }
     // centralized repository
@@ -300,9 +301,33 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
     {
         auto conf = generateConfig({"run", "--mpi", "image"});
         CHECK_EQUAL(conf->commandRun.useMPI, true);
+        CHECK_FALSE(conf->commandRun.mpiType);
 
         conf = generateConfig({"run", "-m", "image"});
         CHECK_EQUAL(conf->commandRun.useMPI, true);
+        CHECK_FALSE(conf->commandRun.mpiType);
+
+        // default MPI type from JSON configuration
+        auto configRAII = test_utility::config::makeConfig();
+        conf = configRAII.config;
+        auto& allocator = conf->json.GetAllocator();
+        conf->json.AddMember("defaultMPIType",
+                             rj::Value{"testDefaultMPI"},
+                             allocator);
+        auto factory = cli::CommandObjectsFactory{};
+        factory.makeCommandObject("run", {"run", "--mpi", "image"}, conf);
+        CHECK_EQUAL(conf->commandRun.useMPI, true);
+        CHECK_EQUAL(*conf->commandRun.mpiType, std::string{"testDefaultMPI"});
+    }
+    // mpi-type
+    {
+        auto conf = generateConfig({"run", "--mpi-type", "mpi0", "image"});
+        CHECK_EQUAL(conf->commandRun.useMPI, true);
+        CHECK_EQUAL(*conf->commandRun.mpiType, std::string{"mpi0"});
+
+        conf = generateConfig({"run", "--mpi", "--mpi-type", "mpi1", "image"});
+        CHECK_EQUAL(conf->commandRun.useMPI, true);
+        CHECK_EQUAL(*conf->commandRun.mpiType, std::string{"mpi1"});
     }
     // pid
     {

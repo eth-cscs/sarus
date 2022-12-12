@@ -69,6 +69,7 @@ class Config {
             std::vector<std::string> userMounts;
             std::vector<std::shared_ptr<runtime::Mount>> mounts;
             std::vector<std::shared_ptr<runtime::DeviceMount>> deviceMounts;
+            boost::optional<std::string> mpiType;
             boost::optional<boost::filesystem::path> workdir;
             boost::optional<CLIArguments> entrypoint;
             CLIArguments execArgs;

@@ -394,7 +394,9 @@ void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesy
         }
 
         for (const auto& linkName : linkNames) {
-            bool linkIsTarget = (dir / linkName == target);
+            auto realLink = sarus::common::realpathWithinRootfs(rootfsDir, dir / linkName);
+            auto realTarget = sarus::common::realpathWithinRootfs(rootfsDir, target);
+            bool linkIsTarget = (realLink == realTarget);
             bool preserveLink = (linkName == libName && preserveRootLink && rootLinkExists);
             if (linkIsTarget || preserveLink) {
                 continue;

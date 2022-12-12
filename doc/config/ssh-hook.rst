@@ -1,5 +1,6 @@
+********
 SSH hook
-========
+********
 
 Sarus also includes the source code for a hook capable of enabling SSH
 connections inside containers. The SSH hook is an executable binary that
@@ -9,7 +10,7 @@ inner workings, please refer to the related :doc:`developer documentation
 </developer/ssh>`.
 
 Hook installation
------------------
+=================
 
 The hook is written in C++ and it will be compiled along with Sarus if the
 ``ENABLE_SSH=TRUE`` CMake option has been used when configuring the build (the
@@ -21,8 +22,8 @@ A custom SSH software (statically linked Dropbear) will also be built and instal
 :ref:`security requirements <post-installation-permissions-security>` for critical
 files and directories.
 
-Sarus configuration
--------------------
+Hook configuration
+==================
 
 The SSH hook must be configured to run as a **prestart** hook. It expects to
 receive its own name/location as the first argument, and the string
@@ -49,7 +50,7 @@ enabling the SSH hook:
    :language: json
 
 Sarus support at runtime
-------------------------
+========================
 
 The command ``sarus ssh-keygen`` will call the hook without creating a
 container, passing the appropriate arguments to generate dedicated keys to be
