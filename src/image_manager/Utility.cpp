@@ -47,7 +47,7 @@ rapidjson::Document getCurrentOCIPlatform() {
         #elif BOOST_ARCH_WORD_BITS_32
             architecture = "arm";
         #endif
-            auto variant = std::string{"v"} + BOOST_VERSION_NUMBER_MAJOR(BOOST_ARCH_ARM);
+            variant = std::string{"v"} + std::to_string(BOOST_VERSION_NUMBER_MAJOR(BOOST_ARCH_ARM));
 
     #elif BOOST_ARCH_PPC64
         #if BOOST_ENDIAN_LITTLE_BYTE || BOOST_ENDIAN_LITTLE_WORD
