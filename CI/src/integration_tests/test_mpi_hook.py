@@ -84,18 +84,23 @@ class TestMPIHook(unittest.TestCase):
         mpi_libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_LIBS]
         mpi_dependency_libs = [cls._SITE_LIBS_PREFIX + "/" + value for value in cls._HOST_MPI_DEPENDENCY_LIBS]
 
-        hook_config = dict()
-        hook_config["version"] = "1.0.0"
-        hook_config["hook"] = dict()
-        hook_config["hook"]["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/mpi_hook"
-        hook_config["hook"]["env"] = [
-            "LDCONFIG_PATH=" + shutil.which("ldconfig"),
-            "MPI_LIBS=" + ":".join(mpi_libs),
-            "MPI_DEPENDENCY_LIBS=" + ":".join(mpi_dependency_libs),
-        ]
-        hook_config["when"] = dict()
-        hook_config["when"]["annotations"] = {"^com.hooks.mpi.enabled$": "^true$"}
-        hook_config["stages"] = ["prestart"]
+        hook_config = {
+            "version": "1.0.0",
+            "hook": {
+                "path": os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/mpi_hook",
+                "env": [
+                    "LDCONFIG_PATH=" + shutil.which("ldconfig"),
+                    "MPI_LIBS=" + ":".join(mpi_libs),
+                    "MPI_DEPENDENCY_LIBS=" + ":".join(mpi_dependency_libs),
+                ]
+            },
+            "when": {
+                "annotations": {
+                    "^com.hooks.mpi.enabled$": "^true$"
+                }
+            },
+            "stages": ["prestart"]
+        }
 
         return hook_config
 

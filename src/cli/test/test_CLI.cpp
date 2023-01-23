@@ -21,6 +21,7 @@
 #include "cli/CLI.hpp"
 #include "cli/CommandHelp.hpp"
 #include "cli/CommandHelpOfCommand.hpp"
+#include "cli/CommandHooks.hpp"
 #include "cli/CommandImages.hpp"
 #include "cli/CommandLoad.hpp"
 #include "cli/CommandPull.hpp"
@@ -74,6 +75,9 @@ TEST(CLITestGroup, CommandTypes) {
 
     command = generateCommandFromCLIArguments({"sarus", "help", "pull"});
     checkCommandDynamicType<cli::CommandHelpOfCommand>(*command);
+
+    command = generateCommandFromCLIArguments({"sarus", "hooks"});
+    checkCommandDynamicType<cli::CommandHooks>(*command);
 
     command = generateCommandFromCLIArguments({"sarus", "images"});
     checkCommandDynamicType<cli::CommandImages>(*command);

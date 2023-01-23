@@ -13,7 +13,6 @@
 #include <chrono>
 
 #include <boost/program_options.hpp>
-#include <boost/algorithm/string/join.hpp>
 
 #include "common/Config.hpp"
 #include "common/Utility.hpp"

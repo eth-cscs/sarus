@@ -32,12 +32,16 @@ class TestHookStdoutStderr(unittest.TestCase):
 
     @classmethod
     def _enable_hook(cls):
-        hook = dict()
-        hook["version"] = "1.0.0"
-        hook["hook"] = dict()
-        hook["hook"]["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/stdout_stderr_test_hook"
-        hook["when"] = {"always": True}
-        hook["stages"] = ["prestart"]
+        hook = {
+            "version": "1.0.0",
+            "hook": {
+                "path": os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/stdout_stderr_test_hook",
+            },
+            "when": {
+                "always": True
+            },
+            "stages": ["prestart"]
+        }
 
         util.create_hook_file(hook, cls._OCIHOOK_CONFIG_FILE)
 

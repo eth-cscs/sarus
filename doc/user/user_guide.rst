@@ -1042,13 +1042,24 @@ hardware and highly-tuned software adopted by high-performance systems are in
 contrast with the infrastructure-agnostic nature of software containers.
 OCI hooks provide a solution to open access to these resources inside containers.
 
-The hooks that will be enabled on a given Sarus installation are configured
-by the system administrators. Please refer to your site documentation or your
-system administrator to know which hooks are available in a specific system and
-how to activate them.
+The hooks which is possible to enable on a given Sarus installation are
+configured by the system administrators. The :program:`sarus hooks` command can
+be used to list the currently configured hooks:
 
-Here we will illustrate a few cases of general interest for HPC from an end-user
-perspective.
+.. code-block:: bash
+
+    $ sarus hooks
+    NAME                               PATH                                            STAGES
+    03-nvidia-container-runtime-hook   /usr/bin/nvidia-container-runtime-hook          prestart
+    05-mpi-hook                        /opt/sarus/default/bin/mpi_hook                 prestart
+    07-ssh-hook                        /opt/sarus/default/bin/ssh_hook                 prestart
+    09-slurm-global-sync-hook          /opt/sarus/default/bin/slurm_global_sync_hook   prestart
+
+Please refer to your site documentation or your system administrator for information
+about the conditions to enable hooks on a specific system.
+
+The following subsections illustrate a few cases of general interest for HPC from
+an end-user perspective.
 
 .. _user-mpi-hook:
 
@@ -1120,6 +1131,22 @@ When multiple hooks are configured, the system administrator has the capability
 to define one of them as the default, which could be accessed through just the
 ``--mpi`` option. This provides compatibility with workflows which do not use
 the ``--mpi-type`` option for reasons of portability or legacy.
+
+The MPI-related hooks configured on the system can be listed through the
+``--mpi`` option of the :program:`sarus hooks` command, for example:
+
+.. code-block:: bash
+
+    $ sarus hooks --mpi
+    NAME                    MPI TYPE
+    05-mpich-hook           ^mpich$ (default)
+    051-mpich-ofi-hook      ^mpich-libfabric$
+
+If the value passed to the ``sarus run --mpi-type`` option matches one of the
+regular expressions under the ``MPI TYPE`` column, the corresponding hook is
+enabled. The ``(default)`` qualifier alongside an MPI type indicates the
+default MPI hook for the Sarus installation, which can be enabled just with
+the ``sarus run --mpi`` option.
 
 .. _user-nvidia-hook:
 

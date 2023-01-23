@@ -25,6 +25,14 @@ def command_output_without_trailing_new_lines(out):
     return lines
 
 
+def get_hooks_command_output(print_mpi_hooks=False):
+    command = ["sarus", "hooks"]
+    if print_mpi_hooks:
+        command += ["--mpi"]
+    lines = get_trimmed_output(command)
+    return [line.split() for line in lines]
+
+
 def load_image(is_centralized_repository, image_archive, image_name):
     if is_centralized_repository:
         command = ["sarus", "load", "--centralized-repository", image_archive, image_name]
@@ -283,3 +291,20 @@ def create_hook_file(hook_config, file_path):
     subprocess.check_output(["sudo", "bash", "-c", f"mv hook_config.json.tmp {file_path}"
                                                    f"&& chown root:root {file_path}"
                                                    f"&& chmod 644 {file_path}"])
+
+
+@contextmanager
+def temporary_hook_files(*hooks_data):
+    """
+    Handles creation and removal of ephemeral hook configuration files.
+    Assumes that input arguments are pairs suitable to be passed as arguments
+    to create_hook_file(), i.e. the pairs consist in a serializable hook config
+    object and the path where to create the hook config file.
+    """
+    try:
+        for (hook_config, file_path) in hooks_data:
+            create_hook_file(hook_config, file_path)
+        yield
+    finally:
+        for (hook_config, file_path) in hooks_data:
+            subprocess.call(["sudo", "rm", file_path])

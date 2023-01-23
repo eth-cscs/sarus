@@ -44,6 +44,7 @@ public:
     public:
         ConditionAnnotations(const std::vector<std::tuple<std::string, std::string>>& annotations);
         bool evaluate(std::shared_ptr<const common::Config>) const override;
+        std::vector<std::tuple<std::string, std::string>> getAnnotations() const {return annotations;};
     private:
         std::vector<std::tuple<std::string, std::string>> annotations;
     };

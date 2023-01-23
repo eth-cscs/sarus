@@ -103,7 +103,7 @@ public:
 
     void printHelpMessage() const override {
         auto printer = cli::HelpMessage()
-            .setUsage("sarus images")
+            .setUsage("sarus images [OPTIONS]")
             .setDescription(getBriefDescription())
             .setOptionsDescription(optionsDescription);
         std::cout << printer;

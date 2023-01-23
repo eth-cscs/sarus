@@ -119,19 +119,24 @@ class TestGlibcHook(unittest.TestCase):
 
     @classmethod
     def _enable_hook(cls):
-        hook = dict()
-        hook["version"] = "1.0.0"
-        hook["hook"] = dict()
-        hook["hook"]["path"] = os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/glibc_hook"
-        hook["hook"]["env"] = [
-            "GLIBC_LIBS=" + ":".join(cls._HOST_GLIBC_LIBS),
-            "LDD_PATH=" + shutil.which("ldd"),
-            "LDCONFIG_PATH=" + shutil.which("ldconfig"),
-            "READELF_PATH=" + shutil.which("readelf"),
-        ]
-        hook["when"] = dict()
-        hook["when"]["annotations"] = {"^com.hooks.glibc.enabled$": "^true$"}
-        hook["stages"] = ["prestart"]
+        hook = {
+            "version": "1.0.0",
+            "hook": {
+                "path": os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/glibc_hook",
+                "env": [
+                    "GLIBC_LIBS=" + ":".join(cls._HOST_GLIBC_LIBS),
+                    "LDD_PATH=" + shutil.which("ldd"),
+                    "LDCONFIG_PATH=" + shutil.which("ldconfig"),
+                    "READELF_PATH=" + shutil.which("readelf"),
+                ]
+            },
+            "when": {
+                "annotations": {
+                    "^com.hooks.glibc.enabled$": "^true$"
+                }
+            },
+            "stages": ["prestart"]
+        }
 
         util.create_hook_file(hook, cls._OCIHOOK_CONFIG_FILE)
 

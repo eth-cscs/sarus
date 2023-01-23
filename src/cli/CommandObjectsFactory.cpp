@@ -13,6 +13,7 @@
 #include "cli/Utility.hpp"
 #include "cli/CommandHelp.hpp"
 #include "cli/CommandHelpOfCommand.hpp"
+#include "cli/CommandHooks.hpp"
 #include "cli/CommandImages.hpp"
 #include "cli/CommandLoad.hpp"
 #include "cli/CommandPull.hpp"
@@ -27,6 +28,7 @@ namespace cli {
 
 CommandObjectsFactory::CommandObjectsFactory() {
     addCommand<cli::CommandHelp>("help");
+    addCommand<cli::CommandHooks>("hooks");
     addCommand<cli::CommandImages>("images");
     addCommand<cli::CommandLoad>("load");
     addCommand<cli::CommandPull>("pull");
