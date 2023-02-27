@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Added the `sarus hooks` command to list the hooks configured for the engine
+- Added the `--annotation` option to `sarus run` for setting custom annotations in the OCI bundle. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#setting-oci-annotations)
 - Added the `--mpi-type` option to `sarus run` for selecting an MPI hook among those configured by the system administrator
 - Added support for the optional `defaultMPIType` parameter in the `sarus.json` configuration file. More details [here](https://sarus.readthedocs.io/en/stable/config/configuration_reference.html#defaultmpitype-string-optional).
 

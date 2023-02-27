@@ -213,7 +213,7 @@ ConfigRAII makeConfig() {
     metadataStream.close();
 
     raii.config->commandRun.hostEnvironment = {{"key", "value"}};
-    raii.config->commandRun.bundleAnnotations = {{"com.test.dummy_key", "dummy_value"}};
+    raii.config->commandRun.ociAnnotations = {{"com.test.dummy_key", "dummy_value"}};
 
     return raii;
 }

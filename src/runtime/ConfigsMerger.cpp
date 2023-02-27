@@ -104,15 +104,9 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getEnvironmentInCont
 }
 
 std::unordered_map<std::string, std::string> ConfigsMerger::getBundleAnnotations() const {
-    auto annotations = config->commandRun.bundleAnnotations;
+    std::unordered_map<std::string, std::string> annotations;
 
-    // Merge the labels from the image.
-    // Note that the unordered_map::insert() function only inserts an element into the container
-    // if the container doesn't already contain an element with an equivalent key.
-    // In other words, the elements from the map used as argument to insert() have lower priority
-    const auto& imageLabels = metadata.labels;
-    annotations.insert(imageLabels.cbegin(), imageLabels.cend());
-
+    // Set automatic annotations by the engine
     if(config->commandRun.enableGlibcReplacement) {
         annotations["com.hooks.glibc.enabled"] = "true";
     }
@@ -134,7 +128,21 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getBundleAnnotations
     auto level = static_cast<IntType>(common::Logger::getInstance().getLevel());
     annotations["com.hooks.logging.level"] = std::to_string(level);
 
-    utility::logMessage("OCI annotations:", common::LogLevel::DEBUG);
+    // Merge custom annotations (from the CLI or other components like the FileDescriptorHandler),
+    // which should have priority over any others.
+    // With C++17, instead of operator[] we could use insert_or_assign()
+    for (const auto& cliAnnotation : config->commandRun.ociAnnotations) {
+        annotations[cliAnnotation.first] = cliAnnotation.second;
+    }
+
+    // Merge the labels from the image.
+    // Note that the unordered_map::insert() function only inserts an element into the container
+    // if the container doesn't already contain an element with an equivalent key.
+    // In other words, the elements from the map used as argument to insert() have lower priority
+    const auto& imageLabels = metadata.labels;
+    annotations.insert(imageLabels.cbegin(), imageLabels.cend());
+
+    utility::logMessage("Generated OCI annotations for the bundle:", common::LogLevel::DEBUG);
     for (const auto& annotation : annotations) {
         utility::logMessage(boost::format("    %s = %s") % std::get<0>(annotation) % std::get<1>(annotation),
                             common::LogLevel::DEBUG);

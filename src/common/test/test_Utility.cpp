@@ -90,6 +90,33 @@ TEST(UtilityTestGroup, setEnvironmentVariable) {
     CHECK_EQUAL(std::string(envValue), testValue);
 }
 
+TEST(UtilityTestGroup, parseKeyValuePair) {
+    auto pair = common::parseKeyValuePair("key=value");
+    CHECK_EQUAL(pair.first, std::string("key"));
+    CHECK_EQUAL(pair.second, std::string("value"));
+
+    // key only
+    pair = common::parseKeyValuePair("key_only");
+    CHECK_EQUAL(pair.first, std::string("key_only"));
+    CHECK_EQUAL(pair.second, std::string(""));
+
+    // no value after separator
+    pair = common::parseKeyValuePair("key=");
+    CHECK_EQUAL(pair.first, std::string("key"));
+    CHECK_EQUAL(pair.second, std::string(""));
+
+    // non-default separator
+    pair = common::parseKeyValuePair("key:value", ':');
+    CHECK_EQUAL(pair.first, std::string("key"));
+    CHECK_EQUAL(pair.second, std::string("value"));
+
+    // empty input
+    CHECK_THROWS(common::Error, common::parseKeyValuePair(""));
+
+    // missing key
+    CHECK_THROWS(common::Error, common::parseKeyValuePair("=value"));
+}
+
 TEST(UtilityTestGroup, switchIdentity) {
     auto testDirRAII = common::PathRAII{ "./sarus-test-switchIdentity" };
     common::createFileIfNecessary(testDirRAII.getPath() / "file", 0, 0);
@@ -318,7 +345,7 @@ TEST(UtilityTestGroup, parseMap) {
         auto list = "key0=value0,key0=value1";
         CHECK_THROWS(common::Error, common::parseMap(list));
     }
-    // too many values error
+    // too many values error, a.k.a. repeated kv separator
     {
         auto list = "key0=value0=value1";
         CHECK_THROWS(common::Error, common::parseMap(list));

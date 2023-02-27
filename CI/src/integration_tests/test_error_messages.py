@@ -281,6 +281,24 @@ class TestErrorMessages(unittest.TestCase):
                             "Supported values: 'host', 'private'.\nSee 'sarus help run'")
         self._check(command, expected_message)
 
+        command = ["sarus", "run", "--env==value", self.DEFAULT_IMAGE, "true"]
+        expected_message = "Error parsing environment variable requested from CLI '=value': " \
+                           "Failed to parse key-value pair '=value': key is empty"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--env", "", self.DEFAULT_IMAGE, "true"]
+        expected_message = "Invalid environment variable requested from CLI: empty option value"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--annotation", "=value", self.DEFAULT_IMAGE, "true"]
+        expected_message = "Error parsing annotation from CLI '=value': " \
+                           "Failed to parse key-value pair '=value': key is empty"
+        self._check(command, expected_message)
+
+        command = ["sarus", "run", "--annotation", "", self.DEFAULT_IMAGE, "true"]
+        expected_message = "Invalid annotation requested from CLI: empty option value"
+        self._check(command, expected_message)
+
         command = ["sarus", "run", self.DEFAULT_IMAGE, "invalid-command-2lk32ldk2"]
         actual_message = util.get_sarus_error_output(command)
         self.assertTrue("level=error" in actual_message)

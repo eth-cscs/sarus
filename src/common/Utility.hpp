@@ -37,12 +37,13 @@ namespace sarus {
 namespace common {
 
 std::unordered_map<std::string, std::string> parseEnvironmentVariables(char** env);
-std::tuple<std::string, std::string> parseEnvironmentVariable(const std::string& variable);
+std::pair<std::string, std::string> parseEnvironmentVariable(const std::string& variable);
 std::string getEnvironmentVariable(const std::string& key);
 void setEnvironmentVariable(const std::string& key, const std::string& value);
 std::string removeWhitespaces(const std::string&);
 std::string replaceString(std::string &buf, const std::string& from, const std::string& to);
 std::string eraseFirstAndLastDoubleQuote(const std::string& buf);
+std::pair<std::string, std::string> parseKeyValuePair(const std::string& pairString, const char separator = '=');
 void switchIdentity(const common::UserIdentity&);
 void setFilesystemUid(const common::UserIdentity&);
 void logProcessUserAndGroupIdentifiers();
@@ -75,8 +76,8 @@ bool isCharacterDevice(const boost::filesystem::path& path);
 bool isSymlink(const boost::filesystem::path& path);
 boost::filesystem::path realpathWithinRootfs(const boost::filesystem::path& rootfs, const boost::filesystem::path& path);
 std::unordered_map<std::string, std::string> parseMap(const std::string& input,
-                                                      const std::string& pairSeparators = ",",
-                                                      const std::string& keyValueSeparators = "=");
+                                                      const char pairSeparators = ',',
+                                                      const char keyValueSeparators = '=');
 std::string makeColonSeparatedListOfPaths(const std::vector<boost::filesystem::path>& paths);
 boost::filesystem::path getSharedLibLinkerName(const boost::filesystem::path& path);
 std::vector<boost::filesystem::path> getSharedLibsFromDynamicLinker(

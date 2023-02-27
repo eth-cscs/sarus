@@ -106,8 +106,8 @@ IGNORE_TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariablesAndBundleAnnotatio
     handler.passStdoutAndStderrToHooks();
     handler.applyChangesToFdsAndEnvVariablesAndBundleAnnotations();
     CHECK_EQUAL(2, handler.getExtraFileDescriptors());
-    CHECK_EQUAL(std::to_string(3), config->commandRun.bundleAnnotations["com.hooks.logging.stdoutfd"]);
-    CHECK_EQUAL(std::to_string(4), config->commandRun.bundleAnnotations["com.hooks.logging.stderrfd"]);
+    CHECK_EQUAL(std::to_string(3), config->commandRun.ociAnnotations["com.hooks.logging.stdoutfd"]);
+    CHECK_EQUAL(std::to_string(4), config->commandRun.ociAnnotations["com.hooks.logging.stderrfd"]);
     CHECK(boost::filesystem::canonical("/proc/self/fd/1") == boost::filesystem::canonical("/proc/self/fd/3"));
     CHECK(boost::filesystem::canonical("/proc/self/fd/2") == boost::filesystem::canonical("/proc/self/fd/4"));
 
@@ -119,8 +119,8 @@ IGNORE_TEST(RuntimeTestGroup, applyChangesToFdsAndEnvVariablesAndBundleAnnotatio
     handler.preservePMIFdIfAny();
     handler.applyChangesToFdsAndEnvVariablesAndBundleAnnotations();
     CHECK_EQUAL(3, handler.getExtraFileDescriptors());
-    CHECK_EQUAL(std::to_string(3), config->commandRun.bundleAnnotations["com.hooks.logging.stdoutfd"]);
-    CHECK_EQUAL(std::to_string(4), config->commandRun.bundleAnnotations["com.hooks.logging.stderrfd"]);
+    CHECK_EQUAL(std::to_string(3), config->commandRun.ociAnnotations["com.hooks.logging.stdoutfd"]);
+    CHECK_EQUAL(std::to_string(4), config->commandRun.ociAnnotations["com.hooks.logging.stderrfd"]);
     CHECK_EQUAL(std::to_string(5), config->commandRun.hostEnvironment["PMI_FD"]);
     CHECK(boost::filesystem::canonical("/proc/self/fd/1") == boost::filesystem::canonical("/proc/self/fd/3"));
     CHECK(boost::filesystem::canonical("/proc/self/fd/2") == boost::filesystem::canonical("/proc/self/fd/4"));

@@ -80,9 +80,11 @@ void FileDescriptorHandler::applyChangesToFdsAndEnvVariablesAndBundleAnnotations
             config->commandRun.hostEnvironment[*fdInfo.containerEnvVariable] = std::to_string(newFd);
         }
 
-        if(fdInfo.bundleAnnotation) {
-            utility::logMessage(boost::format("Setting bundle annotation %s=%d") % *fdInfo.bundleAnnotation % newFd, common::LogLevel::DEBUG);
-            config->commandRun.bundleAnnotations[*fdInfo.bundleAnnotation] = std::to_string(newFd);
+        if(fdInfo.ociAnnotation) {
+            // CLI should always have precedence when setting values: use emplace() to add the annotation
+            // only if the key is not already present (i.e. previously added by CommandRun)
+            utility::logMessage(boost::format("Attempting to set OCI annotation %s=%d") % *fdInfo.ociAnnotation % newFd, common::LogLevel::DEBUG);
+            config->commandRun.ociAnnotations.emplace(*fdInfo.ociAnnotation, std::to_string(newFd));
         }
     }
 

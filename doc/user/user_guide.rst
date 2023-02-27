@@ -989,6 +989,46 @@ Sarus uses `tini <https://github.com/krallin/tini>`_ as its default init process
    Our internal benchmarking tests with `tini <https://github.com/krallin/tini>`_ showed
    overheads of up to 2%.
 
+.. _user-oci-annotations:
+
+Setting OCI annotations
+-----------------------
+
+`OCI annotations <https://github.com/opencontainers/runtime-spec/blob/main/config.md#annotations>`_
+are defined in the OCI Runtime Specification as a mean to provide arbitrary
+metadata for the container in the form of a key-value map. Annotation keys usually
+express a hierarchical namespace structure, with domains separated by ``.``
+(full stop) characters.
+
+Annotations can be useful to control how Sarus selects OCI hooks or, depending on
+their implementation, certain features of OCI hooks and OCI runtimes.
+
+To set an annotation when running a container, use the ``--annotation`` option
+of :program:`sarus run`.
+The option can be passed multiple times, defining one annotation per option.
+The first occurring ``=`` (equals sign) character in the option value is treated
+as the separator between the annotation key and its value.
+
+.. code-block:: bash
+
+    $ srun -N 1 sarus run --annotation com.documentation.example.key=value debian true
+
+Annotations set from the Sarus command line take precedence over other annotations,
+for example coming from the container image (sometimes also known as "image labels")
+or created automatically by Sarus itself.
+For example, the hooks shipped alongside Sarus use the ``com.hooks.logging.level``
+annotation to determine their verbosity level. The annotation is created internally
+by Sarus to match the verbosity of the engine. A different verbosity level for the
+hooks can be defined by overriding the annotation as follows:
+
+.. code-block:: bash
+
+    # Set Sarus hooks to print debug-level messages (level 0)
+    # while Sarus keeps its normal verbosity
+    $ srun -N 1 sarus run --annotation=com.hooks.logging.level=0 debian true
+
+Please refer to your site documentation or your system administrator to learn
+about custom features related to OCI annotations on a specific system.
 
 Verbosity levels and help messages
 ----------------------------------

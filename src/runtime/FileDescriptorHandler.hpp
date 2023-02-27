@@ -30,7 +30,7 @@ private:
     struct FileDescriptorInfo {
         std::string name;
         boost::optional<std::string> containerEnvVariable;
-        boost::optional<std::string> bundleAnnotation;
+        boost::optional<std::string> ociAnnotation;
         bool forceDup;
     };
 

@@ -100,6 +100,9 @@ public:
 private:
     void initializeOptionsDescription() {
         optionsDescription.add_options()
+            ("annotation",
+                boost::program_options::value<std::vector<std::string>>(&annotations),
+                "Add an OCI annotation to the container")
             ("centralized-repository", "Use centralized repository instead of the local one")
             ("device",
                 boost::program_options::value<std::vector<std::string>>(&deviceMounts),
@@ -253,6 +256,7 @@ private:
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
+        makeAnnotations();
         makeUserEnvironment();
         makeSiteMountObjects();
         makeUserMountObjects();
@@ -260,6 +264,35 @@ private:
         makeUserDeviceMountObjects();
 
         cli::utility::printLog("successfully parsed CLI arguments", common::LogLevel::DEBUG);
+    }
+
+    void makeAnnotations() {
+        for(const auto& annotation : annotations) {
+            auto message = boost::format("Parsing annotation from CLI '%s'") % annotation;
+            cli::utility::printLog(message, common::LogLevel::DEBUG);
+
+            if(annotation.empty()) {
+                auto message = boost::format("Invalid annotation requested from CLI: empty option value");
+                utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            }
+
+            std::string key, value;
+            try {
+                std::tie(key, value) = common::parseKeyValuePair(annotation);
+            }
+            catch(std::exception& e) {
+                auto message = boost::format("Error parsing annotation from CLI '%s': %s")
+                               % annotation % e.what();
+                cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            }
+
+            conf->commandRun.ociAnnotations[key] = value;
+            message = boost::format("Successfully parsed annotation from CLI: Key: '%s' - Value: '%s'")
+                      % key % value;
+            cli::utility::printLog(message, common::LogLevel::DEBUG);
+        }
     }
 
     void makeUserEnvironment() {
@@ -274,10 +307,8 @@ private:
             }
 
             std::string name, value;
-            try {
-                std::tie(name, value) = common::parseEnvironmentVariable(variable);
-            }
-            catch(common::Error& e) {
+
+            if(std::find(variable.cbegin(), variable.cend(), '=') == variable.cend()) {
                 auto message = boost::format("Environment variable requested from CLI '%s' does not feature '=' separator. "
                                              "Treating string as variable name and attempting to source value from host "
                                              "environment") % variable;
@@ -296,11 +327,16 @@ private:
                     continue;
                 }
             }
-            catch(std::exception& e) {
-                auto message = boost::format("Error parsing environment variable requested from CLI '%s': %s")
-                               % variable % e.what();
-                cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            else {
+                try {
+                    std::tie(name, value) = common::parseEnvironmentVariable(variable);
+                }
+                catch(std::exception& e) {
+                    auto message = boost::format("Error parsing environment variable requested from CLI '%s': %s")
+                                   % variable % e.what();
+                    cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+                    SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+                }
             }
 
             conf->commandRun.userEnvironment[name] = value;
@@ -504,9 +540,10 @@ private:
 
 private:
     boost::program_options::options_description optionsDescription{"Options"};
-    std::vector<std::string> env;
     std::shared_ptr<common::Config> conf;
+    std::vector<std::string> annotations;
     std::vector<std::string> deviceMounts;
+    std::vector<std::string> env;
     std::string entrypoint;
     std::string mpiType;
     std::string pid;

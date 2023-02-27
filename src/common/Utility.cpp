@@ -58,28 +58,24 @@ namespace common {
 
 std::unordered_map<std::string, std::string> parseEnvironmentVariables(char** env) {
     auto map = std::unordered_map<std::string, std::string>{};
-
     for(size_t i=0; env[i] != nullptr; ++i) {
         std::string key, value;
         std::tie(key, value) = parseEnvironmentVariable(env[i]);
         map[key] = value;
     }
-
     return map;
 }
 
-std::tuple<std::string, std::string> parseEnvironmentVariable(const std::string& variable) {
-    auto keyEnd = std::find(variable.cbegin(), variable.cend(), '=');
-    if(keyEnd == variable.cend()) {
-        auto message = boost::format("Failed to parse environment variable \"%s\". Expected '=' separator.")
-            % variable;
-        SARUS_THROW_ERROR(message.str());
+std::pair<std::string, std::string> parseEnvironmentVariable(const std::string& variable) {
+    std::pair<std::string, std::string> kvPair;
+    try {
+        kvPair = parseKeyValuePair(variable);
     }
-
-    auto key = std::string(variable.cbegin(), keyEnd);
-    auto value = std::string(keyEnd+1, variable.cend());
-
-    return std::tuple<std::string, std::string>{key, value};
+    catch(const common::Error& e) {
+        auto message = boost::format("Failed to parse environment variable: %s") % e.what();
+        SARUS_RETHROW_ERROR(e, message.str());
+    }
+    return kvPair;
 }
 
 std::string getEnvironmentVariable(const std::string& key) {
@@ -109,8 +105,7 @@ std::string removeWhitespaces(const std::string& s) {
     return result;
 }
 
-std::string replaceString(std::string &buf, const std::string& from, const std::string& to)
-{
+std::string replaceString(std::string &buf, const std::string& from, const std::string& to) {
     std::string::size_type pos = buf.find(from);
     while(pos != std::string::npos){
         buf.replace(pos, from.size(), to);
@@ -128,6 +123,17 @@ std::string eraseFirstAndLastDoubleQuote(const std::string& s) {
     }
     return std::string( s.cbegin() + 1,
                         s.cbegin() + s.size() - 1);
+}
+
+std::pair<std::string, std::string> parseKeyValuePair(const std::string& pairString, const char separator) {
+    auto keyEnd = std::find(pairString.cbegin(), pairString.cend(), separator);
+    auto key = std::string(pairString.cbegin(), keyEnd);
+    auto value = keyEnd != pairString.cend() ? std::string(keyEnd+1, pairString.cend()) : std::string{};
+    if(key.empty()) {
+        auto message = boost::format("Failed to parse key-value pair '%s': key is empty") % pairString;
+        SARUS_THROW_ERROR(message.str())
+    }
+    return std::pair<std::string, std::string>{key, value};
 }
 
 void switchIdentity(const common::UserIdentity& identity) {
@@ -682,9 +688,8 @@ boost::filesystem::path realpathWithinRootfs(const boost::filesystem::path& root
  * empty string.
  */
 std::unordered_map<std::string, std::string> parseMap(const std::string& input,
-                                                      const std::string& pairSeparators,
-                                                      const std::string& keyValueSeparators) {
-    // check for empty input
+                                                      const char pairSeparators,
+                                                      const char keyValueSeparators) {
     if(input.empty()) {
         return std::unordered_map<std::string, std::string>{};
     }
@@ -692,34 +697,32 @@ std::unordered_map<std::string, std::string> parseMap(const std::string& input,
     auto map = std::unordered_map<std::string, std::string>{};
 
     auto pairs = std::vector<std::string>{};
-    boost::split(pairs, input, boost::is_any_of(pairSeparators));
+    boost::split(pairs, input, boost::is_any_of(std::string{pairSeparators}));
 
     for(const auto& pair : pairs) {
-        auto tokens = std::vector<std::string>{};
-        boost::split(tokens, pair, boost::is_any_of(keyValueSeparators));
-        const auto& key = tokens[0];
-        auto value = tokens.size() > 1 ? std::move(tokens[1]) : "";
-
-        // check for "too many" tokens
-        if(tokens.size() > 2) {
-            auto message = boost::format("Error: found invalid key-value pair '%s' in '%s' (too many values).")
-                % pair % input;
+        std::string key, value;
+        try {
+            std::tie(key, value) = common::parseKeyValuePair(pair, keyValueSeparators);
+        }
+        catch(std::exception& e) {
+            auto message = boost::format("Error parsing '%s'. %s") % input % e.what();
             logMessage(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO)
+            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
 
-        // check for empty key
-        if(key.empty()) {
-            auto message = boost::format("Error: found empty key in '%s'. Expected a list of key-value pairs.")
-                % input;
+        // do not allow repeated separators in the value
+        auto valueEnd = std::find(value.cbegin(), value.cend(), keyValueSeparators);
+        if(valueEnd != value.cend()) {
+            auto message = boost::format("Error parsing '%s'. Invalid key-value pair '%s': repeated use of separator is not allowed.")
+                % input % pair;
             logMessage(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO)
         }
 
         // check for duplicated key
         if(map.find(key) != map.cend()) {
-            auto message = boost::format("Error: found duplicated key '%s' in '%s'. Expected a list of unique key-value pairs.")
-                % key % input;
+            auto message = boost::format("Error parsing '%s'. Found duplicated key '%s': expected a list of unique key-value pairs.")
+                % input % key;
             logMessage(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO)
         }

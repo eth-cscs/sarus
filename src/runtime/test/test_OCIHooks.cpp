@@ -184,7 +184,7 @@ TEST(OCIHooksTestGroup, create_hook_and_check_activation) {
     // all activation conditions met
     {
         auto configRaii = test_utility::config::makeConfig();
-        configRaii.config->commandRun.bundleAnnotations["com.oci.hooks.test_hook.enabled"] = "true";
+        configRaii.config->commandRun.ociAnnotations["com.oci.hooks.test_hook.enabled"] = "true";
         configRaii.config->commandRun.execArgs = { "./app0" };
         configRaii.config->commandRun.mounts.push_back(
             std::unique_ptr<Mount>{ new Mount{"/src", "/dst", 0, configRaii.config} }
@@ -195,7 +195,7 @@ TEST(OCIHooksTestGroup, create_hook_and_check_activation) {
     // "annotations" condition not met
     {
         auto configRaii = test_utility::config::makeConfig();
-        configRaii.config->commandRun.bundleAnnotations["com.oci.hooks.test_hook.enabled"] = "false";
+        configRaii.config->commandRun.ociAnnotations["com.oci.hooks.test_hook.enabled"] = "false";
         configRaii.config->commandRun.execArgs = { "./app0" };
         configRaii.config->commandRun.mounts.push_back(
             std::unique_ptr<Mount>{ new Mount{"/src", "/dst", 0, configRaii.config} }
@@ -206,7 +206,7 @@ TEST(OCIHooksTestGroup, create_hook_and_check_activation) {
     // "command" condition not met
     {
         auto configRaii = test_utility::config::makeConfig();
-        configRaii.config->commandRun.bundleAnnotations["com.oci.hooks.test_hook.enabled"] = "true";
+        configRaii.config->commandRun.ociAnnotations["com.oci.hooks.test_hook.enabled"] = "true";
         configRaii.config->commandRun.execArgs = { "./xyz0123" };
         configRaii.config->commandRun.mounts.push_back(
             std::unique_ptr<Mount>{ new Mount{"/src", "/dst", 0, configRaii.config} }
@@ -217,7 +217,7 @@ TEST(OCIHooksTestGroup, create_hook_and_check_activation) {
     // "hasBindMounts" condition not met
     {
         auto configRaii = test_utility::config::makeConfig();
-        configRaii.config->commandRun.bundleAnnotations["com.oci.hooks.test_hook.enabled"] = "true";
+        configRaii.config->commandRun.ociAnnotations["com.oci.hooks.test_hook.enabled"] = "true";
         configRaii.config->commandRun.execArgs = { "./app0" };
         configRaii.config->commandRun.mounts = {};
         CHECK(!hook.isActive(configRaii.config));
@@ -260,15 +260,15 @@ TEST(OCIHooksTestGroup, condition_annotations) {
     // 1 matches out of 2
     {
         auto configRaii = test_utility::config::makeConfig();
-        configRaii.config->commandRun.bundleAnnotations["com.oci.hooks.test_hook.enabled"] = "true";
-        configRaii.config->commandRun.bundleAnnotations["com.oci.hooks.test_hook.domain"] = "cuda-related stuff";
+        configRaii.config->commandRun.ociAnnotations["com.oci.hooks.test_hook.enabled"] = "true";
+        configRaii.config->commandRun.ociAnnotations["com.oci.hooks.test_hook.domain"] = "cuda-related stuff";
         CHECK(condition->evaluate(configRaii.config) == false);
     }
     // 2 matches out of 2
     {
         auto configRaii = test_utility::config::makeConfig();
-        configRaii.config->commandRun.bundleAnnotations["com.oci.hooks.test_hook.enabled"] = "true";
-        configRaii.config->commandRun.bundleAnnotations["com.oci.hooks.test_hook.domain"] = "mpi-related stuff";
+        configRaii.config->commandRun.ociAnnotations["com.oci.hooks.test_hook.enabled"] = "true";
+        configRaii.config->commandRun.ociAnnotations["com.oci.hooks.test_hook.domain"] = "mpi-related stuff";
         CHECK(condition->evaluate(configRaii.config) == true);
     }
 }

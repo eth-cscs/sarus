@@ -9,6 +9,7 @@
  */
 
 #include <memory>
+#include <string>
 
 #include <boost/filesystem.hpp>
 #include <rapidjson/document.h>
@@ -235,17 +236,43 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
         CHECK_EQUAL(conf->imageReference.repositoryNamespace, std::string{"library"});
         CHECK_EQUAL(conf->imageReference.image, std::string{"image"});
         CHECK_EQUAL(conf->imageReference.tag, std::string{"latest"});
-        CHECK_EQUAL(conf->useCentralizedRepository, false);
-        CHECK_EQUAL(conf->commandRun.createNewPIDNamespace, false);
-        CHECK_EQUAL(conf->commandRun.addInitProcess, false);
+
+        CHECK_FALSE(conf->useCentralizedRepository);
+
         CHECK_EQUAL(conf->commandRun.userEnvironment.size(), 0);
         CHECK_EQUAL(conf->commandRun.mounts.size(), 1); // 1 site mount + 0 user mount
-        CHECK_EQUAL(conf->commandRun.useMPI, false);
-        CHECK_EQUAL(conf->commandRun.enableGlibcReplacement, 0);
-        CHECK_EQUAL(conf->commandRun.enableSSH, false);
-        CHECK_EQUAL(conf->commandRun.allocatePseudoTTY, false);
+        CHECK_EQUAL(conf->commandRun.ociAnnotations.size(), 1); // 1 annotation already in test config
+        CHECK_FALSE(conf->commandRun.createNewPIDNamespace);
+        CHECK_FALSE(conf->commandRun.addInitProcess);
+        CHECK_FALSE(conf->commandRun.useMPI);
+        CHECK_FALSE(conf->commandRun.enableGlibcReplacement);
+        CHECK_FALSE(conf->commandRun.enableSSH);
+        CHECK_FALSE(conf->commandRun.allocatePseudoTTY);
         CHECK_FALSE(conf->commandRun.mpiType);
         CHECK(conf->commandRun.execArgs.argc() == 0);
+    }
+    //annotation
+    {
+        auto conf = generateConfig({"run", "--annotation=key=value", "image"});
+        CHECK_EQUAL(conf->commandRun.ociAnnotations.size(), 2);
+        CHECK_EQUAL(conf->commandRun.ociAnnotations["com.test.dummy_key"], std::string("dummy_value"));
+        CHECK_EQUAL(conf->commandRun.ociAnnotations["key"], std::string("value"));
+
+        conf = generateConfig({"run",
+                               "--annotation", "normal.annotation.key=value",
+                               "--annotation=nested.annotation.key=innerKey=innerValue",
+                               "--annotation", "empty_annotation=",
+                               "--annotation=no_separator",
+                               "image"});
+        CHECK_EQUAL(conf->commandRun.ociAnnotations.size(), 5);
+        CHECK_EQUAL(conf->commandRun.ociAnnotations["normal.annotation.key"], std::string("value"));
+        CHECK_EQUAL(conf->commandRun.ociAnnotations["nested.annotation.key"], std::string("innerKey=innerValue"));
+        CHECK_EQUAL(conf->commandRun.ociAnnotations["empty_annotation"], std::string(""));
+        CHECK_EQUAL(conf->commandRun.ociAnnotations["no_separator"], std::string(""));
+
+        conf = generateConfig({"run", "--annotation=com.test.dummy_key=overridden_value", "image"});
+        CHECK_EQUAL(conf->commandRun.ociAnnotations.size(), 1);
+        CHECK_EQUAL(conf->commandRun.ociAnnotations["com.test.dummy_key"], std::string("overridden_value"));
     }
     // centralized repository
     {
