@@ -230,7 +230,7 @@ boost::filesystem::path SkopeoDriver::acquireAuthFile(const common::Config::Auth
     rapidjson::Pointer(jsonPointer.str().c_str()).Set(authJSON, encodedCredentials.c_str());
 
     common::createFoldersIfNecessary(authFileBasePath);
-    authFilePath = common::makeUniquePathWithRandomSuffix(authFileBasePath / "auth.json");
+    authFilePath = common::makeUniquePathWithRandomSuffix(authFileBasePath / "sarus-auth").replace_extension(".json");
     common::writeJSON(authJSON, authFilePath);
     boost::filesystem::permissions(authFilePath, boost::filesystem::perms::owner_read | boost::filesystem::perms::owner_write);
 
