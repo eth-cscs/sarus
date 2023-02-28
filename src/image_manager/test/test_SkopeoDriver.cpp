@@ -242,7 +242,9 @@ TEST(SkopeoDriverTestGroup, acquireAuthFile) {
             CHECK_FALSE(boost::filesystem::exists(expectedAuthFilePath));
 
             auto driver = image_manager::SkopeoDriver{config};
-            driver.acquireAuthFile(config->authentication, config->imageReference);
+            auto randomExpectedAuthFilePath = driver.acquireAuthFile(config->authentication, config->imageReference);
+            CHECK_TRUE(expectedAuthFilePath != randomExpectedAuthFilePath);
+            expectedAuthFilePath = randomExpectedAuthFilePath;
 
             CHECK(boost::filesystem::exists(expectedAuthFilePath));
             CHECK(boost::filesystem::status(expectedAuthFilePath).permissions() == expectedPermissions);
@@ -258,7 +260,9 @@ TEST(SkopeoDriverTestGroup, acquireAuthFile) {
             CHECK_FALSE(boost::filesystem::exists(expectedAuthFilePath));
 
             auto driver = image_manager::SkopeoDriver{config};
-            driver.acquireAuthFile(config->authentication, config->imageReference);
+            auto randomExpectedAuthFilePath = driver.acquireAuthFile(config->authentication, config->imageReference);
+            CHECK_TRUE(expectedAuthFilePath != randomExpectedAuthFilePath);
+            expectedAuthFilePath = randomExpectedAuthFilePath;
 
             CHECK(boost::filesystem::exists(expectedAuthFilePath));
             CHECK(boost::filesystem::status(expectedAuthFilePath).permissions() == expectedPermissions);
@@ -275,7 +279,9 @@ TEST(SkopeoDriverTestGroup, acquireAuthFile) {
             CHECK_FALSE(boost::filesystem::exists(expectedAuthFilePath));
 
             auto driver = image_manager::SkopeoDriver{config};
-            driver.acquireAuthFile(config->authentication, config->imageReference);
+            auto randomExpectedAuthFilePath = driver.acquireAuthFile(config->authentication, config->imageReference);
+            CHECK_TRUE(expectedAuthFilePath != randomExpectedAuthFilePath);
+            expectedAuthFilePath = randomExpectedAuthFilePath;
 
             CHECK(boost::filesystem::exists(expectedAuthFilePath));
             CHECK(boost::filesystem::status(expectedAuthFilePath).permissions() == expectedPermissions);

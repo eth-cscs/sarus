@@ -218,7 +218,7 @@ std::string SkopeoDriver::manifestDigest(const boost::filesystem::path& manifest
     return digestOutput;
 }
 
-void SkopeoDriver::acquireAuthFile(const common::Config::Authentication& auth, const common::ImageReference& reference) {
+boost::filesystem::path SkopeoDriver::acquireAuthFile(const common::Config::Authentication& auth, const common::ImageReference& reference) {
     printLog("Acquiring authentication file", common::LogLevel::INFO);
 
     auto jsonPtrFormattedImageName = boost::regex_replace(reference.getFullName(), boost::regex("/"), "~1");
@@ -230,11 +230,12 @@ void SkopeoDriver::acquireAuthFile(const common::Config::Authentication& auth, c
     rapidjson::Pointer(jsonPointer.str().c_str()).Set(authJSON, encodedCredentials.c_str());
 
     common::createFoldersIfNecessary(authFileBasePath);
-    authFilePath = authFileBasePath / "auth.json";
+    authFilePath = common::makeUniquePathWithRandomSuffix(authFileBasePath / "auth.json");
     common::writeJSON(authJSON, authFilePath);
     boost::filesystem::permissions(authFilePath, boost::filesystem::perms::owner_read | boost::filesystem::perms::owner_write);
 
     printLog(boost::format("Successfully acquired authentication file %s") % authFilePath, common::LogLevel::INFO);
+    return authFilePath;
 }
 
 common::CLIArguments SkopeoDriver::generateBaseArgs() const {
