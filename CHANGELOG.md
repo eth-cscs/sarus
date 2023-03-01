@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- Fixed pulling concurrently private images
+- Fixed a race condition when pulling private images concurrently with the same user
 
 ## [1.5.2]
 
