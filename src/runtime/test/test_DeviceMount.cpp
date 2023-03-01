@@ -78,7 +78,7 @@ IGNORE_TEST(DeviceMountTestGroup, getters) {
 
     {
         // Create source file as a character device file with 666 file mode
-        auto testDeviceFile = testDir.getPath() / "testDevice0";
+        auto testDeviceFile = testDir.getPath() / "sarusTestDevice0";
         auto majorID = 511u;
         auto minorID = 511u;
         test_utility::filesystem::createCharacterDeviceFile(testDeviceFile, majorID, minorID);
@@ -90,9 +90,11 @@ IGNORE_TEST(DeviceMountTestGroup, getters) {
         CHECK(devMount.getMajorID() == majorID);
         CHECK(devMount.getMinorID() == minorID);
         CHECK(devMount.getAccess().string() == std::string{"rwm"});
+
+        boost::filesystem::remove(testDeviceFile);
     }
     {
-        auto testDeviceFile = testDir.getPath() / "testDevice1";
+        auto testDeviceFile = testDir.getPath() / "sarusTestDevice1";
         auto majorID = 477u;
         auto minorID = 488u;
         test_utility::filesystem::createBlockDeviceFile(testDeviceFile, majorID, minorID);
@@ -104,6 +106,8 @@ IGNORE_TEST(DeviceMountTestGroup, getters) {
         CHECK_EQUAL(devMount.getMajorID(),  majorID);
         CHECK(devMount.getMinorID() == minorID);
         CHECK(devMount.getAccess().string() == std::string{"rw"});
+
+        boost::filesystem::remove(testDeviceFile);
     }
 }
 
@@ -124,8 +128,8 @@ IGNORE_TEST(DeviceMountTestGroup, performMount) {
     auto rootfsDir = bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()};
     common::createFoldersIfNecessary(rootfsDir);
 
-    auto sourceFile = testDir.getPath() / "testDevice0";
-    auto destinationFile = boost::filesystem::path{"/dev/testDevice0"};
+    auto sourceFile = testDir.getPath() / "sarusTestDevice0";
+    auto destinationFile = boost::filesystem::path{"/dev/sarusTestDevice0"};
 
     auto majorID = 511u;
     auto minorID = 511u;
@@ -142,6 +146,7 @@ IGNORE_TEST(DeviceMountTestGroup, performMount) {
 
     // cleanup
     CHECK(umount((rootfsDir / destinationFile).c_str()) == 0);
+    boost::filesystem::remove(sourceFile);
 }
 
 }}} // namespace

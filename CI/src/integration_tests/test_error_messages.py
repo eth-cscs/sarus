@@ -254,7 +254,8 @@ class TestErrorMessages(unittest.TestCase):
         self._check(command, expected_message)
 
         command = ["sarus", "run", "--mount=src=/invalid-s87dfs9,dst=/dst,type=bind", self.DEFAULT_IMAGE, "true"]
-        expected_message = "Failed to bind mount /invalid-s87dfs9 on container\'s /dst: mount source doesn\'t exist"
+        expected_message = ("Failed to bind mount /invalid-s87dfs9 on container\'s /dst: "
+                            "Failed to find real path for mount source: No such file or directory")
         self._check(command, expected_message)
 
         command = ["sarus", "run", "--mount=src=/src,dst=/dst,type=bind,bind-propagation=slave", self.DEFAULT_IMAGE, "true"]

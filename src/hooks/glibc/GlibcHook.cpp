@@ -26,6 +26,7 @@
 #include "common/CLIArguments.hpp"
 #include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
+#include "runtime/mount_utilities.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -236,8 +237,7 @@ void GlibcHook::replaceGlibcLibrariesInContainer() const {
 
         for (const auto& containerLib : containerLibraries) {
             if (containerLib.filename().string() == soname) {
-                auto destination = rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, containerLib);
-                common::utility::validatedBindMount(hostLib, destination, userIdentity, bundleDir, rootfsDir);
+                sarus::runtime::validatedBindMount(hostLib, containerLib, userIdentity, rootfsDir);
                 wasLibraryReplaced = true;
             }
         }
@@ -246,8 +246,7 @@ void GlibcHook::replaceGlibcLibrariesInContainer() const {
             logMessage(boost::format("Could not find ABI-compatible counterpart for host lib (%s) inside container "
                                      "=> adding host lib (%s) into container's /lib64 via bind mount ")
                        % hostLib % hostLib, sarus::common::LogLevel::WARN);
-            auto destination = rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, "/lib64" / hostLib.filename());
-            common::utility::validatedBindMount(hostLib, destination, userIdentity, bundleDir, rootfsDir);
+            sarus::runtime::validatedBindMount(hostLib, "/lib64"/hostLib.filename(), userIdentity, rootfsDir);
         }
     }
 }

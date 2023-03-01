@@ -35,7 +35,8 @@ Recommended value: ``/var/sarus/OCIBundleDir``
 rootfsFolder (string, REQUIRED)
 -------------------------------
 The name Sarus will assign to the directory inside the OCI bundle; this
-directory will become the root filesystem of the container.
+directory will become the root filesystem of the container. The value must be
+a valid filename and not a path (that is, ``/`` characters are not allowed).
 
 Recommended value: ``rootfs``
 

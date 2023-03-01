@@ -29,29 +29,29 @@ using namespace sarus;
 TEST_GROUP(MountUtilitiesTestGroup) {
 };
 
-TEST(MountUtilitiesTestGroup, validate_mount_source_test) {
+TEST(MountUtilitiesTestGroup, get_validated_mount_source_test) {
     std::string mount_point("./MUMountPoint");
     std::string source_dir_1("./mount_utilities_source_1");
     common::PathRAII source_dir_2RAII("./mount_utilities_source_2");
     std::string source_dir_2 = source_dir_2RAII.getPath().string();
 
     // Test invalid input arguments
-    CHECK_THROWS(common::Error, runtime::validateMountSource(""));
+    CHECK_THROWS(common::Error, runtime::getValidatedMountSource(""));
 
     // Test non-existing directory
-    CHECK_THROWS(common::Error, runtime::validateMountSource(source_dir_1));
+    CHECK_THROWS(common::Error, runtime::getValidatedMountSource(source_dir_1));
 
     // Test existing directory
-    common::executeCommand("mkdir -p " + source_dir_2);
+    common::createFoldersIfNecessary(source_dir_2);
     auto* expected = realpath(source_dir_2.c_str(), NULL);
-    runtime::validateMountSource(source_dir_2);
+    CHECK(runtime::getValidatedMountSource(source_dir_2) == boost::filesystem::path(expected));
 
     // Cleanup
     free(expected);
-    common::executeCommand("rm -rf " + source_dir_2);
+    boost::filesystem::remove_all(source_dir_2);
 }
 
-TEST(MountUtilitiesTestGroup, validate_mount_destination_test) {
+TEST(MountUtilitiesTestGroup, get_validated_mount_destination_test) {
     auto configRAII = test_utility::config::makeConfig();
     auto& config = *configRAII.config;
     auto bundleDirRAII = common::PathRAII{boost::filesystem::path{config.json["OCIBundleDir"].GetString()}};
@@ -60,24 +60,26 @@ TEST(MountUtilitiesTestGroup, validate_mount_destination_test) {
     common::createFoldersIfNecessary(bundleDir / "overlay/rootfs-lower");
 
     // Test invalid input arguments
-    CHECK_THROWS(common::Error, runtime::validateMountDestination("", config));
+    CHECK_THROWS(common::Error, runtime::getValidatedMountDestination("", rootfsDir));
 
     // Test mount on other device
     auto otherDeviceDir = boost::filesystem::path{"/otherDevice"};
     common::createFoldersIfNecessary(rootfsDir / otherDeviceDir);
     auto imageSquashfs = boost::filesystem::path{__FILE__}.parent_path() / "test_image.squashfs";
     runtime::loopMountSquashfs(imageSquashfs, rootfsDir / otherDeviceDir);
-    CHECK_THROWS(common::Error, runtime::validateMountDestination(rootfsDir / otherDeviceDir, config));
+    CHECK_THROWS(common::Error, runtime::getValidatedMountDestination(otherDeviceDir, rootfsDir));
     CHECK(umount((rootfsDir / otherDeviceDir).c_str()) == 0);
 
     // Test non-existing mount point
     auto nonExistingDir = boost::filesystem::path{"/nonExistingMountPoint"};
-    runtime::validateMountDestination(rootfsDir / nonExistingDir, config);
+    auto expected = rootfsDir / nonExistingDir;
+    CHECK(runtime::getValidatedMountDestination(nonExistingDir, rootfsDir) == expected);
 
     // Test existing mount point
     auto existingDir = boost::filesystem::path{"/file_in_squashfs_image"};
-    common::createFoldersIfNecessary(rootfsDir / existingDir);
-    runtime::validateMountDestination(rootfsDir / existingDir, config);
+    expected = rootfsDir / existingDir;
+    common::createFoldersIfNecessary(expected);
+    CHECK(runtime::getValidatedMountDestination(existingDir, rootfsDir) == expected);
 }
 
 TEST(MountUtilitiesTestGroup, bindMount) {

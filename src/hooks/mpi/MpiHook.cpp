@@ -261,9 +261,9 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
     const auto it = hostToContainerLibs.find(hostLib.getPath());
     if (it == hostToContainerLibs.cend()) {
         log(boost::format{"no corresponding libs in container => bind mount (%s) into /lib"} % hostLib.getPath(), sarus::common::LogLevel::DEBUG);
-        auto containerLibReal = sarus::common::realpathWithinRootfs(rootfsDir, "/lib" / hostLib.getPath().filename());
-        common::utility::validatedBindMount(hostLib.getPath(), rootfsDir / containerLibReal, userIdentity, bundleDir, rootfsDir);
-        createSymlinksInDynamicLinkerDefaultSearchDirs("/lib" / hostLib.getPath().filename(), hostLib.getPath().filename(), false);
+        auto containerLib = "/lib" / hostLib.getPath().filename();
+        sarus::runtime::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
+        createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), false);
         return;
     }
     // So, the container has at least one version of the host lib.
@@ -275,25 +275,24 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
     if (bestCandidateLib.isFullAbiCompatible(hostLib)){
         // safe replacement, all good.
         log(boost::format{"abi-compatible => bind mount host lib (%s) on top of container lib (%s) (i.e. override)"} % hostLib.getPath() % bestCandidateLib.getPath(), sarus::common::LogLevel::DEBUG);
-        auto containerLibReal = sarus::common::realpathWithinRootfs(rootfsDir, bestCandidateLib.getPath());
-        common::utility::validatedBindMount(hostLib.getPath(), rootfsDir / containerLibReal, userIdentity, bundleDir, rootfsDir);
-        createSymlinksInDynamicLinkerDefaultSearchDirs(containerLibReal, hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
+        sarus::runtime::validatedBindMount(hostLib.getPath(), bestCandidateLib.getPath(), userIdentity, rootfsDir);
+        createSymlinksInDynamicLinkerDefaultSearchDirs(bestCandidateLib.getPath(), hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
     }
     else if (bestCandidateLib.isMajorAbiCompatible(hostLib)){
         // risky replacement, issue warning.
         log(boost::format{"WARNING: container lib (%s) is major-only-abi-compatible => bind mount host lib (%s) into /lib"} % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::DEBUG);
-        auto containerLibReal = sarus::common::realpathWithinRootfs(rootfsDir, "/lib" / hostLib.getPath().filename());
-        common::utility::validatedBindMount(hostLib.getPath(), rootfsDir / containerLibReal, userIdentity, bundleDir, rootfsDir);
-        createSymlinksInDynamicLinkerDefaultSearchDirs("/lib" / hostLib.getPath().filename(), hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
+        auto containerLib = "/lib" / hostLib.getPath().filename();
+        sarus::runtime::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
+        createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
     }
     else {
         // inject with warning
         // NOTE: This branch is only for MPI dependency libraries. MPI libraries compatibility was already checked before at checkHostContainerAbiCompatibility. Hint for future refactoring.
         log(boost::format{"WARNING: could not find ABI-compatible counterpart for host lib (%s) inside container (best candidate found: %s) => adding host lib (%s) into container's /lib via bind mount "}
             % hostLib.getPath() % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::WARN);
-        auto containerLibReal = sarus::common::realpathWithinRootfs(rootfsDir, "/lib" / hostLib.getPath().filename());
-        common::utility::validatedBindMount(hostLib.getPath(), rootfsDir / containerLibReal, userIdentity, bundleDir, rootfsDir);
-        createSymlinksInDynamicLinkerDefaultSearchDirs("/lib" / hostLib.getPath().filename(), hostLib.getPath().filename(), true);
+        auto containerLib = "/lib" / hostLib.getPath().filename();
+        sarus::runtime::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
+        createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), true);
     }
 
     log("Successfully injected host's shared lib", sarus::common::LogLevel::DEBUG);
@@ -316,7 +315,7 @@ void MpiHook::performBindMounts() const {
     auto devicesCgroupPath = boost::filesystem::path{};
 
     for(const auto& mount : bindMounts) {
-        common::utility::validatedBindMount(mount, rootfsDir / mount, userIdentity, bundleDir, rootfsDir);
+        sarus::runtime::validatedBindMount(mount, mount, userIdentity, rootfsDir);
 
         if (sarus::common::isDeviceFile(mount)) {
             if (devicesCgroupPath.empty()) {
@@ -388,7 +387,7 @@ void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesy
         sarus::common::createFoldersIfNecessary(searchDir);
 
         // prevent writing as root where we are not allowed to
-        if (!sarus::runtime::isPathOnAllowedDevice(searchDir, bundleDir, rootfsDir)) {
+        if (!sarus::runtime::isPathOnAllowedDevice(searchDir, rootfsDir)) {
             log(boost::format("The hook is not allowed to write to %s. Ignoring symlinks creation in this path.") % searchDir, sarus::common::LogLevel::WARN);
             continue;
         }

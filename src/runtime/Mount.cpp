@@ -45,57 +45,15 @@ void Mount::performMount() const {
         SARUS_THROW_ERROR("Internal error: failed to lock std::weak_ptr");
     }
 
-    // switch to user identity to make sure user has access to the mount source
-    common::switchIdentity(config->userIdentity);
-
     auto rootfsDir = boost::filesystem::path{ config->json["OCIBundleDir"].GetString() }
-        / config->json["rootfsFolder"].GetString();
-    auto destinationReal = rootfsDir / common::realpathWithinRootfs(rootfsDir, destination);
-
+                     / config->json["rootfsFolder"].GetString();
     try {
-        validateMountSource(source);
-        validateMountDestination(destinationReal, *config);
-    } catch(std::exception& e) {
-        auto message = boost::format("Failed to bind mount %s on container's %s: %s")
-            % source.string() % destination.string() % e.what();
-        runtime::utility::logMessage(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_RETHROW_ERROR(e, message.str(), common::LogLevel::INFO);
-    }
-
-    auto realpathOfSource = std::shared_ptr<char>{realpath(source.string().c_str(), NULL), free};
-    if (!realpathOfSource) {
-        auto message = boost::format("Failed to find real path for user-requested mount source: %s") % source;
-        SARUS_THROW_ERROR(message.str());
-    }
-
-    // Save predicate result in a variable. This is done before switching back to root identity to leverage
-    // the unprivileged user identity on root_squashed filesystems. The creation of the mount point later
-    // on has to be done as root to enable mounts to the root-owned /dev directory in the container.
-    // Using the Boost filesystem predicate function as root will be denied if the mount source is in a
-    // root_squashed filesystem.
-    auto mountSourceIsDirectory = boost::filesystem::is_directory(realpathOfSource.get());
-
-    auto rootIdentity = common::UserIdentity{};
-    common::switchIdentity(rootIdentity);
-
-    if(mountSourceIsDirectory) {
-        common::createFoldersIfNecessary(destinationReal, config->userIdentity.uid, config->userIdentity.gid);
-    }
-    else {
-        common::createFileIfNecessary(destinationReal, config->userIdentity.uid, config->userIdentity.gid);
-    }
-
-    try {
-        // switch to user filesystem identity to make sure we can access paths as root even on root_squashed filesystems
-        common::setFilesystemUid(config->userIdentity);
-
-        bindMount(realpathOfSource.get(), destinationReal, mountFlags);
-
-        common::setFilesystemUid(rootIdentity);
+        validatedBindMount(source, destination, config->userIdentity, rootfsDir, mountFlags);
     }
     catch (const common::Error& e) {
-            common::setFilesystemUid(rootIdentity);
-            SARUS_RETHROW_ERROR(e, std::string("Failed to perform custom mount"));
+        runtime::utility::logMessage(e.getErrorTrace().back().errorMessage.c_str(),
+                                     common::LogLevel::GENERAL, std::cerr);
+        SARUS_RETHROW_ERROR(e, std::string("Failed to perform custom bind mount"), common::LogLevel::INFO);
     }
 
     runtime::utility::logMessage("Successfully performed bind mount", common::LogLevel::DEBUG);

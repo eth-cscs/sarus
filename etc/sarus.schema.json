@@ -11,7 +11,7 @@
             "$ref": "definitions.schema.json#/AbsolutePath"
         },
         "rootfsFolder": {
-            "$ref": "definitions.schema.json#/Folder"
+            "$ref": "definitions.schema.json#/Filename"
         },
         "prefixDir": {
             "$ref": "definitions.schema.json#/AbsolutePath"
