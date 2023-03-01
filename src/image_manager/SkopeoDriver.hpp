@@ -33,7 +33,7 @@ public:
     boost::filesystem::path copyToOCIImage(const std::string& sourceTransport, const std::string& sourceReference) const;
     std::string inspectRaw(const std::string& sourceTransport, const std::string& sourceReference) const;
     std::string manifestDigest(const boost::filesystem::path& manifestPath) const;
-    void acquireAuthFile(const common::Config::Authentication& auth, const common::ImageReference& reference);
+    boost::filesystem::path acquireAuthFile(const common::Config::Authentication& auth, const common::ImageReference& reference);
     common::CLIArguments generateBaseArgs() const;
 
 private:
