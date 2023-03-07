@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Sarus will now exit with an error if an operation requiring a lockfile on the local repository metadata cannot acquire a lock within 10 seconds.
   Previously, Sarus would keep attempting to acquire a lock indefinitely.
+- When printing error traces, entries related to standard C++ exceptions now provide clearer information
 
 ### Fixed
 

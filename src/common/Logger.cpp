@@ -76,7 +76,8 @@ namespace common {
         for(size_t i=0; i!=trace.size(); ++i) {
             const auto& entry = trace[trace.size()-i-1];
             auto line = boost::format("#%-3.3s %s at %s:%s %s\n")
-                % i % entry.functionName % entry.fileName % entry.fileLine % entry.errorMessage;
+                % i % entry.functionName % entry.fileName % (entry.fileLine != -1 ? std::to_string(entry.fileLine) : "")
+                % entry.errorMessage;
             errStream << line;
         }
     }

@@ -92,6 +92,8 @@ inline bool operator!=(const Error::ErrorTraceEntry& lhs, const Error::ErrorTrac
     return !(lhs == rhs);
 }
 
+std::string getExceptionTypeString(const std::exception& e);
+
 } // namespace
 } // namespace
 
@@ -125,7 +127,8 @@ inline bool operator!=(const Error::ErrorTraceEntry& lhs, const Error::ErrorTrac
         throw; \
     } \
     else { \
-        auto previousErrorTraceEntry = sarus::common::Error::ErrorTraceEntry{exception.what(), "unknown file", -1, "\"unknown function\""}; \
+        auto previousErrorTraceEntry = sarus::common::Error::ErrorTraceEntry{exception.what(), "unspecified location", -1, \
+                                                                             sarus::common::getExceptionTypeString(exception)}; \
         auto error = sarus::common::Error{logLevel, previousErrorTraceEntry}; \
         error.appendErrorTraceEntry(errorTraceEntry); \
         throw error; \

@@ -83,7 +83,7 @@ TEST(ErrorTestGroup, fromStdException) {
         functionThatThrowsFromStdException();
     }
     catch(const common::Error& error) {
-        auto expectedFirstEntry = common::Error::ErrorTraceEntry{"first error message", "unknown file", -1, "\"unknown function\""};
+        auto expectedFirstEntry = common::Error::ErrorTraceEntry{"first error message", "unspecified location", -1, "runtime error"};
         auto expectedSecondEntry = common::Error::ErrorTraceEntry{"second error message", "test_Error.cpp", 37, "functionThatThrowsFromStdException"};
 
         CHECK_EQUAL(error.getErrorTrace().size(), 2);

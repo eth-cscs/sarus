@@ -99,7 +99,7 @@ namespace image_manager {
             removeImageBackingFiles(imageMetadata);
             removeRepositoryMetadataEntry(imageMetadata, repositoryMetadata);
         }
-        catch(std::exception& e) {
+        catch(const std::exception& e) {
             auto message = boost::format("Failed to remove image %s") % imageReference;
             SARUS_RETHROW_ERROR(e, message.str());
         }
@@ -129,7 +129,7 @@ namespace image_manager {
                 }
             }
         }
-        catch(std::exception& e) {
+        catch(const std::exception& e) {
             auto message = boost::format("Failed to list images: %s") % e.what();
             SARUS_RETHROW_ERROR(e, message.str());
         }
@@ -161,7 +161,7 @@ namespace image_manager {
             // Update repository metadata in case entry was removed due to missing backing files
             atomicallyUpdateRepositoryMetadataFile(repositoryMetadata);
         }
-        catch(std::exception& e) {
+        catch(const std::exception& e) {
             auto message = boost::format("Failed to find image %s") % reference;
             SARUS_RETHROW_ERROR(e, message.str());
         }
