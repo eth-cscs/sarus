@@ -40,9 +40,10 @@ public:
     Lockfile(const boost::filesystem::path& file, unsigned int timeoutMs=noTimeout);
     Lockfile(const Lockfile&) = delete;
     Lockfile(Lockfile&&);
+    ~Lockfile();
+
     Lockfile& operator=(const Lockfile&) = delete;
     Lockfile& operator=(Lockfile&&);
-    ~Lockfile();
 
 private:
     boost::filesystem::path convertToLockfile(const boost::filesystem::path& file) const;

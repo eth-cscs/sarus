@@ -39,12 +39,17 @@ Lockfile::Lockfile(const boost::filesystem::path& file, unsigned int timeoutMs)
     unsigned int elapsedTimeMs = 0;
     while(!createLockfileAtomically()) {
         if(timeoutMs != noTimeout && elapsedTimeMs >= timeoutMs) {
-            message = boost::format("failed to acquire lock on file %s (expired timeout of %d milliseconds)") % *lockfile % timeoutMs;
+            message = boost::format("Failed to acquire lock on file %s (expired timeout of %d milliseconds)") % *lockfile % timeoutMs;
             SARUS_THROW_ERROR(message.str());
         }
         const int backoffTimeMs = 100;
         std::this_thread::sleep_for(std::chrono::milliseconds(backoffTimeMs));
         elapsedTimeMs += backoffTimeMs;
+        if(elapsedTimeMs % 1000 == 0) {
+            message = boost::format("Still attempting to acquire lock on file %s after %d ms (will timeout after %d milliseconds)...")
+                                   % *lockfile % elapsedTimeMs % timeoutMs;
+            logger->log(message.str(), loggerSubsystemName, common::LogLevel::WARN);
+        }
     }
 
     logger->log("successfully acquired lock", loggerSubsystemName, common::LogLevel::DEBUG);

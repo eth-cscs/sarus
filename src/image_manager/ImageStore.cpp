@@ -41,29 +41,35 @@ namespace image_manager {
      * Add the container image into repository (or update existing object)
      */
     void ImageStore::addImage(const common::SarusImage& image) const {
-        printLog(boost::format("Adding image %s to metadata file %s")
-                 % image.reference % metadataFile,
+        printLog(boost::format("Adding image %s to metadata file %s") % image.reference % metadataFile,
                  common::LogLevel::INFO);
 
-        common::Lockfile lock{metadataFile};
-        auto metadata = readRepositoryMetadata();
+        try {
+            common::Lockfile lock{metadataFile, lockTimeoutMs};
+            auto metadata = readRepositoryMetadata();
 
-        // remove previous entries with the same image reference (if any)
-        auto& images = metadata["images"];
-        for(auto it = images.Begin(); it != images.End(); ) {
-            if ((*it)["uniqueKey"].GetString() == image.reference.getUniqueKey()) {
-                it = images.Erase(it);
-            } else {
-                ++it;
+            // remove previous entries with the same image reference (if any)
+            auto& images = metadata["images"];
+            for(auto it = images.Begin(); it != images.End(); ) {
+                if ((*it)["uniqueKey"].GetString() == image.reference.getUniqueKey()) {
+                    it = images.Erase(it);
+                } else {
+                    ++it;
+                }
             }
+
+            // add new metadata entry
+            metadata["images"].GetArray().PushBack(
+                createImageJSON(image, metadata.GetAllocator()),
+                metadata.GetAllocator());
+
+            atomicallyUpdateRepositoryMetadataFile(metadata);
         }
-
-        // add new metadata entry
-        metadata["images"].GetArray().PushBack(
-            createImageJSON(image, metadata.GetAllocator()),
-            metadata.GetAllocator());
-
-        atomicallyUpdateRepositoryMetadataFile(metadata);
+        catch (const std::exception &e) {
+            auto message = boost::format("Failed to add image %s to repository metadata file %s")
+                                        % image.reference % metadataFile;
+            SARUS_RETHROW_ERROR(e, message.str());
+        }
 
         printLog(boost::format("Successfully added image"), common::LogLevel::INFO);
     }
@@ -74,18 +80,18 @@ namespace image_manager {
     void ImageStore::removeImage(const common::ImageReference& imageReference) const {
         printLog(boost::format("Attempting to remove image %s from local repository") % imageReference,
                  common::LogLevel::INFO);
-        common::Lockfile lock{metadataFile};
-
-        auto repositoryMetadata = readRepositoryMetadata();
-        auto imageMetadata = findImageMetadata(imageReference, repositoryMetadata);
-
-        if (!imageMetadata) {
-            auto message = boost::format("Cannot find image '%s'") % imageReference;
-            printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
-        }
 
         try {
+            common::Lockfile lock{metadataFile, lockTimeoutMs};
+            auto repositoryMetadata = readRepositoryMetadata();
+            auto imageMetadata = findImageMetadata(imageReference, repositoryMetadata);
+
+            if (!imageMetadata) {
+                auto message = boost::format("Cannot find image '%s'") % imageReference;
+                printLog(message, common::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            }
+
             // Attempting to remove backing files first so that, if something goes wrong on metadata removal,
             // the orphaned metadata have more chance to be cleaned during a subsequent "sarus images" or "sarus run" command.
             // If we remove metadata first and something goes wrong on backing files removal
@@ -105,21 +111,27 @@ namespace image_manager {
      * List the containers in repository
      */
     std::vector<common::SarusImage> ImageStore::listImages() const {
-        common::Lockfile lock{metadataFile};
-        auto repositoryMetadata = readRepositoryMetadata();
         auto images = std::vector<common::SarusImage>{};
 
-        for (const auto& imageMetadata : repositoryMetadata["images"].GetArray()) {
-            // If backing files are present, all image data is available: add the image to list to be visualized.
-            // Else, ensure all image data is cleaned up
-            if (hasImageBackingFiles(imageMetadata)) {
-                auto image = convertImageMetadataToSarusImage(imageMetadata);
-                images.push_back(image);
+        try {
+            common::Lockfile lock{metadataFile, lockTimeoutMs};
+            auto repositoryMetadata = readRepositoryMetadata();
+            for (const auto& imageMetadata : repositoryMetadata["images"].GetArray()) {
+                // If backing files are present, all image data is available: add the image to list to be visualized.
+                // Else, ensure all image data is cleaned up
+                if (hasImageBackingFiles(imageMetadata)) {
+                    auto image = convertImageMetadataToSarusImage(imageMetadata);
+                    images.push_back(image);
+                }
+                else {
+                    removeImageBackingFiles(&imageMetadata);
+                    removeRepositoryMetadataEntry(&imageMetadata, repositoryMetadata);
+                }
             }
-            else {
-                removeImageBackingFiles(&imageMetadata);
-                removeRepositoryMetadataEntry(&imageMetadata, repositoryMetadata);
-            }
+        }
+        catch(std::exception& e) {
+            auto message = boost::format("Failed to list images: %s") % e.what();
+            SARUS_RETHROW_ERROR(e, message.str());
         }
 
         printLog(boost::format("Successfully created list of images."), common::LogLevel::DEBUG);
@@ -128,26 +140,31 @@ namespace image_manager {
 
     boost::optional<common::SarusImage> ImageStore::findImage(const common::ImageReference& reference) const {
         printLog(boost::format("Looking for reference '%s' in local repository") % reference, common::LogLevel::DEBUG);
-        common::Lockfile lock{metadataFile};
         boost::optional<common::SarusImage> image;
 
-        auto repositoryMetadata = readRepositoryMetadata();
-        auto imageMetadata = findImageMetadata(reference, repositoryMetadata);
+        try {
+            common::Lockfile lock{metadataFile, lockTimeoutMs};
+            auto repositoryMetadata = readRepositoryMetadata();
+            auto imageMetadata = findImageMetadata(reference, repositoryMetadata);
+            if (imageMetadata) {
+                // If backing files are present, all image data is available: assign object to return
+                // Else, ensure all image data is cleaned up
+                if (hasImageBackingFiles(*imageMetadata)) {
+                    image = convertImageMetadataToSarusImage(*imageMetadata);
+                }
+                else {
+                    removeImageBackingFiles(imageMetadata);
+                    repositoryMetadata["images"].GetArray().Erase(imageMetadata);
+                }
+            }
 
-        if (imageMetadata) {
-            // If backing files are present, all image data is available: assign object to return
-            // Else, ensure all image data is cleaned up
-            if (hasImageBackingFiles(*imageMetadata)) {
-                image = convertImageMetadataToSarusImage(*imageMetadata);
-            }
-            else {
-                removeImageBackingFiles(imageMetadata);
-                repositoryMetadata["images"].GetArray().Erase(imageMetadata);
-            }
+            // Update repository metadata in case entry was removed due to missing backing files
+            atomicallyUpdateRepositoryMetadataFile(repositoryMetadata);
         }
-
-        // Update repository metadata in case entry was removed due to missing backing files
-        atomicallyUpdateRepositoryMetadataFile(repositoryMetadata);
+        catch(std::exception& e) {
+            auto message = boost::format("Failed to find image %s") % reference;
+            SARUS_RETHROW_ERROR(e, message.str());
+        }
 
         printLog(boost::format("Image for reference '%s' %s") % reference % (image ? "found" : "not found"),
                  common::LogLevel::DEBUG);
