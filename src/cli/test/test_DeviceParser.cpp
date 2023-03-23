@@ -95,7 +95,7 @@ IGNORE_TEST(DeviceParserTestGroup, access) {
     DeviceParserChecker{"/dev/sarusTestDevice0:/dev/containerDevice:mr"}
         .expectSource("/dev/sarusTestDevice0")
         .expectDestination("/dev/containerDevice")
-        .expectAccess("mr");
+        .expectAccess("rm");
 
     // wrong access flags
     DeviceParserChecker{"/dev/sarusTestDevice0:/dev/containerDevice:raw"}.expectParseError();
@@ -106,6 +106,27 @@ IGNORE_TEST(DeviceParserTestGroup, access) {
     DeviceParserChecker{":/dev/sarusTestDevice0:rw"}.expectParseError();
     DeviceParserChecker{"/dev/sarusTestDevice0::rw"}.expectParseError();
     DeviceParserChecker{"/dev/sarusTestDevice0:/dev/containerDevice:"}.expectParseError();
+}
+
+#ifdef ASROOT
+TEST(DeviceParserTestGroup, constructors) {
+#else
+IGNORE_TEST(DeviceParserTestGroup, constructors) {
+#endif
+    auto configRAII = test_utility::config::makeConfig();
+    auto userIdentity = configRAII.config->userIdentity;
+    auto rootfsDir = boost::filesystem::path{ configRAII.config->json["OCIBundleDir"].GetString() }
+                     / configRAII.config->json["rootfsFolder"].GetString();
+
+     auto requestString = std::string("/dev/sarusTestDevice0:/dev/containerDevice:r");
+
+     auto ctor1 = cli::DeviceParser{configRAII.config}.parseDeviceRequest(requestString);
+     auto ctor2 = cli::DeviceParser{rootfsDir, userIdentity}.parseDeviceRequest(requestString);
+
+     CHECK(ctor1->source               == ctor2->source);
+     CHECK(ctor1->destination          == ctor2->destination);
+     CHECK(ctor1->mountFlags           == ctor2->mountFlags);
+     CHECK(ctor1->getAccess().string() == ctor2->getAccess().string());
 }
 
 } // namespace

@@ -25,11 +25,7 @@ namespace runtime {
  */
 class DeviceMount : public Mount {
 public:
-    DeviceMount(const boost::filesystem::path& source,
-                const boost::filesystem::path& destination,
-                const unsigned long mountFlags,
-                const common::DeviceAccess& access,
-                std::shared_ptr<const common::Config> config);
+    DeviceMount(Mount&& baseMount, const common::DeviceAccess& access);
 
 public:
     char getType() const {return type;};

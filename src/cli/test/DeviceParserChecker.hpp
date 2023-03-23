@@ -52,7 +52,9 @@ public:
 
     ~DeviceParserChecker() {
         auto configRAII = test_utility::config::makeConfig();
-        auto mountObject = std::unique_ptr<runtime::DeviceMount>{};
+        auto userIdentity = configRAII.config->userIdentity;
+        auto rootfsDir = boost::filesystem::path{ configRAII.config->json["OCIBundleDir"].GetString() }
+                         / configRAII.config->json["rootfsFolder"].GetString();
 
         auto parser = cli::DeviceParser{configRAII.config};
 
@@ -61,7 +63,7 @@ public:
             return;
         }
 
-        mountObject = parser.parseDeviceRequest(deviceRequest);
+        auto mountObject = parser.parseDeviceRequest(deviceRequest);
 
         if(expectedSource) {
             CHECK(mountObject->source == *expectedSource);
@@ -69,6 +71,10 @@ public:
 
         if(expectedDestination) {
             CHECK(mountObject->destination == *expectedDestination);
+        }
+
+        if(expectedAccess) {
+            CHECK(mountObject->getAccess().string() == *expectedAccess);
         }
 
         CHECK_EQUAL(mountObject->mountFlags, *expectedFlags);

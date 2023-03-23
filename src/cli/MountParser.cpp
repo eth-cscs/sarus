@@ -23,12 +23,13 @@
 namespace sarus {
 namespace cli {
 
-MountParser::MountParser(bool isUserMount, std::shared_ptr<const common::Config> conf)
-    : conf{std::move(conf)}
-{
-    if (isUserMount && this->conf->json.HasMember("userMounts")) {
+/**
+ * Constructor with Config pointer and user/site mount switch is intended to be called by Sarus CLI code
+ */
+MountParser::MountParser(const bool isUserMount, std::shared_ptr<const common::Config> conf) {
+    if (isUserMount && conf->json.HasMember("userMounts")) {
         // Retrieve settings from Config struct
-        const rapidjson::Value& userMounts = this->conf->json["userMounts"];
+        const rapidjson::Value& userMounts = conf->json["userMounts"];
         for (const auto& value : userMounts["notAllowedPrefixesOfPath"].GetArray()) {
             validationSettings.destinationDisallowedWithPrefix.push_back(value.GetString());
         }
@@ -40,6 +41,21 @@ MountParser::MountParser(bool isUserMount, std::shared_ptr<const common::Config>
         validationSettings.destinationDisallowedWithPrefix = {};
         validationSettings.destinationDisallowedExact = {};
     }
+
+    rootfsDir = boost::filesystem::path{ conf->json["OCIBundleDir"].GetString() }
+                / conf->json["rootfsFolder"].GetString();
+    userIdentity = conf->userIdentity;
+}
+
+/**
+ * Constructor with explicit rootfs and user identity is intended to be called by hooks code
+ */
+MountParser::MountParser(const boost::filesystem::path& rootfsDir, const common::UserIdentity& userIdentity)
+    : rootfsDir{rootfsDir}
+    , userIdentity{userIdentity}
+{
+    validationSettings.destinationDisallowedWithPrefix = {};
+    validationSettings.destinationDisallowedExact = {};
 }
 
 /**
@@ -47,6 +63,9 @@ MountParser::MountParser(bool isUserMount, std::shared_ptr<const common::Config>
  * The request comes in the form of a comma-separated list of key-value pairs.
  */
 std::unique_ptr<runtime::Mount> MountParser::parseMountRequest(const std::unordered_map<std::string, std::string>& requestMap) {
+    auto message = boost::format("Parsing mount request '%s'") % convertRequestMapToString(requestMap);
+    utility::printLog(message, common::LogLevel::DEBUG);
+
     // The request has to specify the mount type
     if (requestMap.count("type") == 0) {
         auto message = boost::format("Invalid mount request '%s': 'type' must be specified")
@@ -72,7 +91,7 @@ std::unique_ptr<runtime::Mount> MountParser::parseBindMountRequest(const std::un
     auto destination = getValidatedMountDestination(requestMap);
     auto flags = convertBindMountFlags(requestMap); // Parse the other sub-options into mount flags
 
-    return std::unique_ptr<runtime::Mount>{new runtime::Mount{source, destination, flags, conf}};
+    return std::unique_ptr<runtime::Mount>{new runtime::Mount{source, destination, flags, rootfsDir, userIdentity}};
 }
 
 /*

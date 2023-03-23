@@ -16,14 +16,20 @@
 #include "common/Error.hpp"
 #include "cli/Utility.hpp"
 
-
 namespace sarus {
 namespace cli {
 
-DeviceParser::DeviceParser(std::shared_ptr<const common::Config> conf)
-    : conf{std::move(conf)}
+DeviceParser::DeviceParser(const boost::filesystem::path& rootfsDir, const common::UserIdentity& userIdentity)
+    : rootfsDir{rootfsDir}
+    , userIdentity{userIdentity}
 {}
 
+DeviceParser::DeviceParser(std::shared_ptr<const common::Config> conf)
+    : userIdentity{conf->userIdentity}
+{
+    rootfsDir = boost::filesystem::path{ conf->json["OCIBundleDir"].GetString() }
+                / conf->json["rootfsFolder"].GetString();
+}
 
 std::unique_ptr<runtime::DeviceMount> DeviceParser::parseDeviceRequest(const std::string& requestString) const {
     auto message = boost::format("Parsing device request '%s'") % requestString;
@@ -71,7 +77,8 @@ std::unique_ptr<runtime::DeviceMount> DeviceParser::parseDeviceRequest(const std
         validateMountPath(source, "host");
         validateMountPath(destination, "container");
         auto deviceAccess = createDeviceAccess(accessString);
-        return std::unique_ptr<runtime::DeviceMount>{new runtime::DeviceMount{source, destination, flags, deviceAccess, conf}};
+        auto baseMount = runtime::Mount{source, destination, flags, rootfsDir, userIdentity};
+        return std::unique_ptr<runtime::DeviceMount>{new runtime::DeviceMount{std::move(baseMount), deviceAccess}};
     }
     catch (const common::Error& e) {
         auto message = boost::format("Invalid device request '%s': %s") % requestString %  e.getErrorTrace().back().errorMessage;

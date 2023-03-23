@@ -96,6 +96,23 @@ TEST(MountParserTestGroup, site_flags_of_bind_mount) {
         .parseAsSiteMount().expectFlags(MS_REC | MS_RDONLY | MS_PRIVATE);
 }
 
+TEST(MountParserTestGroup, constructors) {
+    auto configRAII = test_utility::config::makeConfig();
+    auto userIdentity = configRAII.config->userIdentity;
+    auto rootfsDir = boost::filesystem::path{ configRAII.config->json["OCIBundleDir"].GetString() }
+                     / configRAII.config->json["rootfsFolder"].GetString();
+
+    auto requestString = std::string("type=bind,src=/src,dst=/dest,readonly");
+    auto requestMap = common::parseMap(requestString);
+
+    auto ctor1 = cli::MountParser{true, configRAII.config}.parseMountRequest(requestMap);
+    auto ctor2 = cli::MountParser{rootfsDir, userIdentity}.parseMountRequest(requestMap);;
+
+    CHECK(ctor1->source      == ctor2->source);
+    CHECK(ctor1->destination == ctor2->destination);
+    CHECK(ctor1->mountFlags  == ctor2->mountFlags);
+}
+
 } // namespace
 } // namespace
 } // namespace

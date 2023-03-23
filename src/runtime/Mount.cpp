@@ -26,29 +26,37 @@
 namespace sarus {
 namespace runtime {
 
-Mount::Mount(   const boost::filesystem::path& source,
-                const boost::filesystem::path& destination,
-                const size_t mountFlags,
-                std::shared_ptr<const common::Config> config)
+Mount::Mount(const boost::filesystem::path& source,
+             const boost::filesystem::path& destination,
+             const size_t mountFlags,
+             const boost::filesystem::path& rootfsDir,
+             const common::UserIdentity userIdentity)
     : source{source}
     , destination{destination}
     , mountFlags{mountFlags}
-    , config_weak{config}
+    , rootfsDir{rootfsDir}
+    , userIdentity{userIdentity}
 {}
+
+Mount::Mount(const boost::filesystem::path& source,
+             const boost::filesystem::path& destination,
+             const size_t mountFlags,
+             std::shared_ptr<const common::Config> config)
+    : source{source}
+    , destination{destination}
+    , mountFlags{mountFlags}
+    , userIdentity{config->userIdentity}
+{
+    rootfsDir = boost::filesystem::path{ config->json["OCIBundleDir"].GetString() }
+                / config->json["rootfsFolder"].GetString();
+}
 
 void Mount::performMount() const {
     runtime::utility::logMessage(boost::format("Performing bind mount: source = %s; target = %s; mount flags = %d")
         % source.string() % destination.string() % mountFlags, common::LogLevel::DEBUG);
 
-    auto config = config_weak.lock();
-    if(!config) {
-        SARUS_THROW_ERROR("Internal error: failed to lock std::weak_ptr");
-    }
-
-    auto rootfsDir = boost::filesystem::path{ config->json["OCIBundleDir"].GetString() }
-                     / config->json["rootfsFolder"].GetString();
     try {
-        validatedBindMount(source, destination, config->userIdentity, rootfsDir, mountFlags);
+        validatedBindMount(source, destination, userIdentity, rootfsDir, mountFlags);
     }
     catch (const common::Error& e) {
         runtime::utility::logMessage(e.getErrorTrace().back().errorMessage.c_str(),

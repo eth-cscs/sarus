@@ -61,29 +61,50 @@ IGNORE_TEST(MountTestGroup, mount_test) {
     auto ret = std::system(command.c_str());
     CHECK(WIFEXITED(ret) != 0 && WEXITSTATUS(ret) == 0);
 
-    // mount non-existing destination directory
-    runtime::Mount{sourceDir, destinationDir, mount_flags, config}.performMount();
-    CHECK(test_utility::filesystem::are_directories_equal(sourceDir.string(), (rootfsDir / destinationDir).string(), 1));
+    // test mount of non-existing destination directory
+    {
+        runtime::Mount{sourceDir, destinationDir, mount_flags, config}.performMount();
+        CHECK(test_utility::filesystem::are_directories_equal(sourceDir.string(), (rootfsDir / destinationDir).string(), 1));
 
-    // cleanup
-    CHECK(umount((rootfsDir / destinationDir).c_str()) == 0);
-    boost::filesystem::remove_all(rootfsDir / destinationDir);
+        // cleanup
+        CHECK(umount((rootfsDir / destinationDir).c_str()) == 0);
+        boost::filesystem::remove_all(rootfsDir / destinationDir);
+    }
+    // test mount of existing destination directory
+    {
+        common::createFoldersIfNecessary(rootfsDir / destinationDir);
+        runtime::Mount{sourceDir, destinationDir.c_str(), mount_flags, config}.performMount();
+        CHECK(test_utility::filesystem::are_directories_equal(sourceDir.string(), (rootfsDir / destinationDir).string(), 1));
 
-    // mount existing destination directory
-    common::createFoldersIfNecessary(rootfsDir / destinationDir);
-    runtime::Mount{sourceDir, destinationDir.c_str(), mount_flags, config}.performMount();
-    CHECK(test_utility::filesystem::are_directories_equal(sourceDir.string(), (rootfsDir / destinationDir).string(), 1));
+        // cleanup
+        CHECK(umount((rootfsDir / destinationDir).c_str()) == 0);
+        boost::filesystem::remove_all(rootfsDir / destinationDir);
+    }
+    // test mount of individual file
+    {
+        runtime::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, config}.performMount();
+        CHECK(test_utility::filesystem::isSameBindMountedFile(sourceFile.getPath(), rootfsDir / destinationFile.getPath()));
 
-    // cleanup
-    CHECK(umount((rootfsDir / destinationDir).c_str()) == 0);
-    boost::filesystem::remove_all(rootfsDir / destinationDir);
+        // cleanup
+        CHECK(umount((rootfsDir / destinationFile.getPath()).c_str()) == 0);
+    }
+    // test ctor with 5 arguments
+    {
+        runtime::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, rootfsDir, config->userIdentity}.performMount();
+        CHECK(test_utility::filesystem::isSameBindMountedFile(sourceFile.getPath(), rootfsDir / destinationFile.getPath()));
 
-    // mount file
-    runtime::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, config}.performMount();
-    CHECK(test_utility::filesystem::isSameBindMountedFile(sourceFile.getPath(), rootfsDir / destinationFile.getPath()));
+        // cleanup
+        CHECK(umount((rootfsDir / destinationFile.getPath()).c_str()) == 0);
+    }
+    // test default move ctor
+    {
+        auto mountObject = runtime::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, config};
+        runtime::Mount{std::move(mountObject)}.performMount();
+        CHECK(test_utility::filesystem::isSameBindMountedFile(sourceFile.getPath(), rootfsDir / destinationFile.getPath()));
 
-    // cleanup
-    CHECK(umount((rootfsDir / destinationFile.getPath()).c_str()) == 0);
+        // cleanup
+        CHECK(umount((rootfsDir / destinationFile.getPath()).c_str()) == 0);
+    }
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();

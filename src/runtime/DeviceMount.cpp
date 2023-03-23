@@ -20,12 +20,8 @@
 namespace sarus {
 namespace runtime {
 
-DeviceMount::DeviceMount(const boost::filesystem::path& source,
-                         const boost::filesystem::path& destination,
-                         const unsigned long mountFlags,
-                         const common::DeviceAccess& access,
-                         std::shared_ptr<const common::Config> config)
-    : Mount{source, destination, mountFlags, std::move(config)}
+DeviceMount::DeviceMount(Mount&& baseMount, const common::DeviceAccess& access)
+    : Mount{std::move(baseMount)}
     , access{access}
 {
     runtime::utility::logMessage(

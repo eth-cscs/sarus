@@ -66,7 +66,9 @@ public:
 
     ~MountParserChecker() {
         auto configRAII = test_utility::config::makeConfig();
-        auto mountObject = std::unique_ptr<runtime::Mount>{};
+        auto userIdentity = configRAII.config->userIdentity;
+        auto rootfsDir = boost::filesystem::path{ configRAII.config->json["OCIBundleDir"].GetString() }
+                         / configRAII.config->json["rootfsFolder"].GetString();
 
         auto parser = cli::MountParser{!isSiteMount, configRAII.config};
 
@@ -77,7 +79,7 @@ public:
             return;
         }
 
-        mountObject = parser.parseMountRequest(map);
+        auto mountObject = parser.parseMountRequest(map);
 
         if(expectedSource) {
             CHECK(mountObject->source == *expectedSource);

@@ -15,6 +15,9 @@
 #include <boost/filesystem.hpp>
 #include <sys/mount.h>
 
+#include "common/UserIdentity.hpp"
+
+
 namespace sarus {
 
 // forward declaration to avoid cyclic dependency of headers
@@ -24,10 +27,15 @@ namespace runtime {
 
 class Mount {
 public:
-    Mount(  const boost::filesystem::path& source,
-            const boost::filesystem::path& destination,
-            const unsigned long mountFlags,
-            std::shared_ptr<const common::Config> config);
+    Mount(const boost::filesystem::path& source,
+          const boost::filesystem::path& destination,
+          const unsigned long mountFlags,
+          const boost::filesystem::path& rootfsDir,
+          const common::UserIdentity userIdentity);
+    Mount(const boost::filesystem::path& source,
+          const boost::filesystem::path& destination,
+          const unsigned long mountFlags,
+          std::shared_ptr<const common::Config> config);
 
     void performMount() const;
 
@@ -37,7 +45,8 @@ public: // public for test purpose
     unsigned long mountFlags;
 
 private:
-    std::weak_ptr<const common::Config> config_weak;
+    boost::filesystem::path rootfsDir;
+    common::UserIdentity userIdentity;
 };
 
 }} // namespaces

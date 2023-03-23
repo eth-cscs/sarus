@@ -28,7 +28,8 @@ namespace cli {
 
 class MountParser {
 public:
-    MountParser(bool isUserMount, std::shared_ptr<const common::Config> conf);
+    MountParser(const bool isUserMount, std::shared_ptr<const common::Config> conf);
+    MountParser(const boost::filesystem::path& rootfsDir, const common::UserIdentity& userIdentity);
     std::unique_ptr<runtime::Mount> parseMountRequest(const std::unordered_map<std::string, std::string>& mountRequest);
 
 private:
@@ -47,8 +48,9 @@ private:
     std::string convertRequestMapToString(const std::unordered_map<std::string, std::string>&) const;
 
 private:
-    std::shared_ptr<const common::Config> conf;
     ValidationSettings validationSettings = {};
+    boost::filesystem::path rootfsDir;
+    common::UserIdentity userIdentity;
 };
 
 } // namespace

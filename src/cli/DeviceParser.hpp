@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-#include "common/Config.hpp"
+#include "common/UserIdentity.hpp"
 #include "runtime/DeviceMount.hpp"
 
 
@@ -23,15 +23,17 @@ namespace cli {
 
 class DeviceParser {
 public:
+    DeviceParser(const boost::filesystem::path& rootfsDir, const common::UserIdentity& userIdentity);
     DeviceParser(std::shared_ptr<const common::Config> conf);
-    std::unique_ptr<runtime::DeviceMount> parseDeviceRequest(const std::string& requestString) const ;
+    std::unique_ptr<runtime::DeviceMount> parseDeviceRequest(const std::string& requestString) const;
 
 private:
     common::DeviceAccess createDeviceAccess(const std::string& accessString) const;
     void validateMountPath(const boost::filesystem::path& path, const std::string& context) const;
 
 private:
-    std::shared_ptr<const common::Config> conf;
+    boost::filesystem::path rootfsDir;
+    common::UserIdentity userIdentity;
 };
 
 } // namespace
