@@ -19,7 +19,7 @@ jobs:
 
   check-standalone-integration:
     needs: [check-documentation]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Build and Test
         shell: bash
