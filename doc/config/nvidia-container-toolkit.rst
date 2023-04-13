@@ -113,7 +113,7 @@ The hook environment also needs to grant visibility to the libnvidia-container
 library (e.g. ``libnvidia-container.so``) and CLI utility (``nvidia-container-cli``).
 
 Below is an example of `OCI hook JSON configuration file
-<https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
+<https://github.com/containers/common/blob/main/pkg/hooks/docs/oci-hooks.5.md>`_
 enabling the NVIDIA Container Runtime hook. Notice that in this example the
 ``-config=/path/to/config.toml`` flag is entered before the ``prestart``
 positional argument to point the hook to a configuration file installed in a

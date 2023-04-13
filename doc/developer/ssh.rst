@@ -31,7 +31,7 @@ Configuration by the system administrator
 =========================================
 
 The following is an example of `OCI hook JSON configuration file
-<https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
+<https://github.com/containers/common/blob/main/pkg/hooks/docs/oci-hooks.5.md>`_
 enabling the SSH hook:
 
 .. literalinclude:: /config/hook_examples/07-ssh-hook.json

@@ -46,7 +46,7 @@ The hook optionally supports the following environment variable:
   between subsequent invocations of the timestamp hook for the same container.
 
 The following is an example of `OCI hook JSON configuration file
-<https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
+<https://github.com/containers/common/blob/main/pkg/hooks/docs/oci-hooks.5.md>`_
 enabling the Timestamp hook:
 
 .. literalinclude:: /config/hook_examples/00-timestamp-hook.json

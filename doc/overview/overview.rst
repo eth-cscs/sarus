@@ -262,7 +262,7 @@ coming from the image. We hereby highlight the most important details:
   by default. A separate PID namespace for the container can be created if requested
   from the command line.
 * Settings for OCI hooks are generated from the `OCI hook JSON configuration files
-  <https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
+  <https://github.com/containers/common/blob/main/pkg/hooks/docs/oci-hooks.5.md>`_
   which are :doc:`configured</config/configure_hooks>` by the sysadmin.
 
 Container launch

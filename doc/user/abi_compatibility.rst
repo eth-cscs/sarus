@@ -5,7 +5,7 @@ The :ref:`native MPICH hook <user-mpi-hook>` injects host libraries into the
 container, effectively replacing the compatible MPI implementation provided by the
 container image. This is done to achieve optimal performance: while container
 images are ideally `infrastructure agnostic
-<https://github.com/opencontainers/runtime-spec/blob/master/principles.md#3-infrastructure-agnostic>`_
+<https://github.com/opencontainers/runtime-spec/blob/main/principles.md#3-infrastructure-agnostic>`_
 to maximize portability, the interconnect technologies found on HPC systems are
 often proprietary, requiring vendor-specific MPI software to be used at their
 full potential, or in some cases just to access the network hardware.

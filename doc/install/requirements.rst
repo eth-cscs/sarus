@@ -38,6 +38,11 @@ or some dependencies might be provided in versions not supported by Sarus.
 Please follow the :ref:`manual installation <requirements-manual-installation>`
 instructions for such dependencies.
 
+.. important::
+   Please note that when building on ARM architecture, Boost version **1.77.x** or
+   later is required.
+
+
 .. tabs::
 
     .. group-tab:: OpenSUSE Leap 15.4
@@ -98,6 +103,10 @@ Boost libraries
 `Boost libraries <https://www.boost.org/>`_ are required to be version **1.60.x**
 or later. The recommended version, which is used routinely for build
 integration and testing, is **1.77.x**.
+
+It is especially important to note that when building on ARM architecture, Boost
+version **1.77.x** or later is required.
+
 
 .. note::
     The following instructions will default to ``/usr/local`` as the installation

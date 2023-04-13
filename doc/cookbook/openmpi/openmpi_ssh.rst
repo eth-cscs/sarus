@@ -17,7 +17,7 @@ Test case
 =========
 We use the "Hello world in C" program included with the OpenMPI codebase in the
 `examples/hello_c.c
-<https://github.com/open-mpi/ompi/blob/master/examples/hello_c.c>`_ file.
+<https://github.com/open-mpi/ompi/blob/main/examples/hello_c.c>`_ file.
 We do not measure performance with this test and we do not make comparisons with
 a native implementation.
 

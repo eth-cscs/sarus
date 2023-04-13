@@ -52,7 +52,7 @@ Example value: ``/opt/sarus/<version>``
 hooksDir (string, OPTIONAL)
 ---------------------------
 Absolute path to the directory containing the `OCI hook JSON configuration files
-<https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_.
+<https://github.com/containers/common/blob/main/pkg/hooks/docs/oci-hooks.5.md>`_.
 See :doc:`/config/configure_hooks`.
 Sarus will process the JSON files in *hooksDir* and generate the configuration
 file of the OCI bundle accordingly. The hooks will effectively be called by
@@ -306,7 +306,7 @@ seccompProfile (string, OPTIONAL)
 ---------------------------------
 Absolute path to a file defining a seccomp profile in accordance with the
 `JSON format specified by the OCI Runtime Specification
-<https://github.com/opencontainers/runtime-spec/blob/master/config-linux.md#seccomp>`_.
+<https://github.com/opencontainers/runtime-spec/blob/main/config-linux.md#seccomp>`_.
 This profile will be applied to the container process by the OCI runtime.
 
 `Seccomp <https://www.kernel.org/doc/Documentation/prctl/seccomp_filter.txt>`_

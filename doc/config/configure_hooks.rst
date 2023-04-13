@@ -5,7 +5,7 @@ Configuring Sarus for OCI hooks
 In order to extend the core functionality provided by a container runtime, the
 OCI Runtime Specification allows for components to be hooked into the
 container's lifecycle, performing custom actions. These `OCI hooks
-<https://github.com/opencontainers/runtime-spec/blob/master/config.md#posix-platform-hooks>`_
+<https://github.com/opencontainers/runtime-spec/blob/main/config.md#posix-platform-hooks>`_
 are especially amenable to HPC use cases, where the dedicated hardware and
 highly-tuned software adopted by high-performance systems are in contrast with
 the platform-agnostic nature of software containers. Effectively, OCI hooks
@@ -14,7 +14,7 @@ features and specialized resources within container instances.
 
 To enable the use of hooks in Sarus, the :ref:`hooksDir <config-reference-hooksDir>` directory specified
 in *sarus.json* must be populated with `OCI hook JSON configuration files
-<https://github.com/containers/common/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_.
+<https://github.com/containers/common/blob/main/pkg/hooks/docs/oci-hooks.5.md>`_.
 Sarus currently supports the OCI hook schema version 1.0.0.
 
 Sarus parses the JSON files in :ref:`hooksDir <config-reference-hooksDir>` (subdirectories excluded) and,

@@ -52,7 +52,7 @@ arguments, but its actions are controlled through a few environment variables:
   libraries that will substitute the container's libraries.
 
 The following is an example of `OCI hook JSON configuration file
-<https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
+<https://github.com/containers/common/blob/main/pkg/hooks/docs/oci-hooks.5.md>`_
 enabling the glibc hook:
 
 .. literalinclude:: /config/hook_examples/01-glibc-hook.json

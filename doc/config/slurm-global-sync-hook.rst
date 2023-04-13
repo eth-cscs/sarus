@@ -53,7 +53,7 @@ argument. The following environment variables must be defined:
   The file is used by the hook to retrieve the username of the user.
 
 The following is an example of `OCI hook JSON configuration file
-<https://github.com/containers/libpod/blob/master/pkg/hooks/docs/oci-hooks.5.md>`_
+<https://github.com/containers/common/blob/main/pkg/hooks/docs/oci-hooks.5.md>`_
 enabling the Slurm global sync hook:
 
 .. literalinclude:: /config/hook_examples/09-slurm-global-sync-hook.json
