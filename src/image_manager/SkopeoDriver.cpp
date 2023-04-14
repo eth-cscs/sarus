@@ -150,7 +150,7 @@ std::string SkopeoDriver::inspectRaw(const std::string& sourceTransport, const s
          * Quay.io responds "unauthorized" regardless if the image is private or non-existent.
          * Additionally, the error strings might have different contents depending on the registry.
          */
-        auto deniedAccessString = std::string{"denied:"};
+        auto deniedAccessString = std::string{"requested access to the resource is denied"};
         auto unauthorizedAccessString = std::string{"unauthorized:"};
         auto invalidCredentialsString = std::string{"invalid username/password:"};
         auto manifestErrorString = std::string{"reading manifest"};
