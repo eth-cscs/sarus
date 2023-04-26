@@ -18,7 +18,7 @@ sudo rm -rf /var/lib/apt/lists/*
 
 # The following dependencies are not provided via the system's package manager
 # and should be installed manually:
-# - Runc version 1.1.4
+# - Runc version 1.1.6
 
 # DOCS: END
 
