@@ -16,6 +16,9 @@ from contextlib import contextmanager
 ALPINE_IMAGE = "quay.io/ethcscs/alpine:3.14"
 UBUNTU_IMAGE = "quay.io/ethcscs/ubuntu:20.04"
 
+sarus_json_filename = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/sarus.json"
+sarus_json_backup = sarus_json_filename+".bak"
+
 
 def command_output_without_trailing_new_lines(out):
     lines = [line for line in out.split('\n')]
@@ -121,13 +124,18 @@ def remove_image_if_necessary(is_centralized_repository, image):
     subprocess.check_call(command)
 
 
-def remove_image_backing_file(image):
-    import json, pwd, pathlib
-    with open(os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/sarus.json") as sarus_json:
+def get_local_repository_path():
+    import pwd, pathlib
+    with open(sarus_json_filename) as sarus_json:
         config = json.load(sarus_json)
         repo_base = config["localRepositoryBaseDir"]
     username = pwd.getpwuid(os.geteuid()).pw_name
-    image_backing_file = pathlib.Path(repo_base, username, f".sarus/images/{image.replace(':', '/')}.squashfs")
+    return pathlib.Path(repo_base, username, ".sarus")
+
+
+def remove_image_backing_file(image):
+    import pathlib
+    image_backing_file = pathlib.Path(get_local_repository_path(), f"images/{image.replace(':', '/')}.squashfs")
     image_backing_file.unlink()
 
 
@@ -235,10 +243,6 @@ def get_sarus_error_output(command, fail_expected=True):
 def assert_sarus_raises_error_containing_text(command, text):
     sarus_output = get_sarus_error_output(command)
     assert text in sarus_output, 'Sarus generated an error, but it did not contain the expected text "{}".'.format(text)
-
-
-sarus_json_filename = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/sarus.json"
-sarus_json_backup = sarus_json_filename+".bak"
 
 
 def modify_sarus_json(new_parameters):

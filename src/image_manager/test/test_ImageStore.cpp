@@ -51,10 +51,16 @@ TEST_GROUP(ImageStoreTestGroup) {
     }
 };
 
-void addImageHarness(const image_manager::ImageStore& imageStore, const common::SarusImage& image) {
+static void addImageHarness(const image_manager::ImageStore& imageStore, const common::SarusImage& image) {
     imageStore.addImage(image);
     common::createFileIfNecessary(image.imageFile);
     common::createFileIfNecessary(image.metadataFile);
+}
+
+static bool isFileOwnedBy(const boost::filesystem::path& metadataFile, const common::UserIdentity& userIdentity) {
+    uid_t fileUid; gid_t fileGid;
+    std::tie(fileUid, fileGid) = common::getOwner(metadataFile);
+    return fileUid == userIdentity.uid && fileGid == userIdentity.gid;
 }
 
 TEST(ImageStoreTestGroup, addListRemove) {
@@ -63,6 +69,7 @@ TEST(ImageStoreTestGroup, addListRemove) {
         addImageHarness(imageStore, image);
     }
     CHECK(boost::filesystem::exists(imageStore.getRepositoryMetadataFile()));
+    CHECK(isFileOwnedBy(imageStore.getRepositoryMetadataFile(), configRAII.config->userIdentity));
     CHECK(imageStore.listImages() == imageVector);
 
     // automatically remove an image without backing file
@@ -70,6 +77,8 @@ TEST(ImageStoreTestGroup, addListRemove) {
     imageVector.pop_back();
     refVector.pop_back();
     CHECK(imageStore.listImages() == imageVector);
+    CHECK(boost::filesystem::exists(imageStore.getRepositoryMetadataFile()));
+    CHECK(isFileOwnedBy(imageStore.getRepositoryMetadataFile(), configRAII.config->userIdentity));
 
     // remove all remaining images
     for (const auto& ref : refVector) {
@@ -88,6 +97,8 @@ TEST(ImageStoreTestGroup, addListRemove) {
     addImageHarness(imageStore, imageVector[0]);
     CHECK(imageStore.listImages().back() == imageVector[0]);
     CHECK(imageStore.listImages().front() == imageVector[1]);
+    CHECK(boost::filesystem::exists(imageStore.getRepositoryMetadataFile()));
+    CHECK(isFileOwnedBy(imageStore.getRepositoryMetadataFile(), configRAII.config->userIdentity));
 }
 
 TEST(ImageStoreTestGroup, getImageID) {
@@ -115,6 +126,7 @@ TEST(ImageStoreTestGroup, findImage) {
         addImageHarness(imageStore, image);
     }
     CHECK(boost::filesystem::exists(imageStore.getRepositoryMetadataFile()));
+    CHECK(isFileOwnedBy(imageStore.getRepositoryMetadataFile(), configRAII.config->userIdentity));
     CHECK(imageStore.listImages().size() == imageVector.size());
 
     // look for available images
@@ -133,6 +145,8 @@ TEST(ImageStoreTestGroup, findImage) {
     // automatically remove an image without backing file
     boost::filesystem::remove(imageVector.back().imageFile);
     CHECK_FALSE(imageStore.findImage(refVector.back()));
+    CHECK(boost::filesystem::exists(imageStore.getRepositoryMetadataFile()));
+    CHECK(isFileOwnedBy(imageStore.getRepositoryMetadataFile(), configRAII.config->userIdentity));
 }
 
 }}} // namespace

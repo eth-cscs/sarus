@@ -80,6 +80,7 @@ class TestCommandRun(unittest.TestCase):
         command = ["sarus", "run", self.DEFAULT_IMAGE, "true"]
         output = util.get_sarus_error_output(command)
         assert f"Image {self.DEFAULT_IMAGE} is not available" in output
+        assert self._is_repository_metadata_owned_by_user()
 
         # Check we can run after pulling again
         util.pull_image(is_centralized_repository=False, image=self.DEFAULT_IMAGE)
@@ -118,3 +119,9 @@ class TestCommandRun(unittest.TestCase):
         processes.sort(key=lambda process: process["pid"])  # sort by pid in ascending order
 
         return processes
+
+    def _is_repository_metadata_owned_by_user(self):
+        import os, pathlib
+        repository_metadata = pathlib.Path(util.get_local_repository_path(), "metadata.json")
+        metadata_stat = repository_metadata.stat()
+        return metadata_stat.st_uid == os.getuid() and metadata_stat.st_gid == os.getgid()

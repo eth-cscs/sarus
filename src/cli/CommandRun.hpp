@@ -508,9 +508,11 @@ private:
     void verifyThatImageIsAvailable() const {
         cli::utility::printLog( boost::format("Verifying that image %s is available") % conf->imageReference,
                                 common::LogLevel::INFO);
-        // switch to user filesystem identity to make sure we can access images on root_squashed filesystems
+        // switch to user identity to make sure that:
+        //   - we can access images on root_squashed filesystems
+        //   - we do not create/update local repo files (e.g. repo metadata and lockfiles) with root ownership
         auto rootIdentity = common::UserIdentity{};
-        common::setFilesystemUid(conf->userIdentity);
+        common::switchIdentity(conf->userIdentity);
 
         try {
             auto imageStore = image_manager::ImageStore(conf);
@@ -532,7 +534,7 @@ private:
             SARUS_RETHROW_ERROR(e, "Failed to verify that image is available");
         }
 
-        common::setFilesystemUid(rootIdentity);
+        common::switchIdentity(rootIdentity);
 
         cli::utility::printLog(boost::format("Successfully verified that image %s is available") % conf->imageReference,
                                common::LogLevel::INFO);

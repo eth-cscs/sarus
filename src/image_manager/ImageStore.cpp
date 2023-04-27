@@ -154,12 +154,9 @@ namespace image_manager {
                 }
                 else {
                     removeImageBackingFiles(imageMetadata);
-                    repositoryMetadata["images"].GetArray().Erase(imageMetadata);
+                    removeRepositoryMetadataEntry(imageMetadata, repositoryMetadata);
                 }
             }
-
-            // Update repository metadata in case entry was removed due to missing backing files
-            atomicallyUpdateRepositoryMetadataFile(repositoryMetadata);
         }
         catch(const std::exception& e) {
             auto message = boost::format("Failed to find image %s") % reference;

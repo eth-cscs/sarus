@@ -29,6 +29,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - Fixed a race condition when pulling private images concurrently with the same user
+- Fixed a bug which was causing repository metadata files and their corresponding lockfiles to be created or atomically updated with root group ownership after executing a `sarus run` command.
+  The aforementioned files are now correctly created or updated with user and group ownership of the user who launched Sarus.
 
 
 ## [1.5.2]
