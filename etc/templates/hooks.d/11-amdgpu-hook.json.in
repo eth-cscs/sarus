@@ -1,0 +1,10 @@
+{
+    "version": "1.0.0",
+    "hook": {
+        "path": "@INSTALL_PATH@/bin/amdgpu_hook"
+    },
+    "when": {
+        "always": true
+    },
+    "stages": ["prestart"]
+}

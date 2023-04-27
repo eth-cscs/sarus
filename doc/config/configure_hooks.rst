@@ -47,3 +47,4 @@ for specific use cases:
    ssh-hook
    slurm-global-sync-hook
    timestamp-hook
+   amdgpu-hook
