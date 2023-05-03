@@ -185,6 +185,15 @@ def run_command_in_container_with_slurm(image, command, options_of_srun_command=
     return get_trimmed_output(full_command, **subprocess_kwargs)
 
 
+def get_hash_of_file_in_container(path, image, options=None):
+    output = run_command_in_container(is_centralized_repository=False,
+                                      image=image,
+                                      command=["md5sum", path],
+                                      options_of_run_command=options)
+    file_hash = output[0].split()[0]
+    return file_hash
+
+
 def get_hashes_of_host_libs_in_container(is_centralized_repository, image, options_of_run_command=None):
     """
     Returns a list of md5sum hashes of dynamic libraries which are bind-mounted into a container from the host.
@@ -209,6 +218,18 @@ def get_hashes_of_host_libs_in_container(is_centralized_repository, image, optio
         hashes.append(output[0].split()[0])
 
     return hashes
+
+
+def generate_file_md5_hash(path, algorithm):
+    import hashlib, sys
+    with open(path, "rb") as f:
+        hash_md5 = hashlib.md5()
+        if sys.version_info >= (3, 11):
+            hash_md5 = hashlib.file_digest(f, "md5")
+        else:
+            for chunk in iter(lambda: f.read(8192), b""):
+                hash_md5.update(chunk)
+    return hash_md5.hexdigest()
 
 
 def get_trimmed_output(full_command, **subprocess_kwargs):

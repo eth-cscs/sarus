@@ -1,0 +1,16 @@
+{
+    "version": "1.0.0",
+    "hook": {
+        "path": "@INSTALL_PATH@/bin/mount_hook",
+        "args": ["mount_hook",
+            @MOUNT_ARGS@
+        ],
+        "env": [
+            "LDCONFIG_PATH=/sbin/ldconfig"
+        ]
+    },
+    "when": {
+        "always": true
+    },
+    "stages": ["prestart"]
+}

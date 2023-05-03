@@ -89,6 +89,20 @@ std::unordered_map<std::string, std::string> parseEnvironmentVariablesFromOCIBun
     return env;
 }
 
+boost::optional<std::string> getEnvironmentVariableValueFromOCIBundle(const std::string& key, const boost::filesystem::path& bundleDir) {
+    boost::optional<std::string> value;
+    auto json = sarus::common::readJSON(bundleDir / "config.json");
+    for(const auto& variable : json["process"]["env"].GetArray()) {
+        std::string k, v;
+        std::tie(k, v) = sarus::common::parseEnvironmentVariable(variable.GetString());
+        if (k == key) {
+            value = v;
+            break;
+        }
+    }
+    return value;
+}
+
 static void enterNamespace(const boost::filesystem::path& namespaceFile) {
     // get namespace's fd   
     auto fd = open(namespaceFile.c_str(), O_RDONLY);

@@ -43,6 +43,7 @@ for specific use cases:
 
    mpi-hook
    nvidia-container-toolkit
+   mount-hook
    glibc-hook
    ssh-hook
    slurm-global-sync-hook

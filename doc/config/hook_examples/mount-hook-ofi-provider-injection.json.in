@@ -1,0 +1,31 @@
+{
+    "version": "1.0.0",
+    "hook": {
+        "path": "/opt/sarus/default/bin/mount_hook",
+        "args": ["mount_hook",
+            "--mount=type=bind,src=/usr/local/libfabric/1.18.0/lib/libfabric/libgnix-fi.so,dst=<FI_PROVIDER_PATH>/libgnix-fi.so",
+            "--mount=type=bind,src=/opt/cray/xpmem/default/lib64/libxpmem.so.0,dst=/usr/lib/libxpmem.so.0",
+            "--mount=type=bind,src=/opt/cray/ugni/default/lib64/libugni.so.0,dst=/usr/lib64/libugni.so.0",
+            "--mount=type=bind,src=/opt/cray/udreg/default/lib64/libudreg.so.0,dst=/usr/lib64/libudreg.so.0",
+            "--mount=type=bind,src=/opt/cray/alps/default/lib64/libalpsutil.so.0,dst=/usr/lib64/libalpsutil.so.0",
+            "--mount=type=bind,src=/opt/cray/alps/default/lib64/libalpslli.so.0,dst=/usr/lib64/libalpslli.so.0",
+            "--mount=type=bind,src=/opt/cray/wlm_detect/default/lib64/libwlm_detect.so.0,dst=/usr/lib64/libwlm_detect.so.0",
+            "--mount=type=bind,src=/var/opt/cray/alps,dst=/var/opt/cray/alps",
+            "--mount=type=bind,src=/etc/opt/cray/wlm_detect,dst=/etc/opt/cray/wlm_detect",
+            "--mount=type=bind,src=/opt/gcc/10.3.0/snos/lib64/libatomic.so.1,dst=/usr/lib/libatomic.so.1",
+            "--device=/dev/kgni0",
+            "--device=/dev/kdreg",
+            "--device=/dev/xpmem"
+        ],
+        "env": [
+            "LDCONFIG_PATH=/sbin/ldconfig"
+        ]
+    },
+    "when": {
+        "annotations": {
+            "^com.hooks.mpi.enabled$": "^true$",
+            "^com.hooks.mpi.type$": "^libfabric$"
+        }
+    },
+    "stages": ["prestart"]
+}

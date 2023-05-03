@@ -1,0 +1,58 @@
+{
+    "version": "1.0.0",
+    "hook": {
+        "path": "/opt/sarus/default/bin/mount_hook",
+        "args": ["mount_hook",
+            "--mount=type=bind,src=/usr/bin/salloc,dst=/usr/bin/salloc",
+            "--mount=type=bind,src=/usr/bin/sbatch,dst=/usr/bin/sbatch",
+            "--mount=type=bind,src=/usr/bin/sinfo,dst=/usr/bin/sinfo",
+            "--mount=type=bind,src=/usr/bin/squeue,dst=/usr/bin/squeue",
+            "--mount=type=bind,src=/usr/bin/srun,dst=/usr/bin/srun",
+            "--mount=type=bind,src=/etc/slurm,dst=/etc/slurm",
+            "--mount=type=bind,src=/usr/lib64/slurm,dst=/usr/lib64/slurm",
+            "--mount=type=bind,src=/var/run/munge,destination=/run/munge",
+            "--mount=type=bind,src=/usr/lib64/libmunge.so.2,dst=/usr/lib64/libmunge.so.2",
+            "--mount=type=bind,src=/opt/cray/alpscomm/default/lib64/libalpscomm_sn.so.0,dst=/usr/lib64/libalpscomm_sn.so.0",
+            "--mount=type=bind,src=/opt/cray/alpscomm/default/lib64/libalpscomm_cn.so.0,dst=/usr/lib64/libalpscomm_cn.so.0",
+            "--mount=type=bind,src=/opt/cray/swrap/default/lib64/libswrap.so.0,dst=/usr/lib64/libswrap.so.0",
+            "--mount=type=bind,src=/opt/cray/socketauth/default/lib64/libsocketauth.so.0,dst=/usr/lib64/libsocketauth.so.0",
+            "--mount=type=bind,src=/opt/cray/comm_msg/default/lib64/libcomm_msg.so.0,dst=/usr/lib64/libcomm_msg.so.0",
+            "--mount=type=bind,src=/opt/cray/sysadm/default/lib64/libsysadm.so.0,dst=/usr/lib64/libsysadm.so.0",
+            "--mount=type=bind,src=/opt/cray/codbc/default/lib64/libcodbc.so.0,dst=/usr/lib64/libcodbc.so.0",
+            "--mount=type=bind,src=/opt/cray/nodeservices/default/lib64/libnodeservices.so.0,dst=/usr/lib64/libnodeservices.so.0",
+            "--mount=type=bind,src=/opt/cray/sysutils/default/lib64/libsysutils.so.0,dst=/usr/lib64/libsysutils.so.0",
+            "--mount=type=bind,src=/opt/cray/pe/atp/libAtpDispatch.so,dst=/opt/cray/pe/atp/libAtpDispatch.so",
+            "--mount=type=bind,src=/opt/cray/pe/atp/3.14.5/slurm/libAtpSLaunch.so,dst=/opt/cray/pe/atp/3.14.5/slurm/libAtpSLaunch.so",
+            "--mount=type=bind,src=/usr/lib64/libxmlrpc-epi.so.0,dst=/usr/lib64/libxmlrpc-epi.so.0",
+            "--mount=type=bind,src=/usr/lib64/libodbc.so.2,dst=/usr/lib64/libodbc.so.2",
+            "--mount=type=bind,src=/usr/lib64/libexpat.so.1,dst=/usr/lib64/libexpat.so.1",
+            "--mount=type=bind,src=/usr/lib64/libltdl.so.7,dst=/usr/lib64/libltdl.so.7",
+            "--mount=type=bind,src=/opt/cray/job/default/lib64/libjob.so.0,dst=/usr/lib64/libjob.so.0",
+            "--mount=type=bind,src=/opt/cray/job/default/lib64/libjobctl.so.0,dst=/usr/lib64/libjobctl.so.0",
+            "--mount=type=bind,src=/opt/cray/ugni/default/lib64/libugni.so.0,dst=/usr/lib64/libugni.so.0",
+            "--mount=type=bind,src=/usr/lib64/libjansson.so.4,dst=/usr/lib64/libjansson.so.4",
+            "--mount=type=bind,src=/opt/cscs/jobreport/jobreport.so,dst=/opt/cscs/jobreport/jobreport.so",
+            "--mount=type=bind,src=/opt/cscs/nohome/nohome.so,dst=/opt/cscs/nohome/nohome.so",
+            "--mount=type=bind,src=/usr/lib64/libslurm.so.36,dst=/usr/lib64/libslurm.so.36",
+            "--mount=type=bind,src=/usr/lib64/libcurl.so.4,dst=/usr/lib64/libcurl.so.4",
+            "--mount=type=bind,src=/usr/lib64/libnghttp2.so.14,dst=/usr/lib64/libnghttp2.so.14",
+            "--mount=type=bind,src=/usr/lib64/libssh.so.4,dst=/usr/lib64/libssh.so.4",
+            "--mount=type=bind,src=/usr/lib64/libpsl.so.5,dst=/usr/lib64/libpsl.so.5",
+            "--mount=type=bind,src=/usr/lib64/libssl.so.1.1,dst=/usr/lib64/libssl.so.1.1",
+            "--mount=type=bind,src=/usr/lib64/libcrypto.so.1.1,dst=/usr/lib64/libcrypto.so.1.1",
+            "--mount=type=bind,src=/usr/lib64/libldap_r-2.4.so.2,dst=/usr/lib64/libldap_r-2.4.so.2",
+            "--mount=type=bind,src=/usr/lib64/liblber-2.4.so.2,dst=/usr/lib64/liblber-2.4.so.2",
+            "--mount=type=bind,src=/usr/lib64/libsasl2.so.3,dst=/usr/lib64/libsasl2.so.3",
+            "--mount=type=bind,src=/usr/lib64/libyaml-0.so.2,dst=/usr/lib64/libyaml-0.so.2"
+        ],
+        "env": [
+            "LDCONFIG_PATH=/sbin/ldconfig"
+        ]
+    },
+    "when": {
+        "annotations": {
+            "^com.hooks.slurm.activate$": "^true$"
+        }
+    },
+    "stages": ["prestart"]
+}

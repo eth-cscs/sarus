@@ -19,10 +19,8 @@
 #include <fcntl.h>
 
 #include <boost/format.hpp>
-#include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <rapidjson/document.h>
-#include <rapidjson/istreamwrapper.h>
 
 #include "common/Logger.hpp"
 #include "common/Error.hpp"

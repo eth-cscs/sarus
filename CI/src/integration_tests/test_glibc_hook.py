@@ -98,7 +98,7 @@ class TestGlibcHook(unittest.TestCase):
     """
     _OCIHOOK_CONFIG_FILE = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/hooks.d/glibc_hook.json"
     _HOST_GLIBC_LIBS = _get_host_glibc_libs()
-    _HOST_GLIBC_LIBS_HASHES = [subprocess.check_output(["md5sum", lib]).decode().split()[0] for lib in _HOST_GLIBC_LIBS]
+    _HOST_GLIBC_LIBS_HASHES = [util.generate_file_md5_hash(lib, "md5") for lib in _HOST_GLIBC_LIBS]
 
     @classmethod
     def setUpClass(cls):

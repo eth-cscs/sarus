@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <sys/types.h>
 #include <boost/filesystem.hpp>
+#include <boost/optional.hpp>
 #include <rapidjson/document.h>
 
 #include "common/Logger.hpp"
@@ -29,6 +30,7 @@ namespace utility {
 void applyLoggingConfigIfAvailable(const rapidjson::Document&);
 std::tuple<boost::filesystem::path, pid_t> parseStateOfContainerFromStdin();
 std::unordered_map<std::string, std::string> parseEnvironmentVariablesFromOCIBundle(const boost::filesystem::path&);
+boost::optional<std::string> getEnvironmentVariableValueFromOCIBundle(const std::string& key, const boost::filesystem::path&);
 void enterMountNamespaceOfProcess(pid_t);
 void enterPidNamespaceOfProcess(pid_t pid);
 void validatedBindMount(const boost::filesystem::path& from, const boost::filesystem::path& to,

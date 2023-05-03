@@ -15,10 +15,13 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include <boost/optional.hpp>
+#include <rapidjson/document.h>
 
 #include "common/Utility.hpp"
 #include "common/PathRAII.hpp"
 #include "hooks/common/Utility.hpp"
+#include "test_utility/Misc.hpp"
 #include "test_utility/OCIHooks.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
@@ -44,6 +47,49 @@ TEST(HooksUtilityTestGroup, parseStateOfContainerFromStdin) {
 
     CHECK(returnedBundleDir == expectedBundleDir.getPath());
     CHECK_EQUAL(returnedPid, expectedPid);
+}
+
+TEST(HooksUtilityTestGroup, getEnvironmentVariableValueFromOCIBundle) {
+    auto testBundleDir = sarus::common::PathRAII(
+        sarus::common::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "hooks-test-bundle-dir"));
+    sarus::common::createFoldersIfNecessary(testBundleDir.getPath());
+    auto bundleConfigFile = testBundleDir.getPath() / "config.json";
+
+    auto config = test_utility::ocihooks::createBaseConfigJSON(testBundleDir.getPath() / "rootfs",
+                                                               test_utility::misc::getNonRootUserIds());
+    auto& allocator = config.GetAllocator();
+
+    // Variable set and non-empty
+    {
+        config["process"]["env"].PushBack("TEST_VAR_SET_NOEMPTY0=value0", allocator);
+        config["process"]["env"].PushBack("TEST_VAR_SET_NOEMPTY1=value1", allocator);
+        config["process"]["env"].PushBack("TEST_VAR_SET_NOEMPTY2=value2", allocator);
+        sarus::common::writeJSON(config, bundleConfigFile);
+        auto value = utility::getEnvironmentVariableValueFromOCIBundle("TEST_VAR_SET_NOEMPTY1", testBundleDir.getPath());
+        CHECK(bool(value));
+        CHECK(*value == std::string("value1"));
+        config["process"]["env"].SetArray();
+    }
+    // Variable set and empty
+    {
+        config["process"]["env"].PushBack("TEST_VAR_SET_NOEMPTY0=value0", allocator);
+        config["process"]["env"].PushBack("TEST_VAR_SET_EMPTY=", allocator);
+        config["process"]["env"].PushBack("TEST_VAR_SET_NOEMPTY2=value2", allocator);
+        sarus::common::writeJSON(config, bundleConfigFile);
+        auto value = utility::getEnvironmentVariableValueFromOCIBundle("TEST_VAR_SET_EMPTY", testBundleDir.getPath());
+        CHECK(bool(value));
+        CHECK(*value == std::string(""));
+        config["process"]["env"].SetArray();
+    }
+    // Variable not set
+    {
+        config["process"]["env"].PushBack("TEST_VAR_SET_NOEMPTY0=value0", allocator);
+        config["process"]["env"].PushBack("TEST_VAR_SET_NOEMPTY2=value2", allocator);
+        sarus::common::writeJSON(config, bundleConfigFile);
+        auto value = utility::getEnvironmentVariableValueFromOCIBundle("TEST_VAR_NOT_SET", testBundleDir.getPath());
+        CHECK_FALSE(value);
+        config["process"]["env"].SetArray();
+    }
 }
 
 TEST(HooksUtilityTestGroup, findSubsystemMountPaths) {

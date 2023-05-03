@@ -1,0 +1,26 @@
+FROM docker.io/ubuntu:22.04
+
+ARG libfabric_version=1.17.1
+
+RUN apt-get update && apt-get install -y \
+        build-essential \
+        ca-certificates \
+        automake \
+        autoconf \
+        libtool \
+        wget \
+        --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install libfabric
+RUN wget -q https://github.com/ofiwg/libfabric/archive/v${libfabric_version}.tar.gz \
+    && tar xf v${libfabric_version}.tar.gz \
+    && cd libfabric-${libfabric_version} \
+    && ./autogen.sh \
+    && ./configure --prefix=/usr \
+    && make -j$(nproc) \
+    && make install \
+    && ldconfig \
+    && cd .. \
+    && rm -rf v${libfabric_version}.tar.gz libfabric-${libfabric_version}
+

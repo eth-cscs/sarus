@@ -82,6 +82,12 @@ pygments_style = 'sphinx'
 sphinx_tabs_valid_builders = ['linkcheck']
 sphinx_tabs_disable_tab_closing = True
 
+# Avoid double hyphen (used for command line options) to be converted into a
+# single long dash (em dash) outside "literal" environments.
+# This is meant to render correctly double hyphens in :ref: links and the
+# likes.
+smartquotes = False
+
 
 # -- Options for HTML output -------------------------------------------------
 

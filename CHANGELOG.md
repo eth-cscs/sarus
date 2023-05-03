@@ -14,6 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added support for the optional `defaultMPIType` parameter in the `sarus.json` configuration file. More details [here](https://sarus.readthedocs.io/en/stable/config/configuration_reference.html#defaultmpitype-string-optional).
 - Added a warning message when acquisition of a lockfile on the local repository metadata file is taking an unusually long time.
   The message is displayed every 1 second, until the lock acquisition timeout is reached.
+- Added a new OCI hook to perform arbitrary sequences of bind mounts and device mounts into containers.
+  The hook is meant to streamline the implementation and usage of advanced features which can be enabled through sets of related mounts.
+  More details [here](https://sarus.readthedocs.io/en/stable/config/mount-hook.html).
 - Added a note about the Boost minimum required version 1.77 when building on ARM.
 - Added the AMD GPU OCI hook to provide access to ROCm AMD GPU devices inside the container. More details [here](https://sarus.readthedocs.io/en/stable/config/amdgpu-hook.html)
 

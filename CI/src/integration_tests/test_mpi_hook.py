@@ -28,7 +28,7 @@ class TestMPIHook(unittest.TestCase):
 
     _CI_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     _DUMMY_LIB_PATH = _CI_DIR + "/dummy_libs/lib_dummy_0.so"
-    _HOST_LIB_HASH = subprocess.check_output(["md5sum", _DUMMY_LIB_PATH]).decode().split()[0]
+    _HOST_LIB_HASH = util.generate_file_md5_hash(_DUMMY_LIB_PATH, "md5")
 
     @classmethod
     def setUpClass(cls):
