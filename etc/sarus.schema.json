@@ -122,6 +122,19 @@
         },
         "enablePMIxv3Support": {
             "type": "boolean"
+        },
+        "repositoryMetadataLockTimings": {
+            "type": "object",
+            "properties": {
+                "timeoutMs": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "warningMs": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
         }
     },
     "required": [

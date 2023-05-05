@@ -402,6 +402,30 @@ This could fit the case of a system where only a single MPI hook is configured.
 Refer to :ref:`this section <mpi-hook-config-annotations-cli>` for more details
 about the interaction between command line options, annotations, and hook selection.
 
+.. _config-reference-repositoryMetadataLockTimings:
+
+repositoryMetadataLockTimings (object, OPTIONAL)
+------------------------------------------------
+To prevent race conditions when accessing metadata files of local image
+repositories, Sarus implements a mechanism based on a lock file.
+
+The ``repositoryMetadataLockTimings`` JSON object allows to control the
+behavior of Sarus while it is waiting to acquire the lock on the metadata file.
+This object can have the following optional fields:
+
+* ``timeoutMs`` (integer): Maximum amount of time (in milliseconds) for which
+  Sarus attempts to acquire the lock. If Sarus is still waiting after this time
+  has elapsed, the program times out and exits with an error.
+  The value must be a positive integer. If the parameter is not defined,
+  defaults to 60000 ms (60 seconds).
+* ``warningMs``: While waiting to acquire the lock, Sarus prints regular
+  warning messages to inform of its status (i.e. access to the metadata file
+  is taking longer but the program is not stalled for another reason) until
+  the timeout is reached or acquisition of the lock is successful.
+  This parameter determines the time interval (in milliseconds) between such
+  warning messages. The value must be a positive integer. If the parameter is not
+  defined, defaults to 10000 ms (10 seconds).
+
 .. _config-reference-PMIxv3:
 
 enablePMIxv3Support (bool, OPTIONAL) (experimental)
@@ -482,5 +506,9 @@ Example configuration file
             "enforce": false
         },
         "containersRegistries.dPath": "/opt/sarus/1.5.2/etc/registries.d"
-        "defaultMPIType": "mpich"
+        "defaultMPIType": "mpich",
+        "repositoryMetadataLockTimings": {
+            "timeoutMs": 120000,
+            "warningMs": 15000
+        }
     }

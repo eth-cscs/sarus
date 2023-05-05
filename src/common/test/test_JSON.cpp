@@ -70,6 +70,18 @@ TEST(JSONTestGroup, validFile) {
     CHECK_EQUAL(config->json["seccompProfile"].GetString(), std::string("/opt/sarus/etc/seccomp/default.json"));
     CHECK_EQUAL(config->json["apparmorProfile"].GetString(), std::string("sarus-default"));
     CHECK_EQUAL(config->json["selinuxLabel"].GetString(), std::string("system_u:system_r:svirt_sarus_t:s0:c124,c675"));
+    CHECK_EQUAL(config->json["selinuxMountLabel"].GetString(), std::string("system_u:object_r:svirt_sarus_file_t:s0:c715,c811"));
+
+    const rapidjson::Value& containersPolicy = config->json["containersPolicy"];
+    CHECK_EQUAL(containersPolicy["path"].GetString(), std::string("/opt/sarus/etc/policy.json"));
+    CHECK_EQUAL(containersPolicy["enforce"].GetBool(), false);
+
+    CHECK_EQUAL(config->json["containersRegistries.dPath"].GetString(), std::string("/opt/sarus/etc/registries.d"));
+    CHECK_EQUAL(config->json["defaultMPIType"].GetString(), std::string("mpich"));
+
+    const rapidjson::Value& lockTimings = config->json["repositoryMetadataLockTimings"];
+    CHECK_EQUAL(lockTimings["timeoutMs"].GetInt(), 120000);
+    CHECK_EQUAL(lockTimings["warningMs"].GetInt(), 15000);
 }
 
 TEST(JSONTestGroup, minimumRequirementsFile) {
@@ -92,6 +104,12 @@ TEST(JSONTestGroup, relativePaths) {
 
 TEST(JSONTestGroup, siteMountWithoutType) {
     boost::filesystem::path jsonFile(testSourceDir / "json/site_mount_without_type.json");
+    boost::filesystem::path jsonSchemaFile(projectRootDir / "etc/sarus.schema.json");
+    CHECK_THROWS(sarus::common::Error, sarus::common::Config(jsonFile, jsonSchemaFile));
+}
+
+TEST(JSONTestGroup, invalidLockTiming) {
+    boost::filesystem::path jsonFile(testSourceDir / "json/invlid_lock_timing.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "etc/sarus.schema.json");
     CHECK_THROWS(sarus::common::Error, sarus::common::Config(jsonFile, jsonSchemaFile));
 }

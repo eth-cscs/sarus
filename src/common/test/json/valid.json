@@ -52,5 +52,10 @@
         "path": "/opt/sarus/etc/policy.json",
         "enforce": false
     },
-    "containersRegistries.dPath": "/opt/sarus/etc/registries.d"
+    "containersRegistries.dPath": "/opt/sarus/etc/registries.d",
+    "defaultMPIType": "mpich",
+    "repositoryMetadataLockTimings": {
+        "timeoutMs": 120000,
+        "warningMs": 15000
+    }
 }

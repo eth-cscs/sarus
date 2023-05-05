@@ -37,7 +37,7 @@ public:
 
 public:
     Lockfile();
-    Lockfile(const boost::filesystem::path& file, unsigned int timeoutMs=noTimeout);
+    Lockfile(const boost::filesystem::path& file, unsigned int timeoutMs=noTimeout, unsigned int warningMs=1000);
     Lockfile(const Lockfile&) = delete;
     Lockfile(Lockfile&&);
     ~Lockfile();

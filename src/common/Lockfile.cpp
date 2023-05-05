@@ -29,7 +29,7 @@ Lockfile::Lockfile()
     : logger(&common::Logger::getInstance())
 {}
 
-Lockfile::Lockfile(const boost::filesystem::path& file, unsigned int timeoutMs)
+Lockfile::Lockfile(const boost::filesystem::path& file, unsigned int timeoutMs, unsigned int warningMs)
     : logger(&common::Logger::getInstance())
     , lockfile{convertToLockfile(file)}
 {
@@ -45,7 +45,7 @@ Lockfile::Lockfile(const boost::filesystem::path& file, unsigned int timeoutMs)
         const int backoffTimeMs = 100;
         std::this_thread::sleep_for(std::chrono::milliseconds(backoffTimeMs));
         elapsedTimeMs += backoffTimeMs;
-        if(elapsedTimeMs % 1000 == 0) {
+        if(elapsedTimeMs % warningMs == 0) {
             message = boost::format("Still attempting to acquire lock on file %s after %d ms (will timeout after %d milliseconds)...")
                                    % *lockfile % elapsedTimeMs % timeoutMs;
             logger->log(message.str(), loggerSubsystemName, common::LogLevel::WARN);

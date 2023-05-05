@@ -58,7 +58,8 @@ private:
     const std::string sysname = "ImageStore"; // system name for logger
     boost::filesystem::path imagesDirectory;
     boost::filesystem::path metadataFile;
-    unsigned int lockTimeoutMs = 10000;
+    unsigned int lockWarningMs;
+    unsigned int lockTimeoutMs;
 };
 
 } // namespace

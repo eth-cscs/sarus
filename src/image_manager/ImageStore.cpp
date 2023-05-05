@@ -35,7 +35,23 @@ namespace image_manager {
     ImageStore::ImageStore(std::shared_ptr<const common::Config> config)
         : imagesDirectory{config->directories.images}
         , metadataFile{config->directories.repository / "metadata.json"}
-    {}
+    {
+        auto rjPtr = rj::Pointer("/repositoryMetadataLockTimings/timeoutMs");
+        if (const rj::Value* configLockTimeoutMs = rjPtr.Get(config->json)) {
+            lockTimeoutMs = configLockTimeoutMs->GetInt();
+        }
+        else {
+            lockTimeoutMs = 60000;
+        }
+
+        rjPtr = rj::Pointer("/repositoryMetadataLockTimings/warningMs");
+        if (const rj::Value* configLockWarningMs = rjPtr.Get(config->json)) {
+            lockWarningMs = configLockWarningMs->GetInt();
+        }
+        else {
+            lockWarningMs = 10000;
+        }
+    }
 
     /**
      * Add the container image into repository (or update existing object)
@@ -45,7 +61,7 @@ namespace image_manager {
                  common::LogLevel::INFO);
 
         try {
-            common::Lockfile lock{metadataFile, lockTimeoutMs};
+            common::Lockfile lock{metadataFile, lockTimeoutMs, lockWarningMs};
             auto metadata = readRepositoryMetadata();
 
             // remove previous entries with the same image reference (if any)
@@ -82,7 +98,7 @@ namespace image_manager {
                  common::LogLevel::INFO);
 
         try {
-            common::Lockfile lock{metadataFile, lockTimeoutMs};
+            common::Lockfile lock{metadataFile, lockTimeoutMs, lockWarningMs};
             auto repositoryMetadata = readRepositoryMetadata();
             auto imageMetadata = findImageMetadata(imageReference, repositoryMetadata);
 
@@ -114,7 +130,7 @@ namespace image_manager {
         auto images = std::vector<common::SarusImage>{};
 
         try {
-            common::Lockfile lock{metadataFile, lockTimeoutMs};
+            common::Lockfile lock{metadataFile, lockTimeoutMs, lockWarningMs};
             auto repositoryMetadata = readRepositoryMetadata();
             for (const auto& imageMetadata : repositoryMetadata["images"].GetArray()) {
                 // If backing files are present, all image data is available: add the image to list to be visualized.
@@ -143,7 +159,7 @@ namespace image_manager {
         boost::optional<common::SarusImage> image;
 
         try {
-            common::Lockfile lock{metadataFile, lockTimeoutMs};
+            common::Lockfile lock{metadataFile, lockTimeoutMs, lockWarningMs};
             auto repositoryMetadata = readRepositoryMetadata();
             auto imageMetadata = findImageMetadata(reference, repositoryMetadata);
             if (imageMetadata) {
