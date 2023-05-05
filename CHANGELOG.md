@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [1.6.0]
 
 ### Added
 
@@ -15,11 +15,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   The message is displayed at a [configurable interval](https://sarus.readthedocs.io/en/stable/config/configuration_reference.html#repositorymetadatalocktimings-object-optional) (default 10 seconds), until the lock acquisition timeout is reached.
 - Added support for the optional `defaultMPIType` parameter in the `sarus.json` configuration file. More details [here](https://sarus.readthedocs.io/en/stable/config/configuration_reference.html#defaultmpitype-string-optional).
 - Added support for the optional `repositoryMetadataLockTimings` parameter in the `sarus.json` configuration file. More details [here](https://sarus.readthedocs.io/en/stable/config/configuration_reference.html#repositorymetadatalocktimings-object-optional).
+- Added the AMD GPU OCI hook to provide access to ROCm AMD GPU devices inside the container. More details [here](https://sarus.readthedocs.io/en/stable/config/amdgpu-hook.html)
 - Added a new OCI hook to perform arbitrary sequences of bind mounts and device mounts into containers.
   The hook is meant to streamline the implementation and usage of advanced features which can be enabled through sets of related mounts.
   More details [here](https://sarus.readthedocs.io/en/stable/config/mount-hook.html).
 - Added a note about the Boost minimum required version 1.77 when building on ARM.
-- Added the AMD GPU OCI hook to provide access to ROCm AMD GPU devices inside the container. More details [here](https://sarus.readthedocs.io/en/stable/config/amdgpu-hook.html)
 
 ### Changed
 
