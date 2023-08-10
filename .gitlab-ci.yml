@@ -20,7 +20,7 @@ variables:
   HOST_CACHES_PATH: /var/lib/gitlab-runner/cache/ids/sarus
 
 get_credentials:
-  image: vault:latest
+  image: vault:1.13.3
   stage: prepare_pipeline
   tags:
     - Fulen
