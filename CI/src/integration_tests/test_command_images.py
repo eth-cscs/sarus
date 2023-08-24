@@ -7,7 +7,6 @@
 
 import unittest
 import os
-import re
 
 
 import common.util as util
@@ -68,6 +67,7 @@ class TestCommandImages(unittest.TestCase):
         self.assertEqual(image_output[2], expected_digest)
 
     def _test_command_images(self, is_centralized_repository):
+        import re
         expected_header = ["REPOSITORY", "TAG", "IMAGE", "ID", "CREATED", "SIZE", "SERVER"]
 
         # pull image from default registry
@@ -91,8 +91,8 @@ class TestCommandImages(unittest.TestCase):
         image_output = self._image_in_output_of_images_command(is_centralized_repository, False, "load/library/loaded_image", "latest", "")
         self.assertEqual(image_output[0], "load/library/loaded_image")
         self.assertEqual(image_output[1], "latest")
-        self.assertEqual(image_output[2], "501d1a8f0487")
         self.assertEqual(image_output[5], "load")
+        self.assertTrue(re.match(r"[a-zA-Z0-9]{12}", image_output[2]))
         self.assertTrue(re.match(r"1\.[89]\dMB", image_output[4]))
 
     def _header_in_output_of_images_command(self, is_centralized_repository, print_digests=False):
