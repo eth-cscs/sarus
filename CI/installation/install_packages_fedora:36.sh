@@ -12,7 +12,7 @@ sudo rm -rf /var/cache/dnf
 
 # The following dependencies are not provided via the system's package manager
 # and should be installed manually:
-# - Runc version 1.1.6
+# - Runc version 1.1.9
 # - Umoci
 
 # DOCS: END
