@@ -64,23 +64,32 @@ TEST(SkopeoDriverTestGroup, copyToOCIImage) {
     }
 }
 
-TEST(SkopeoDriverTestGroup, inspectRaw) {
-    auto configRAII = test_utility::config::makeConfig();
-    auto& config = configRAII.config;
-
-    auto driver = image_manager::SkopeoDriver{config};
-
-    auto imageReference = std::string{"quay.io/ethcscs/alpine:3.14"};
-    auto expectedManifest = common::readFile(boost::filesystem::path{__FILE__}.parent_path() / "expected_inspect_raw_manifest.json");
-
-    auto returnedManifest = driver.inspectRaw("docker", imageReference);
+static void filterInspectOutputTestHelper(const image_manager::SkopeoDriver& driver,
+                                          const std::string& expectedManifestFilename) {
+    auto testSourceDir = boost::filesystem::path{__FILE__}.parent_path();
+    auto expectedManifestPath = testSourceDir / expectedManifestFilename;
+    auto expectedManifest = common::readFile(expectedManifestPath);
+    auto returnedManifest = driver.filterInspectOutput(expectedManifest);
     CHECK(returnedManifest == expectedManifest);
 
-    // Check debug mode does not alter result
-    common::Logger::getInstance().setLevel(common::LogLevel::DEBUG);
-    returnedManifest = driver.inspectRaw("docker", imageReference);
+    // Check debug output does not alter result
+    auto skopeoDebugLines = common::readFile(testSourceDir / "skopeo_debug_lines.txt");
+    returnedManifest = driver.filterInspectOutput(skopeoDebugLines + expectedManifest);
     CHECK(returnedManifest == expectedManifest);
     common::Logger::getInstance().setLevel(common::LogLevel::WARN);
+}
+
+TEST(SkopeoDriverTestGroup, filterInspectOutput) {
+    auto configRAII = test_utility::config::makeConfig();
+    auto& config = configRAII.config;
+    auto driver = image_manager::SkopeoDriver{config};
+
+    // Multi-line, indented
+    filterInspectOutputTestHelper(driver, "expected_manifests/alpine_3.14.json");
+    // Single line
+    filterInspectOutputTestHelper(driver, "expected_manifests/alpine_buildah.json");
+    // Multi-line, not indented
+    filterInspectOutputTestHelper(driver, "expected_manifests/zlib_ghcr.json");
 }
 
 TEST(SkopeoDriverTestGroup, manifestDigest) {
@@ -90,7 +99,7 @@ TEST(SkopeoDriverTestGroup, manifestDigest) {
 
     auto driver = image_manager::SkopeoDriver{config};
 
-    auto rawManifestPath = boost::filesystem::path{__FILE__}.parent_path() / "expected_inspect_raw_manifest.json";
+    auto rawManifestPath = boost::filesystem::path{__FILE__}.parent_path() / "expected_manifests/alpine_3.14.json";
     CHECK(driver.manifestDigest(rawManifestPath) == std::string{"sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d"});
 
     // OCI image blobs have their own digests as filenames, so it's a useful property for more test cases

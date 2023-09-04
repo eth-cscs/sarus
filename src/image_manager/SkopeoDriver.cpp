@@ -190,11 +190,9 @@ std::string SkopeoDriver::inspectRaw(const std::string& sourceTransport, const s
 
     // The Skopeo debug/warning messages are useful to be embedded in an exception message,
     // but prevent the output from being converted to JSON.
-    // Exclude the extra lines from Skopeo and only return the JSON output
-    inspectOutput = inspectOutput.substr(inspectOutput.rfind("\n{")+1);
-
-    printLog(boost::format("Raw inspect filtered output: %s") % inspectOutput, common::LogLevel::DEBUG);
-    return inspectOutput;
+    // Exclude the extra lines from Skopeo and only return the JSON output, assuming it is the last
+    // substring enclosed by curly braces that can be found in the output string
+    return filterInspectOutput(inspectOutput);
 }
 
 std::string SkopeoDriver::manifestDigest(const boost::filesystem::path& manifestPath) const {
@@ -236,6 +234,24 @@ boost::filesystem::path SkopeoDriver::acquireAuthFile(const common::Config::Auth
 
     printLog(boost::format("Successfully acquired authentication file %s") % authFilePath, common::LogLevel::INFO);
     return authFilePath;
+}
+
+std::string SkopeoDriver::filterInspectOutput(const std::string& inspectOutput) const {
+    std::string filteredOutput;
+    // TODO: this could be refactored into a common utility to match JSON-like strings
+    boost::smatch matches;
+    boost::regex jsonLikePattern(R"(\{(?:[^{}]|(?R))*\})");
+    if (boost::regex_search(inspectOutput, matches, jsonLikePattern)) {
+        filteredOutput = matches[matches.size() - 1];
+    }
+    else {
+        auto message = boost::format("Could not detect any JSON-like pattern after manifest inspect operation. "
+                                     "Raw inspect output:\n%s") % inspectOutput;
+        SARUS_THROW_ERROR(message.str());
+    }
+
+    printLog(boost::format("Raw inspect filtered output: %s") % filteredOutput, common::LogLevel::DEBUG);
+    return filteredOutput;
 }
 
 common::CLIArguments SkopeoDriver::generateBaseArgs() const {

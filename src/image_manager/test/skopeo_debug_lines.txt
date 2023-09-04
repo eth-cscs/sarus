@@ -1,0 +1,12 @@
+DEBU[0000] Loading registries configuration "/etc/containers/registries.conf" 
+DEBU[0000] Loading registries configuration "/etc/containers/registries.conf.d/shortnames.conf" 
+DEBU[0000] Trying to access "docker.io/library/alpine:latest" 
+DEBU[0000] No credentials for docker.io found           
+DEBU[0000] Using registries.d directory /etc/containers/registries.d for sigstore configuration 
+DEBU[0000]  No signature storage configuration found for docker.io/library/alpine:latest, using built-in default file:///home/user/.local/share/containers/sigstore 
+DEBU[0000] Looking for TLS certificates and private keys in /etc/docker/certs.d/docker.io 
+DEBU[0000] GET https://registry-1.docker.io/v2/         
+DEBU[0000] Ping https://registry-1.docker.io/v2/ status 401 
+DEBU[0000] GET https://auth.docker.io/token?scope=repository%3Alibrary%2Falpine%3Apull&service=registry.docker.io 
+DEBU[0000] GET https://registry-1.docker.io/v2/library/alpine/manifests/latest 
+DEBU[0001] Content-Type from manifest GET is "application/vnd.docker.distribution.manifest.list.v2+json"

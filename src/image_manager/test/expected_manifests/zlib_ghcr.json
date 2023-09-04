@@ -1,0 +1,24 @@
+{
+"mediaType":"application/vnd.oci.image.manifest.v1+json",
+"schemaVersion":2,
+"config":{
+"mediaType":"application/vnd.oci.image.config.v1+json",
+"digest":"sha256:89210d0e9eb2eb59718480e05952c5e6e2f281e647a455b56d18e3a3add39006",
+"size":1663
+},
+"layers":[
+{
+"mediaType":"application/vnd.oci.image.layer.v1.tar+gzip",
+"size":29533422,
+"digest":"sha256:3153aa388d026c26a2235e1ed0163e350e451f41a8a313e1804d7e1afb857ab4"
+},
+{
+"mediaType":"application/vnd.oci.image.layer.v1.tar+gzip",
+"digest":"sha256:527bca282263ba1baafa344a90d2b07664ec9e241503f678b80182e3cda239e7",
+"size":153466
+}
+],
+"annotations":{
+"org.opencontainers.image.description":"zlib@=1.2.13%gcc@=12.2.0+optimize+pic+shared build_system=makefile arch=linux-ubuntu22.10-zen2"
+}
+}

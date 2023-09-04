@@ -34,6 +34,7 @@ public:
     std::string inspectRaw(const std::string& sourceTransport, const std::string& sourceReference) const;
     std::string manifestDigest(const boost::filesystem::path& manifestPath) const;
     boost::filesystem::path acquireAuthFile(const common::Config::Authentication& auth, const common::ImageReference& reference);
+    std::string filterInspectOutput(const std::string& inspectOutput) const;
     common::CLIArguments generateBaseArgs() const;
 
 private:

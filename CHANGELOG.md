@@ -11,6 +11,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Updated recommended runc version to 1.1.9
 
 
+### Fixed
+
+- Fixed support for image manifests which are provided by registries as multi-line, not indented JSON
+
+
 ## [1.6.0]
 
 ### Added
