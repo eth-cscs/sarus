@@ -159,12 +159,12 @@ install_sarus_from_archive() {
     sudo ln -s ${sarus_version} default
     fail_on_error "Failed to install Sarus"
 
-    export PATH=/opt/sarus/default/bin:${PATH}
-    sudo /opt/sarus/default/configure_installation.sh
+    export PATH=${root_dir}/default/bin:${PATH}
+    sudo ${root_dir}/default/configure_installation.sh
 
     fail_on_error "Failed to install Sarus"
 
-    echo "Successfully installed Sarus"
+    echo "Successfully installed Sarus ${sarus_version} in ${root_dir}/default"
 
     cd ${pwd_backup}
 }
@@ -199,20 +199,20 @@ run_unit_tests() {
 }
 
 run_integration_tests() {
-    local build_dir=$1; shift || error "${FUNCNAME}: missing build_dir argument"
+    local install_dir=$1; shift || error "${FUNCNAME}: missing install_dir argument"
 
     echo "Running integration tests with user=docker"
     sudo -u docker --login bash -c "
-        PATH=/opt/sarus/default/bin:\${PATH} PYTHONPATH=/sarus-source/CI/src:\${PYTHONPATH} \
-        CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker \
+        PATH=${install_dir}/bin:\${PATH} PYTHONPATH=/sarus-source/CI/src:\${PYTHONPATH} \
+        CMAKE_INSTALL_PREFIX=${install_dir} HOME=/home/docker \
         pytest -v -m 'not asroot' /sarus-source/CI/src/integration_tests/" # TIP: Add -s --last-failed to pytest to get more output from failed tests.
     fail_on_error "Python integration tests failed"
     echo "Successfully run integration tests with user=docker"
 
     echo "Running integration tests with user=root"
     sudo --login bash -c "
-        PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=/sarus-source/CI/src:\$PYTHONPATH \
-        CMAKE_INSTALL_PREFIX=/opt/sarus/default HOME=/home/docker \
+        PATH=${install_dir}/bin:\$PATH PYTHONPATH=/sarus-source/CI/src:\$PYTHONPATH \
+        CMAKE_INSTALL_PREFIX=${install_dir} HOME=/home/docker \
         pytest -v -m asroot /sarus-source/CI/src/integration_tests/"
     fail_on_error "Python integration tests as root failed"
     echo "Successfully run integration tests with user=root"

@@ -131,7 +131,7 @@ sarus-itest-standalone() {
     _run_cmd_in_container ${image_run} root \
         ". /sarus-source/CI/utility_functions.bash && \
         install_sarus_from_archive /opt/sarus ${sarus_archive} && \
-        run_integration_tests $(_build_dir_container)"
+        run_integration_tests /opt/sarus/default"
 
     fail_on_error "${FUNCNAME}: failed"
 }
@@ -140,6 +140,8 @@ sarus-itest-from-scratch() {
     echo "${FUNCNAME^^} with:"
     _print_parameters
 
+    local install_dir="/opt/sarus/default"
+
     if [ ${toolchain_file} = "gcc-asan.cmake" ]; then
         echo "${FUNCNAME}: skipping integration tests (Sarus doesn't work when built with ASan)"
         return
@@ -147,8 +149,8 @@ sarus-itest-from-scratch() {
 
     _run_cmd_in_container ${image_run} root \
         ". /sarus-source/CI/utility_functions.bash && \
-        install_sarus $(_build_dir_container) /opt/sarus/default && \
-        run_integration_tests $(_build_dir_container)"
+        install_sarus $(_build_dir_container) ${install_dir} && \
+        run_integration_tests ${install_dir}"
 
     fail_on_error "${FUNCNAME}: failed"
 }
@@ -157,6 +159,8 @@ sarus-itest-from-scratch-debug() {
     echo "${FUNCNAME^^} with:"
     _print_parameters
 
+    local install_dir="/opt/sarus/default"
+
     if [ ${toolchain_file} = "gcc-asan.cmake" ]; then
         echo "${FUNCNAME}: skipping integration tests (Sarus doesn't work when built with ASan)"
         return
@@ -164,7 +168,7 @@ sarus-itest-from-scratch-debug() {
 
     _run_cmd_in_interactive_container ${image_run} root \
         ". /sarus-source/CI/utility_functions.bash && \
-        install_sarus $(_build_dir_container) /opt/sarus/default && \
+        install_sarus $(_build_dir_container) ${install_dir} && \
         bash"
 
     fail_on_error "${FUNCNAME}: failed"

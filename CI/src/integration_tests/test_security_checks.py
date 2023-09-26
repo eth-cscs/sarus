@@ -40,73 +40,87 @@ class TestSecurityChecks(unittest.TestCase):
 
     def setUp(self):
         # To make sure these tests start from a sane default state
-        self._sarus_foo()
+        sarus_foo()
 
     def tearDown(self):
         # To make sure these tests are not altering config files permissions
-        self._sarus_foo()
+        sarus_foo()
 
     def test_untamperable_config(self):
-        self._check_untamperable(CONFIG_FILENAME)
+        check_untamperable(CONFIG_FILENAME)
 
     def test_untamperable_config_schema(self):
-        self._check_untamperable(SCHEMA_FILENAME)
+        check_untamperable(SCHEMA_FILENAME)
 
     def test_disabled_security_checks(self):
         with util.custom_sarus_json({"securityChecks": False}):
             # some tamperable locations are OK...
             with changed_owner("/opt/sarus/default/bin/", NONROOT_ID, NONROOT_ID):
-                self._sarus_foo()
+                sarus_foo()
 
             # but not these two...
-            self._check_untamperable(CONFIG_FILENAME)
-            self._check_untamperable(SCHEMA_FILENAME)
+            check_untamperable(CONFIG_FILENAME)
+            check_untamperable(SCHEMA_FILENAME)
 
     def test_untamperable_binaries(self):
-        INIT_PATH = self._get_parameter_from_config_file("initPath")
-        RUNC_PATH = self._get_parameter_from_config_file("runcPath")
+        init_path = get_parameter_from_config_file("initPath")
+        runc_path = get_parameter_from_config_file("runcPath")
 
-        self._check_untamperable(INIT_PATH)
-        self._check_untamperable(RUNC_PATH)
+        check_untamperable(init_path)
+        check_untamperable(runc_path)
 
-        self._check_untamperable("/opt/sarus/default/bin/")
+        check_untamperable("/opt/sarus/default/bin/")
 
     def test_untamperable_hooks_and_deps(self):
-        # ssh is only default hook enabled
-        self._check_untamperable("/opt/sarus/default/etc/hooks.d/07-ssh-hook.json")
-        self._check_untamperable("/opt/sarus/default/bin/ssh_hook")
-        self._check_untamperable("/opt/sarus/default/dropbear")
+        hook_config = {
+            "version": "1.0.0",
+            "hook": {
+                "path": os.environ["CMAKE_INSTALL_PREFIX"] + "/bin/timestamp_hook"
+            },
+            "when": {
+                "always": True
+            },
+            "stages": ["prestart"]
+        }
+        hook_config_file = "/opt/sarus/default/etc/hooks.d/00-timestamp-hook.json"
+        with util.temporary_hook_files((hook_config, hook_config_file)):
+            check_untamperable(hook_config_file)
+            check_untamperable("/opt/sarus/default/bin/timestamp_hook")
+        check_untamperable("/opt/sarus/default/dropbear")
 
-    def _get_parameter_from_config_file(self, parameter):
-        with open(CONFIG_FILENAME) as conf_file:
-            conf = json.load(conf_file)
-            return conf[parameter]
 
-    def _sarus_foo(self):
-        """
-        Performs the simplest Sarus action so Security Checks are run.
-        """
-        with open(os.devnull, 'wb') as devnull:
-            res = subprocess.run(SARUS_FOO_CMD, stdout=devnull, check=True)
-        assert res.returncode == 0
+def get_parameter_from_config_file(parameter):
+    with open(CONFIG_FILENAME) as conf_file:
+        conf = json.load(conf_file)
+        return conf[parameter]
 
-    def _check_untamperable(self, path):
-        if os.path.isdir(path):
-            entry = path if path[-1] != '/' else path[:-1]
-        else:
-            entry = os.path.basename(path)
 
-        with changed_owner(path, NONROOT_ID, NONROOT_ID):
-            util.assert_sarus_raises_error_containing_text(SARUS_FOO_CMD,
-                                                           '{}" must be owned by root'.format(entry))
+def sarus_foo():
+    """
+    Performs the simplest Sarus action so Security Checks are run.
+    """
+    with open(os.devnull, 'wb') as devnull:
+        res = subprocess.run(SARUS_FOO_CMD, stdout=devnull, check=True)
+    assert res.returncode == 0
 
-        with changed_permissions(path, stat.S_IWGRP):
-            util.assert_sarus_raises_error_containing_text(SARUS_FOO_CMD,
-                                                           '{}" cannot be group- or world-writable'.format(entry))
 
-        with changed_permissions(path, stat.S_IWOTH):
-            util.assert_sarus_raises_error_containing_text(SARUS_FOO_CMD,
-                                                           '{}" cannot be group- or world-writable'.format(entry))
+def check_untamperable(path):
+    if os.path.isdir(path):
+        entry = path if path[-1] != '/' else path[:-1]
+    else:
+        entry = os.path.basename(path)
+
+    with changed_owner(path, NONROOT_ID, NONROOT_ID):
+        util.assert_sarus_raises_error_containing_text(SARUS_FOO_CMD,
+                                                       '{}" must be owned by root'.format(entry))
+
+    with changed_permissions(path, stat.S_IWGRP):
+        util.assert_sarus_raises_error_containing_text(SARUS_FOO_CMD,
+                                                       '{}" cannot be group- or world-writable'.format(entry))
+
+    with changed_permissions(path, stat.S_IWOTH):
+        util.assert_sarus_raises_error_containing_text(SARUS_FOO_CMD,
+                                                       '{}" cannot be group- or world-writable'.format(entry))
 
 
 @contextmanager
