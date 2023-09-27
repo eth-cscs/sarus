@@ -27,7 +27,7 @@ Security related
 ----------------
 
 Because of the considerable power granted by the requirements above, as a
-security measure Sarus will check that critical files and directories opened
+security measure Sarus checks that critical files and directories opened
 during privileged execution meet the following restrictions:
 
   - They are owned by root.
@@ -38,8 +38,8 @@ during privileged execution meet the following restrictions:
 
 The files checked for the security conditions are:
 
-  - ``sarus.json`` in Sarus's configuration directory ``<sarus install prefix>/etc``.
-  - ``sarus.schema.json`` in Sarus's configuration directory ``<sarus install prefix>/etc``.
+  - ``sarus.json`` in Sarus' configuration directory ``<sarus install prefix>/etc``.
+  - ``sarus.schema.json`` in Sarus' configuration directory ``<sarus install prefix>/etc``.
   - The init binary pointed by ``initPath`` in ``sarus.json``.
   - The OCI-compliant runtime pointed by ``runcPath`` in ``sarus.json``.
   - All the OCI hooks JSON files in the ``hooksDir`` directory specified in ``sarus.json``.
@@ -48,7 +48,9 @@ The files checked for the security conditions are:
 For directories, the conditions apply recursively for all their contents.
 The checked directories are:
 
-  - The directory where Sarus will create the OCI bundle.
+  - The directory where the Sarus engine and hook binaries are installed
+    (``<sarus install prefix>/bin``).
+  - The directory where Sarus creates the OCI bundle.
     This location can be configured through the ``OCIBundleDir`` entry in
     ``sarus.json``.
   - If the :doc:`SSH Hook </config/ssh-hook>` is installed,
@@ -56,7 +58,7 @@ The checked directories are:
 
 Most security checks can be disabled through the :ref:`corresponding parameter
 <config-reference-securityChecks>` in the Sarus configuration file.
-Checks on ``sarus.json`` and ``sarus.schema.json`` will always be performed,
+Checks on ``sarus.json`` and ``sarus.schema.json`` are always performed,
 regardless of the parameter value.
 
 .. important::

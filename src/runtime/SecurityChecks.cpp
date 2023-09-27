@@ -143,6 +143,7 @@ void SecurityChecks::runSecurityChecks(const boost::filesystem::path& sarusInsta
         checkThatBinariesInSarusJsonAreUntamperable();
         checkThatOCIHooksAreUntamperable();
         checkThatPathIsUntamperable(boost::filesystem::path{config->json["OCIBundleDir"].GetString()});
+        checkThatPathIsUntamperable(boost::filesystem::path{config->json["prefixDir"].GetString() + std::string{"/bin"}});
         checkThatPathIsUntamperable(boost::filesystem::path{config->json["prefixDir"].GetString() + std::string{"/dropbear"}});
     }
 }

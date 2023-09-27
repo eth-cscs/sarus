@@ -16,6 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Fixed support for image manifests which are provided by registries as multi-line, not indented JSON
 
+### Security
+
+- The installation directory of Sarus binaries is now always verified by the security checks.
+  Previously the check on this directory could be skipped if no Sarus hooks were configured and if the runc and init binaries were located elsewhere.
+
 
 ## [1.6.0]
 

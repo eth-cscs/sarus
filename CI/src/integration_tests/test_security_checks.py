@@ -63,13 +63,14 @@ class TestSecurityChecks(unittest.TestCase):
             check_untamperable(SCHEMA_FILENAME)
 
     def test_untamperable_binaries(self):
+        installation_prefix = get_parameter_from_config_file("prefixDir")
         init_path = get_parameter_from_config_file("initPath")
         runc_path = get_parameter_from_config_file("runcPath")
 
         check_untamperable(init_path)
         check_untamperable(runc_path)
 
-        check_untamperable("/opt/sarus/default/bin/")
+        check_untamperable(f"{installation_prefix}/bin")
 
     def test_untamperable_hooks_and_deps(self):
         hook_config = {
