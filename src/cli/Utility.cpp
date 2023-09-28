@@ -12,6 +12,7 @@
 
 #include <chrono>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
 
 #include "common/Config.hpp"
@@ -24,30 +25,44 @@ namespace sarus {
 namespace cli {
 namespace utility {
 
+static bool isDomainLike(const std::string str) {
+    return (   str.find(".") != std::string::npos
+            || str.find(":") != std::string::npos
+            || str == std::string("localhost")
+            || str == std::string("load")
+            || str != boost::algorithm::to_lower_copy(str));
+}
+
 /**
  * Parse server, namespace and individual image name from a string matching cli::regex::name
  */
-static std::tuple<std::string, std::string, std::string> parseNameMatch(const std::string& in) {
+static std::tuple<std::string, std::string, std::string> parseNameMatch(const std::string& input) {
     auto server = common::ImageReference::DEFAULT_SERVER;
     auto repositoryNamespace = common::ImageReference::DEFAULT_REPOSITORY_NAMESPACE;
-    auto image = std::string{};
-    auto first_separator = in.find_first_of("/");
-    auto last_separator = in.find_last_of("/");
+    auto image = input;
 
-    // No separators found: input is short image name
-    if (last_separator == std::string::npos){
-        image = in;
-    }
-    // Only one separator: input is "namespace/image"
-    else if (first_separator == last_separator){
-        repositoryNamespace = in.substr(0, first_separator);
-        image = in.substr(last_separator+1);
-    }
-    // Two or more separators
-    else {
-        server = in.substr(0, first_separator);
-        repositoryNamespace = in.substr(first_separator + 1, last_separator - first_separator - 1);
-        image = in.substr(last_separator+1);
+    auto firstSeparator = input.find_first_of("/");
+    if (firstSeparator != std::string::npos){
+        auto remainder = input;
+
+        auto first_component = input.substr(0, firstSeparator);
+        if (isDomainLike(first_component)) {
+            server = first_component;
+            remainder = input.substr(firstSeparator+1);
+        }
+
+        auto lastSeparator = remainder.find_last_of("/");
+
+        // No separators found: remainder is short image name
+        if (lastSeparator == std::string::npos){
+            repositoryNamespace = std::string{};
+            image = remainder;
+        }
+        // At least one separator: remainder is "namespace[/namespace]/image"
+        else {
+            repositoryNamespace = remainder.substr(0, lastSeparator);
+            image = remainder.substr(lastSeparator+1);
+        }
     }
 
     return std::tuple<std::string, std::string, std::string>{server, repositoryNamespace, image};

@@ -19,30 +19,36 @@ namespace sarus {
 namespace cli {
 namespace regex {
 
-extern boost::regex domain;
-extern boost::regex name;
-extern boost::regex tag;
-extern boost::regex digest;
-extern boost::regex reference;
+extern const boost::regex domain;
+extern const boost::regex name;
+extern const boost::regex tag;
+extern const boost::regex digest;
+extern const boost::regex reference;
 
 namespace strings {
 
-extern std::string alphaNumeric;
-extern std::string separator;
-extern std::string nameComponent;
-extern std::string domainComponent;
-extern std::string domain;
-extern std::string name;
-extern std::string tag;
-extern std::string digest;
-extern std::string reference;
+extern const std::string alphaNumeric;
+extern const std::string separator;
+extern const std::string pathComponent;
+extern const std::string domainNameComponent;
+extern const std::string ipv6Address;
+extern const std::string port;
+extern const std::string domainName;
+extern const std::string host;
+extern const std::string domain;
+extern const std::string remoteName;
+extern const std::string namePattern;
+extern const std::string name;
+extern const std::string tag;
+extern const std::string digest;
+extern const std::string reference;
 
-extern std::string concatenate(std::initializer_list<std::string> expr);
-extern std::string optional(std::string expr);
-extern std::string repeated(std::string expr);
-extern std::string group(std::string expr);
-extern std::string capture(std::string expr);
-extern std::string anchored(std::string expr);
+std::string concatenate(const std::initializer_list<std::string> expr);
+std::string optional(const std::string& expr);
+std::string repeated(const std::string& expr);
+std::string group(const std::string& expr);
+std::string capture(const std::string& expr);
+std::string anchored(const std::string& expr);
 
 }
 }

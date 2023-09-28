@@ -65,32 +65,80 @@ TEST(CLIUtilityTestGroup, parseImageReference) {
     CHECK_EQUAL(imageReference.tag, std::string{"tag"});
     CHECK_EQUAL(imageReference.digest, std::string{""});
 
-    imageReference = cli::utility::parseImageReference("server/namespace/image:tag");
-    CHECK_EQUAL(imageReference.server, std::string{"server"});
+    imageReference = cli::utility::parseImageReference("server.io/namespace/image:tag");
+    CHECK_EQUAL(imageReference.server, std::string{"server.io"});
     CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace"});
     CHECK_EQUAL(imageReference.image, std::string{"image"});
     CHECK_EQUAL(imageReference.tag, std::string{"tag"});
     CHECK_EQUAL(imageReference.digest, std::string{""});
 
     // Nested namespaces
-    imageReference = cli::utility::parseImageReference("server/namespace0/namespace1/image:tag");
-    CHECK_EQUAL(imageReference.server, std::string{"server"});
+    imageReference = cli::utility::parseImageReference("server.io/namespace0/namespace1/image:tag");
+    CHECK_EQUAL(imageReference.server, std::string{"server.io"});
     CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace0/namespace1"});
     CHECK_EQUAL(imageReference.image, std::string{"image"});
     CHECK_EQUAL(imageReference.tag, std::string{"tag"});
     CHECK_EQUAL(imageReference.digest, std::string{""});
 
+    // Nested namespaces without server
+    imageReference = cli::utility::parseImageReference("namespace0/namespace1/image:tag");
+    CHECK_EQUAL(imageReference.server, std::string{"docker.io"});
+    CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace0/namespace1"});
+    CHECK_EQUAL(imageReference.image, std::string{"image"});
+    CHECK_EQUAL(imageReference.tag, std::string{"tag"});
+    CHECK_EQUAL(imageReference.digest, std::string{""});
+
+    // No namespaces
+    imageReference = cli::utility::parseImageReference("server.io/image:tag");
+    CHECK_EQUAL(imageReference.server, std::string{"server.io"});
+    CHECK_EQUAL(imageReference.repositoryNamespace, std::string{""});
+    CHECK_EQUAL(imageReference.image, std::string{"image"});
+    CHECK_EQUAL(imageReference.tag, std::string{"tag"});
+    CHECK_EQUAL(imageReference.digest, std::string{""});
+
+    // localhost as server
+    imageReference = cli::utility::parseImageReference("localhost/namespace/image:tag");
+    CHECK_EQUAL(imageReference.server, std::string{"localhost"});
+    CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace"});
+    CHECK_EQUAL(imageReference.image, std::string{"image"});
+    CHECK_EQUAL(imageReference.tag, std::string{"tag"});
+    CHECK_EQUAL(imageReference.digest, std::string{""});
+
+    // load as server
+    imageReference = cli::utility::parseImageReference("load/namespace/image:tag");
+    CHECK_EQUAL(imageReference.server, std::string{"load"});
+    CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace"});
+    CHECK_EQUAL(imageReference.image, std::string{"image"});
+    CHECK_EQUAL(imageReference.tag, std::string{"tag"});
+    CHECK_EQUAL(imageReference.digest, std::string{""});
+
+    // Server with port
+    imageReference = cli::utility::parseImageReference("server.io:1234/namespace/image:tag");
+    CHECK_EQUAL(imageReference.server, std::string{"server.io:1234"});
+    CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace"});
+    CHECK_EQUAL(imageReference.image, std::string{"image"});
+    CHECK_EQUAL(imageReference.tag, std::string{"tag"});
+    CHECK_EQUAL(imageReference.digest, std::string{""});
+
+    // Server with port and no domain dots
+    imageReference = cli::utility::parseImageReference("server:1234/namespace/image:tag");
+    CHECK_EQUAL(imageReference.server, std::string{"server:1234"});
+    CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace"});
+    CHECK_EQUAL(imageReference.image, std::string{"image"});
+    CHECK_EQUAL(imageReference.tag, std::string{"tag"});
+    CHECK_EQUAL(imageReference.digest, std::string{""});
+
     // Image with digest
-    imageReference = cli::utility::parseImageReference("server/namespace/image@sha256:d4ff818577bc193b309b355b02ebc9220427090057b54a59e73b79bdfe139b83");
-    CHECK_EQUAL(imageReference.server, std::string{"server"});
+    imageReference = cli::utility::parseImageReference("server.io/namespace/image@sha256:d4ff818577bc193b309b355b02ebc9220427090057b54a59e73b79bdfe139b83");
+    CHECK_EQUAL(imageReference.server, std::string{"server.io"});
     CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace"});
     CHECK_EQUAL(imageReference.image, std::string{"image"});
     CHECK_EQUAL(imageReference.tag, std::string{""});
     CHECK_EQUAL(imageReference.digest, std::string{"sha256:d4ff818577bc193b309b355b02ebc9220427090057b54a59e73b79bdfe139b83"});
 
     // Image with tag+digest
-    imageReference = cli::utility::parseImageReference("server/namespace/image:tag@sha256:d4ff818577bc193b309b355b02ebc9220427090057b54a59e73b79bdfe139b83");
-    CHECK_EQUAL(imageReference.server, std::string{"server"});
+    imageReference = cli::utility::parseImageReference("server.io/namespace/image:tag@sha256:d4ff818577bc193b309b355b02ebc9220427090057b54a59e73b79bdfe139b83");
+    CHECK_EQUAL(imageReference.server, std::string{"server.io"});
     CHECK_EQUAL(imageReference.repositoryNamespace, std::string{"namespace"});
     CHECK_EQUAL(imageReference.image, std::string{"image"});
     CHECK_EQUAL(imageReference.tag, std::string{"tag"});

@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - Fixed support for image manifests which are provided by registries as multi-line, not indented JSON
+- Fixed parsing from the command line of image references which feature registry host and image name, but no namespaces (e.g. `<registry>/<image>`)
 
 ### Security
 

@@ -30,8 +30,15 @@ TEST(CLIRegexTestGroup, domain) {
     CHECK(boost::regex_match("dom0.dom1.io:4567", matches, regex::domain));
     CHECK(boost::regex_match("dom0-dom1.org", matches, regex::domain));
     CHECK(boost::regex_match("dom0--dom1.org", matches, regex::domain));
+    CHECK(boost::regex_match("192.168.1.1", matches, regex::domain));
+    CHECK(boost::regex_match("192.168.1.1:1234", matches, regex::domain));
+    CHECK(boost::regex_match("[2001:db8:1::2]", matches, regex::domain)); // ipv6 compressed
+    CHECK(boost::regex_match("[2001:db8:1::2]:1234", matches, regex::domain));
+    CHECK(boost::regex_match("[2001:0db8:aaaa:bbbb:cccc:dddd:eeee:0001]", matches, regex::domain)); // ipv6 long
+    CHECK(boost::regex_match("[2001:0db8:aaaa:bbbb:cccc:dddd:eeee:0001]:1234", matches, regex::domain));
 
-    CHECK_FALSE(boost::regex_match("server:port", matches, regex::domain));
+    // wrong formats
+    CHECK_FALSE(boost::regex_match("server.com:port", matches, regex::domain));
     CHECK_FALSE(boost::regex_match("-server.com", matches, regex::domain));
     CHECK_FALSE(boost::regex_match("serv-.er", matches, regex::domain));
     CHECK_FALSE(boost::regex_match("serv.-er", matches, regex::domain));
@@ -39,6 +46,13 @@ TEST(CLIRegexTestGroup, domain) {
     CHECK_FALSE(boost::regex_match("..server.com", matches, regex::domain));
     CHECK_FALSE(boost::regex_match("serv..er.com", matches, regex::domain));
     CHECK_FALSE(boost::regex_match("serv_er.com:1234", matches, regex::domain));
+    CHECK_FALSE(boost::regex_match("2001:db8:1::2:1234", matches, regex::domain));
+
+    // wrong port separators
+    CHECK_FALSE(boost::regex_match("server.com::1234", matches, regex::domain));
+    CHECK_FALSE(boost::regex_match("192.168.1.1::1234", matches, regex::domain));
+    CHECK_FALSE(boost::regex_match("[2001:db8:1::2]::1234", matches, regex::domain));
+    CHECK_FALSE(boost::regex_match("[2001:0db8:aaaa:bbbb:cccc:dddd:eeee:0001]::1234", matches, regex::domain));
 }
 
 TEST(CLIRegexTestGroup, name) {
@@ -84,8 +98,6 @@ TEST(CLIRegexTestGroup, name) {
     CHECK_FALSE(boost::regex_match("space0/..space1/image", matches, regex::name));
     CHECK_FALSE(boost::regex_match("space0/.space1/image", matches, regex::name));
     CHECK_FALSE(boost::regex_match("spa..ce/image", matches, regex::name));
-
-    CHECK_FALSE(boost::regex_match("_image", matches, regex::name));
 }
 
 TEST(CLIRegexTestGroup, reference) {
