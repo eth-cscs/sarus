@@ -17,7 +17,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <unordered_set>
 
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
@@ -60,15 +59,6 @@ MpiHook::MpiHook() {
     log("Successfully initialized hook", sarus::common::LogLevel::INFO);
 }
 
-static void updateLdconfigPath(const std::unordered_set<std::string>& uniquePaths, const boost::filesystem::path& ldconfigFile) {
-    sarus::common::createFileIfNecessary(ldconfigFile.string());
-    std::ofstream of{ldconfigFile.string()};
-    for(auto& path: uniquePaths) {
-        sarus::common::Logger::getInstance().log(boost::format("Adding %s to %s") % path % ldconfigFile.string(), "MPI Hook", sarus::common::LogLevel::DEBUG);
-        of << path << std::endl;
-    }
-}
-
 void MpiHook::activateMpiSupport() {
     log("Activating MPI support", sarus::common::LogLevel::INFO);
 
@@ -85,9 +75,6 @@ void MpiHook::activateMpiSupport() {
     injectHostLibraries(hostMpiLibs, hostToContainerMpiLibs);
     injectHostLibraries(hostDepLibs, hostToContainerDependencyLibs);
     performBindMounts();
-    updateLdconfigPath({hookMountRoot.string()}, rootfsDir / "/etc/ld.so.conf.d/mpi_hook.conf");
-
-    log("Execute LDCONFIG", sarus::common::LogLevel::DEBUG);
     sarus::common::executeCommand(ldconfig.string() + " -r " + rootfsDir.string()); // update container's dynamic linker
 
     log("Successfully activated MPI support", sarus::common::LogLevel::INFO);
@@ -111,14 +98,6 @@ void MpiHook::parseConfigJSONOfBundle() {
     uid_t uidOfUser = json["process"]["user"]["uid"].GetInt();
     gid_t gidOfUser = json["process"]["user"]["gid"].GetInt();
     userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
-
-    if(json.HasMember("annotations")) {
-        if(json["annotations"].HasMember("com.hooks.mpi.mount_dir_parent")) {
-            hookMountRoot = boost::filesystem::path(json["annotations"]["com.hooks.mpi.mount_dir_parent"].GetString()) / "mpi_hook";
-            auto message = boost::format("Mount folder for mpi_hook is set to %s") % hookMountRoot.string();
-            log(message, sarus::common::LogLevel::INFO);
-        }
-    }
 
     log("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);
 }
@@ -246,14 +225,15 @@ void MpiHook::checkHostContainerAbiCompatibility(const HostToContainerLibsMap& h
                         % hostLib.getRealName()
                         % containerLib.getRealName();
                 log(message, sarus::common::LogLevel::WARN);
-                continue;
             }
-            auto message = boost::format(
-                "Failed to activate MPI support. Host's MPI library %s is not ABI"
-                " compatible with container's MPI library %s.")
-                % hostLib.getRealName()
-                % containerLib.getRealName();
-            SARUS_THROW_ERROR(message.str());
+            else {
+                auto message = boost::format(
+                    "Failed to activate MPI support. Host's MPI library %s is not ABI"
+                    " compatible with container's MPI library %s.")
+                    % hostLib.getRealName()
+                    % containerLib.getRealName();
+                SARUS_THROW_ERROR(message.str());
+            }
         }
     }
 
@@ -278,8 +258,8 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
 
     const auto it = hostToContainerLibs.find(hostLib.getPath());
     if (it == hostToContainerLibs.cend()) {
-        log(boost::format{"no corresponding libs in container => bind mount (%s) into %s"} % hostLib.getPath() % hookMountRoot.string(), sarus::common::LogLevel::DEBUG);
-        auto containerLib = hookMountRoot / hostLib.getPath().filename();
+        log(boost::format{"no corresponding libs in container => bind mount (%s) into /lib"} % hostLib.getPath(), sarus::common::LogLevel::DEBUG);
+        auto containerLib = "/lib" / hostLib.getPath().filename();
         sarus::runtime::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), false);
         return;
@@ -298,16 +278,17 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
     }
     else if (bestCandidateLib.isMajorAbiCompatible(hostLib)){
         // risky replacement, issue warning.
-        log(boost::format{"WARNING: container lib (%s) is major-only-abi-compatible"} % bestCandidateLib.getPath(), sarus::common::LogLevel::DEBUG);
-        sarus::runtime::validatedBindMount(hostLib.getPath(), bestCandidateLib.getPath(), userIdentity, rootfsDir);
-        createSymlinksInDynamicLinkerDefaultSearchDirs(bestCandidateLib.getPath(), hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
+        log(boost::format{"WARNING: container lib (%s) is major-only-abi-compatible => bind mount host lib (%s) into /lib"} % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::DEBUG);
+        auto containerLib = "/lib" / hostLib.getPath().filename();
+        sarus::runtime::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
+        createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
     }
     else {
         // inject with warning
         // NOTE: This branch is only for MPI dependency libraries. MPI libraries compatibility was already checked before at checkHostContainerAbiCompatibility. Hint for future refactoring.
-        log(boost::format{"WARNING: could not find ABI-compatible counterpart for host lib (%s) inside container (best candidate found: %s) => adding host lib (%s) into container's %s via bind mount "}
-            % hostLib.getPath() % bestCandidateLib.getPath() % hostLib.getPath() % hookMountRoot.string() , sarus::common::LogLevel::WARN);
-        auto containerLib = hookMountRoot / hostLib.getPath().filename();
+        log(boost::format{"WARNING: could not find ABI-compatible counterpart for host lib (%s) inside container (best candidate found: %s) => adding host lib (%s) into container's /lib via bind mount "}
+            % hostLib.getPath() % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::WARN);
+        auto containerLib = "/lib" / hostLib.getPath().filename();
         sarus::runtime::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), true);
     }
@@ -346,18 +327,10 @@ void MpiHook::performBindMounts() const {
     log("Successfully performed bind mounts", sarus::common::LogLevel::INFO);
 }
 
-boost::optional<std::string> parseSharedLibAbiToSoname(const boost::filesystem::path& linkFilename) {
-    auto versionNumbers = sarus::common::parseSharedLibAbi(linkFilename);
-    if (versionNumbers.size() == 0) {
-        return boost::none;
-    }
-    return versionNumbers[0];
-}
-
 void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesystem::path& target,
                                                              const boost::filesystem::path& linkFilename,
                                                              const bool preserveRootLink) const {
-    // Generate symlinks to the library in the hook mount path, to make sure that:
+    // Generate symlinks to the library in the container's /lib and /lib64, to make sure that:
     //
     // 1. ldconfig will find the library in the container, because the symlink will be in
     //    one of ldconfig's default search directories.
@@ -373,6 +346,10 @@ void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesy
     //    ld.so from dynamically linking MPI applications to libmpi.so.12, if libmpi.so.12 is not
     //    in one of the ld.so's default search paths.
     //
+    // Some ldconfig/ld.so versions/builds only search in the default directories /lib or /lib64.
+    // So, let's create symlinks to the library in both /lib and /lib64 to make sure that they
+    // will be found.
+    //
     // preserveRootLink:
     //      As explained above, this method helps you create also a chain of symlinks that go from your library version
     //      up to the root linkername link. (e.g. you inject libfoo.so.4.1 and you end up with links libfoo.so.4 and libfoo.so).
@@ -383,10 +360,8 @@ void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesy
     //      not the linker names, to avoid breaking the injected library for the same reason stated above.
     auto libName = sarus::common::getSharedLibLinkerName(linkFilename);
     auto linkNames = std::vector<std::string> { libName.string() };
-
-    auto versionNumber = parseSharedLibAbiToSoname(linkFilename);
-    if(versionNumber) {
-        linkNames.push_back(linkNames.back() + "." + versionNumber.get());
+    for(const auto& versionNumber : sarus::common::parseSharedLibAbi(linkFilename)) {
+        linkNames.push_back(linkNames.back() + "." + versionNumber);
     }
 
     // Preserve root links (when requested)
@@ -403,32 +378,34 @@ void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesy
         }
     }
 
-    auto searchDir = rootfsDir / hookMountRoot;
-    sarus::common::createFoldersIfNecessary(searchDir);
+    // Let's create symlinks in /lib and /lib64
+    auto linkerDefaultSearchDirs = std::vector<boost::filesystem::path> {"/lib", "/lib64"};
+    for (const auto& dir: linkerDefaultSearchDirs) {
+        auto searchDir = rootfsDir / dir;
+        sarus::common::createFoldersIfNecessary(searchDir);
 
-    // prevent writing as root where we are not allowed to
-    if (!sarus::runtime::isPathOnAllowedDevice(searchDir, rootfsDir)) {
-        log(boost::format("The hook is not allowed to write to %s. Ignoring symlinks creation in this path.") % searchDir, sarus::common::LogLevel::WARN);
-    }
-
-    for (const auto& linkName : linkNames) {
-        if(boost::filesystem::path{linkName}.filename() == target.filename()) {
-            continue;
-        }
-        auto realLink = sarus::common::realpathWithinRootfs(rootfsDir, hookMountRoot / linkName);
-        auto realTarget = sarus::common::realpathWithinRootfs(rootfsDir, target);
-        bool linkIsTarget = (realLink == realTarget);
-        bool preserveLink = (linkName == libName && preserveRootLink && rootLinkExists);
-        if (linkIsTarget || preserveLink) {
+        // prevent writing as root where we are not allowed to
+        if (!sarus::runtime::isPathOnAllowedDevice(searchDir, rootfsDir)) {
+            log(boost::format("The hook is not allowed to write to %s. Ignoring symlinks creation in this path.") % searchDir, sarus::common::LogLevel::WARN);
             continue;
         }
 
-        auto link = searchDir / linkName;
-        boost::filesystem::remove(link);
-        boost::filesystem::create_symlink(target, link);
-        
-        auto message = boost::format("Created symlink in container %s -> %s") % link % target;
-        log(message, sarus::common::LogLevel::DEBUG);
+        for (const auto& linkName : linkNames) {
+            auto realLink = sarus::common::realpathWithinRootfs(rootfsDir, dir / linkName);
+            auto realTarget = sarus::common::realpathWithinRootfs(rootfsDir, target);
+            bool linkIsTarget = (realLink == realTarget);
+            bool preserveLink = (linkName == libName && preserveRootLink && rootLinkExists);
+            if (linkIsTarget || preserveLink) {
+                continue;
+            }
+
+            auto link = searchDir / linkName;
+            boost::filesystem::remove(link);
+            boost::filesystem::create_symlink(target, link);
+
+            auto message = boost::format("Created symlink in container %s -> %s") % link % target;
+            log(message, sarus::common::LogLevel::DEBUG);
+        }
     }
 }
 

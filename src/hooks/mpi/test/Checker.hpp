@@ -75,11 +75,6 @@ public:
         return *this;
     }
 
-    Checker& setCustomMountParentDir(const std::string& path) {
-        customMountPath = path;
-        return *this;
-    }
-
     void checkSuccessful() const {
         setupTestEnvironment();
         MpiHook{}.activateMpiSupport();
@@ -107,19 +102,6 @@ private:
     void setupTestEnvironment() const {
         sarus::common::createFoldersIfNecessary(rootfsDir / "etc");
         auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
-        if(!customMountPath.empty()) {
-            rapidjson::Value jCustomMountPath(rapidjson::kObjectType);
-            jCustomMountPath.AddMember(
-                "com.hooks.mpi.mount_dir_parent", 
-                rj::Value{customMountPath.c_str(), doc.GetAllocator()},
-                doc.GetAllocator()
-            );
-            if(!doc.HasMember("annotations")) {
-                doc.AddMember("annotations", jCustomMountPath, doc.GetAllocator());
-            } else {
-                doc["annotations"] = jCustomMountPath;
-            }
-        }
         sarus::common::writeJSON(doc, bundleDir / "config.json");
         createLibraries();
         setupDynamicLinkerInContainer();
@@ -155,7 +137,6 @@ private:
                 of << dir << "\n";
             }
         }
-        of << "include /etc/ld.so.conf.d/*.conf" << std::endl;
         of.close(); // write to disk
 
         // create /etc/ld.so.cache
@@ -164,22 +145,22 @@ private:
 
     void checkOnlyExpectedLibrariesAreInRootfs() const {
         auto expected = *expectedPostHookContainerLibs;
-        std::sort(expected.begin(), expected.end(), [](boost::filesystem::path first, boost::filesystem::path second) {
-            return first.filename().string() > second.filename().string();
-        });
+        for(auto& lib : expected) {
+            lib = rootfsDir / lib;
+        }
+        std::sort(expected.begin(), expected.end());
 
         auto begin = boost::filesystem::recursive_directory_iterator{rootfsDir};
         auto end = boost::filesystem::recursive_directory_iterator{};
         auto actual = std::vector<boost::filesystem::path>{};
         std::copy_if(begin, end, std::back_inserter(actual), sarus::common::isSharedLib);
-        std::sort(actual.begin(), actual.end(), [](boost::filesystem::path first, boost::filesystem::path second) {
-            return first.filename().string() > second.filename().string();
-        });
+        std::sort(actual.begin(), actual.end());
 
-        CHECK_EQUAL(actual.size(), expected.size());
-        for(auto itra{actual.begin()}, itre{expected.begin()}; itra != actual.cend() && itre != expected.cend(); ++itra, ++itre) {
-            CHECK_EQUAL(itra->filename().string(), itre->filename().string());
-        }
+        auto actual_s   = std::string{};
+        for (auto i : actual) actual_s.append(i.filename().string());
+        auto expected_s = std::string{};
+        for (auto i : expected) expected_s.append(i.filename().string());
+        CHECK_EQUAL(expected_s, actual_s);
     }
 
     void checkInjectedAndPreservedLibrariesAsExpected() const {
@@ -250,7 +231,6 @@ private:
     boost::optional<std::vector<boost::filesystem::path>> expectedPostHookContainerLibs;
     std::vector<boost::filesystem::path> preservedPostHookContainerLibs;
     std::vector<boost::filesystem::path> bindMounts;
-    std::string customMountPath;
 };
 
 }}}} // namespace

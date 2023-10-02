@@ -61,7 +61,6 @@ private:
 private:
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
-    boost::filesystem::path hookMountRoot{"/opt/mpi_hook"};
     pid_t pidOfContainer;
     sarus::common::UserIdentity userIdentity;
     boost::filesystem::path ldconfig;

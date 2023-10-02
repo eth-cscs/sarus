@@ -1188,25 +1188,6 @@ enabled. The ``(default)`` qualifier alongside an MPI type indicates the
 default MPI hook for the Sarus installation, which can be enabled just with
 the ``sarus run --mpi`` option.
 
-.. note::
-    
-    The MPI hook attempts to overlay dependency libraries (not the MPI libraries
-    themselves, which are always substituted in-place) onto existing
-    corresponding libraries within the container.
-    However, if the version compatibility check fails due to differences
-    in minor versions or  the inability to validate compatibility, the libraries
-    will be mounted to an alternate location to prevent conflicts.
-    By making use of the annotation ``com.hooks.mpi.mount_dir_parent=<libraries parent directory>``
-    the user can configure the parent directory of the designated mount folder
-    for the libraries, for example:
-
-    .. code-block:: bash
-
-        $ sarus run --mpi --annotation=com.hooks.mpi.mount_dir_parent=<libraries parent directory> <repo name>/<image name>
-
-    When using the annotation as in the previous example, the hook constructs
-    the path for the mounts as ``<libraries parent directory>/mpi_hook/``.
-
 .. _user-nvidia-hook:
 
 NVIDIA GPU support
