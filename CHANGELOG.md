@@ -6,10 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- MPI Hook: added support for the `com.hooks.mpi.mount_dir_parent` OCI annotation.
+  This annotation can be used to customize the parent directory of the folder where the hook adds symlinks and mounts for dependency libraries which don't have a suitable counterpart in the container.
+
 ### Changed
 
 - The configuration files for the SSH hook and the Slurm sync hook are no longer generated automatically as part of the CMake installation process.
   In other words, the aforementioned hooks are no longer configured and enabled by default.
+- MPI Hook: dependency libraries and symlinks added by the hook in the container are now mounted or created in a dedicated directory.
+  Previously, the hook made mounts and created multiple duplicate links in several system directories. More details [here] (https://sarus.readthedocs.io/en/stable/config/mpi-hook.html#hook-configuration)
 - Updated recommended runc version to 1.1.9
 
 ### Fixed

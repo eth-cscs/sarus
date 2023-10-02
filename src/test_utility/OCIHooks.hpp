@@ -13,6 +13,7 @@
 
 #include <cstdio>
 #include <iostream>
+#include <fstream>
 #include <boost/format.hpp>
 #include <boost/filesystem.hpp>
 #include <rapidjson/document.h>

@@ -56,8 +56,25 @@ arguments, but its actions are controlled through a few environment variables:
   schema.
 
 * ``MPI_DEPENDENCY_LIBS``: Colon separated list of absolute paths to
-  libraries that are dependencies of the ``MPI_LIBS``. These libraries
-  are always bind mounted in the container under ``/usr/lib``.
+  libraries that are dependencies of the ``MPI_LIBS``. The hook attempts to
+  overlay these libraries onto corresponding libraries within the container.
+  However, if the version compatibility check fails due to differences in minor
+  versions or the inability to validate compatibility, the libraries are
+  mounted to an alternate location to prevent conflicts.
+  By default, the path of this directory in the container is ``/opt/mpi_hook``;
+  this location is also used for other files and symlinks which the hook may
+  need to create in the container.
+  By making use of the annotation ``com.hooks.mpi.mount_dir_parent=<libraries parent directory>``,
+  the user can customize the parent directory of the designated mount folder for the 
+  libraries which don't have a suitable counterpart in the container,
+  for example:
+
+  .. code-block:: bash
+
+    $ sarus run --mpi --annotation=com.hooks.mpi.mount_dir_parent=<libraries parent directory> <repo name>/<image name>
+
+  When using the annotation as in the previous example, the hook constructs
+  the path for the mounts as ``<libraries parent directory>/mpi_hook/``.
 
 * ``BIND_MOUNTS``: Colon separated list of absolute paths to generic
   files or directories that are required for the correct functionality of the

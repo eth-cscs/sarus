@@ -7,6 +7,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  *
  */
+#include <fstream>
 
 #include <sys/vfs.h>
 #include <sys/mount.h>

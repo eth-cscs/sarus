@@ -15,6 +15,19 @@ import pytest
 import common.util as util
 
 
+def assert_annotation_overrides_default_mount_dir(image_tag, expected_libs, parent_mount_path):
+    try:
+        result = util.run_command_in_container(is_centralized_repository=False,
+                                               image="quay.io/ethcscs/sarus-integration-tests:" + image_tag,
+                                               command=["ls", parent_mount_path + "/mpi_hook"],
+                                               options_of_run_command=[
+                                                   "--mpi", "--annotation=com.hooks.mpi.mount_dir_parent=" + parent_mount_path
+                                               ])
+        assert (expected_libs == set(result))
+    except subprocess.CalledProcessError as _:
+        assert (False)
+
+
 class TestMPIHook(unittest.TestCase):
     """
     These tests verify that the host MPI libraries are properly brought into the container.
@@ -101,7 +114,6 @@ class TestMPIHook(unittest.TestCase):
             },
             "stages": ["prestart"]
         }
-
         return hook_config
 
     def setUp(self):
@@ -169,6 +181,13 @@ class TestMPIHook(unittest.TestCase):
         output = util.get_sarus_error_output(command, fail_expected=False)
         number_of_occurrences = sum(["[WARN]" in line and text in line for line in output.split('\n')])
         assert number_of_occurrences == expected_occurrences, 'Sarus didn\'t generate the expected MPI warnings containing the text "{}".'.format(text)
+
+    def test_cli_annotation_overrides_default_mount_path(self):
+        parent_mount_path = "/opt/xyz"
+        for image_tag, libs in zip(["mpich_compatible", "mpich_compatible_symlink"],
+                                   [{'libdependency0.so', 'libdependency1.so', 'libmpi.so', 'libmpi.so.12', 'libmpich.so', 'libmpich.so.12'},
+                                    {'libdependency0.so', 'libdependency1.so', 'libmpi.so', 'libmpi.so.12', 'libmpich.so', 'libmpich.so.12', 'libmpi.so.12.5.5'}]):
+            assert_annotation_overrides_default_mount_dir(image_tag, libs, parent_mount_path)
 
 
 @pytest.mark.asroot

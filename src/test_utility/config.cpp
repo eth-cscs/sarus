@@ -10,6 +10,7 @@
 
 #include "config.hpp"
 
+#include <fstream>
 #include <memory>
 
 #include <unistd.h>

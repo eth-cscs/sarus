@@ -35,6 +35,7 @@
 #include <limits.h>
 #include <fcntl.h>
 
+#include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <rapidjson/istreamwrapper.h>
@@ -786,6 +787,11 @@ std::vector<boost::filesystem::path> getSharedLibsFromDynamicLinker(
 
 bool isSharedLib(const boost::filesystem::path& file) {
     auto filename = file.filename().string();
+
+    // check that is not a directory, e.g. /etc/ld.so.conf.d
+    if(boost::filesystem::is_directory(file)){
+        return false;
+    }
 
     // check that extension doesn't end with '.conf', e.g. /etc/ld.so.conf
     if(boost::ends_with(filename, ".conf")) {

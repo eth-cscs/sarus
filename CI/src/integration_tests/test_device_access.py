@@ -158,7 +158,7 @@ class TestDeviceOption(TestDeviceBaseClass):
         out = util.run_command_in_container(is_centralized_repository=False,
                                             image=self.CONTAINER_IMAGE,
                                             command=container_args,
-                                            options_of_run_command=sarus_options)
+                                            options_of_run_command=sarus_options, timeout=15)
         assert out[0] == device_path
 
         # Restore full device access in host cgroup
