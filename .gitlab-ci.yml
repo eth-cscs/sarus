@@ -135,10 +135,10 @@ rocky9:
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
-fedora36:
+fedora38:
   extends: .from_source
   script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH fedora:36 fedora:36
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH fedora:38 fedora:38
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 

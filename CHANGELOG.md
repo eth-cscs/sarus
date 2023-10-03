@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - MPI Hook: dependency libraries and symlinks added by the hook in the container are now mounted or created in a dedicated directory.
   Previously, the hook made mounts and created multiple duplicate links in several system directories. More details [here] (https://sarus.readthedocs.io/en/stable/config/mpi-hook.html#hook-configuration)
 - Updated recommended runc version to 1.1.9
+- Updated CI tests from source on Fedora (36 -> 38)
 
 ### Fixed
 

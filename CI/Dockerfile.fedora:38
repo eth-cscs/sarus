@@ -11,11 +11,11 @@
 # Docker Image used to build Sarus from its source,
 # but with cached dependencies already in this image.
 #
-FROM fedora:36
+FROM fedora:38
 
 COPY ./installation/ /tmp/
-RUN /tmp/install_sudo.sh fedora:36
-RUN /tmp/install_packages_fedora:36.sh
+RUN /tmp/install_sudo.sh fedora:38
+RUN /tmp/install_packages_fedora:38.sh
 RUN bash -i -c "/tmp/install_dep_runc.bash"
 RUN bash -i -c "/tmp/install_dep_umoci.bash"
 RUN pip3 install -r /tmp/requirements_tests.txt

@@ -15,6 +15,7 @@ from contextlib import contextmanager
 
 ALPINE_IMAGE = "quay.io/ethcscs/alpine:3.14"
 UBUNTU_IMAGE = "quay.io/ethcscs/ubuntu:20.04"
+FEDORA_IMAGE = "quay.io/ethcscs/fedora:38"
 
 sarus_json_filename = os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/sarus.json"
 sarus_json_backup = sarus_json_filename+".bak"

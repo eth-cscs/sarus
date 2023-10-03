@@ -1,4 +1,4 @@
-FROM fedora:36
+FROM fedora:38
 
 COPY libdummy.so /usr/lib/libdummy.so
 

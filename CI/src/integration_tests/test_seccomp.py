@@ -32,7 +32,7 @@ class TestSeccomp(unittest.TestCase):
     def _pull_docker_images(cls):
         images = [util.ALPINE_IMAGE,
                   util.UBUNTU_IMAGE,
-                  "quay.io/ethcscs/fedora:34"]
+                  util.FEDORA_IMAGE]
         for image in images:
             util.pull_image_if_necessary(is_centralized_repository=False, image=image)
 
@@ -70,7 +70,7 @@ class TestSeccomp(unittest.TestCase):
                                                         container_args,
                                                         "/tmp: Operation not permitted")
         self._assert_sarus_raises_error_containing_text(sarus_options,
-                                                        "quay.io/ethcscs/fedora:34",
+                                                        util.FEDORA_IMAGE,
                                                         container_args,
                                                         "/tmp: Operation not permitted")
         container_args = ["sh", "-c", "cd /tmp"]

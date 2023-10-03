@@ -15,6 +15,7 @@
 #include <memory>
 #include <unordered_set>
 #include <sys/types.h>
+#include <cstdint>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 

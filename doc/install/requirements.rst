@@ -66,9 +66,9 @@ instructions for such dependencies.
            :start-after: set -ex
            :end-before: # DOCS: END
 
-    .. group-tab:: Fedora 36
+    .. group-tab:: Fedora 38
 
-        .. literalinclude:: ../../CI/installation/install_packages_fedora:36.sh
+        .. literalinclude:: ../../CI/installation/install_packages_fedora:38.sh
            :language: bash
            :start-after: set -ex
            :end-before: # DOCS: END
