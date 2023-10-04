@@ -156,10 +156,10 @@ debian11:
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 
-opensuseleap15.4:
+opensuseleap15.5:
   extends: .from_source
   script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH opensuseleap:15.4 opensuseleap:15.4
+    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH opensuseleap:15.5 opensuseleap:15.5
     - sarus-build-images
     - sarus-build-from-scratch-and-test
 

@@ -45,9 +45,9 @@ instructions for such dependencies.
 
 .. tabs::
 
-    .. group-tab:: OpenSUSE Leap 15.4
+    .. group-tab:: OpenSUSE Leap 15.5
 
-        .. literalinclude:: ../../CI/installation/install_packages_opensuseleap:15.4.sh
+        .. literalinclude:: ../../CI/installation/install_packages_opensuseleap:15.5.sh
            :language: bash
            :start-after: set -ex
            :end-before: # DOCS: END
