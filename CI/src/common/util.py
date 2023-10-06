@@ -264,7 +264,9 @@ def get_sarus_error_output(command, fail_expected=True):
 
 def assert_sarus_raises_error_containing_text(command, text):
     sarus_output = get_sarus_error_output(command)
-    assert text in sarus_output, 'Sarus generated an error, but it did not contain the expected text "{}".'.format(text)
+    assert text in sarus_output, ('Sarus generated an error, but it did not contain the expected text.\n'
+                                  'Generated message: {}\n'
+                                  'Expected: {}'.format(sarus_output, text))
 
 
 def modify_sarus_json(new_parameters):
