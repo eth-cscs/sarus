@@ -1254,8 +1254,8 @@ the keys just once, as they are persistent between sessions.
 
 It is then possible to execute a container passing the ``--ssh`` option to
 :program:`sarus run`, e.g. ``sarus run --ssh <image> <command>``. Using the
-previously generated the SSH keys, the hook will instantiate an sshd and setup a
-custom ``ssh`` binary inside each container created with the same command.
+previously generated the SSH keys, the hook instantiates an SSH daemon and sets
+up a custom ``ssh`` binary inside each container created with the same command.
 
 Within a container spawned with the ``--ssh`` option, it is possible to connect
 into other containers by simply issuing the ``ssh`` command available in the
@@ -1265,14 +1265,25 @@ default search ``PATH``. E.g.:
 
     ssh <hostname of other node>
 
-The custom ``ssh`` binary will take care of using the proper keys and
+The custom ``ssh`` binary takes care of using the proper keys and
 non-standard port in order to connect to the remote container.
 
-When the ``ssh`` program is called without a command argument, it will open
+When the ``ssh`` program is called without a command argument, it opens
 a login shell into the remote container. In this situation, the SSH hook attempts
 to reproduce the environment variables which were defined upon the launch
 of the remote container. The aim is to replicate the experience of actually
 accessing a shell in the container as it was created.
+
+The hook supports the annotation ``com.hooks.ssh.authorize_ssh_key``, which allows
+the user to add a public key to the container's ``authorized_keys`` file, e.g.
+
+.. code-block:: bash
+
+   sarus run --ssh --annotation com.hooks.ssh.authorize_ssh_key=$HOME/.ssh/<key>.pub <image>
+
+Notice that the annotation value must be a public key file, not the public key
+itself. The annotation allows remote access via SSH to the running container
+through user-specified (and potentially ephemeral) keys.
 
 .. warning::
    The SSH hook currently does not implement a poststop functionality and

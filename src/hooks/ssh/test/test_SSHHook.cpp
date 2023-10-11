@@ -137,6 +137,18 @@ public:
         for (const auto& var : environmentVariablesInContainer) {
             doc["process"]["env"].PushBack(rj::Value{var.c_str(), allocator}, allocator);
         }
+        rapidjson::Value jUserSshKey(rapidjson::kObjectType);
+        jUserSshKey.AddMember(
+            "com.hooks.ssh.authorize_ssh_key", 
+            rj::Value{(sshKeysDirInHost / "user_key.pub").string().c_str(), doc.GetAllocator()},
+            doc.GetAllocator()
+        );
+        if(!doc.HasMember("annotations")) {
+            doc.AddMember("annotations", jUserSshKey, doc.GetAllocator());
+        } else {
+            doc["annotations"] = jUserSshKey;
+        }
+
         sarus::common::writeJSON(doc, bundleDir / "config.json");
     }
 
@@ -168,6 +180,11 @@ public:
 
     void setEnvironmentVariableInContainer(const std::string& variable) {
         environmentVariablesInContainer.push_back(variable);
+    }
+
+    void generateUserSshKeyFile() {
+        std::ofstream userSshKeyFile{(sshKeysDirInHost / "user_key.pub").string()};
+        userSshKeyFile << userSshKey;
     }
 
     void checkHostHasSshKeys() const {
@@ -282,6 +299,19 @@ public:
         CHECK(status.permissions() == expectedPermissions);
     }
 
+    bool isUserSshKeyAuthorized() {
+        std::ifstream authorizedKeysFile{(expectedHomeDirInContainer / ".ssh/authorized_keys").string()};
+        if(!authorizedKeysFile.is_open()) {
+            return false;
+        }
+        std::string line;
+        while(getline(authorizedKeysFile, line)) {
+            if (line.find(userSshKey, 0) != std::string::npos) {
+                return true;
+            }
+        }
+        return false;
+    }
 private:
     std::tuple<uid_t, gid_t> idsOfRoot{0, 0};
     std::tuple<uid_t, gid_t> idsOfUser = test_utility::misc::getNonRootUserIds();
@@ -303,6 +333,7 @@ private:
     std::uint16_t serverPort = 11111;
     std::vector<boost::filesystem::path> rootfsFolders = {"etc", "dev", "bin", "sbin", "usr", "lib", "lib64"}; // necessary to chroot into rootfs
     std::vector<std::string> environmentVariablesInContainer;
+    std::string userSshKey{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAvAIP2SI2ON23c6ZP1c7gQf17P25npZLgHSxfwqRKNWh27p user@test"};
 };
 
 TEST_GROUP(SSHHookTestGroup) {
@@ -377,6 +408,30 @@ TEST(SSHHookTestGroup, testSetEnvironmentOnLogin) {
     SshHook{}.startSshDaemon();
     helper.checkContainerHasEnvironmentFile();
     helper.checkContainerHasEtcProfileModule();
+}
+
+TEST(SSHHookTestGroup, testInjectKeyUsingAnnotations) {
+
+    Helper helper{};
+
+    helper.setRootIds();
+    helper.setupTestEnvironment();
+
+    // generate + check SSH keys in local repository
+    helper.setUserIds(); // keygen is executed with user privileges
+    SshHook{}.generateSshKeys(true);
+    helper.generateUserSshKeyFile();
+
+    helper.setRootIds();
+    helper.checkHostHasSshKeys();
+
+    // start sshd
+    helper.writeContainerStateToStdin();
+    SshHook{}.startSshDaemon();
+    helper.checkContainerHasClientKeys();
+    helper.checkContainerHasServerKeys();
+    
+    CHECK_TRUE(helper.isUserSshKeyAuthorized());
 }
 
 }}}} // namespace

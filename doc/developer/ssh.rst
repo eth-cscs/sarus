@@ -27,6 +27,13 @@ Within a container spawned with the ``--ssh`` option, the user can ssh into othe
 The custom ``ssh`` executable will take care of using the proper keys and non-standard port in order to connect
 to the remote container.
 
+The hook supports the annotation ``com.hooks.ssh.authorize_ssh_key`` that allows the user to add a public key to
+the container's `authorized_keys` file, e.g.
+
+.. code-block:: bash
+
+   sarus run --ssh --annotation com.hooks.ssh.authorize_ssh_key=$HOME/.ssh/<key>.pub <image>
+
 Configuration by the system administrator
 =========================================
 

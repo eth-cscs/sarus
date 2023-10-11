@@ -62,6 +62,7 @@ private:
     boost::filesystem::path dropbearRelativeDirInContainer;
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
+    boost::filesystem::path userPublicKeyFilename;
     pid_t pidOfContainer;
     uid_t uidOfUser;
     gid_t gidOfUser;

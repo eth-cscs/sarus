@@ -122,6 +122,12 @@ void SshHook::parseConfigJSONOfBundle() {
     uidOfUser = json["process"]["user"]["uid"].GetInt();
     gidOfUser = json["process"]["user"]["gid"].GetInt();
 
+    if(json.HasMember("annotations")) {
+        if(json["annotations"].HasMember("com.hooks.ssh.authorize_ssh_key")) {
+            userPublicKeyFilename = boost::filesystem::path(json["annotations"]["com.hooks.ssh.authorize_ssh_key"].GetString());
+        }
+    }
+
     log("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);
 }
 
@@ -173,6 +179,13 @@ void SshHook::sshKeygen(const boost::filesystem::path& outputFile) const {
         % dropbearDirInHost.string()
         % outputFile.string();
     sarus::common::executeCommand(command.str());
+}
+
+static void authorizePublicKey(const boost::filesystem::path& publicKeyFileName,
+                        const boost::filesystem::path& authorizedKeysFileName) {
+    std::ifstream publicKeyFile(publicKeyFileName.string());
+    std::ofstream authorizedKeysFile(authorizedKeysFileName.string(), std::ios::app);
+    authorizedKeysFile << publicKeyFile.rdbuf();
 }
 
 void SshHook::generateAuthorizedKeys(const boost::filesystem::path& userKeyFile,
@@ -256,9 +269,20 @@ void SshHook::copySshKeysIntoContainer() const {
     sarus::common::copyFile(sshKeysDirInHost / "id_dropbear",
                             sshKeysDirInContainer / "id_dropbear",
                             uidOfUser, gidOfUser);
+
+    // update if necessary
+    auto containerAuthorizedKeys = sshKeysDirInContainer / "authorized_keys";
     sarus::common::copyFile(sshKeysDirInHost / "authorized_keys",
-                            sshKeysDirInContainer / "authorized_keys",
+                            containerAuthorizedKeys,
                             uidOfUser, gidOfUser);
+    if(!userPublicKeyFilename.empty()) {
+        log(boost::format("Adding key %s to %s") % userPublicKeyFilename.string() % containerAuthorizedKeys.string(), sarus::common::LogLevel::INFO);
+        auto rootIdentity = sarus::common::UserIdentity{};
+        auto userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
+        sarus::common::switchIdentity(userIdentity);
+        authorizePublicKey(boost::filesystem::path{userPublicKeyFilename}, containerAuthorizedKeys);
+        sarus::common::switchIdentity(rootIdentity);
+    }
 
     log("Successfully copied SSH keys into container", sarus::common::LogLevel::INFO);
 }

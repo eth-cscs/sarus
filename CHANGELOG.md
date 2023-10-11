@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - MPI Hook: added support for the `com.hooks.mpi.mount_dir_parent` OCI annotation.
   This annotation can be used to customize the parent directory of the folder where the hook adds symlinks and mounts for dependency libraries which don't have a suitable counterpart in the container.
+- SSH Hook: added support for the `com.hooks.ssh.authorize_ssh_key` OCI annotation, which allows to authorize a user-provided public key for connecting to the running container.
 
 ### Changed
 
