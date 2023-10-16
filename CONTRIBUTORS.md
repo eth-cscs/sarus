@@ -3,6 +3,7 @@
 - Aliaga, Tomas. ETH Zurich - CSCS
 - Benedicic, Lucas. ETH Zurich - CSCS
 - Brambilla, Michele. ETH Zurich - CSCS
+- Chesi, Matteo. ETH Zurich - CSCS
 - Cruz, Felipe. ETH Zurich - CSCS
 - Fink, Andreas. ETH Zurich - CSCS
 - Hooks, Timothy Dayne

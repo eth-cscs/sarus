@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [1.6.1]
 
 ### Added
 
@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The configuration files for the SSH hook and the Slurm sync hook are no longer generated automatically as part of the CMake installation process.
   In other words, the aforementioned hooks are no longer configured and enabled by default.
 - Updated recommended runc version to 1.1.9
-- Updated CI tests from source on Fedora (36 -> 38)
+- Updated CI tests from source on Fedora (36 -> 38) and OpenSUSE Leap (15.4 -> 15.5)
 
 ### Fixed
 
