@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - SSH Hook: added support for the `com.hooks.ssh.authorize_ssh_key` OCI annotation, which allows to authorize a user-provided public key for connecting to the running container.
+- Added a User Guide section about using Visual Studio Code's Remote Development extension in conjunction with Sarus and the SSH hook. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#remote-development-with-visual-studio-code)
 
 ### Changed
 

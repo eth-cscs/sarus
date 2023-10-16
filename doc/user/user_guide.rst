@@ -1436,3 +1436,78 @@ interconnect support:
 
 Notice that an ``--mpi=pmi2`` option was passed to ``srun`` but *not* to
 :program:`sarus run`.
+
+Remote development with Visual Studio Code
+==========================================
+
+.. |vscode_button| image:: vscode_remote_window_button.png
+                   :alt: Visual Studio Code remote window button
+
+`Visual Studio Code <https://code.visualstudio.com/>`_ is a popular Programming
+IDE that can be configured to edit and test code on remote systems.
+Remote systems can be accessed via SSH protocol, hence the Sarus SSH hook can be
+used to extend the IDE to work on remote Sarus container environments.
+
+Follow these steps to configure Visual Studio Code to access remote Sarus 
+instances:
+
+On the remote system start a Sarus container enabling SSH:
+
+1. Copy your public SSH key on the remote host that will run the container.
+
+   .. code-block:: bash
+
+      <me>@<laptop>:~$ scp ~/.ssh/id_ed25519.pub <remote_user>@<remote_node>:~/.ssh/
+
+2. Run the remote container with the ``--ssh`` option and the annotation to authorize 
+   your public key.
+
+   .. code-block:: bash
+
+      <remote_user>@<remote_node>:~> sarus run --ssh --tty --entrypoint bash \
+      > --annotation com.hooks.ssh.authorize_ssh_key=$HOME/.ssh/id_ed25519.pub \
+      > <container_image>
+
+3. Test that you can now access the remote container via SSH on port 15263.
+
+   .. code-block:: bash
+
+      <me>@<laptop>:~$ ssh -o StrictHostKeyChecking=no -o ControlMaster=no \
+      > -o UserKnownHostsFile=/dev/null -p 15263 <remote_user>@<remote_node>
+
+ 
+Configure Visual Studio Code to access the remote Sarus container:
+
+4. On Visual Studio Code, install "Remote Development" and "Remote - SSH" 
+   extensions.
+
+5. Click on the bottom left corner |vscode_button| symbol on Visual Studio Code.
+
+6. Select "Connect to Host..." .
+
+7. Select "+ Add New SSH Host..." .
+
+8. On the "Enter SSH Connection Command" window, insert the SSH command line that 
+   you tested on step 3 .
+
+9. Select the SSH client configuration file where you prefer to add the host,
+   i.e. ``$HOME/.ssh/config``.
+
+10. Now on this file you should find a new entry like:
+
+   .. code-block:: bash
+
+      Host <remote_node>
+          HostName <remote_node>
+          StrictHostKeyChecking no
+          ControlMaster no
+          UserKnownHostsFile /dev/null
+          Port 15263
+          User <remote_user>
+
+11. Select "Connect" to connect the IDE to the remote container environment.
+
+For more details about "Remote - SSH" Visual Studio Code extension, you can
+refer to `this tutorial <https://code.visualstudio.com/docs/remote/ssh-tutorial>`_ 
+from the official Visual Studio Code documentation.
+
