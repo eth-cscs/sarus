@@ -1266,12 +1266,19 @@ Notice that the annotation value must be a public key file, not the public key
 itself. The annotation allows remote access via SSH to the running container
 through user-specified (and potentially ephemeral) keys.
 
+The ``com.hooks.ssh.pidfile_container`` annotation allows the user to define the 
+Dropbear daemon PIDfile inside the container.
+
+The ``com.hooks.ssh.pidfile_host`` annotation can be used to copy the PIDfile of the
+Dropbear daemon in the host.
+
 .. warning::
    The SSH hook currently does not implement a poststop functionality and
-   requires the use of a private PID namespace to cleanup the Dropbear daemon.
-   Thus, the hook currently requires the use of a :ref:`private PID namespace <user-private-pid>`
-   for the container. Thus, the ``--ssh`` option of :program:`sarus run` implies
-   ``--pid=private``, and is incompatible with the use of ``--pid=host``.
+   requires the use of a :ref:`private PID namespace <user-private-pid>` for
+   the container in order to cleanup the Dropbear daemon.
+   Thus, the ``--ssh`` option of :program:`sarus run` implies ``--pid=private``,
+   and is incompatible with the use of ``--pid=host``.
+
 
 OpenMPI communication through SSH
 ---------------------------------

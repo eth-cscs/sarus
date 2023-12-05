@@ -54,7 +54,10 @@ private:
 
 private:
     bool isHookEnabled = false;
+    bool joinNamespaces = true;
     std::string username;
+    boost::filesystem::path pidfileHost;
+    boost::filesystem::path pidfileContainer = "/var/run/dropbear/dropbear.pid";
     boost::filesystem::path sshKeysDirInHost;
     boost::filesystem::path sshKeysDirInContainer;
     boost::filesystem::path dropbearDirInHost;

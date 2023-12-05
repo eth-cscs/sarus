@@ -10,10 +10,13 @@
 
 #include "SshHook.hpp"
 
+#include <chrono>
+#include <thread>
 #include <fstream>
 #include <cstdlib>
 #include <tuple>
 #include <sstream>
+#include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/regex.hpp>
 
@@ -78,12 +81,18 @@ void SshHook::checkUserHasSshKeys() {
 void SshHook::startSshDaemon() {
     log("Activating SSH in container", sarus::common::LogLevel::INFO);
 
-    dropbearRelativeDirInContainer = boost::filesystem::path("/opt/oci-hooks/dropbear");
+    dropbearRelativeDirInContainer = boost::filesystem::path("/opt/oci-hooks/ssh/dropbear");
     dropbearDirInHost = sarus::common::getEnvironmentVariable("DROPBEAR_DIR");
     serverPort = std::stoi(sarus::common::getEnvironmentVariable("SERVER_PORT"));
+    try {
+        auto envJoinNamespaces = sarus::common::getEnvironmentVariable("JOIN_NAMESPACES");
+        joinNamespaces = (boost::algorithm::to_upper_copy(envJoinNamespaces) == std::string("TRUE"));
+    } catch (sarus::common::Error&) {}
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
-    hooks::common::utility::enterMountNamespaceOfProcess(pidOfContainer);
-    hooks::common::utility::enterPidNamespaceOfProcess(pidOfContainer);
+    if (joinNamespaces) {
+        hooks::common::utility::enterMountNamespaceOfProcess(pidOfContainer);
+        hooks::common::utility::enterPidNamespaceOfProcess(pidOfContainer);
+    }
     parseConfigJSONOfBundle();
     username = getUsername(uidOfUser);
     sshKeysDirInHost = getSshKeysDirInHost(username);
@@ -125,6 +134,12 @@ void SshHook::parseConfigJSONOfBundle() {
     if(json.HasMember("annotations")) {
         if(json["annotations"].HasMember("com.hooks.ssh.authorize_ssh_key")) {
             userPublicKeyFilename = boost::filesystem::path(json["annotations"]["com.hooks.ssh.authorize_ssh_key"].GetString());
+        }
+        if(json["annotations"].HasMember("com.hooks.ssh.pidfile_container")) {
+            pidfileContainer = boost::filesystem::path(json["annotations"]["com.hooks.ssh.pidfile_container"].GetString());
+        }
+        if(json["annotations"].HasMember("com.hooks.ssh.pidfile_host")) {
+            pidfileHost = boost::filesystem::path(json["annotations"]["com.hooks.ssh.pidfile_host"].GetString());
         }
     }
 
@@ -196,7 +211,7 @@ void SshHook::generateAuthorizedKeys(const boost::filesystem::path& userKeyFile,
     // output user's public key
     auto command = boost::format{"%s/bin/dropbearkey -y -f %s"}
         % dropbearDirInHost.string()
-        % (sshKeysDirInHost / "id_dropbear").string();
+        % userKeyFile.string();
     auto output = sarus::common::executeCommand(command.str());
 
     // extract public key
@@ -208,7 +223,7 @@ void SshHook::generateAuthorizedKeys(const boost::filesystem::path& userKeyFile,
     // write public key to "authorized_keys" file
     while(std::getline(ss, line)) {
         if(boost::regex_match(line, matches, re)) {
-            auto ofs = std::ofstream{ (sshKeysDirInHost / "authorized_keys").c_str() };
+            auto ofs = std::ofstream{ authorizedKeysFile.c_str() };
             ofs << matches[1] << std::endl;
             ofs.close();
             log("Successfully generated \"authorized_keys\" file", sarus::common::LogLevel::INFO);
@@ -381,17 +396,35 @@ void SshHook::startSshDaemonInContainer() const {
 
     auto sshKeysPathWithinContainer = "/" / boost::filesystem::relative(sshKeysDirInContainer, rootfsDir);
 
+    auto pidfileContainerReal = sarus::common::realpathWithinRootfs(rootfsDir, pidfileContainer);
+    auto pidfileContainerFull = rootfsDir / pidfileContainerReal;
+    sarus::common::createFoldersIfNecessary(pidfileContainerFull.parent_path(), uidOfUser, gidOfUser);
+
     auto dropbearCommand = sarus::common::CLIArguments{
         dropbearRelativeDirInContainer.string() + "/bin/dropbear",
         "-E",
         "-r", sshKeysPathWithinContainer.string() + "/dropbear_ecdsa_host_key",
-        "-p", std::to_string(serverPort)
+        "-p", std::to_string(serverPort),
+        "-P", pidfileContainerReal.string()
     };
     auto status = sarus::common::forkExecWait(dropbearCommand, preExecActions);
     if(status != 0) {
         auto message = boost::format("%s/bin/dropbear exited with status %d")
             % dropbearRelativeDirInContainer % status;
         SARUS_THROW_ERROR(message.str());
+    }
+
+    if (!pidfileHost.empty()) {
+        // Wait a little to ensure Dropbear has created its pidfile
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        if (boost::filesystem::is_regular_file(pidfileContainerFull)) {
+            sarus::common::copyFile(pidfileContainerFull, pidfileHost, uidOfUser, gidOfUser);
+        }
+        else {
+            auto message = boost::format("Failed to copy Dropbear pidfile to host path (%s): container pidfile (%s) not found")
+                    % pidfileHost % pidfileContainerReal;
+            log(message, sarus::common::LogLevel::WARN);
+        }
     }
 
     log("Successfully started SSH daemon in container", sarus::common::LogLevel::INFO);

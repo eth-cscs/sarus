@@ -300,7 +300,7 @@ int forkExecWait(const common::CLIArguments& args,
             SARUS_THROW_ERROR(message.str());
         }
 
-        logMessage( boost::format("%s exited with status %d") % args % WEXITSTATUS(status),
+        logMessage( boost::format("%s (pid %d) exited with status %d") % args % pid % WEXITSTATUS(status),
                     common::LogLevel::DEBUG);
 
         return WEXITSTATUS(status);

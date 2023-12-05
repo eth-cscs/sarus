@@ -8,7 +8,9 @@
  *
  */
 
+#include <chrono>
 #include <memory>
+#include <thread>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -128,6 +130,12 @@ public:
             }
         }
         passwd.write(rootfsDir / "etc/passwd");
+
+        // Ensure parent path for container pidfile is writable by user
+        if (boost::filesystem::exists(getDropbearPidFileInContainerAbsolute().parent_path())) {
+            auto addOthersWritePerms = boost::filesystem::perms::add_perms | boost::filesystem::perms::others_write;
+            boost::filesystem::permissions(getDropbearPidFileInContainerAbsolute().parent_path(), addOthersWritePerms);
+        }
     }
 
     void createConfigJSON() {
@@ -137,16 +145,28 @@ public:
         for (const auto& var : environmentVariablesInContainer) {
             doc["process"]["env"].PushBack(rj::Value{var.c_str(), allocator}, allocator);
         }
-        rapidjson::Value jUserSshKey(rapidjson::kObjectType);
-        jUserSshKey.AddMember(
-            "com.hooks.ssh.authorize_ssh_key", 
-            rj::Value{(sshKeysDirInHost / "user_key.pub").string().c_str(), doc.GetAllocator()},
-            doc.GetAllocator()
-        );
-        if(!doc.HasMember("annotations")) {
-            doc.AddMember("annotations", jUserSshKey, doc.GetAllocator());
+        rapidjson::Value extraAnnotations(rapidjson::kObjectType);
+        extraAnnotations.AddMember(
+            "com.hooks.ssh.authorize_ssh_key",
+            rj::Value{(sshKeysDirInHost / "user_key.pub").c_str(), allocator},
+            allocator);
+        if (!dropbearPidFileInContainerRelative.empty()) {
+          extraAnnotations.AddMember(
+              "com.hooks.ssh.pidfile_container",
+              rj::Value{dropbearPidFileInContainerRelative.c_str(),
+                        allocator},
+              allocator);
+        }
+        if (!dropbearPidFileInHost.getPath().empty()) {
+          extraAnnotations.AddMember(
+              "com.hooks.ssh.pidfile_host",
+              rj::Value{dropbearPidFileInHost.getPath().c_str(), allocator},
+              allocator);
+        }
+        if (!doc.HasMember("annotations")) {
+          doc.AddMember("annotations", extraAnnotations, allocator);
         } else {
-            doc["annotations"] = jUserSshKey;
+          doc["annotations"] = extraAnnotations;
         }
 
         sarus::common::writeJSON(doc, bundleDir / "config.json");
@@ -211,7 +231,7 @@ public:
         std::string line;
 
         boost::smatch matches;
-        boost::regex pattern("^ *([0-9]+) +/opt/oci-hooks/dropbear/bin/dropbear.*$");
+        boost::regex pattern("^ *([0-9]+) +/opt/oci-hooks/ssh/dropbear/bin/dropbear.*$");
 
         while(std::getline(ss, line)) {
             if(boost::regex_match(line, matches, pattern)) {
@@ -227,7 +247,7 @@ public:
 
         auto expectedScript = boost::format{
             "#!/bin/sh\n"
-            "/opt/oci-hooks/dropbear/bin/dbclient -y -p %s $*\n"
+            "/opt/oci-hooks/ssh/dropbear/bin/dbclient -y -p %s $*\n"
         } % serverPort;
         auto actualScript = sarus::common::readFile(targetFile);
         CHECK_EQUAL(actualScript, expectedScript.str());
@@ -286,7 +306,7 @@ public:
         auto expectedScript = std::string(
                 "#!/bin/sh\n"
                 "if [ \"$SSH_CONNECTION\" ]; then\n"
-                "    . /opt/oci-hooks/dropbear/environment\n"
+                "    . /opt/oci-hooks/ssh/dropbear/environment\n"
                 "fi\n");
         auto actualScript = sarus::common::readFile(targetFile);
         CHECK_EQUAL(actualScript, expectedScript);
@@ -312,6 +332,23 @@ public:
         }
         return false;
     }
+
+    const boost::filesystem::path getDropbearPidFileInContainerAbsolute() const {
+        return rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, dropbearPidFileInContainerRelative);
+    }
+
+    const boost::filesystem::path getDropbearPidFileInHost() const {
+        return dropbearPidFileInHost.getPath();
+    }
+
+    void setDropbearPidFileInContainer(const std::string& PidFile) {
+        dropbearPidFileInContainerRelative = PidFile;
+    }
+
+    void setDropbearPidFileInHost(const std::string& PidFile) {
+        dropbearPidFileInHost = sarus::common::PathRAII{PidFile};
+    }
+
 private:
     std::tuple<uid_t, gid_t> idsOfRoot{0, 0};
     std::tuple<uid_t, gid_t> idsOfUser = test_utility::misc::getNonRootUserIds();
@@ -329,7 +366,9 @@ private:
     boost::filesystem::path sshKeysDirInHost = homeDirInHost / ".oci-hooks/ssh/keys";
     sarus::common::PathRAII dropbearDirInHost = sarus::common::PathRAII{boost::filesystem::absolute(
                                                sarus::common::makeUniquePathWithRandomSuffix("./hook-test-dropbeardir-in-host"))};
-    boost::filesystem::path dropbearDirInContainer = rootfsDir / "opt/oci-hooks/dropbear";
+    boost::filesystem::path dropbearDirInContainer = rootfsDir / "opt/oci-hooks/ssh/dropbear";
+    boost::filesystem::path dropbearPidFileInContainerRelative = "/var/run/dropbear/dropbear.pid";
+    sarus::common::PathRAII dropbearPidFileInHost = sarus::common::PathRAII("");
     std::uint16_t serverPort = 11111;
     std::vector<boost::filesystem::path> rootfsFolders = {"etc", "dev", "bin", "sbin", "usr", "lib", "lib64"}; // necessary to chroot into rootfs
     std::vector<std::string> environmentVariablesInContainer;
@@ -411,7 +450,6 @@ TEST(SSHHookTestGroup, testSetEnvironmentOnLogin) {
 }
 
 TEST(SSHHookTestGroup, testInjectKeyUsingAnnotations) {
-
     Helper helper{};
 
     helper.setRootIds();
@@ -432,6 +470,80 @@ TEST(SSHHookTestGroup, testInjectKeyUsingAnnotations) {
     helper.checkContainerHasServerKeys();
     
     CHECK_TRUE(helper.isUserSshKeyAuthorized());
+}
+
+TEST(SSHHookTestGroup, testDefaultDropbearPidFiles) {
+    Helper helper{};
+
+    helper.setRootIds();
+    helper.setupTestEnvironment();
+
+    // generate + check SSH keys in local repository
+    helper.setUserIds(); // keygen is executed with user privileges
+    SshHook{}.generateSshKeys(true);
+    helper.generateUserSshKeyFile();
+
+    helper.setRootIds();
+    helper.checkHostHasSshKeys();
+
+    // start sshd
+    helper.writeContainerStateToStdin();
+    SshHook{}.startSshDaemon();
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    CHECK(boost::filesystem::is_regular_file(helper.getDropbearPidFileInContainerAbsolute()));
+    CHECK_FALSE(boost::filesystem::exists(helper.getDropbearPidFileInHost()));
+}
+
+TEST(SSHHookTestGroup, testDropbearPidFileInHost) {
+    Helper helper{};
+
+    helper.setDropbearPidFileInHost((boost::filesystem::current_path() / "dropbear.pid").string());
+    helper.setRootIds();
+    helper.setupTestEnvironment();
+
+    // generate + check SSH keys in local repository
+    helper.setUserIds(); // keygen is executed with user privileges
+    SshHook{}.generateSshKeys(true);
+    helper.generateUserSshKeyFile();
+
+    helper.setRootIds();
+    helper.checkHostHasSshKeys();
+
+    // start sshd
+    helper.writeContainerStateToStdin();
+    SshHook{}.startSshDaemon();
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    auto pidInContainer = sarus::common::readFile(helper.getDropbearPidFileInContainerAbsolute());
+    auto pidInHost = sarus::common::readFile(helper.getDropbearPidFileInHost());
+    CHECK(pidInContainer == pidInHost);
+}
+
+TEST(SSHHookTestGroup, testDropbearPidFilesInCustomPaths) {
+    Helper helper{};
+
+    helper.setDropbearPidFileInHost((boost::filesystem::current_path() / "dropbear.pid").string());
+    helper.setDropbearPidFileInContainer("/etc/dropbear/dropbear.pid");
+    helper.setRootIds();
+    helper.setupTestEnvironment();
+
+    // generate + check SSH keys in local repository
+    helper.setUserIds(); // keygen is executed with user privileges
+    SshHook{}.generateSshKeys(true);
+    helper.generateUserSshKeyFile();
+
+    helper.setRootIds();
+    helper.checkHostHasSshKeys();
+
+    // start sshd
+    helper.writeContainerStateToStdin();
+    SshHook{}.startSshDaemon();
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    auto pidInContainer = sarus::common::readFile(helper.getDropbearPidFileInContainerAbsolute());
+    auto pidInHost = sarus::common::readFile(helper.getDropbearPidFileInHost());
+    CHECK(pidInContainer == pidInHost);
 }
 
 }}}} // namespace
