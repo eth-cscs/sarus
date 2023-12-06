@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [1.6.2]
 
 ### Added
 - SSH Hook: added support for the `com.hooks.ssh.pidfile_container` OCI annotation, which allows to customize the path to the Dropbear daemon PIDfile inside the container.
