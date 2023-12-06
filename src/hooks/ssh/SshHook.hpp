@@ -70,6 +70,7 @@ private:
     uid_t uidOfUser;
     gid_t gidOfUser;
     std::uint16_t serverPort;
+    bool overlayMountHostDotSsh = true;
 };
 
 }}} // namespace

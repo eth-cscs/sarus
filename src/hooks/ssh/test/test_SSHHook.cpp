@@ -349,6 +349,19 @@ public:
         dropbearPidFileInHost = sarus::common::PathRAII{PidFile};
     }
 
+    bool containerMountsDotSsh() {
+        auto overlayDir = bundleDir / "overlay";
+        if  (!boost::filesystem::exists(overlayDir) || !boost::filesystem::is_directory(overlayDir)) {
+            return false;
+        }
+        std::set<std::string> foundLayers;
+        for(auto& layer : boost::make_iterator_range(boost::filesystem::directory_iterator(overlayDir), {})){
+            foundLayers.insert(layer.path().filename().string());
+        }
+
+        return foundLayers == std::set<std::string>{"ssh-lower", "ssh-upper", "ssh-work"};
+    }
+
 private:
     std::tuple<uid_t, gid_t> idsOfRoot{0, 0};
     std::tuple<uid_t, gid_t> idsOfUser = test_utility::misc::getNonRootUserIds();
@@ -544,6 +557,51 @@ TEST(SSHHookTestGroup, testDropbearPidFilesInCustomPaths) {
     auto pidInContainer = sarus::common::readFile(helper.getDropbearPidFileInContainerAbsolute());
     auto pidInHost = sarus::common::readFile(helper.getDropbearPidFileInHost());
     CHECK(pidInContainer == pidInHost);
+}
+
+TEST(SSHHookTestGroup, testDefaultMountsDotSshAsOverlayFs) {
+    // sarus::common::setEnvironmentVariable("OVERLAY_MOUNT_HOME_SSH", "False");
+
+    Helper helper{};
+
+    helper.setRootIds();
+    helper.setupTestEnvironment();
+
+    // generate + check SSH keys in local repository
+    helper.setUserIds(); // keygen is executed with user privileges
+    SshHook{}.generateSshKeys(true);
+    helper.generateUserSshKeyFile();
+
+    helper.setRootIds();
+
+    // start sshd
+    helper.writeContainerStateToStdin();
+    SshHook{}.startSshDaemon();
+
+    CHECK_TRUE(helper.containerMountsDotSsh());    
+}
+
+TEST(SSHHookTestGroup, testEnvVarDisableMountsDotSshAsOverlayFs) {
+    sarus::common::setEnvironmentVariable("OVERLAY_MOUNT_HOME_SSH", "False");
+
+    Helper helper{};
+
+    helper.setRootIds();
+    helper.setupTestEnvironment();
+
+    // generate + check SSH keys in local repository
+    helper.setUserIds(); // keygen is executed with user privileges
+    SshHook{}.generateSshKeys(true);
+    helper.generateUserSshKeyFile();
+
+    helper.setRootIds();
+
+    // start sshd
+    helper.writeContainerStateToStdin();
+    SshHook{}.startSshDaemon();
+
+    CHECK_FALSE(helper.containerMountsDotSsh());    
+    sarus::common::setEnvironmentVariable("OVERLAY_MOUNT_HOME_SSH", "");
 }
 
 }}}} // namespace

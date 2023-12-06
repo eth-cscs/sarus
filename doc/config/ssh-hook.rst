@@ -42,13 +42,40 @@ environment variables must be defined:
   port and is typically set to a value different than 22 in order to avoid clashes with an SSH
   daemon that could be running on the host.
 
-By default, the hook attempts to join the mount and PID namespaces of the container. 
-This behavior can be modified using the following optional environment variable:
+The following optional environment variables can also be defined:
 
-* ``JOIN_NAMESPACES``: When `FALSE` (case insensitive), the hook does not actively join the mount and PID
-  namespaces of the container. This is useful when the hook is executed already inside the appropriate 
+* ``OVERLAY_MOUNT_HOME_SSH``: When set to ``False`` (case-insensitive), an overlay
+  filesystem is not mounted on top of the container's ``${HOME}/.ssh`` directory.
+  By default or when this variable is set to ``True`` (case-insensitive), the
+  hook creates an overlay filesystem over the container's ``${HOME}/.ssh``
+  directory, preventing permanent modifications to its contents.
+  For instance, if the user's host ``${HOME}/.ssh`` directory is bind mounted
+  within the container, the overlay mount ensures that modifications made by the
+  hook (such as adding custom keys and key authorizations) do not propagate back
+  to the host.
+
+  It's important to note that full support for rootless overlay is
+  available only on Linux kernel versions 5.13 or later. Consequently, if the SSH
+  hook is utilized by an unprivileged container runtime, the system's kernel must
+  be sufficiently recent to perform the overlay mount.
+  Setting ``OVERLAY_MOUNT_HOME_SSH=False`` enables the hook to operate
+  successfully on systems with kernels older than 5.13.
+
+  .. warning::
+
+     If ``OVERLAY_MOUNT_HOME_SSH`` is set to ``False`` AND the user's ``${HOME}/.ssh``
+     directory is bind mounted from the host into the container, the SSH hook will
+     modify the content of the host directory!
+
+     When using If ``OVERLAY_MOUNT_HOME_SSH=False`` it is strongly advised
+     to avoid configuring any automatic mount of ``${HOME}`` into the container.
+     Additionally, it is very important to clearly communicate to users the
+     implications when performing bind mounts related to ``${HOME}``.
+
+* ``JOIN_NAMESPACES``: When set to ``False`` (case-insensitive), the hook does not actively join the mount and PID
+  namespaces of the container. This is useful when the hook is executed already inside the appropriate
   namespaces, or when the hook does not have the privileges to join said namespaces.
-
+  By default, the hook always attempts to join the mount and PID namespaces of the container.
 
 The following is an example of `OCI hook JSON configuration file
 <https://github.com/containers/common/blob/main/pkg/hooks/docs/oci-hooks.5.md>`_

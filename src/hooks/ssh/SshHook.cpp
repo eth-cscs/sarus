@@ -13,8 +13,6 @@
 #include <chrono>
 #include <thread>
 #include <fstream>
-#include <cstdlib>
-#include <tuple>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
@@ -143,6 +141,16 @@ void SshHook::parseConfigJSONOfBundle() {
         }
     }
 
+    try {
+        auto envOverlayMountHome = sarus::common::getEnvironmentVariable("OVERLAY_MOUNT_HOME_SSH");
+        overlayMountHostDotSsh = boost::algorithm::to_upper_copy(envOverlayMountHome) != "FALSE";
+    } 
+    catch(const sarus::common::Error& error) {
+        overlayMountHostDotSsh = true; // default behaviour: mount
+        auto message = boost::format("%s. ~/.ssh will be mounted in the container using OverlayFS.") % error.what();
+        log(message, sarus::common::LogLevel::INFO);
+    }
+
     log("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);
 }
 
@@ -258,17 +266,19 @@ void SshHook::setupSshKeysDirInContainer() const {
     sarus::common::createFoldersIfNecessary(sshKeysDirInContainer);
     sarus::common::switchIdentity(rootIdentity);
 
-    // mount overlayfs on top of the container's ~/.ssh, otherwise we
-    // could mess up with the host's ~/.ssh directory. E.g. when the user
-    // bind mounts the host's /home into the container
-    auto lowerDir = bundleDir / "overlay/ssh-lower";
-    auto upperDir = bundleDir / "overlay/ssh-upper";
-    auto workDir = bundleDir / "overlay/ssh-work";
-    sarus::common::createFoldersIfNecessary(lowerDir);
-    sarus::common::createFoldersIfNecessary(upperDir, uidOfUser, gidOfUser);
-    sarus::common::createFoldersIfNecessary(workDir);
-    runtime::mountOverlayfs(lowerDir, upperDir, workDir, sshKeysDirInContainer);
-
+    if (overlayMountHostDotSsh) {
+        // mount overlayfs on top of the container's ~/.ssh, otherwise we
+        // could mess up with the host's ~/.ssh directory. E.g. when the user
+        // bind mounts the host's /home into the container
+        auto lowerDir = bundleDir / "overlay/ssh-lower";
+        auto upperDir = bundleDir / "overlay/ssh-upper";
+        auto workDir = bundleDir / "overlay/ssh-work";
+        sarus::common::createFoldersIfNecessary(lowerDir);
+        sarus::common::createFoldersIfNecessary(upperDir, uidOfUser, gidOfUser);
+        sarus::common::createFoldersIfNecessary(workDir);
+        runtime::mountOverlayfs(lowerDir, upperDir, workDir, sshKeysDirInContainer);
+    }
+    
     log("Successfully set up directory for SSH keys into container", sarus::common::LogLevel::INFO);
 }
 
