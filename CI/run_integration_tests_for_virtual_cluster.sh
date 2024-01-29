@@ -29,7 +29,7 @@ stop_and_remove_cluster() {
     if [ -d $virtual_cluster_dir ]; then
         log "stopping virtual cluster"
         cd $virtual_cluster_dir
-        docker-compose down -v
+        docker compose down -v
         log "successfully stopped virtual cluster"
         log "removing virtual cluster"
         cd ..
@@ -60,7 +60,7 @@ start_cluster() {
     log "starting virtual cluster on $virtual_cluster_dir"
     cd $virtual_cluster_dir
     mkdir -p sync
-    docker-compose up -d
+    docker compose up -d
     fail_on_error "failed to start cluster with docker-compose up"
     log "successfully started virtual cluster"
 }
@@ -76,7 +76,7 @@ wait_for_controller_node_to_finish_startup() {
 wait_for_idle_state_of_server_nodes() {
     log "waiting for idle state of server nodes"
     cd $virtual_cluster_dir
-    while ! docker-compose exec -T controller sinfo |grep "server\[0-1\]" |grep idle >/dev/null; do
+    while ! docker compose exec -T controller sinfo |grep "server\[0-1\]" |grep idle >/dev/null; do
         sleep 1
     done
     log "successfully waited for idle state of server nodes"
@@ -87,7 +87,7 @@ run_tests() {
     local test_files=$(cd $script_dir/src/integration_tests_for_virtual_cluster && ls test_*.py)
     local tests_dir_in_container=/sarus-source/CI/src
     cd $virtual_cluster_dir
-    docker-compose exec --user=docker -T controller bash -c "cd $tests_dir_in_container/integration_tests_for_virtual_cluster && PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=$tests_dir_in_container:\$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/default pytest -v $test_files"
+    docker compose exec --user=docker -T controller bash -c "cd $tests_dir_in_container/integration_tests_for_virtual_cluster && PATH=/opt/sarus/default/bin:\$PATH PYTHONPATH=$tests_dir_in_container:\$PYTHONPATH CMAKE_INSTALL_PREFIX=/opt/sarus/default pytest -v $test_files"
     if [ $? -ne 0 ]; then
         stop_and_remove_cluster
         error "failed to run integration tests in virtual cluster"

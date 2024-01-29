@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Changed
+
+- Updated CI distributed tests to use Docker Compose V2 and Compose file format version 3
+- Updated automatic documentation build to use Sphinx 7.2.6 and Sphinx RTD Theme 2.0.0
+
 ## [1.6.2]
 
 ### Added
