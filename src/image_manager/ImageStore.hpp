@@ -19,6 +19,7 @@
 #include <boost/filesystem.hpp>
 #include <rapidjson/document.h>
 
+#include "common/Flock.hpp"
 #include "common/Config.hpp"
 #include "common/SarusImage.hpp"
 
@@ -27,6 +28,8 @@ namespace sarus {
 namespace image_manager {
 
 class ImageStore {
+    using milliseconds = std::chrono::milliseconds;
+    
 public:
     ImageStore(std::shared_ptr<const common::Config>);
 
@@ -41,14 +44,14 @@ public:
     boost::filesystem::path getImageMetadataFile(const common::ImageReference& reference) const;
 
 private:
-    rapidjson::Document readRepositoryMetadata() const;
+    rapidjson::Document initRepositoryMetadataFile() const;
     const rapidjson::Value* findImageMetadata(const common::ImageReference& reference, const rapidjson::Document& metadata) const;
-    void atomicallyUpdateRepositoryMetadataFile(const rapidjson::Value& metadata) const;
+    void atomicallyUpdateRepositoryMetadataFile(const rapidjson::Value& metadata, common::Flock* const lock) const;
     rapidjson::Value createImageJSON(const common::SarusImage&, rapidjson::MemoryPoolAllocator<>& allocator) const;
     common::SarusImage convertImageMetadataToSarusImage(const rapidjson::Value& imageMetadata) const;
     bool hasImageBackingFiles(const rapidjson::Value& imageMetadata) const;
     void removeImageBackingFiles(const rapidjson::Value* imageMetadata) const;
-    void removeRepositoryMetadataEntry(const rapidjson::Value* imageMetadata, rapidjson::Document& repositoryMetadata) const;
+    void removeRepositoryMetadataEntry(const rapidjson::Value* imageMetadata, rapidjson::Document& repositoryMetadata, common::Flock* const lock) const;
     void printLog(const boost::format& message, common::LogLevel LogLevel,
                   std::ostream& out = std::cout, std::ostream& err = std::cerr) const;
     void printLog(const std::string& message, common::LogLevel LogLevel,
@@ -58,8 +61,8 @@ private:
     const std::string sysname = "ImageStore"; // system name for logger
     boost::filesystem::path imagesDirectory;
     boost::filesystem::path metadataFile;
-    unsigned int lockWarningMs;
-    unsigned int lockTimeoutMs;
+    milliseconds lockWarning;
+    milliseconds lockTimeout;
 };
 
 } // namespace

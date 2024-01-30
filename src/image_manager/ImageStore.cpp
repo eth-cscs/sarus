@@ -23,7 +23,7 @@
 #include "common/Error.hpp"
 #include "common/Logger.hpp"
 #include "common/Utility.hpp"
-#include "common/Lockfile.hpp"
+#include "common/Flock.hpp"
 #include "common/SarusImage.hpp"
 
 
@@ -36,20 +36,24 @@ namespace image_manager {
         : imagesDirectory{config->directories.images}
         , metadataFile{config->directories.repository / "metadata.json"}
     {
+        if (!boost::filesystem::exists(metadataFile)) {
+            initRepositoryMetadataFile();
+        }
+
         auto rjPtr = rj::Pointer("/repositoryMetadataLockTimings/timeoutMs");
         if (const rj::Value* configLockTimeoutMs = rjPtr.Get(config->json)) {
-            lockTimeoutMs = configLockTimeoutMs->GetInt();
+            lockTimeout = milliseconds{configLockTimeoutMs->GetInt()};
         }
         else {
-            lockTimeoutMs = 60000;
+            lockTimeout = milliseconds{60000};
         }
 
         rjPtr = rj::Pointer("/repositoryMetadataLockTimings/warningMs");
         if (const rj::Value* configLockWarningMs = rjPtr.Get(config->json)) {
-            lockWarningMs = configLockWarningMs->GetInt();
+            lockWarning = milliseconds{configLockWarningMs->GetInt()};
         }
         else {
-            lockWarningMs = 10000;
+            lockWarning = milliseconds{10000};
         }
     }
 
@@ -61,8 +65,8 @@ namespace image_manager {
                  common::LogLevel::INFO);
 
         try {
-            common::Lockfile lock{metadataFile, lockTimeoutMs, lockWarningMs};
-            auto metadata = readRepositoryMetadata();
+            common::Flock lock{metadataFile, common::Flock::Type::writeLock, lockTimeout, lockWarning};
+            auto metadata = common::readJSON(metadataFile);
 
             // remove previous entries with the same image reference (if any)
             auto& images = metadata["images"];
@@ -79,7 +83,7 @@ namespace image_manager {
                 createImageJSON(image, metadata.GetAllocator()),
                 metadata.GetAllocator());
 
-            atomicallyUpdateRepositoryMetadataFile(metadata);
+            atomicallyUpdateRepositoryMetadataFile(metadata, &lock);
         }
         catch (const std::exception &e) {
             auto message = boost::format("Failed to add image %s to repository metadata file %s")
@@ -98,8 +102,8 @@ namespace image_manager {
                  common::LogLevel::INFO);
 
         try {
-            common::Lockfile lock{metadataFile, lockTimeoutMs, lockWarningMs};
-            auto repositoryMetadata = readRepositoryMetadata();
+            common::Flock lock{metadataFile, common::Flock::Type::writeLock, lockTimeout, lockWarning};
+            auto repositoryMetadata = common::readJSON(metadataFile);
             auto imageMetadata = findImageMetadata(imageReference, repositoryMetadata);
 
             if (!imageMetadata) {
@@ -113,7 +117,7 @@ namespace image_manager {
             // If we remove metadata first and something goes wrong on backing files removal
             // there would be no data-driven way to reach the orphaned files, which would just lie in the filesystem occupying space.
             removeImageBackingFiles(imageMetadata);
-            removeRepositoryMetadataEntry(imageMetadata, repositoryMetadata);
+            removeRepositoryMetadataEntry(imageMetadata, repositoryMetadata, &lock);
         }
         catch(const std::exception& e) {
             auto message = boost::format("Failed to remove image %s") % imageReference;
@@ -130,8 +134,8 @@ namespace image_manager {
         auto images = std::vector<common::SarusImage>{};
 
         try {
-            common::Lockfile lock{metadataFile, lockTimeoutMs, lockWarningMs};
-            auto repositoryMetadata = readRepositoryMetadata();
+            common::Flock lock{metadataFile, common::Flock::Type::writeLock, lockTimeout, lockWarning};
+            auto repositoryMetadata = common::readJSON(metadataFile);
             for (const auto& imageMetadata : repositoryMetadata["images"].GetArray()) {
                 // If backing files are present, all image data is available: add the image to list to be visualized.
                 // Else, ensure all image data is cleaned up
@@ -141,7 +145,7 @@ namespace image_manager {
                 }
                 else {
                     removeImageBackingFiles(&imageMetadata);
-                    removeRepositoryMetadataEntry(&imageMetadata, repositoryMetadata);
+                    removeRepositoryMetadataEntry(&imageMetadata, repositoryMetadata, &lock);
                 }
             }
         }
@@ -159,8 +163,8 @@ namespace image_manager {
         boost::optional<common::SarusImage> image;
 
         try {
-            common::Lockfile lock{metadataFile, lockTimeoutMs, lockWarningMs};
-            auto repositoryMetadata = readRepositoryMetadata();
+            common::Flock lock{metadataFile, common::Flock::Type::readLock, lockTimeout, lockWarning};
+            auto repositoryMetadata = common::readJSON(metadataFile);
             auto imageMetadata = findImageMetadata(reference, repositoryMetadata);
             if (imageMetadata) {
                 // If backing files are present, all image data is available: assign object to return
@@ -170,7 +174,14 @@ namespace image_manager {
                 }
                 else {
                     removeImageBackingFiles(imageMetadata);
-                    removeRepositoryMetadataEntry(imageMetadata, repositoryMetadata);
+                    // Obtain exclusive access to the file by acquiring a write lock
+                    lock.convertToType(common::Flock::Type::writeLock);
+                    // Check if another process has updated the metadata in the meantime
+                    repositoryMetadata = common::readJSON(metadataFile);
+                    imageMetadata = findImageMetadata(reference, repositoryMetadata);
+                    if (imageMetadata) {
+                        removeRepositoryMetadataEntry(imageMetadata, repositoryMetadata, &lock);
+                    }
                 }
             }
         }
@@ -184,19 +195,14 @@ namespace image_manager {
         return image;
     }
 
-    rapidjson::Document ImageStore::readRepositoryMetadata() const {
+    rapidjson::Document ImageStore::initRepositoryMetadataFile() const {
         rj::Document metadata;
 
-        // if metadata already exists, load it
-        if (boost::filesystem::exists(metadataFile)) {
-            printLog( boost::format("metadata already exists. Try to read json.") , common::LogLevel::DEBUG);
-            metadata = common::readJSON(metadataFile);
-        }
-        // otherwise create new metadata with empty images array
-        else {
-            metadata = rj::Document{rj::kObjectType};
-            metadata.AddMember("images", rj::kArrayType, metadata.GetAllocator());
-        }
+        metadata = rj::Document{rj::kObjectType};
+        metadata.AddMember("images", rj::kArrayType, metadata.GetAllocator());
+
+        common::Flock lock{};
+        atomicallyUpdateRepositoryMetadataFile(metadata, &lock);
 
         return metadata;
     }
@@ -331,9 +337,9 @@ namespace image_manager {
      * IMPORTANT: this function does not lock the metadata file on its own!
      *            Use this function from a caller performing the lock!
      */
-    void ImageStore::removeRepositoryMetadataEntry(const rapidjson::Value* imageEntry, rapidjson::Document& repositoryMetadata) const {
+    void ImageStore::removeRepositoryMetadataEntry(const rapidjson::Value* imageEntry, rapidjson::Document& repositoryMetadata, common::Flock* const lock) const {
         repositoryMetadata["images"].GetArray().Erase(imageEntry);
-        atomicallyUpdateRepositoryMetadataFile(repositoryMetadata);
+        atomicallyUpdateRepositoryMetadataFile(repositoryMetadata, lock);
         printLog("Removed image entry from repository metadata", common::LogLevel::DEBUG);
     }
 
@@ -353,21 +359,28 @@ namespace image_manager {
      * and then atomically creates/replaces the actual metadata file by renaming the
      * temporary one.
      */
-    void ImageStore::atomicallyUpdateRepositoryMetadataFile(const rapidjson::Value& metadata) const {
+    void ImageStore::atomicallyUpdateRepositoryMetadataFile(const rapidjson::Value& metadata, common::Flock* const lock) const {
         auto metadataFileTemp = common::makeUniquePathWithRandomSuffix(metadataFile);
 
-        printLog( boost::format("Update metadata: %s") % metadataFile, common::LogLevel::DEBUG);
+        printLog( boost::format("Updating repository metadata file: %s") % metadataFile, common::LogLevel::DEBUG);
 
         try {
             common::writeJSON(metadata, metadataFileTemp);
-            boost::filesystem::rename(metadataFileTemp, metadataFile); // atomically replace old metadata file
+            common::Flock newLock{metadataFileTemp, common::Flock::Type::writeLock, milliseconds{1000}, common::Flock::noTimeout};
+
+            // Atomically replace old metadata file.
+            // After this, the process should hold locks on both file descriptors for new and old metadata files.
+            boost::filesystem::rename(metadataFileTemp, metadataFile);
+
+            // Hand over the lock for the new file to the caller function
+            *lock = std::move(newLock);
         }
         catch (const std::exception &e) {
             auto message = boost::format("Failed to write metadata file %s") % metadataFile;
             SARUS_RETHROW_ERROR(e, message.str());
         }
 
-        printLog( boost::format("Success to update metadata: %s") % metadataFile, common::LogLevel::DEBUG);
+        printLog("Successfully updated repository metadata file", common::LogLevel::DEBUG);
     }
 
     boost::filesystem::path ImageStore::getImageSquashfsFile(const common::ImageReference& reference) const {
