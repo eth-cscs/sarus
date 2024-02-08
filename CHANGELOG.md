@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   The new implementation can support both shared locks (a.k.a. read locks) and exclusive locks (a.k.a. write locks),
   and improves the startup time when launching large numbers of containers at scale.
 - Updated recommended runc version to 1.1.12
+- Updated recommended libnvidia-container version to 1.14.5
+- Updated recommended NVIDIA Container Toolkit version to 1.14.5
 - Updated CI integration tests on Rocky 8 to use Python 3.9, solving a problem of missing wheel packages for the previous Python version
 - Updated CI distributed tests to use Docker Compose V2 and Compose file format version 3
 - Updated automatic documentation build to use Sphinx 7.2.6 and Sphinx RTD Theme 2.0.0

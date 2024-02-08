@@ -19,7 +19,7 @@ The hook depends on the library and utility provided by the
 `libnvidia-container <https://github.com/NVIDIA/libnvidia-container>`_
 project to carry out the low-level actions of importing the GPU device and
 drivers inside the container. At the time of writing, the latest release of
-``libnvidia-container`` is version 1.13.0. The most straightforward way to obtain
+``libnvidia-container`` is version 1.14.5. The most straightforward way to obtain
 the library and its CLI utility binary is to configure the related
 `package repository <https://nvidia.github.io/libnvidia-container/>`_
 for your Linux distribution and install the pre-built packages. For example, on
@@ -39,7 +39,7 @@ Installation
 ============
 
 At the time of writing, the latest revision of the NVIDIA Container Runtime hook
-is version 1.13.0.
+is version 1.14.5.
 
 System packages
 ---------------
@@ -81,11 +81,11 @@ You can now proceed to build the hook:
     
     $ git clone https://github.com/NVIDIA/nvidia-container-toolkit.git
     $ cd nvidia-container-toolkit
-    $ git checkout v1.13.0
+    $ git checkout v1.14.5
     $ make cmd-nvidia-container-runtime-hook
 
     # Copy the hook binary to an installation directory
-    $ sudo cp ./nvidia-container-runtime-hook /opt/sarus/bin/nvidia-container-runtime-hook-1.13.0
+    $ sudo cp ./nvidia-container-runtime-hook /opt/sarus/bin/nvidia-container-runtime-hook-1.14.5
 
 To ensure correct functionality, the hook also needs a TOML configuration file
 to be present on the system, and will look for it in the default path
