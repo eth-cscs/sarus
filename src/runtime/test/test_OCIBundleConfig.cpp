@@ -190,6 +190,26 @@ static void enterTestDeviceFilesInJson(rapidjson::Document* json) {
     (*json)["linux"]["resources"]["devices"].PushBack(testDevice1Rule, *allocator);
 }
 
+static void enterHooksLoggingAnnotationsInJson(rapidjson::Document* json) {
+    auto* allocator = &json->GetAllocator();
+
+    auto* realStderr = realpath("/dev/stderr", NULL);
+    if (realStderr != nullptr) {
+        auto realStderrValue = rj::Value{realStderr, *allocator};
+        (*json)["annotations"].AddMember("com.hooks.logging.stderrfd", realStderrValue, *allocator);
+        free(realStderr);
+    }
+
+    auto* realStdout = realpath("/dev/stdout", NULL);
+    if (realStdout != nullptr) {
+        auto realStdoutValue = rj::Value{realStdout, *allocator};
+        (*json)["annotations"].AddMember("com.hooks.logging.stdoutfd", realStdoutValue, *allocator);
+        free(realStdout);
+    }
+
+    (*json)["annotations"].AddMember("com.hooks.logging.level", "2", *allocator);
+}
+
 TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     // create test config
     auto configRAII = test_utility::config::makeConfig();
@@ -207,7 +227,10 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     auto actualJson = common::readJSON(actualConfigFile);
     sortJsonEnvironmentArray(actualJson);
 
-    compareJsonObjects(actualJson, getExpectedJson());
+    auto expectedJson = getExpectedJson();
+    enterHooksLoggingAnnotationsInJson(&expectedJson);
+
+    compareJsonObjects(actualJson, expectedJson);
 }
 
 #ifdef ASROOT
@@ -234,6 +257,7 @@ IGNORE_TEST(OCIBundleConfigTestGroup, allowed_devices) {
 
     auto expectedJson = getExpectedJson();
     enterTestDeviceFilesInJson(&expectedJson);
+    enterHooksLoggingAnnotationsInJson(&expectedJson);
 
     compareJsonObjects(actualJson, expectedJson);
 }

@@ -128,6 +128,27 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getBundleAnnotations
     auto level = static_cast<IntType>(common::Logger::getInstance().getLevel());
     annotations["com.hooks.logging.level"] = std::to_string(level);
 
+    // Resolve paths of the engine's stdout/stderr (if available) to be used by hooks
+    // as their stdout/err file descriptors
+    auto* realPtr = realpath("/dev/stdout", NULL);
+    if (realPtr != nullptr) {
+        annotations["com.hooks.logging.stdoutfd"] = realPtr;
+        free(realPtr);
+    }
+    else {
+        auto message = boost::format("Failed to find real path for /dev/stdout: %s") % strerror(errno);
+        utility::logMessage(message, common::LogLevel::DEBUG);
+    }
+    realPtr = realpath("/dev/stderr", NULL);
+    if (realPtr != nullptr) {
+        annotations["com.hooks.logging.stderrfd"] = realPtr;
+        free(realPtr);
+    }
+    else {
+        auto message = boost::format("Failed to find real path for /dev/stderr: %s") % strerror(errno);
+        utility::logMessage(message, common::LogLevel::DEBUG);
+    }
+
     // Merge custom annotations (from the CLI or other components like the FileDescriptorHandler),
     // which should have priority over any others.
     // With C++17, instead of operator[] we could use insert_or_assign()

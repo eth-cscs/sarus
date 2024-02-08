@@ -42,14 +42,6 @@ void FileDescriptorHandler::preservePMIFdIfAny() {
     }
 }
 
-void FileDescriptorHandler::passStdoutAndStderrToHooks() {
-    // Note: force duplication of stdout and stderr file descriptors because runc
-    // replaces them prior executing the hooks, i.e. the Sarus's stdout and stderr
-    // wouldn't be accessible from the hooks if not duplicated.
-    fileDescriptorsToPreserve[1] = { "stdout", {}, std::string{"com.hooks.logging.stdoutfd"}, true };
-    fileDescriptorsToPreserve[2] = { "stderr", {}, std::string{"com.hooks.logging.stderrfd"}, true };
-}
-
 void FileDescriptorHandler::applyChangesToFdsAndEnvVariablesAndBundleAnnotations() {
     utility::logMessage("Applying changes to file descriptors, container's environment variables and bundle's annotations",
                         common::LogLevel::INFO);

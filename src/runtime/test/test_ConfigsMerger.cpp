@@ -294,6 +294,8 @@ TEST(ConfigsMergerTestGroup, pmix_environment) {
 
 TEST(ConfigsMergerTestGroup, bundle_annotations) {
     auto metadata = common::ImageMetadata{};
+    auto* realStdout = realpath("/dev/stdout", NULL);
+    auto* realStderr = realpath("/dev/stderr", NULL);
 
     // No hooks enabled
     {
@@ -303,6 +305,8 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
             {"com.test.dummy_key", "dummy_value"},
             {"com.hooks.logging.level", "2"}
         };
+        if (realStdout != nullptr) expectedAnnotations["com.hooks.logging.stdoutfd"] = realStdout;
+        if (realStderr != nullptr) expectedAnnotations["com.hooks.logging.stderrfd"] = realStderr;
         CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
     }
     // glibc hook enabled
@@ -315,6 +319,8 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
             {"com.hooks.logging.level", "2"},
             {"com.hooks.glibc.enabled", "true"}
         };
+        if (realStdout != nullptr) expectedAnnotations["com.hooks.logging.stdoutfd"] = realStdout;
+        if (realStderr != nullptr) expectedAnnotations["com.hooks.logging.stderrfd"] = realStderr;
         CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
     }
     // MPI hook enabled
@@ -328,6 +334,8 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
             {"com.hooks.glibc.enabled", "true"},
             {"com.hooks.mpi.enabled", "true"}
         };
+        if (realStdout != nullptr) expectedAnnotations["com.hooks.logging.stdoutfd"] = realStdout;
+        if (realStderr != nullptr) expectedAnnotations["com.hooks.logging.stderrfd"] = realStderr;
         CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
 
         // Explicit MPI type
@@ -340,6 +348,8 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
             {"com.hooks.mpi.enabled", "true"},
             {"com.hooks.mpi.type", "mpi0"}
         };
+        if (realStdout != nullptr) expectedAnnotations["com.hooks.logging.stdoutfd"] = realStdout;
+        if (realStderr != nullptr) expectedAnnotations["com.hooks.logging.stderrfd"] = realStderr;
         CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
     }
     // SSH hook enabled
@@ -353,6 +363,8 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
             {"com.hooks.slurm-global-sync.enabled", "true"},
             {"com.hooks.ssh.enabled", "true"}
         };
+        if (realStdout != nullptr) expectedAnnotations["com.hooks.logging.stdoutfd"] = realStdout;
+        if (realStderr != nullptr) expectedAnnotations["com.hooks.logging.stderrfd"] = realStderr;
         CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
     }
     // Image annotations
@@ -365,6 +377,8 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
             {"com.hooks.logging.level", "2"},
             {"com.test.image.key", "image_value"}
         };
+        if (realStdout != nullptr) expectedAnnotations["com.hooks.logging.stdoutfd"] = realStdout;
+        if (realStderr != nullptr) expectedAnnotations["com.hooks.logging.stderrfd"] = realStderr;
         CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
         metadata.labels.erase("com.test.image.key");
     }
@@ -377,11 +391,16 @@ TEST(ConfigsMergerTestGroup, bundle_annotations) {
         config->commandRun.ociAnnotations["com.hooks.logging.level"] = "0";
         auto expectedAnnotations = std::unordered_map<std::string, std::string>{
             {"com.test.dummy_key", "dummy_value"},
-            {"com.hooks.logging.level", "0"}
+            {"com.hooks.logging.level", "0"},
         };
+        if (realStdout != nullptr) expectedAnnotations["com.hooks.logging.stdoutfd"] = realStdout;
+        if (realStderr != nullptr) expectedAnnotations["com.hooks.logging.stderrfd"] = realStderr;
         auto annot = ConfigsMerger{config, metadata}.getBundleAnnotations();
         CHECK((ConfigsMerger{config, metadata}.getBundleAnnotations() == expectedAnnotations));
     }
+
+    free(realStdout);
+    free(realStderr);
 }
 
 TEST(ConfigsMergerTestGroup, command_to_execute) {

@@ -62,7 +62,6 @@ void Runtime::setupOCIBundle() {
     performDeviceMounts();
     remountRootfsWithNoSuid();
     fdHandler.preservePMIFdIfAny();
-    fdHandler.passStdoutAndStderrToHooks();
     fdHandler.applyChangesToFdsAndEnvVariablesAndBundleAnnotations();
     bundleConfig.generateConfigFile();
 

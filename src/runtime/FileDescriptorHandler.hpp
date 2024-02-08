@@ -22,7 +22,6 @@ class FileDescriptorHandler {
 public:
     FileDescriptorHandler(std::shared_ptr<common::Config>);
     void preservePMIFdIfAny();
-    void passStdoutAndStderrToHooks();
     void applyChangesToFdsAndEnvVariablesAndBundleAnnotations();
     int getExtraFileDescriptors() const {return extraFileDescriptors;};
 

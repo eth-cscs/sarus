@@ -54,11 +54,15 @@ void applyLoggingConfigIfAvailable(const rapidjson::Document& json) {
     }
 
     if(json["annotations"].HasMember("com.hooks.logging.stdoutfd")) {
-        replaceFd(1, std::stoi(json["annotations"]["com.hooks.logging.stdoutfd"].GetString()));
+        int fd = open(json["annotations"]["com.hooks.logging.stdoutfd"].GetString(), O_WRONLY);
+        replaceFd(1, fd);
+        close(fd);
     }
 
     if(json["annotations"].HasMember("com.hooks.logging.stderrfd")) {
-        replaceFd(2, std::stoi(json["annotations"]["com.hooks.logging.stderrfd"].GetString()));
+        int fd = open(json["annotations"]["com.hooks.logging.stderrfd"].GetString(), O_WRONLY);
+        replaceFd(2, fd);
+        close(fd);
     }
 }
 

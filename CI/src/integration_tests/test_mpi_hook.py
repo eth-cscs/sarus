@@ -127,6 +127,7 @@ class TestMPIHook(unittest.TestCase):
         number_of_expected_mounts = len(self._HOST_MPI_LIBS) + len(self._HOST_MPI_DEPENDENCY_LIBS)
         assert hashes.count(self._HOST_LIB_HASH) == number_of_expected_mounts
 
+    @pytest.mark.xfail(reason="Hooks stdout/err are not captured by Pytest after changes for runc 1.1.12")
     def test_mpich_minor_incompatible(self):
         self._mpi_command_line_option = True
         self._container_image = "quay.io/ethcscs/sarus-integration-tests:mpich_minor_incompatible"

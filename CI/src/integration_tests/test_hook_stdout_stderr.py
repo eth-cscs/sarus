@@ -6,6 +6,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import unittest
+import pytest
 import subprocess
 import os
 import re
@@ -49,6 +50,7 @@ class TestHookStdoutStderr(unittest.TestCase):
     def _disable_hook(cls):
         subprocess.call(["sudo", "rm", cls._OCIHOOK_CONFIG_FILE])
 
+    @pytest.mark.xfail(reason="Hooks stdout/err are not captured by Pytest after changes for runc 1.1.12")
     def test_stdout(self):
         # DEBUG log level
         expected = [
@@ -74,6 +76,7 @@ class TestHookStdoutStderr(unittest.TestCase):
         stdout = self._get_sarus_stdout()
         self._check_output_matches(stdout, expected)
 
+    @pytest.mark.xfail(reason="Hooks stdout/err are not captured by Pytest after changes for runc 1.1.12")
     def test_stderr(self):
         expected = [
             r"^hook's stderr$",
