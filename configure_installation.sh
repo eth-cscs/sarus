@@ -138,7 +138,8 @@ sed -i etc/sarus.json -e 's|@SITE_MOUNTS@||g'
 exit_on_error "failed to set SITE_MOUNTS in etc/sarus.json"
 
 # issue warning about tmpfs filesystem on Cray CLE <7
-if [ -e /etc/opt/cray/release/cle-release ]; then
+if [ -e /etc/opt/cray/release/cle-release ] && \
+	grep -q '^RELEASE=' /etc/opt/cray/release/cle-release; then
     cle_version=$(cat /etc/opt/cray/release/cle-release |head -n 1 |sed 's/RELEASE=\([0-9]\+\).*/\1/')
     if [ ${cle_version} -lt 7 ]; then
         echo "WARNING: on a Cray system with CLE <7 it is highly advised to set '\"ramFilesystemType\": \"tmpfs\"' in etc/sarus.json." \
