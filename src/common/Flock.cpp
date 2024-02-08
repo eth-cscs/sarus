@@ -152,11 +152,19 @@ void Flock::release() {
     if (fileFd >= 0) {
         if (flock(fileFd, LOCK_UN | LOCK_NB) == -1) {
             auto message = boost::format("failed to release lock on %s (fd %d): %s") % *lockfile % fileFd % strerror(errno);
-            logger->log(message.str(), loggerSubsystemName, common::LogLevel::WARN);
+            // FIXME: this should be a warning, but currently the lock handover during atomic updates of the local
+            // repo metadata file is not completely clean, so it triggers this message about the temporary file,
+            // even if there is nothing wrong and the operation completes successfully.
+            // Temporarily demoting this message to INFO.
+            logger->log(message.str(), loggerSubsystemName, common::LogLevel::INFO);
         }
         if(close(fileFd) != 0) {
             auto message = boost::format("failed to close file descriptor %d of file %s") % fileFd % *lockfile;
-            logger->log(message.str(), loggerSubsystemName, common::LogLevel::WARN);
+            // FIXME: this should be a warning, but currently the lock handover during atomic updates of the local
+            // repo metadata file is not completely clean, so it triggers this message about the temporary file,
+            // even if there is nothing wrong and the operation completes successfully.
+            // Temporarily demoting this message to INFO.
+            logger->log(message.str(), loggerSubsystemName, common::LogLevel::INFO);
         }
     }
 }
