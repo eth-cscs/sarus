@@ -148,10 +148,11 @@ Here we will provide some indications to install `runc
 <https://github.com/opencontainers/runc>`_, the reference implementation from
 the Open Container Initiative. The recommended version is **v1.1.12**.
 
-.. note::
-    runc versions from 1.1.0 to 1.1.2 have a bug which causes an error when
-    Sarus attempts to propagate the PMI2 interface into containers.
-    The bug has been fixed in runc 1.1.3.
+.. important::
+    Due to the changes and hardening measures it introduces,
+    runc 1.1.12 is not compatible with Sarus (and its hooks) versions 1.6.2 and earlier.
+
+    Sarus 1.6.3 and later should be used alongside runc 1.1.12.
 
 The simplest solution is to download a pre-built binary release from the
 project's GitHub page:

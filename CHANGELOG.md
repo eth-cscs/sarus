@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [1.6.3]
 
 ### Changed
 
@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Updated CI distributed tests to use Docker Compose V2 and Compose file format version 3
 - Updated automatic documentation build to use Sphinx 7.2.6 and Sphinx RTD Theme 2.0.0
 
+
 ## [1.6.2]
 
 ### Added
@@ -25,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - SSH Hook: added support for the `com.hooks.ssh.pidfile_host` OCI annotation, which optionally copies the PIDfile of the Dropbear server to the specified path on the host.
 - SSH Hook: added support for the `OVERLAY_MOUNT_HOME_SSH` environment variable, which allows to control the creation of an overlay filesystem on top of the container's `${HOME}/.ssh` directory.
   More details [here](https://sarus.readthedocs.io/en/stable/config/ssh-hook.html#hook-configuration)
+
 
 ## [1.6.1]
 
