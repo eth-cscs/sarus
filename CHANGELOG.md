@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- Glibc hook: fixed detection of the container's glibc version, which was causing a shell-init error on some systems
+
+
 ## [1.6.3]
 
 ### Changed

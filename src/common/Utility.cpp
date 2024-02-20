@@ -213,6 +213,18 @@ void logProcessUserAndGroupIdentifiers() {
                % rgid % egid % sgid % setfsgid(-1), common::LogLevel::DEBUG);
 }
 
+static void readCStream(FILE* const in, std::iostream* const out) {
+    char buffer[1024];
+    while(!feof(in)) {
+        if(fgets(buffer, sizeof(buffer), in)) {
+            *out << buffer;
+        }
+        else if(!feof(in)) {
+            SARUS_THROW_ERROR("Failed to read C stream: call to fgets() failed.");
+        }
+    }
+}
+
 std::string executeCommand(const std::string& command) {
     auto commandWithRedirection = command + " 2>&1"; // stderr-to-stdout redirection necessary because popen only reads stdout
     logMessage(boost::format("Executing command '%s'") % commandWithRedirection, common::LogLevel::DEBUG);
@@ -224,17 +236,12 @@ std::string executeCommand(const std::string& command) {
         SARUS_THROW_ERROR(message.str());
     }
 
-    char buffer[1024];
-    std::string commandOutput;
-    while(!feof(pipe)) {
-        if(fgets(buffer, sizeof(buffer), pipe)) {
-            commandOutput += buffer;
-        }
-        else if(!feof(pipe)) {
-            auto message = boost::format("Failed to execute command \"%s\". Call to fgets() failed.")
-                % commandWithRedirection;
-            SARUS_THROW_ERROR(message.str());
-        }
+    std::stringstream commandOutput;
+    try {
+        readCStream(pipe, &commandOutput);
+    } catch(const common::Error& e) {
+        auto message = boost::format("Failed to read stdout from command \"%s\"") % commandWithRedirection;
+        SARUS_RETHROW_ERROR(e, message.str());
     }
 
     auto status = pclose(pipe);
@@ -246,23 +253,34 @@ std::string executeCommand(const std::string& command) {
     else if(!WIFEXITED(status)) {
         auto message = boost::format(   "Failed to execute command \"%s\"."
                                         " Process terminated abnormally. Process' output:\n\n%s")
-                                        % commandWithRedirection % commandOutput;
+                                        % commandWithRedirection % commandOutput.str();
         SARUS_THROW_ERROR(message.str());
     }
     else if(WEXITSTATUS(status) != 0) {
         auto message = boost::format(   "Failed to execute command \"%s\"."
                                         " Process terminated with status %d. Process' output:\n\n%s")
-                                        % commandWithRedirection % WEXITSTATUS(status) % commandOutput;
+                                        % commandWithRedirection % WEXITSTATUS(status) % commandOutput.str();
         SARUS_THROW_ERROR(message.str());
     }
 
-    return commandOutput;
+    return commandOutput.str();
 }
 
 int forkExecWait(const common::CLIArguments& args,
                  const boost::optional<std::function<void()>>& preExecChildActions,
-                 const boost::optional<std::function<void(int)>>& postForkParentActions) {
+                 const boost::optional<std::function<void(int)>>& postForkParentActions,
+                 std::iostream* const childStdoutStream) {
     logMessage(boost::format("Forking and executing '%s'") % args, common::LogLevel::DEBUG);
+
+
+    int pipefd[2];
+    if(childStdoutStream) {
+        if(pipe(pipefd) == -1) {
+            auto message = boost::format("Failed to open pipe to execute subprocess %s: %s")
+                % args % strerror(errno);
+            SARUS_THROW_ERROR(message.str());
+        }
+    }
 
     // fork and execute
     auto pid = fork();
@@ -274,6 +292,12 @@ int forkExecWait(const common::CLIArguments& args,
 
     bool isChild = pid == 0;
     if(isChild) {
+        if(childStdoutStream) {
+            // Redirect stdout to write to the pipe, then we don't need the pipe ends anymore
+            dup2(pipefd[1], STDOUT_FILENO);
+            close(pipefd[0]);
+            close(pipefd[1]);
+        }
         if(preExecChildActions) {
             (*preExecChildActions)();
         }
@@ -284,6 +308,18 @@ int forkExecWait(const common::CLIArguments& args,
     else {
         if(postForkParentActions) {
             (*postForkParentActions)(pid);
+        }
+        if(childStdoutStream) {
+            // Close the write end of the pipe, as it won't be used
+            close(pipefd[1]);
+
+            FILE *childStdoutPipe = fdopen(pipefd[0], "r");
+            try {
+                readCStream(childStdoutPipe, childStdoutStream);
+            } catch(const common::Error& e) {
+                auto message = boost::format("Failed to read stdout from subprocess %s") % args;
+                SARUS_RETHROW_ERROR(e, message.str());
+            }
         }
         int status;
         do {
@@ -309,7 +345,7 @@ int forkExecWait(const common::CLIArguments& args,
 
 void redirectStdoutToFile(const boost::filesystem::path& path) {
     int fd = open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-    dup2(fd, 1);
+    dup2(fd, STDOUT_FILENO);
     close(fd);
 }
 

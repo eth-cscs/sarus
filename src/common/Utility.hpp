@@ -50,7 +50,8 @@ void logProcessUserAndGroupIdentifiers();
 std::string executeCommand(const std::string& command);
 int forkExecWait(const common::CLIArguments& args,
                  const boost::optional<std::function<void()>>& preExecChildActions = {},
-                 const boost::optional<std::function<void(int)>>& postForkParentActions = {});
+                 const boost::optional<std::function<void(int)>>& postForkParentActions = {},
+                 std::iostream* const childStdoutStream= nullptr);
 void redirectStdoutToFile(const boost::filesystem::path& file);
 void SetStdinEcho(bool);
 std::string getHostname();
