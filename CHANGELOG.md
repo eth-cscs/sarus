@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- MPI hook: verbosity levels for log messages about ABI compatibility and library replacements have been slightly adjusted.
+  In particular, a warning about adding libraries into the container has been moved to a higher verbosity level
+  (i.e. it will only be displayed when using the `--verbose` or `--debug` global command-line options).
+
 ### Fixed
 
 - Glibc hook: fixed detection of the container's glibc version, which was causing a shell-init error on some systems

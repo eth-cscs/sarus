@@ -272,22 +272,22 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
 
     if (bestCandidateLib.isFullAbiCompatible(hostLib)){
         // safe replacement, all good.
-        log(boost::format{"abi-compatible => bind mount host lib (%s) on top of container lib (%s) (i.e. override)"} % hostLib.getPath() % bestCandidateLib.getPath(), sarus::common::LogLevel::DEBUG);
+        log(boost::format{"abi-compatible => bind mounting host lib (%s) on top of container lib (%s) (i.e. override)"} % hostLib.getPath() % bestCandidateLib.getPath(), sarus::common::LogLevel::DEBUG);
         sarus::runtime::validatedBindMount(hostLib.getPath(), bestCandidateLib.getPath(), userIdentity, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs(bestCandidateLib.getPath(), hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
     }
     else if (bestCandidateLib.isMajorAbiCompatible(hostLib)){
-        // risky replacement, issue warning.
-        log(boost::format{"WARNING: container lib (%s) is major-only-abi-compatible => bind mount host lib (%s) into /lib"} % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::DEBUG);
+        // risky replacement, issue notice.
+        log(boost::format{"Container lib (%s) is major-only-abi-compatible => bind mounting host lib (%s) into /lib"} % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::INFO);
         auto containerLib = "/lib" / hostLib.getPath().filename();
         sarus::runtime::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
     }
     else {
-        // inject with warning
+        // inject with notice
         // NOTE: This branch is only for MPI dependency libraries. MPI libraries compatibility was already checked before at checkHostContainerAbiCompatibility. Hint for future refactoring.
-        log(boost::format{"WARNING: could not find ABI-compatible counterpart for host lib (%s) inside container (best candidate found: %s) => adding host lib (%s) into container's /lib via bind mount "}
-            % hostLib.getPath() % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::WARN);
+        log(boost::format{"Could not find ABI-compatible counterpart for host lib (%s) inside container (best candidate found: %s) => adding host lib (%s) into container's /lib via bind mount "}
+            % hostLib.getPath() % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::INFO);
         auto containerLib = "/lib" / hostLib.getPath().filename();
         sarus::runtime::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), true);
