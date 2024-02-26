@@ -104,7 +104,12 @@ public:
         sarus::common::setEnvironmentVariable("HOOK_BASE_DIR", sshKeysBaseDir.string());
         sarus::common::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
         sarus::common::setEnvironmentVariable("DROPBEAR_DIR", dropbearDirInHost.getPath().string());
-        sarus::common::setEnvironmentVariable("SERVER_PORT", std::to_string(serverPort));
+        sarus::common::setEnvironmentVariable("SERVER_PORT_DEFAULT", std::to_string(serverPortDefault));
+
+        if (!userSshKeyPath.empty()) {
+            std::ofstream userSshKeyFile{userSshKeyPath.string()};
+            userSshKeyFile << userSshKey;
+        }
 
         createConfigJSON();
 
@@ -146,10 +151,12 @@ public:
             doc["process"]["env"].PushBack(rj::Value{var.c_str(), allocator}, allocator);
         }
         rapidjson::Value extraAnnotations(rapidjson::kObjectType);
-        extraAnnotations.AddMember(
-            "com.hooks.ssh.authorize_ssh_key",
-            rj::Value{(sshKeysDirInHost / "user_key.pub").c_str(), allocator},
-            allocator);
+        if (boost::filesystem::exists(userSshKeyPath)) {
+            extraAnnotations.AddMember(
+                "com.hooks.ssh.authorize_ssh_key",
+                rj::Value{userSshKeyPath.c_str(), allocator},
+                allocator);
+        }
         if (!dropbearPidFileInContainerRelative.empty()) {
           extraAnnotations.AddMember(
               "com.hooks.ssh.pidfile_container",
@@ -161,6 +168,12 @@ public:
           extraAnnotations.AddMember(
               "com.hooks.ssh.pidfile_host",
               rj::Value{dropbearPidFileInHost.getPath().c_str(), allocator},
+              allocator);
+        }
+        if (serverPort > 0) {
+          extraAnnotations.AddMember(
+              "com.hooks.ssh.port",
+              rj::Value{std::to_string(serverPort).c_str(), allocator},
               allocator);
         }
         if (!doc.HasMember("annotations")) {
@@ -202,9 +215,8 @@ public:
         environmentVariablesInContainer.push_back(variable);
     }
 
-    void generateUserSshKeyFile() {
-        std::ofstream userSshKeyFile{(sshKeysDirInHost / "user_key.pub").string()};
-        userSshKeyFile << userSshKey;
+    void enableUserSshKeyPath() {
+        userSshKeyPath = homeDirInHost / "user_key.pub";
     }
 
     void checkHostHasSshKeys() const {
@@ -241,6 +253,26 @@ public:
         return {};
     }
 
+    boost::optional<std::uint16_t> getSshDaemonPort() const {
+        auto out = sarus::common::executeCommand("ps ax -o args");
+        std::stringstream ss{out};
+        std::string line;
+
+        boost::smatch matches;
+        boost::regex pattern("^ */opt/oci-hooks/ssh/dropbear/bin/dropbear.*-p ([0-9]+).*$");
+
+        while(std::getline(ss, line)) {
+            if(boost::regex_match(line, matches, pattern)) {
+                return std::stoi(matches[1]);
+            }
+        }
+        return {};
+    }
+
+    void checkDefaultSshDaemonPort() const {
+        CHECK(getSshDaemonPort() == serverPortDefault);
+    }
+
     void checkContainerHasSshBinary() const {
         auto targetFile = boost::filesystem::path(rootfsDir / "usr/bin/ssh");
         CHECK(boost::filesystem::exists(targetFile));
@@ -248,7 +280,7 @@ public:
         auto expectedScript = boost::format{
             "#!/bin/sh\n"
             "/opt/oci-hooks/ssh/dropbear/bin/dbclient -y -p %s $*\n"
-        } % serverPort;
+        } % (serverPort > 0 ? serverPort : serverPortDefault);
         auto actualScript = sarus::common::readFile(targetFile);
         CHECK_EQUAL(actualScript, expectedScript.str());
 
@@ -349,6 +381,10 @@ public:
         dropbearPidFileInHost = sarus::common::PathRAII{PidFile};
     }
 
+    void setCustomServerPort(const std::uint16_t portNumber) {
+        serverPort = portNumber;
+    }
+
     bool containerMountsDotSsh() {
         auto overlayDir = bundleDir / "overlay";
         if  (!boost::filesystem::exists(overlayDir) || !boost::filesystem::is_directory(overlayDir)) {
@@ -382,10 +418,12 @@ private:
     boost::filesystem::path dropbearDirInContainer = rootfsDir / "opt/oci-hooks/ssh/dropbear";
     boost::filesystem::path dropbearPidFileInContainerRelative = "/var/run/dropbear/dropbear.pid";
     sarus::common::PathRAII dropbearPidFileInHost = sarus::common::PathRAII("");
-    std::uint16_t serverPort = 11111;
+    std::uint16_t serverPortDefault = 11111;
+    std::uint16_t serverPort = 0;
     std::vector<boost::filesystem::path> rootfsFolders = {"etc", "dev", "bin", "sbin", "usr", "lib", "lib64"}; // necessary to chroot into rootfs
     std::vector<std::string> environmentVariablesInContainer;
     std::string userSshKey{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAvAIP2SI2ON23c6ZP1c7gQf17P25npZLgHSxfwqRKNWh27p user@test"};
+    boost::filesystem::path userSshKeyPath;
 };
 
 TEST_GROUP(SSHHookTestGroup) {
@@ -466,12 +504,12 @@ TEST(SSHHookTestGroup, testInjectKeyUsingAnnotations) {
     Helper helper{};
 
     helper.setRootIds();
+    helper.enableUserSshKeyPath();
     helper.setupTestEnvironment();
 
     // generate + check SSH keys in local repository
     helper.setUserIds(); // keygen is executed with user privileges
     SshHook{}.generateSshKeys(true);
-    helper.generateUserSshKeyFile();
 
     helper.setRootIds();
     helper.checkHostHasSshKeys();
@@ -494,7 +532,6 @@ TEST(SSHHookTestGroup, testDefaultDropbearPidFiles) {
     // generate + check SSH keys in local repository
     helper.setUserIds(); // keygen is executed with user privileges
     SshHook{}.generateSshKeys(true);
-    helper.generateUserSshKeyFile();
 
     helper.setRootIds();
     helper.checkHostHasSshKeys();
@@ -518,7 +555,6 @@ TEST(SSHHookTestGroup, testDropbearPidFileInHost) {
     // generate + check SSH keys in local repository
     helper.setUserIds(); // keygen is executed with user privileges
     SshHook{}.generateSshKeys(true);
-    helper.generateUserSshKeyFile();
 
     helper.setRootIds();
     helper.checkHostHasSshKeys();
@@ -544,7 +580,6 @@ TEST(SSHHookTestGroup, testDropbearPidFilesInCustomPaths) {
     // generate + check SSH keys in local repository
     helper.setUserIds(); // keygen is executed with user privileges
     SshHook{}.generateSshKeys(true);
-    helper.generateUserSshKeyFile();
 
     helper.setRootIds();
     helper.checkHostHasSshKeys();
@@ -570,7 +605,6 @@ TEST(SSHHookTestGroup, testDefaultMountsDotSshAsOverlayFs) {
     // generate + check SSH keys in local repository
     helper.setUserIds(); // keygen is executed with user privileges
     SshHook{}.generateSshKeys(true);
-    helper.generateUserSshKeyFile();
 
     helper.setRootIds();
 
@@ -592,7 +626,6 @@ TEST(SSHHookTestGroup, testEnvVarDisableMountsDotSshAsOverlayFs) {
     // generate + check SSH keys in local repository
     helper.setUserIds(); // keygen is executed with user privileges
     SshHook{}.generateSshKeys(true);
-    helper.generateUserSshKeyFile();
 
     helper.setRootIds();
 
@@ -602,6 +635,46 @@ TEST(SSHHookTestGroup, testEnvVarDisableMountsDotSshAsOverlayFs) {
 
     CHECK_FALSE(helper.containerMountsDotSsh());    
     sarus::common::setEnvironmentVariable("OVERLAY_MOUNT_HOME_SSH", "");
+}
+
+TEST(SSHHookTestGroup, testDefaultServerPort) {
+    Helper helper{};
+
+    helper.setRootIds();
+    helper.setupTestEnvironment();
+
+    // generate + check SSH keys in local repository
+    helper.setUserIds(); // keygen is executed with user privileges
+    SshHook{}.generateSshKeys(true);
+    helper.setRootIds();
+    helper.checkHostHasSshKeys();
+
+    // start sshd
+    helper.writeContainerStateToStdin();
+    SshHook{}.startSshDaemon();
+    helper.checkDefaultSshDaemonPort();
+    helper.checkContainerHasSshBinary();
+}
+
+TEST(SSHHookTestGroup, testCustomServerPort) {
+    std::uint16_t expectedPort = 57864;
+    Helper helper{};
+
+    helper.setRootIds();
+    helper.setCustomServerPort(expectedPort);
+    helper.setupTestEnvironment();
+
+    // generate + check SSH keys in local repository
+    helper.setUserIds(); // keygen is executed with user privileges
+    SshHook{}.generateSshKeys(true);
+    helper.setRootIds();
+    helper.checkHostHasSshKeys();
+
+    // start sshd
+    helper.writeContainerStateToStdin();
+    SshHook{}.startSshDaemon();
+    CHECK(helper.getSshDaemonPort() == expectedPort);
+    helper.checkContainerHasSshBinary();
 }
 
 }}}} // namespace

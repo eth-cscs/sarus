@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- SSH hook: added support for the `com.hooks.ssh.port` OCI annotation, which allows to customize the port used by the Dropbear server.
+
 ### Changed
 
 - MPI hook: verbosity levels for log messages about ABI compatibility and library replacements have been slightly adjusted.
@@ -15,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - Glibc hook: fixed detection of the container's glibc version, which was causing a shell-init error on some systems
+- SSH hook: the `SERVER_PORT` environment variable in the JSON configuration file has been renamed to `SERVER_PORT_DEFAULT`
 
 
 ## [1.6.3]

@@ -20,7 +20,7 @@ def generate_hook_config():
                 "HOOK_BASE_DIR=/home",
                 "PASSWD_FILE=" + os.environ["CMAKE_INSTALL_PREFIX"] + "/etc/passwd",
                 "DROPBEAR_DIR=" + os.environ["CMAKE_INSTALL_PREFIX"] + "/dropbear",
-                "SERVER_PORT=15263"
+                "SERVER_PORT_DEFAULT=15263"
             ],
             "args": [
                 "ssh_hook",

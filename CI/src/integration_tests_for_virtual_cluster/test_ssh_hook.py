@@ -58,7 +58,7 @@ class TestSshHook(unittest.TestCase):
                     f"HOOK_BASE_DIR={cls.OCI_HOOKS_BASE_DIR}",
                     f"PASSWD_FILE={cls.SARUS_INSTALL_PATH}/etc/passwd",
                     f"DROPBEAR_DIR={cls.SARUS_INSTALL_PATH}/dropbear",
-                    "SERVER_PORT=15263"
+                    "SERVER_PORT_DEFAULT=15263"
                 ],
                 "args": [
                     "ssh_hook",
@@ -101,26 +101,18 @@ class TestSshHook(unittest.TestCase):
 
             # check SSH from node0 to node1
             hostname_node1 = get_hostname_of_node1(self.image_with_musl)
-            hostname_node1_through_ssh = get_hostname_of_node1_though_ssh(self.image_with_musl, hostname_node1)
-            self.assertEqual(hostname_node1, hostname_node1_through_ssh)
-            hostname_node1_through_ssh = get_hostname_of_node1_though_ssh(self.image_with_glibc, hostname_node1)
-            self.assertEqual(hostname_node1, hostname_node1_through_ssh)
+            self._check_ssh_hook(hostname_node1)
 
             # check SSH from node0 to node1 with non-standard $HOME
             # in some systems the home from the passwd file (copied from the host)
             # might not be present in the container. The hook has to deduce it from
             # the passwd file and create it.
             with custom_home_in_sarus_passwd_file("/users/test"):
-                hostname_node1_through_ssh = get_hostname_of_node1_though_ssh(self.image_with_musl, hostname_node1)
-                self.assertEqual(hostname_node1, hostname_node1_through_ssh)
-                hostname_node1_through_ssh = get_hostname_of_node1_though_ssh(self.image_with_glibc, hostname_node1)
-                self.assertEqual(hostname_node1, hostname_node1_through_ssh)
+                self._check_ssh_hook(hostname_node1)
 
-                # check SSH goes into container (not host)
-                prettyname = get_prettyname_of_node1_through_ssh(self.image_with_musl, hostname_node1)
-                self.assertEqual(prettyname, "Alpine Linux v3.14")
-                prettyname = get_prettyname_of_node1_through_ssh(self.image_with_glibc, hostname_node1)
-                self.assertEqual(prettyname, "Debian GNU/Linux 10 (buster)")
+            # check SSH from node0 to node1 with server port set from Sarus CLI
+            self._check_ssh_hook(hostname_node1, ["--annotation=com.hooks.ssh.port=33333"])
+
 
     def test_ssh_keys_generation(self):
         ssh_dir = os.environ['HOME'] + "/.oci-hooks/ssh"
@@ -143,6 +135,26 @@ class TestSshHook(unittest.TestCase):
         fingerprint_changed = subprocess.check_output(fingerprint_command).decode()
         self.assertNotEqual(fingerprint, fingerprint_changed)
 
+    def _check_ssh_hook(self, hostname_node1, sarus_run_extra_opts=[]):
+        hostname_node1_through_ssh = get_hostname_of_node1_though_ssh(self.image_with_musl,
+                                                                      hostname_node1,
+                                                                      sarus_run_extra_opts)
+        self.assertEqual(hostname_node1, hostname_node1_through_ssh)
+        hostname_node1_through_ssh = get_hostname_of_node1_though_ssh(self.image_with_glibc,
+                                                                      hostname_node1,
+                                                                      sarus_run_extra_opts)
+        self.assertEqual(hostname_node1, hostname_node1_through_ssh)
+
+        # check SSH goes into container (not host)
+        prettyname = get_prettyname_of_node1_through_ssh(self.image_with_musl,
+                                                         hostname_node1,
+                                                         sarus_run_extra_opts)
+        self.assertEqual(prettyname, "Alpine Linux v3.14")
+        prettyname = get_prettyname_of_node1_through_ssh(self.image_with_glibc,
+                                                         hostname_node1,
+                                                         sarus_run_extra_opts)
+        self.assertEqual(prettyname, "Debian GNU/Linux 10 (buster)")
+
 
 def get_hostname_of_node1(image):
     command = [
@@ -158,7 +170,7 @@ def get_hostname_of_node1(image):
     return out[0]
 
 
-def get_hostname_of_node1_though_ssh(image, hostname_node1):
+def get_hostname_of_node1_though_ssh(image, hostname_node1, sarus_run_extra_opts=[]):
     command = [
         "sh",
         "-c",
@@ -174,12 +186,12 @@ def get_hostname_of_node1_though_ssh(image, hostname_node1):
     out = util.run_command_in_container_with_slurm(image=image,
                                                    command=command,
                                                    options_of_srun_command=["-N2"],
-                                                   options_of_run_command=["--ssh"])
+                                                   options_of_run_command=["--ssh"]+sarus_run_extra_opts)
     assert len(out) == 1  # expect one single line of output
     return out[0]
 
 
-def get_prettyname_of_node1_through_ssh(image, hostname_node1):
+def get_prettyname_of_node1_through_ssh(image, hostname_node1, sarus_run_extra_opts=[]):
     command = [
         "sh",
         "-c",
@@ -195,7 +207,7 @@ def get_prettyname_of_node1_through_ssh(image, hostname_node1):
     out = util.run_command_in_container_with_slurm(image=image,
                                                    command=command,
                                                    options_of_srun_command=["-N2"],
-                                                   options_of_run_command=["--ssh"])
+                                                   options_of_run_command=["--ssh"]+sarus_run_extra_opts)
     assert len(out) == 1  # expect one single line of output
     return re.match(r".*PRETTY_NAME=\"([^\"]+)\" .*", out[0]).group(1)
 

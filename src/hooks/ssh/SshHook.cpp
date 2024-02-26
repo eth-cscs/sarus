@@ -81,7 +81,7 @@ void SshHook::startSshDaemon() {
 
     dropbearRelativeDirInContainer = boost::filesystem::path("/opt/oci-hooks/ssh/dropbear");
     dropbearDirInHost = sarus::common::getEnvironmentVariable("DROPBEAR_DIR");
-    serverPort = std::stoi(sarus::common::getEnvironmentVariable("SERVER_PORT"));
+    serverPort = std::stoi(sarus::common::getEnvironmentVariable("SERVER_PORT_DEFAULT"));
     try {
         auto envJoinNamespaces = sarus::common::getEnvironmentVariable("JOIN_NAMESPACES");
         joinNamespaces = (boost::algorithm::to_upper_copy(envJoinNamespaces) == std::string("TRUE"));
@@ -138,6 +138,9 @@ void SshHook::parseConfigJSONOfBundle() {
         }
         if(json["annotations"].HasMember("com.hooks.ssh.pidfile_host")) {
             pidfileHost = boost::filesystem::path(json["annotations"]["com.hooks.ssh.pidfile_host"].GetString());
+        }
+        if(json["annotations"].HasMember("com.hooks.ssh.port")) {
+            serverPort = std::stoi(json["annotations"]["com.hooks.ssh.port"].GetString());
         }
     }
 

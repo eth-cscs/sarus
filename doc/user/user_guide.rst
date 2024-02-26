@@ -1226,12 +1226,13 @@ SSH connection within containers
 --------------------------------
 
 Sarus also comes with a hook which enables support for SSH connections within
-containers.
+containers, leveraging the `Dropbear SSH software <https://matt.ucc.asn.au/dropbear/dropbear.html>`_.
 
-When Sarus is configured to use this hook, you must first run the command
-``sarus ssh-keygen`` to generate the SSH keys that will be used by the SSH
-daemons and the SSH clients in the containers. It is sufficient to generate
-the keys just once, as they are persistent between sessions.
+When Sarus is configured to use this hook, before attempting SSH connections
+to/from containers, the ``sarus ssh-keygen`` command must be run in order to
+generate the keys that will be used by the SSH daemons and the SSH clients
+inside containers.
+It is sufficient to generate the keys just once, as they are persistent between sessions.
 
 It is then possible to execute a container passing the ``--ssh`` option to
 :program:`sarus run`, e.g. ``sarus run --ssh <image> <command>``. Using the
@@ -1271,6 +1272,9 @@ Dropbear daemon PIDfile inside the container.
 
 The ``com.hooks.ssh.pidfile_host`` annotation can be used to copy the PIDfile of the
 Dropbear daemon in the host.
+
+The ``com.hooks.ssh.port`` annotation can be used to set an arbitrary port for the Dropbear server
+and client, overriding the value from the default hook configuration.
 
 .. warning::
    The SSH hook currently does not implement a poststop functionality and
@@ -1514,7 +1518,13 @@ Configure Visual Studio Code to access the remote Sarus container:
 
 11. Select "Connect" to connect the IDE to the remote container environment.
 
+.. important::
+
+    In order to establish connections through "Remote - SSH" extension,
+    the ``scp`` program must be available within the container.
+    This is required by Visual Studio Code to send and establish the VS Code
+    Server into the remote container.
+
 For more details about "Remote - SSH" Visual Studio Code extension, you can
 refer to `this tutorial <https://code.visualstudio.com/docs/remote/ssh-tutorial>`_ 
 from the official Visual Studio Code documentation.
-

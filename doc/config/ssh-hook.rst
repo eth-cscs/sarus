@@ -38,9 +38,10 @@ environment variables must be defined:
 
 * ``DROPBEAR_DIR``: Absolute path to the location of the custom SSH software.
 
-* ``SERVER_PORT``: TCP port on which the SSH daemon will listen. This must be an unused
-  port and is typically set to a value different than 22 in order to avoid clashes with an SSH
-  daemon that could be running on the host.
+* ``SERVER_PORT_DEFAULT``: Default TCP port on which the SSH daemon will listen. This must be an unused
+  port and is typically set to a value different than 22 in order to avoid clashes with an OpenSSH
+  daemon that could be running on the host. This value can be overridden by setting the
+  ``com.hooks.ssh.port`` annotation for the container.
 
 The following optional environment variables can also be defined:
 
@@ -99,6 +100,10 @@ Dropbear daemon PIDfile inside the container (the default path is ``/opt/oci-hoo
 
 The ``com.hooks.ssh.pidfile_host`` annotation can be used to copy the PIDfile of the
 Dropbear daemon to the specified path on the host.
+
+The ``com.hooks.ssh.port`` annotation can be used to set an arbitrary port for the Dropbear server
+and client, overriding the value from the ``SERVER_PORT_DEFAULT`` environment variable set in the hook
+configuration file.
 
 .. important::
    The SSH hook currently does not implement a poststop functionality and
