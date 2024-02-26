@@ -43,6 +43,10 @@ environment variables must be defined:
   daemon that could be running on the host. This value can be overridden by setting the
   ``com.hooks.ssh.port`` annotation for the container.
 
+  ``SERVER_PORT_DEFAULT`` takes precedence over the deprecated ``SERVER_PORT``
+  environment variable, which serves the same purpose.
+  Support for ``SERVER_PORT`` will be removed in a future release.
+
 The following optional environment variables can also be defined:
 
 * ``OVERLAY_MOUNT_HOME_SSH``: When set to ``False`` (case-insensitive), an overlay

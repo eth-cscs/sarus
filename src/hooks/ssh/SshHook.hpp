@@ -69,7 +69,7 @@ private:
     pid_t pidOfContainer;
     uid_t uidOfUser;
     gid_t gidOfUser;
-    std::uint16_t serverPort;
+    std::uint16_t serverPort = 0;
     bool overlayMountHostDotSsh = true;
 };
 

@@ -81,7 +81,17 @@ void SshHook::startSshDaemon() {
 
     dropbearRelativeDirInContainer = boost::filesystem::path("/opt/oci-hooks/ssh/dropbear");
     dropbearDirInHost = sarus::common::getEnvironmentVariable("DROPBEAR_DIR");
-    serverPort = std::stoi(sarus::common::getEnvironmentVariable("SERVER_PORT_DEFAULT"));
+    try {
+        serverPort = std::stoi(sarus::common::getEnvironmentVariable("SERVER_PORT"));
+    } catch (sarus::common::Error&) {}
+    try {
+        serverPort = std::stoi(sarus::common::getEnvironmentVariable("SERVER_PORT_DEFAULT"));
+    } catch (sarus::common::Error& e) {
+        if (serverPort == 0) {
+            SARUS_RETHROW_ERROR(e, "At least one of the environment variables SERVER_PORT_DEFAULT (preferred)"
+                                   " or SERVER_PORT (deprecated) must be defined.")
+        }
+    }
     try {
         auto envJoinNamespaces = sarus::common::getEnvironmentVariable("JOIN_NAMESPACES");
         joinNamespaces = (boost::algorithm::to_upper_copy(envJoinNamespaces) == std::string("TRUE"));

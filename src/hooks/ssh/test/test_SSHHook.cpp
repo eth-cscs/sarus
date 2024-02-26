@@ -656,6 +656,47 @@ TEST(SSHHookTestGroup, testDefaultServerPort) {
     helper.checkContainerHasSshBinary();
 }
 
+TEST(SSHHookTestGroup, testDefaultServerPortOverridesDeprecatedVar) {
+    std::uint16_t expectedPort = 29476;
+    Helper helper{};
+
+    helper.setRootIds();
+    helper.setupTestEnvironment();
+    sarus::common::setEnvironmentVariable("SERVER_PORT", std::to_string(expectedPort));
+
+    // generate + check SSH keys in local repository
+    helper.setUserIds(); // keygen is executed with user privileges
+    SshHook{}.generateSshKeys(true);
+    helper.setRootIds();
+    helper.checkHostHasSshKeys();
+
+    // start sshd
+    helper.writeContainerStateToStdin();
+    SshHook{}.startSshDaemon();
+    helper.checkDefaultSshDaemonPort();
+}
+
+TEST(SSHHookTestGroup, testDeprecatedServerPort) {
+    std::uint16_t expectedPort = 44184;
+    Helper helper{};
+
+    helper.setRootIds();
+    helper.setupTestEnvironment();
+    sarus::common::setEnvironmentVariable("SERVER_PORT", std::to_string(expectedPort));
+    unsetenv("SERVER_PORT_DEFAULT");
+
+    // generate + check SSH keys in local repository
+    helper.setUserIds(); // keygen is executed with user privileges
+    SshHook{}.generateSshKeys(true);
+    helper.setRootIds();
+    helper.checkHostHasSshKeys();
+
+    // start sshd
+    helper.writeContainerStateToStdin();
+    SshHook{}.startSshDaemon();
+    CHECK(helper.getSshDaemonPort() == expectedPort);
+}
+
 TEST(SSHHookTestGroup, testCustomServerPort) {
     std::uint16_t expectedPort = 57864;
     Helper helper{};
