@@ -30,12 +30,13 @@ class Sarus(CMakePackage):
     """Sarus is an OCI-compliant container engine for HPC systems."""
 
     homepage = "https://github.com/eth-cscs/sarus"
-    url      = "https://github.com/eth-cscs/sarus/archive/1.6.3.tar.gz"
+    url      = "https://github.com/eth-cscs/sarus/archive/1.6.4.tar.gz"
     git      = "https://github.com/eth-cscs/sarus.git"
 
     version('develop', branch='develop', submodules=True)
     version('master',  branch='master', submodules=True)
-    version("1.6.3", tag="1.6.3", submodules=True)
+    version("1.6.4", tag="1.6.4", submodules=True)
+    version("1.6.3", commit="169ea2149a26a21fe73683be0eb0a31fb3806671")
     version("1.6.2", commit="4af913f4d65679f78e5bb7f2c006d8cff8d24b1d")
     version("1.6.1", commit="089b3284473f82a08d3541d133f7cd65df92a6e4")
     version("1.6.0", commit="9c01d76736940feb360175c515e5778e408e631e")
