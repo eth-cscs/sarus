@@ -231,10 +231,20 @@ public:
     }
 
     void checkContainerHasClientKeys() const {
-        CHECK(boost::filesystem::exists(expectedHomeDirInContainer / ".ssh/id_dropbear"));
-        CHECK(sarus::common::getOwner(expectedHomeDirInContainer / ".ssh/id_dropbear") == idsOfUser);
-        CHECK(boost::filesystem::exists(expectedHomeDirInContainer / ".ssh/authorized_keys"));
-        CHECK(sarus::common::getOwner(expectedHomeDirInContainer / ".ssh/authorized_keys") == idsOfUser);
+        auto userKeyFile = expectedHomeDirInContainer / ".ssh/id_dropbear";
+        auto authorizedKeysFile = expectedHomeDirInContainer / ".ssh/authorized_keys";
+
+        CHECK(boost::filesystem::exists(userKeyFile));
+        CHECK(sarus::common::getOwner(userKeyFile) == idsOfUser);
+        CHECK(boost::filesystem::exists(authorizedKeysFile));
+        CHECK(sarus::common::getOwner(authorizedKeysFile) == idsOfUser);
+
+        auto expectedAuthKeysPermissions =
+            boost::filesystem::owner_read | boost::filesystem::owner_write |
+            boost::filesystem::group_read |
+            boost::filesystem::others_read;
+        auto status = boost::filesystem::status(authorizedKeysFile);
+        CHECK(status.permissions() == expectedAuthKeysPermissions);
     }
 
     boost::optional<pid_t> getSshDaemonPid() const {
@@ -661,7 +671,7 @@ TEST(SSHHookTestGroup, testDefaultServerPortOverridesDeprecatedVar) {
     Helper helper{};
 
     helper.setRootIds();
-    helper.setupTestEnvironment();
+    helper.setupTestEnvironment(); // "SERVER_PORT_DEFAULT" is set here
     sarus::common::setEnvironmentVariable("SERVER_PORT", std::to_string(expectedPort));
 
     // generate + check SSH keys in local repository
@@ -681,7 +691,7 @@ TEST(SSHHookTestGroup, testDeprecatedServerPort) {
     Helper helper{};
 
     helper.setRootIds();
-    helper.setupTestEnvironment();
+    helper.setupTestEnvironment(); // "SERVER_PORT_DEFAULT" is set here
     sarus::common::setEnvironmentVariable("SERVER_PORT", std::to_string(expectedPort));
     unsetenv("SERVER_PORT_DEFAULT");
 

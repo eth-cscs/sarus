@@ -241,16 +241,24 @@ void SshHook::generateAuthorizedKeys(const boost::filesystem::path& userKeyFile,
     auto matches = boost::smatch{};
     auto re = boost::regex{"^(ecdsa-.*)$"};
 
+    sarus::common::createFileIfNecessary(authorizedKeysFile, uidOfUser, gidOfUser);
+
     // write public key to "authorized_keys" file
     while(std::getline(ss, line)) {
         if(boost::regex_match(line, matches, re)) {
-            auto ofs = std::ofstream{ authorizedKeysFile.c_str() };
+            auto ofs = std::ofstream{authorizedKeysFile.c_str(), std::ios::out | std::ios::app};
             ofs << matches[1] << std::endl;
             ofs.close();
             log("Successfully generated \"authorized_keys\" file", sarus::common::LogLevel::INFO);
             return;
         }
     }
+
+    // set permissions
+    boost::filesystem::permissions(authorizedKeysFile,
+        boost::filesystem::owner_read | boost::filesystem::owner_write |
+        boost::filesystem::group_read |
+        boost::filesystem::others_read);
 
     auto message = boost::format("Failed to parse key from %s") % userKeyFile;
     SARUS_THROW_ERROR(message.str());
