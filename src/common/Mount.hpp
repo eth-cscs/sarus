@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef sarus_runtime_Mount_hpp
-#define sarus_runtime_Mount_hpp
+#ifndef sarus_common_Mount_hpp
+#define sarus_common_Mount_hpp
 
 #include <memory>
 #include <boost/filesystem.hpp>
@@ -19,11 +19,10 @@
 
 
 namespace sarus {
+namespace common {
 
 // forward declaration to avoid cyclic dependency of headers
-namespace common { class Config; }
-
-namespace runtime {
+class Config;
 
 class Mount {
 public:

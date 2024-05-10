@@ -22,7 +22,6 @@
 #include "cli/MountParser.hpp"
 #include "cli/DeviceParser.hpp"
 #include "hooks/common/Utility.hpp"
-#include "runtime/mount_utilities.hpp"
 
 namespace sarus {
 namespace hooks {

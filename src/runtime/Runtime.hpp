@@ -38,7 +38,6 @@ private:
     void performExtraMounts() const;
     void performDeviceMounts() const;
     void remountRootfsWithNoSuid() const;
-    void clearEnvironmentVariables() const;
 
 private:
     std::shared_ptr<common::Config> config;

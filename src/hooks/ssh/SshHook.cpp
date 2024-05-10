@@ -22,7 +22,7 @@
 #include "common/Utility.hpp"
 #include "common/Lockfile.hpp"
 #include "common/PasswdDB.hpp"
-#include "runtime/mount_utilities.hpp"
+#include "common/mount_utilities.hpp"
 #include "hooks/common/Utility.hpp"
 
 
@@ -297,7 +297,7 @@ void SshHook::setupSshKeysDirInContainer() const {
         sarus::common::createFoldersIfNecessary(lowerDir);
         sarus::common::createFoldersIfNecessary(upperDir, uidOfUser, gidOfUser);
         sarus::common::createFoldersIfNecessary(workDir);
-        runtime::mountOverlayfs(lowerDir, upperDir, workDir, sshKeysDirInContainer);
+        sarus::common::mountOverlayfs(lowerDir, upperDir, workDir, sshKeysDirInContainer);
     }
     
     log("Successfully set up directory for SSH keys into container", sarus::common::LogLevel::INFO);

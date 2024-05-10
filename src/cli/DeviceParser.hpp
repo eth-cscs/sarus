@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "common/UserIdentity.hpp"
-#include "runtime/DeviceMount.hpp"
+#include "common/DeviceMount.hpp"
 
 
 namespace sarus {
@@ -25,7 +25,7 @@ class DeviceParser {
 public:
     DeviceParser(const boost::filesystem::path& rootfsDir, const common::UserIdentity& userIdentity);
     DeviceParser(std::shared_ptr<const common::Config> conf);
-    std::unique_ptr<runtime::DeviceMount> parseDeviceRequest(const std::string& requestString) const;
+    std::unique_ptr<common::DeviceMount> parseDeviceRequest(const std::string& requestString) const;
 
 private:
     common::DeviceAccess createDeviceAccess(const std::string& accessString) const;

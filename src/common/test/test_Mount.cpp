@@ -19,7 +19,7 @@
 
 #include "test_utility/config.hpp"
 #include "test_utility/filesystem.hpp"
-#include "runtime/Mount.hpp"
+#include "common/Mount.hpp"
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 #include "test_utility/unittest_main_function.hpp"
@@ -63,7 +63,7 @@ IGNORE_TEST(MountTestGroup, mount_test) {
 
     // test mount of non-existing destination directory
     {
-        runtime::Mount{sourceDir, destinationDir, mount_flags, config}.performMount();
+        common::Mount{sourceDir, destinationDir, mount_flags, config}.performMount();
         CHECK(test_utility::filesystem::are_directories_equal(sourceDir.string(), (rootfsDir / destinationDir).string(), 1));
 
         // cleanup
@@ -73,7 +73,7 @@ IGNORE_TEST(MountTestGroup, mount_test) {
     // test mount of existing destination directory
     {
         common::createFoldersIfNecessary(rootfsDir / destinationDir);
-        runtime::Mount{sourceDir, destinationDir.c_str(), mount_flags, config}.performMount();
+        common::Mount{sourceDir, destinationDir.c_str(), mount_flags, config}.performMount();
         CHECK(test_utility::filesystem::are_directories_equal(sourceDir.string(), (rootfsDir / destinationDir).string(), 1));
 
         // cleanup
@@ -82,7 +82,7 @@ IGNORE_TEST(MountTestGroup, mount_test) {
     }
     // test mount of individual file
     {
-        runtime::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, config}.performMount();
+        common::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, config}.performMount();
         CHECK(test_utility::filesystem::isSameBindMountedFile(sourceFile.getPath(), rootfsDir / destinationFile.getPath()));
 
         // cleanup
@@ -90,7 +90,7 @@ IGNORE_TEST(MountTestGroup, mount_test) {
     }
     // test ctor with 5 arguments
     {
-        runtime::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, rootfsDir, config->userIdentity}.performMount();
+        common::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, rootfsDir, config->userIdentity}.performMount();
         CHECK(test_utility::filesystem::isSameBindMountedFile(sourceFile.getPath(), rootfsDir / destinationFile.getPath()));
 
         // cleanup
@@ -98,8 +98,8 @@ IGNORE_TEST(MountTestGroup, mount_test) {
     }
     // test default move ctor
     {
-        auto mountObject = runtime::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, config};
-        runtime::Mount{std::move(mountObject)}.performMount();
+        auto mountObject = common::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, config};
+        common::Mount{std::move(mountObject)}.performMount();
         CHECK(test_utility::filesystem::isSameBindMountedFile(sourceFile.getPath(), rootfsDir / destinationFile.getPath()));
 
         // cleanup

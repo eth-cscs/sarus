@@ -29,7 +29,7 @@
 #include "cli/HelpMessage.hpp"
 #include "image_manager/ImageStore.hpp"
 #include "runtime/Runtime.hpp"
-#include "runtime/DeviceMount.hpp"
+#include "common/DeviceMount.hpp"
 
 
 namespace sarus {
@@ -458,14 +458,14 @@ private:
         return vector;
     }
 
-    std::shared_ptr<runtime::DeviceMount> findMatchingSiteDevice(const std::unique_ptr<runtime::DeviceMount>& deviceMount,
-                                                                 const std::vector<std::shared_ptr<runtime::DeviceMount>> siteDevices) const {
+    std::shared_ptr<common::DeviceMount> findMatchingSiteDevice(const std::unique_ptr<common::DeviceMount>& deviceMount,
+                                                                 const std::vector<std::shared_ptr<common::DeviceMount>> siteDevices) const {
         for (const auto& siteDevice : siteDevices) {
             if (deviceMount->source == siteDevice->source) {
                 return siteDevice;
             }
         }
-        return std::shared_ptr<runtime::DeviceMount>{};
+        return std::shared_ptr<common::DeviceMount>{};
     }
 
     bool checkUserHasSshKeys() const {

@@ -22,14 +22,13 @@
 #include "common/Logger.hpp"
 #include "common/Utility.hpp"
 #include "common/CLIArguments.hpp"
-#include "runtime/Utility.hpp"
 
 
 namespace sarus {
-namespace runtime {
+namespace common {
 
 boost::filesystem::path getValidatedMountSource(const boost::filesystem::path& source) {
-    utility::logMessage(boost::format("Validating mount source: %s") % source, common::LogLevel::DEBUG);
+    logMessage(boost::format("Validating mount source: %s") % source, LogLevel::DEBUG);
     auto* realPtr = realpath(source.c_str(), NULL);
     if (realPtr == nullptr) {
         auto message = boost::format("Failed to find real path for mount source: %s") % strerror(errno);
@@ -43,15 +42,15 @@ boost::filesystem::path getValidatedMountSource(const boost::filesystem::path& s
         auto message = boost::format("Real path of mount source does not exist: %s") % sourceReal;
         SARUS_THROW_ERROR(message.str());
     }
-    utility::logMessage(boost::format("Returning successfully validated mount source: %s") % sourceReal,
-                        common::LogLevel::DEBUG);
+    logMessage(boost::format("Returning successfully validated mount source: %s") % sourceReal,
+                        LogLevel::DEBUG);
     return sourceReal;
 }
 
 
 boost::filesystem::path getValidatedMountDestination(const boost::filesystem::path& destination,
                                                      const boost::filesystem::path& rootfsDir) {
-    utility::logMessage(boost::format("Validating mount destination: %s") % destination, common::LogLevel::DEBUG);
+    logMessage(boost::format("Validating mount destination: %s") % destination, LogLevel::DEBUG);
 
     if (destination.is_relative()) {
         SARUS_THROW_ERROR("Internal error: destination is not an absolute path");
@@ -59,7 +58,7 @@ boost::filesystem::path getValidatedMountDestination(const boost::filesystem::pa
     if (rootfsDir.is_relative()) {
         SARUS_THROW_ERROR("Internal error: rootfsDir is not an absolute path");
     }
-    auto destinationReal = rootfsDir / common::realpathWithinRootfs(rootfsDir, destination);
+    auto destinationReal = rootfsDir / realpathWithinRootfs(rootfsDir, destination);
 
     /* If the destination does not exist, check its parents */
     if (!boost::filesystem::exists(destinationReal)) {
@@ -81,7 +80,7 @@ boost::filesystem::path getValidatedMountDestination(const boost::filesystem::pa
             auto message = boost::format("Internal error: failed to find existing parent folder of %s") % destination;
             SARUS_THROW_ERROR(message.str());
         }
-        utility::logMessage(boost::format("Deepest path for such path is %s") % *deepestExistingFolder, common::LogLevel::DEBUG);
+        logMessage(boost::format("Deepest path for such path is %s") % *deepestExistingFolder, LogLevel::DEBUG);
 
         if (!isPathOnAllowedDevice(*deepestExistingFolder, rootfsDir)) {
             auto message = boost::format("Mount destination (%s) is not on a device allowed for mounts") % (*deepestExistingFolder);
@@ -102,32 +101,32 @@ boost::filesystem::path getValidatedMountDestination(const boost::filesystem::pa
             SARUS_THROW_ERROR(message.str());
         }
     }
-    utility::logMessage(boost::format("Returning successfully validated mount destination: %s") % destinationReal,
-                        common::LogLevel::DEBUG);
+    logMessage(boost::format("Returning successfully validated mount destination: %s") % destinationReal,
+                        LogLevel::DEBUG);
     return destinationReal;
 }
 
 
 bool isPathOnAllowedDevice(const boost::filesystem::path& path, const boost::filesystem::path& rootfsDir) {
     auto pathDevice = getDevice(path);
-    utility::logMessage(boost::format("Target device for path %s is: %d") % path % pathDevice, common::LogLevel::DEBUG);
+    logMessage(boost::format("Target device for path %s is: %d") % path % pathDevice, LogLevel::DEBUG);
 
     auto allowedDevices = std::vector<dev_t>{};
     allowedDevices.reserve(4);
-    utility::logMessage("Allowed devices are:", common::LogLevel::DEBUG);
+    logMessage("Allowed devices are:", LogLevel::DEBUG);
 
     auto dev = getDevice("/tmp");
     allowedDevices.push_back(dev);
-    utility::logMessage(boost::format("%d: /tmp") % dev, common::LogLevel::DEBUG);
+    logMessage(boost::format("%d: /tmp") % dev, LogLevel::DEBUG);
 
     dev = getDevice(rootfsDir);
     allowedDevices.push_back(dev);
-    utility::logMessage(boost::format("%d: rootfsDir (%s)") % dev % rootfsDir, common::LogLevel::DEBUG);
+    logMessage(boost::format("%d: rootfsDir (%s)") % dev % rootfsDir, LogLevel::DEBUG);
 
     if (boost::filesystem::exists(rootfsDir / "dev")) {
         dev = getDevice(rootfsDir / "dev");
         allowedDevices.push_back(dev);
-        utility::logMessage(boost::format("%d: %s/dev") % dev % rootfsDir, common::LogLevel::DEBUG);
+        logMessage(boost::format("%d: %s/dev") % dev % rootfsDir, LogLevel::DEBUG);
     }
 
     auto bundleDir = rootfsDir.parent_path();
@@ -137,7 +136,7 @@ bool isPathOnAllowedDevice(const boost::filesystem::path& path, const boost::fil
         // but this method could be used from within the container
         dev = getDevice(lowerLayer);
         allowedDevices.push_back(dev);
-        utility::logMessage(boost::format("%d: rootfs-lower (%s)") % dev % lowerLayer, common::LogLevel::DEBUG);
+        logMessage(boost::format("%d: rootfs-lower (%s)") % dev % lowerLayer, LogLevel::DEBUG);
     }
 
     bool isPathOnAllowedDevice = std::find(allowedDevices.cbegin(),
@@ -167,14 +166,14 @@ dev_t getDevice(const boost::filesystem::path& path) {
  */
 void validatedBindMount(const boost::filesystem::path& source,
                         const boost::filesystem::path& destination,
-                        const sarus::common::UserIdentity& userIdentity,
+                        const UserIdentity& userIdentity,
                         const boost::filesystem::path& rootfsDir,
                         const unsigned long flags) {
-    auto rootIdentity = sarus::common::UserIdentity{};
+    auto rootIdentity = UserIdentity{};
 
     try {
         // switch to user identity to make sure user has access to the mount source
-        sarus::common::switchIdentity(userIdentity);
+        switchIdentity(userIdentity);
         auto sourceReal = getValidatedMountSource(source);
         auto destinationReal = getValidatedMountDestination(destination, rootfsDir);
 
@@ -184,28 +183,28 @@ void validatedBindMount(const boost::filesystem::path& source,
         // Using the Boost filesystem predicate function as root will be denied if the mount source is in a
         // root_squashed filesystem.
         auto mountSourceIsDirectory = boost::filesystem::is_directory(sourceReal);
-        sarus::common::switchIdentity(rootIdentity);
+        switchIdentity(rootIdentity);
 
         // Create file or folder if necessary, after validation.
         // Always assign ownership of the newly-created mount point to the container user:
         // while it has no effect on the ownership and permissions of the mounted resource in the container
         // (they are the same as the mount source), a non-root-owned file reduces cleanup problems (in case there are any).
         if (mountSourceIsDirectory){
-            sarus::common::createFoldersIfNecessary(destinationReal, userIdentity.uid, userIdentity.gid);
+            createFoldersIfNecessary(destinationReal, userIdentity.uid, userIdentity.gid);
         }
         else {
-            sarus::common::createFileIfNecessary(destinationReal, userIdentity.uid, userIdentity.gid);
+            createFileIfNecessary(destinationReal, userIdentity.uid, userIdentity.gid);
         }
 
         // switch to user filesystem identity to make sure we can access paths as root even on root_squashed filesystems
-        common::setFilesystemUid(userIdentity);
+        setFilesystemUid(userIdentity);
         bindMount(sourceReal, destinationReal, flags);
-        common::setFilesystemUid(rootIdentity);
+        setFilesystemUid(rootIdentity);
     }
-    catch(sarus::common::Error& e) {
+    catch(Error& e) {
         // Restore root identity in case the exception happened while having a non-privileged id.
         // By setting the euid, the fsuid will also be set accordingly.
-        sarus::common::switchIdentity(rootIdentity);
+        switchIdentity(rootIdentity);
         auto message = boost::format("Failed to bind mount %s on container's %s: %s")
                        % source.string() % destination.string() % e.what();
         SARUS_RETHROW_ERROR(e, message.str());
@@ -214,7 +213,7 @@ void validatedBindMount(const boost::filesystem::path& source,
 
 
 void bindMount(const boost::filesystem::path& from, const boost::filesystem::path& to, unsigned long flags) {
-    utility::logMessage(boost::format{"Bind mounting %s -> %s"} % from % to, common::LogLevel::DEBUG);
+    logMessage(boost::format{"Bind mounting %s -> %s"} % from % to, LogLevel::DEBUG);
 
     unsigned long flagsForBindMount = MS_BIND | MS_REC;
     unsigned long flagsForRemount = MS_REMOUNT | MS_BIND | MS_NOSUID | MS_REC;
@@ -253,12 +252,12 @@ void loopMountSquashfs(const boost::filesystem::path& image, const boost::filesy
     command += " " + image.string();
     command += " " + mountPoint.string();
 
-    utility::logMessage(boost::format{"Performing loop mount: %s "} % command, common::LogLevel::DEBUG);
+    logMessage(boost::format{"Performing loop mount: %s "} % command, LogLevel::DEBUG);
 
     try {
-        common::executeCommand(command);
+        executeCommand(command);
     }
-    catch(common::Error& e) {
+    catch(Error& e) {
         auto message = boost::format("Failed to loop mount %s on %s") % image % mountPoint;
         SARUS_RETHROW_ERROR(e, message.str());
     }
@@ -273,8 +272,8 @@ void mountOverlayfs(const boost::filesystem::path& lowerDir,
         % lowerDir.string()
         % upperDir.string()
         % workDir.string();
-    utility::logMessage(boost::format{"Performing overlay mount to %s "} % mountPoint, common::LogLevel::DEBUG);
-    utility::logMessage(boost::format{"Overlay options: %s "} % options.str(), common::LogLevel::DEBUG);
+    logMessage(boost::format{"Performing overlay mount to %s "} % mountPoint, LogLevel::DEBUG);
+    logMessage(boost::format{"Overlay options: %s "} % options.str(), LogLevel::DEBUG);
     if(mount("overlay", mountPoint.c_str(), "overlay", MS_MGC_VAL, options.str().c_str()) != 0) {
         auto message = boost::format("Failed to mount OverlayFS on %s (options: %s): %s")
             % mountPoint % options % strerror(errno);

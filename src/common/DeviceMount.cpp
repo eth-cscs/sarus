@@ -14,28 +14,27 @@
 
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
-#include "runtime/Utility.hpp"
+
 
 
 namespace sarus {
-namespace runtime {
+namespace common {
 
-DeviceMount::DeviceMount(Mount&& baseMount, const common::DeviceAccess& access)
+DeviceMount::DeviceMount(Mount&& baseMount, const DeviceAccess& access)
     : Mount{std::move(baseMount)}
     , access{access}
 {
-    runtime::utility::logMessage(
-            boost::format("Constructing device mount object: source = %s; destination = %s; mount flags = %d; access = %s")
-            % source.string() % destination.string() % mountFlags % access.string(), common::LogLevel::DEBUG);
+    logMessage(boost::format("Constructing device mount object: source = %s; destination = %s; mount flags = %d; access = %s")
+            % source.string() % destination.string() % mountFlags % access.string(), LogLevel::DEBUG);
 
-    if (!common::isDeviceFile(source)) {
+    if (!isDeviceFile(source)) {
         auto message = boost::format("Source path %s is not a device file")
             % source;
         SARUS_THROW_ERROR(message.str());
     }
 
-    id = common::getDeviceID(source);
-    type = common::getDeviceType(source);
+    id = getDeviceID(source);
+    type = getDeviceType(source);
 }
 
 unsigned int DeviceMount::getMajorID() const {

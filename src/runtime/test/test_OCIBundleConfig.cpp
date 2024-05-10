@@ -164,11 +164,11 @@ static void enterTestDeviceFilesInConfig(const common::PathRAII& bundleDir, cons
 
     // enter devices into config struct
     size_t mount_flags = 0;
-    auto mount0 = runtime::Mount{testDevice0, testDevice0, mount_flags, config};
-    auto mount1 = runtime::Mount{testDevice1, testDevice1, mount_flags, config};
-    auto deviceVector = std::vector<std::shared_ptr<runtime::DeviceMount>>{};
-    deviceVector.emplace_back(new runtime::DeviceMount{std::move(mount0), common::DeviceAccess("rwm")});
-    deviceVector.emplace_back(new runtime::DeviceMount{std::move(mount1), common::DeviceAccess("rw")});
+    auto mount0 = common::Mount{testDevice0, testDevice0, mount_flags, config};
+    auto mount1 = common::Mount{testDevice1, testDevice1, mount_flags, config};
+    auto deviceVector = std::vector<std::shared_ptr<common::DeviceMount>>{};
+    deviceVector.emplace_back(new common::DeviceMount{std::move(mount0), common::DeviceAccess("rwm")});
+    deviceVector.emplace_back(new common::DeviceMount{std::move(mount1), common::DeviceAccess("rw")});
     config->commandRun.deviceMounts = deviceVector;
 }
 

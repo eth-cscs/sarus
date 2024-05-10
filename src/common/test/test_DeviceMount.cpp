@@ -15,7 +15,7 @@
 
 #include "test_utility/config.hpp"
 #include "test_utility/filesystem.hpp"
-#include "runtime/DeviceMount.hpp"
+#include "common/DeviceMount.hpp"
 #include "common/DeviceAccess.hpp"
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
@@ -23,7 +23,7 @@
 #include "test_utility/unittest_main_function.hpp"
 
 namespace sarus {
-namespace runtime {
+namespace common {
 namespace test{
 
 TEST_GROUP(DeviceMountTestGroup) {
@@ -144,7 +144,7 @@ IGNORE_TEST(DeviceMountTestGroup, performMount) {
     auto devAccess = common::DeviceAccess("rwm");
 
     // perform the mount
-    runtime::DeviceMount{std::move(mountObject), devAccess}.performMount();
+    common::DeviceMount{std::move(mountObject), devAccess}.performMount();
     CHECK(test_utility::filesystem::isSameBindMountedFile(sourceFile, rootfsDir / destinationFile));
     CHECK(common::getDeviceID(rootfsDir / destinationFile) == makedev(majorID, minorID));
     CHECK(common::getDeviceType(rootfsDir / destinationFile) == 'c');

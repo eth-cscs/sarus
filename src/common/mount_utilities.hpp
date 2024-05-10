@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef sarus_runtime_mount_utilities_hpp
-#define sarus_runtime_mount_utilities_hpp
+#ifndef sarus_common_mount_utilities_hpp
+#define sarus_common_mount_utilities_hpp
 
 #include <cstddef>
 #include <sys/stat.h>
@@ -20,11 +20,11 @@
 
 #include "common/Config.hpp"
 #include "common/Logger.hpp"
-#include "runtime/Mount.hpp"
+#include "common/Mount.hpp"
 
 
 namespace sarus {
-namespace runtime {
+namespace common {
 
 boost::filesystem::path getValidatedMountSource(const boost::filesystem::path&);
 boost::filesystem::path getValidatedMountDestination(const boost::filesystem::path& destination,
@@ -33,7 +33,7 @@ bool isPathOnAllowedDevice(const boost::filesystem::path& path, const boost::fil
 dev_t getDevice(const boost::filesystem::path& path);
 void validatedBindMount(const boost::filesystem::path& source,
                         const boost::filesystem::path& destination,
-                        const sarus::common::UserIdentity& userIdentity,
+                        const UserIdentity& userIdentity,
                         const boost::filesystem::path& rootfsDir,
                         const unsigned long flags=0);
 void bindMount(const boost::filesystem::path& from, const boost::filesystem::path& to, unsigned long flags=0);

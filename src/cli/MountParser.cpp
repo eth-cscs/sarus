@@ -16,8 +16,8 @@
 #include <boost/filesystem.hpp>
 
 #include "common/Error.hpp"
+#include "common/Mount.hpp"
 #include "cli/Utility.hpp"
-#include "runtime/Mount.hpp"
 
 
 namespace sarus {
@@ -62,7 +62,7 @@ MountParser::MountParser(const boost::filesystem::path& rootfsDir, const common:
  * Parses a custom mount request into a Mount object.
  * The request comes in the form of a comma-separated list of key-value pairs.
  */
-std::unique_ptr<runtime::Mount> MountParser::parseMountRequest(const std::unordered_map<std::string, std::string>& requestMap) {
+std::unique_ptr<common::Mount> MountParser::parseMountRequest(const std::unordered_map<std::string, std::string>& requestMap) {
     auto message = boost::format("Parsing mount request '%s'") % convertRequestMapToString(requestMap);
     utility::printLog(message, common::LogLevel::DEBUG);
 
@@ -86,12 +86,12 @@ std::unique_ptr<runtime::Mount> MountParser::parseMountRequest(const std::unorde
     }
 }
 
-std::unique_ptr<runtime::Mount> MountParser::parseBindMountRequest(const std::unordered_map<std::string, std::string>& requestMap) {
+std::unique_ptr<common::Mount> MountParser::parseBindMountRequest(const std::unordered_map<std::string, std::string>& requestMap) {
     auto source = getValidatedMountSource(requestMap);
     auto destination = getValidatedMountDestination(requestMap);
     auto flags = convertBindMountFlags(requestMap); // Parse the other sub-options into mount flags
 
-    return std::unique_ptr<runtime::Mount>{new runtime::Mount{source, destination, flags, rootfsDir, userIdentity}};
+    return std::unique_ptr<common::Mount>{new common::Mount{source, destination, flags, rootfsDir, userIdentity}};
 }
 
 /*

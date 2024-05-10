@@ -20,7 +20,7 @@
 
 #include "common/Config.hpp"
 #include "common/Logger.hpp"
-#include "runtime/Mount.hpp"
+#include "common/Mount.hpp"
 
 
 namespace sarus {
@@ -30,7 +30,7 @@ class MountParser {
 public:
     MountParser(const bool isUserMount, std::shared_ptr<const common::Config> conf);
     MountParser(const boost::filesystem::path& rootfsDir, const common::UserIdentity& userIdentity);
-    std::unique_ptr<runtime::Mount> parseMountRequest(const std::unordered_map<std::string, std::string>& mountRequest);
+    std::unique_ptr<common::Mount> parseMountRequest(const std::unordered_map<std::string, std::string>& mountRequest);
 
 private:
     struct ValidationSettings {
@@ -41,7 +41,7 @@ private:
     };
 
 private:
-    std::unique_ptr<runtime::Mount> parseBindMountRequest(const std::unordered_map<std::string, std::string>& requestMap);
+    std::unique_ptr<common::Mount> parseBindMountRequest(const std::unordered_map<std::string, std::string>& requestMap);
     unsigned long convertBindMountFlags(const std::unordered_map<std::string, std::string>& requestMap);
     boost::filesystem::path getValidatedMountSource(const std::unordered_map<std::string, std::string>& requestMap);
     boost::filesystem::path getValidatedMountDestination(const std::unordered_map<std::string, std::string>& requestMap);

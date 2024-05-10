@@ -99,6 +99,20 @@ void setEnvironmentVariable(const std::string& key, const std::string& value) {
     logMessage(boost::format("Set environment variable %s=%s") % key % value, common::LogLevel::DEBUG);
 }
 
+void clearEnvironmentVariables() {
+    if(clearenv() != 0) {
+        SARUS_THROW_ERROR("Failed to clear host environment variables");
+    }
+
+    auto path = std::string{"/bin:/sbin:/usr/bin"};
+    int overwrite = 1;
+    if(setenv("PATH", path.c_str(), overwrite) != 0) {
+        auto message = boost::format("Failed to setenv(\"PATH\", %s, %d): %s")
+            % path.c_str() % overwrite % strerror(errno);
+        SARUS_THROW_ERROR(message.str());
+    }
+}
+
 std::string removeWhitespaces(const std::string& s) {
     auto result = s;
     auto newEnd = std::remove_if(result.begin(), result.end(), iswspace);

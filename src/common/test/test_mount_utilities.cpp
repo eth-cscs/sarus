@@ -20,7 +20,7 @@
 #include "test_utility/filesystem.hpp"
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
-#include "runtime/mount_utilities.hpp"
+#include "common/mount_utilities.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
 
@@ -36,15 +36,15 @@ TEST(MountUtilitiesTestGroup, get_validated_mount_source_test) {
     std::string source_dir_2 = source_dir_2RAII.getPath().string();
 
     // Test invalid input arguments
-    CHECK_THROWS(common::Error, runtime::getValidatedMountSource(""));
+    CHECK_THROWS(common::Error, common::getValidatedMountSource(""));
 
     // Test non-existing directory
-    CHECK_THROWS(common::Error, runtime::getValidatedMountSource(source_dir_1));
+    CHECK_THROWS(common::Error, common::getValidatedMountSource(source_dir_1));
 
     // Test existing directory
     common::createFoldersIfNecessary(source_dir_2);
     auto* expected = realpath(source_dir_2.c_str(), NULL);
-    CHECK(runtime::getValidatedMountSource(source_dir_2) == boost::filesystem::path(expected));
+    CHECK(common::getValidatedMountSource(source_dir_2) == boost::filesystem::path(expected));
 
     // Cleanup
     free(expected);
@@ -60,30 +60,30 @@ TEST(MountUtilitiesTestGroup, get_validated_mount_destination_test) {
     common::createFoldersIfNecessary(bundleDir / "overlay/rootfs-lower");
 
     // Test invalid input arguments
-    CHECK_THROWS(common::Error, runtime::getValidatedMountDestination("", rootfsDir));
+    CHECK_THROWS(common::Error, common::getValidatedMountDestination("", rootfsDir));
 
     // Test mount on other device
     auto otherDeviceDir = boost::filesystem::path{"/otherDevice"};
     common::createFoldersIfNecessary(rootfsDir / otherDeviceDir);
     auto imageSquashfs = boost::filesystem::path{__FILE__}.parent_path() / "test_image.squashfs";
-    runtime::loopMountSquashfs(imageSquashfs, rootfsDir / otherDeviceDir);
-    CHECK_THROWS(common::Error, runtime::getValidatedMountDestination(otherDeviceDir, rootfsDir));
+    common::loopMountSquashfs(imageSquashfs, rootfsDir / otherDeviceDir);
+    CHECK_THROWS(common::Error, common::getValidatedMountDestination(otherDeviceDir, rootfsDir));
     CHECK(umount((rootfsDir / otherDeviceDir).c_str()) == 0);
 
     // Test non-existing mount point
     auto nonExistingDir = boost::filesystem::path{"/nonExistingMountPoint"};
     auto expected = rootfsDir / nonExistingDir;
-    CHECK(runtime::getValidatedMountDestination(nonExistingDir, rootfsDir) == expected);
+    CHECK(common::getValidatedMountDestination(nonExistingDir, rootfsDir) == expected);
 
     // Test existing mount point
     auto existingDir = boost::filesystem::path{"/file_in_squashfs_image"};
     expected = rootfsDir / existingDir;
     common::createFoldersIfNecessary(expected);
-    CHECK(runtime::getValidatedMountDestination(existingDir, rootfsDir) == expected);
+    CHECK(common::getValidatedMountDestination(existingDir, rootfsDir) == expected);
 }
 
 TEST(MountUtilitiesTestGroup, bindMount) {
-    auto tempDirRAII = common::PathRAII{common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-runtime-bindmount")};
+    auto tempDirRAII = common::PathRAII{common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-common-bindmount")};
     const auto& tempDir = tempDirRAII.getPath();
     auto fromDir = tempDir / "from";
     auto toDir = tempDir / "to";
@@ -92,7 +92,7 @@ TEST(MountUtilitiesTestGroup, bindMount) {
     common::createFoldersIfNecessary(toDir);
     common::createFileIfNecessary(fromDir / "file");
 
-    runtime::bindMount(fromDir, toDir);
+    common::bindMount(fromDir, toDir);
 
     // check that "file" is in the mounted directory
     CHECK(boost::filesystem::exists(toDir / "file"));
@@ -105,7 +105,7 @@ TEST(MountUtilitiesTestGroup, bindMount) {
 }
 
 TEST(MountUtilitiesTestGroup, bindMountReadOnly) {
-    auto tempDirRAII = common::PathRAII{common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-runtime-bindmount")};
+    auto tempDirRAII = common::PathRAII{common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-common-bindmount")};
     const auto& tempDir = tempDirRAII.getPath();
     auto fromDir = tempDir / "from";
     auto toDir = tempDir / "to";
@@ -114,7 +114,7 @@ TEST(MountUtilitiesTestGroup, bindMountReadOnly) {
     common::createFoldersIfNecessary(toDir);
     common::createFileIfNecessary(fromDir / "file");
 
-    runtime::bindMount(fromDir, toDir, MS_RDONLY);
+    common::bindMount(fromDir, toDir, MS_RDONLY);
 
     // check that "file" is in the mounted directory
     CHECK(boost::filesystem::exists(toDir / "file"));
@@ -127,7 +127,7 @@ TEST(MountUtilitiesTestGroup, bindMountReadOnly) {
 }
 
 TEST(MountUtilitiesTestGroup, bindMountRecursive) {
-    auto tempDirRAII = common::PathRAII{common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-runtime-bindmount")};
+    auto tempDirRAII = common::PathRAII{common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-common-bindmount")};
     const auto& tempDir = tempDirRAII.getPath();
 
     auto a = tempDir / "a";
@@ -141,12 +141,12 @@ TEST(MountUtilitiesTestGroup, bindMountRecursive) {
 
     // check that "d.txt" is in the mounted directory
     CHECK(!boost::filesystem::exists(b / "d.txt"));
-    runtime::bindMount(c, b);
+    common::bindMount(c, b);
     CHECK(boost::filesystem::exists(b / "d.txt"));
 
     // check that mounts are recursive by default
     CHECK(!boost::filesystem::exists(a / "d.txt"));
-    runtime::bindMount(b, a);
+    common::bindMount(b, a);
     CHECK(boost::filesystem::exists(a / "d.txt"));
 
     // cleanup
@@ -155,12 +155,12 @@ TEST(MountUtilitiesTestGroup, bindMountRecursive) {
 }
 
 TEST(MountUtilitiesTestGroup, loopMountSquashfs) {
-    auto mountPointRAII = common::PathRAII{common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-runtime-loopMountSquashfs")};
+    auto mountPointRAII = common::PathRAII{common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-common-loopMountSquashfs")};
     const auto& mountPoint = mountPointRAII.getPath();
     common::createFoldersIfNecessary(mountPoint);
 
     auto imageSquashfs = boost::filesystem::path{__FILE__}.parent_path() / "test_image.squashfs";
-    runtime::loopMountSquashfs(imageSquashfs, mountPoint);
+    common::loopMountSquashfs(imageSquashfs, mountPoint);
     CHECK(boost::filesystem::exists(mountPoint / "file_in_squashfs_image"));
 
     CHECK(umount(mountPoint.string().c_str()) == 0);

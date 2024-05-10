@@ -29,7 +29,7 @@
 #include "common/ImageReference.hpp"
 #include "common/CLIArguments.hpp"
 #include "runtime/Utility.hpp"
-#include "runtime/mount_utilities.hpp"
+#include "common/mount_utilities.hpp"
 
 
 namespace sarus {
@@ -42,7 +42,7 @@ Runtime::Runtime(std::shared_ptr<common::Config> config)
     , bundleConfig{config}
     , fdHandler{config}
 {
-    clearEnvironmentVariables();
+    common::clearEnvironmentVariables();
 
     auto status = common::readFile("/proc/self/status");
     config->commandRun.cpuAffinity = common::getCpuAffinity();
@@ -164,8 +164,8 @@ void Runtime::mountImageIntoRootfs() const {
     common::createFoldersIfNecessary(upperDir, config->userIdentity.uid, config->userIdentity.gid);
     common::createFoldersIfNecessary(workDir);
 
-    loopMountSquashfs(config->getImageFile(), lowerDir);
-    mountOverlayfs(lowerDir, upperDir, workDir, rootfsDir);
+    common::loopMountSquashfs(config->getImageFile(), lowerDir);
+    common::mountOverlayfs(lowerDir, upperDir, workDir, rootfsDir);
 
     utility::logMessage("Successfully mounted image into bundle's rootfs", common::LogLevel::INFO);
 }
@@ -221,7 +221,7 @@ void Runtime::mountInitProgramIntoRootfsIfNecessary() const {
         auto src = boost::filesystem::path{ config->json["initPath"].GetString() };
         auto dst = rootfsDir / "dev/init";
         common::createFileIfNecessary(dst);
-        bindMount(src, dst);
+        common::bindMount(src, dst);
         utility::logMessage("Successfully mounted init program into rootfs", common::LogLevel::INFO);
     }
 }
@@ -279,20 +279,6 @@ void Runtime::remountRootfsWithNoSuid() const {
         SARUS_THROW_ERROR(message.str());
     }
     utility::logMessage("Successfully remounted rootfs with MS_NOSUID", common::LogLevel::INFO);
-}
-
-void Runtime::clearEnvironmentVariables() const {
-    if(clearenv() != 0) {
-        SARUS_THROW_ERROR("Failed to clear host environment variables");
-    }
-
-    auto path = std::string{"/bin:/sbin:/usr/bin"};
-    int overwrite = 1;
-    if(setenv("PATH", path.c_str(), overwrite) != 0) {
-        auto message = boost::format("Failed to setenv(\"PATH\", %s, %d): %s")
-            % path.c_str() % overwrite % strerror(errno);
-        SARUS_THROW_ERROR(message.str());
-    }
 }
 
 } // namespace

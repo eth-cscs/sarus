@@ -17,8 +17,8 @@
 #include "common/CLIArguments.hpp"
 #include "common/LogLevel.hpp"
 #include "common/UserIdentity.hpp"
-#include "runtime/Mount.hpp"
-#include "runtime/DeviceMount.hpp"
+#include "common/Mount.hpp"
+#include "common/DeviceMount.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -30,7 +30,7 @@ public:
     void activate() const;
 
     // for testing purposes
-    const std::vector<std::shared_ptr<runtime::Mount>> getBindMounts() const {return bindMounts;};
+    const std::vector<std::shared_ptr<sarus::common::Mount>> getBindMounts() const {return bindMounts;};
 
 private:
     void parseConfigJSONOfBundle();
@@ -51,8 +51,8 @@ private:
     sarus::common::UserIdentity userIdentity;
     boost::filesystem::path ldconfigPath;
     boost::filesystem::path fiProviderPath;
-    std::vector<std::shared_ptr<runtime::Mount>> bindMounts;
-    std::vector<std::shared_ptr<runtime::DeviceMount>> deviceMounts;
+    std::vector<std::shared_ptr<sarus::common::Mount>> bindMounts;
+    std::vector<std::shared_ptr<sarus::common::DeviceMount>> deviceMounts;
 };
 
 }}} // namespace

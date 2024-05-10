@@ -31,7 +31,7 @@ DeviceParser::DeviceParser(std::shared_ptr<const common::Config> conf)
                 / conf->json["rootfsFolder"].GetString();
 }
 
-std::unique_ptr<runtime::DeviceMount> DeviceParser::parseDeviceRequest(const std::string& requestString) const {
+std::unique_ptr<common::DeviceMount> DeviceParser::parseDeviceRequest(const std::string& requestString) const {
     auto message = boost::format("Parsing device request '%s'") % requestString;
     utility::printLog(message, common::LogLevel::DEBUG);
 
@@ -77,8 +77,8 @@ std::unique_ptr<runtime::DeviceMount> DeviceParser::parseDeviceRequest(const std
         validateMountPath(source, "host");
         validateMountPath(destination, "container");
         auto deviceAccess = createDeviceAccess(accessString);
-        auto baseMount = runtime::Mount{source, destination, flags, rootfsDir, userIdentity};
-        return std::unique_ptr<runtime::DeviceMount>{new runtime::DeviceMount{std::move(baseMount), deviceAccess}};
+        auto baseMount = common::Mount{source, destination, flags, rootfsDir, userIdentity};
+        return std::unique_ptr<common::DeviceMount>{new common::DeviceMount{std::move(baseMount), deviceAccess}};
     }
     catch (const common::Error& e) {
         auto message = boost::format("Invalid device request '%s': %s") % requestString %  e.getErrorTrace().back().errorMessage;

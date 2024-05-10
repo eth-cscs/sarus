@@ -188,7 +188,7 @@ TEST(OCIHooksTestGroup, create_hook_and_check_activation) {
         configRaii.config->commandRun.ociAnnotations["com.oci.hooks.test_hook.enabled"] = "true";
         configRaii.config->commandRun.execArgs = { "./app0" };
         configRaii.config->commandRun.mounts.push_back(
-            std::unique_ptr<Mount>{ new Mount{"/src", "/dst", 0, configRaii.config} }
+            std::unique_ptr<common::Mount>{ new common::Mount{"/src", "/dst", 0, configRaii.config} }
         );
         CHECK(hook.isActive(configRaii.config));
     }
@@ -199,7 +199,7 @@ TEST(OCIHooksTestGroup, create_hook_and_check_activation) {
         configRaii.config->commandRun.ociAnnotations["com.oci.hooks.test_hook.enabled"] = "false";
         configRaii.config->commandRun.execArgs = { "./app0" };
         configRaii.config->commandRun.mounts.push_back(
-            std::unique_ptr<Mount>{ new Mount{"/src", "/dst", 0, configRaii.config} }
+            std::unique_ptr<common::Mount>{ new common::Mount{"/src", "/dst", 0, configRaii.config} }
         );
         CHECK(!hook.isActive(configRaii.config));
     }
@@ -210,7 +210,7 @@ TEST(OCIHooksTestGroup, create_hook_and_check_activation) {
         configRaii.config->commandRun.ociAnnotations["com.oci.hooks.test_hook.enabled"] = "true";
         configRaii.config->commandRun.execArgs = { "./xyz0123" };
         configRaii.config->commandRun.mounts.push_back(
-            std::unique_ptr<Mount>{ new Mount{"/src", "/dst", 0, configRaii.config} }
+            std::unique_ptr<common::Mount>{ new common::Mount{"/src", "/dst", 0, configRaii.config} }
         );
         CHECK(!hook.isActive(configRaii.config));
     }
@@ -329,7 +329,7 @@ TEST(OCIHooksTestGroup, condition_hasBindMounts) {
     {
         auto configRaii = test_utility::config::makeConfig();
         configRaii.config->commandRun.mounts.push_back(
-            std::unique_ptr<Mount>{ new Mount{"/src", "/dst", 0, configRaii.config} }
+            std::unique_ptr<common::Mount>{ new common::Mount{"/src", "/dst", 0, configRaii.config} }
         );
 
         // hasBindMounts=false

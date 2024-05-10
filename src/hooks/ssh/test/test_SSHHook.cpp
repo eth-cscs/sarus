@@ -23,7 +23,7 @@
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
-#include "runtime/mount_utilities.hpp"
+#include "common/mount_utilities.hpp"
 #include "hooks/ssh/SshHook.hpp"
 #include "test_utility/Misc.hpp"
 #include "test_utility/config.hpp"
@@ -124,7 +124,7 @@ public:
             sarus::common::createFoldersIfNecessary(workDir);
             sarus::common::createFoldersIfNecessary(mergedDir);
 
-            runtime::mountOverlayfs(lowerDir, upperDir, workDir, mergedDir);
+            sarus::common::mountOverlayfs(lowerDir, upperDir, workDir, mergedDir);
         }
 
         // set requested home dir in /etc/passwd

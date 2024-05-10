@@ -117,8 +117,8 @@ void setupSignalProxying(const pid_t childPid) {
     }
 };
 
-std::vector<std::unique_ptr<runtime::Mount>> generatePMIxMounts(std::shared_ptr<const common::Config> config) {
-    auto mounts = std::vector<std::unique_ptr<runtime::Mount>>{};
+std::vector<std::unique_ptr<common::Mount>> generatePMIxMounts(std::shared_ptr<const common::Config> config) {
+    auto mounts = std::vector<std::unique_ptr<common::Mount>>{};
     auto& hostEnvironment = config->commandRun.hostEnvironment;
 
     auto pmixServerPath = boost::filesystem::path{};
@@ -126,7 +126,7 @@ std::vector<std::unique_ptr<runtime::Mount>> generatePMIxMounts(std::shared_ptr<
     if (pmixServerVar != hostEnvironment.cend()) {
         utility::logMessage(boost::format("Found PMIX_SERVER_TMPDIR=%s") % pmixServerVar->second, common::LogLevel::DEBUG);
         pmixServerPath = boost::filesystem::path(pmixServerVar->second);
-        mounts.push_back(std::unique_ptr<runtime::Mount>{new runtime::Mount{pmixServerPath, pmixServerPath, MS_REC|MS_PRIVATE, config}});
+        mounts.push_back(std::unique_ptr<common::Mount>{new common::Mount{pmixServerPath, pmixServerPath, MS_REC|MS_PRIVATE, config}});
     }
     else {
         utility::logMessage("Could not find PMIX_SERVER_TMPDIR env variable", common::LogLevel::DEBUG);
@@ -150,7 +150,7 @@ std::vector<std::unique_ptr<runtime::Mount>> generatePMIxMounts(std::shared_ptr<
                     // we have already scheduled for mounting
                     auto relativePath = boost::filesystem::relative(slurmPmixPath, pmixServerPath);
                     if (relativePath.empty() || boost::starts_with(relativePath.string(), std::string(".."))) {
-                        mounts.push_back(std::unique_ptr<runtime::Mount>{new runtime::Mount{slurmPmixPath, slurmPmixPath, MS_REC|MS_PRIVATE, config}});
+                        mounts.push_back(std::unique_ptr<common::Mount>{new common::Mount{slurmPmixPath, slurmPmixPath, MS_REC|MS_PRIVATE, config}});
                     }
                     else {
                         utility::logMessage("Slurm PMIx directory for job step is equal or child of PMIX_SERVER_TMPDIR. Skipping mount",
@@ -163,11 +163,11 @@ std::vector<std::unique_ptr<runtime::Mount>> generatePMIxMounts(std::shared_ptr<
                     auto slurmTmpFS = boost::filesystem::path(matches[1]);
                     auto mountPath = slurmTmpFS / (boost::format("spmix_appdir_%s_%s.%s") % slurmJobUid % slurmJobId % slurmStepId).str();
                     if (boost::filesystem::exists(mountPath)) {
-                        mounts.push_back(std::unique_ptr<runtime::Mount>{new runtime::Mount{mountPath, mountPath, MS_REC|MS_PRIVATE, config}});
+                        mounts.push_back(std::unique_ptr<common::Mount>{new common::Mount{mountPath, mountPath, MS_REC|MS_PRIVATE, config}});
                     }
                     else{
                         mountPath = slurmTmpFS / (boost::format("spmix_appdir_%s.%s") % slurmJobId % slurmStepId).str();
-                        mounts.push_back(std::unique_ptr<runtime::Mount>{new runtime::Mount{mountPath, mountPath, MS_REC|MS_PRIVATE, config}});
+                        mounts.push_back(std::unique_ptr<common::Mount>{new common::Mount{mountPath, mountPath, MS_REC|MS_PRIVATE, config}});
                     }
                 }
             }

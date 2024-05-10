@@ -22,8 +22,8 @@
 #include "common/Utility.hpp"
 #include "common/Config.hpp"
 #include "common/Error.hpp"
+#include "common/Mount.hpp"
 #include "cli/MountParser.hpp"
-#include "runtime/Mount.hpp"
 
 #include <CppUTest/CommandLineTestRunner.h> // boost library must be included before CppUTest
 

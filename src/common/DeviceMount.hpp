@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef sarus_runtime_DeviceMount_hpp
-#define sarus_runtime_DeviceMount_hpp
+#ifndef sarus_common_DeviceMount_hpp
+#define sarus_common_DeviceMount_hpp
 
 #include <sys/types.h>
 
@@ -18,23 +18,23 @@
 
 
 namespace sarus {
-namespace runtime {
+namespace common {
 
 /**
  * This class represents a bind mount for a device file
  */
 class DeviceMount : public Mount {
 public:
-    DeviceMount(Mount&& baseMount, const common::DeviceAccess& access);
+    DeviceMount(Mount&& baseMount, const DeviceAccess& access);
 
 public:
     char getType() const {return type;};
     unsigned int getMajorID() const;
     unsigned int getMinorID() const;
-    const common::DeviceAccess& getAccess() const {return access;};
+    const DeviceAccess& getAccess() const {return access;};
 
 private:
-    common::DeviceAccess access;
+    DeviceAccess access;
     dev_t id;
     char type;
 };

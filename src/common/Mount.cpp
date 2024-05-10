@@ -19,18 +19,17 @@
 #include <sys/fsuid.h>
 
 #include "common/Utility.hpp"
-#include "runtime/Utility.hpp"
-#include "runtime/mount_utilities.hpp"
+#include "common/mount_utilities.hpp"
 
 
 namespace sarus {
-namespace runtime {
+namespace common {
 
 Mount::Mount(const boost::filesystem::path& source,
              const boost::filesystem::path& destination,
              const size_t mountFlags,
              const boost::filesystem::path& rootfsDir,
-             const common::UserIdentity userIdentity)
+             const UserIdentity userIdentity)
     : source{source}
     , destination{destination}
     , mountFlags{mountFlags}
@@ -41,7 +40,7 @@ Mount::Mount(const boost::filesystem::path& source,
 Mount::Mount(const boost::filesystem::path& source,
              const boost::filesystem::path& destination,
              const size_t mountFlags,
-             std::shared_ptr<const common::Config> config)
+             std::shared_ptr<const Config> config)
     : source{source}
     , destination{destination}
     , mountFlags{mountFlags}
@@ -52,19 +51,19 @@ Mount::Mount(const boost::filesystem::path& source,
 }
 
 void Mount::performMount() const {
-    runtime::utility::logMessage(boost::format("Performing bind mount: source = %s; target = %s; mount flags = %d")
-        % source.string() % destination.string() % mountFlags, common::LogLevel::DEBUG);
+    logMessage(boost::format("Performing bind mount: source = %s; target = %s; mount flags = %d")
+        % source.string() % destination.string() % mountFlags, LogLevel::DEBUG);
 
     try {
         validatedBindMount(source, destination, userIdentity, rootfsDir, mountFlags);
     }
-    catch (const common::Error& e) {
-        runtime::utility::logMessage(e.getErrorTrace().back().errorMessage.c_str(),
-                                     common::LogLevel::GENERAL, std::cerr);
-        SARUS_RETHROW_ERROR(e, std::string("Failed to perform custom bind mount"), common::LogLevel::INFO);
+    catch (const Error& e) {
+        logMessage(e.getErrorTrace().back().errorMessage.c_str(),
+                                     LogLevel::GENERAL, std::cerr);
+        SARUS_RETHROW_ERROR(e, std::string("Failed to perform custom bind mount"), LogLevel::INFO);
     }
 
-    runtime::utility::logMessage("Successfully performed bind mount", common::LogLevel::DEBUG);
+    logMessage("Successfully performed bind mount", LogLevel::DEBUG);
 }
 
 } // namespace

@@ -17,14 +17,14 @@
 
 #include "common/Config.hpp"
 #include "common/Logger.hpp"
-#include "runtime/Mount.hpp"
+#include "common/Mount.hpp"
 
 namespace sarus {
 namespace runtime {
 namespace utility {
 
 void setupSignalProxying(const pid_t childPid);
-std::vector<std::unique_ptr<runtime::Mount>> generatePMIxMounts(std::shared_ptr<const common::Config>);
+std::vector<std::unique_ptr<common::Mount>> generatePMIxMounts(std::shared_ptr<const common::Config>);
 void logMessage(const boost::format&, common::LogLevel,
                 std::ostream& out=std::cout, std::ostream& err=std::cerr);
 void logMessage(const std::string&, common::LogLevel,

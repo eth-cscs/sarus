@@ -24,9 +24,9 @@
 #include "common/CLIArguments.hpp"
 #include "common/UserIdentity.hpp"
 #include "common/Logger.hpp"
+#include "common/Mount.hpp"
+#include "common/DeviceMount.hpp"
 #include "ImageReference.hpp"
-#include "runtime/Mount.hpp"
-#include "runtime/DeviceMount.hpp"
 
 
 namespace sarus {
@@ -67,8 +67,8 @@ class Config {
             std::unordered_map<std::string, std::string> ociAnnotations;
             std::vector<int> cpuAffinity;
             std::vector<std::string> userMounts;
-            std::vector<std::shared_ptr<runtime::Mount>> mounts;
-            std::vector<std::shared_ptr<runtime::DeviceMount>> deviceMounts;
+            std::vector<std::shared_ptr<common::Mount>> mounts;
+            std::vector<std::shared_ptr<common::DeviceMount>> deviceMounts;
             boost::optional<std::string> mpiType;
             boost::optional<boost::filesystem::path> workdir;
             boost::optional<CLIArguments> entrypoint;

@@ -26,7 +26,7 @@
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
-#include "runtime/mount_utilities.hpp"
+#include "common/mount_utilities.hpp"
 #include "SharedLibrary.hpp"
 
 namespace sarus {
@@ -260,7 +260,7 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
     if (it == hostToContainerLibs.cend()) {
         log(boost::format{"no corresponding libs in container => bind mount (%s) into /lib"} % hostLib.getPath(), sarus::common::LogLevel::DEBUG);
         auto containerLib = "/lib" / hostLib.getPath().filename();
-        sarus::runtime::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
+        sarus::common::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), false);
         return;
     }
@@ -273,14 +273,14 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
     if (bestCandidateLib.isFullAbiCompatible(hostLib)){
         // safe replacement, all good.
         log(boost::format{"abi-compatible => bind mounting host lib (%s) on top of container lib (%s) (i.e. override)"} % hostLib.getPath() % bestCandidateLib.getPath(), sarus::common::LogLevel::DEBUG);
-        sarus::runtime::validatedBindMount(hostLib.getPath(), bestCandidateLib.getPath(), userIdentity, rootfsDir);
+        sarus::common::validatedBindMount(hostLib.getPath(), bestCandidateLib.getPath(), userIdentity, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs(bestCandidateLib.getPath(), hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
     }
     else if (bestCandidateLib.isMajorAbiCompatible(hostLib)){
         // risky replacement, issue notice.
         log(boost::format{"Container lib (%s) is major-only-abi-compatible => bind mounting host lib (%s) into /lib"} % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::INFO);
         auto containerLib = "/lib" / hostLib.getPath().filename();
-        sarus::runtime::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
+        sarus::common::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
     }
     else {
@@ -289,7 +289,7 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
         log(boost::format{"Could not find ABI-compatible counterpart for host lib (%s) inside container (best candidate found: %s) => adding host lib (%s) into container's /lib via bind mount "}
             % hostLib.getPath() % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::INFO);
         auto containerLib = "/lib" / hostLib.getPath().filename();
-        sarus::runtime::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
+        sarus::common::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), true);
     }
 
@@ -313,7 +313,7 @@ void MpiHook::performBindMounts() const {
     auto devicesCgroupPath = boost::filesystem::path{};
 
     for(const auto& mount : bindMounts) {
-        sarus::runtime::validatedBindMount(mount, mount, userIdentity, rootfsDir);
+        sarus::common::validatedBindMount(mount, mount, userIdentity, rootfsDir);
 
         if (sarus::common::isDeviceFile(mount)) {
             if (devicesCgroupPath.empty()) {
@@ -385,7 +385,7 @@ void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesy
         sarus::common::createFoldersIfNecessary(searchDir);
 
         // prevent writing as root where we are not allowed to
-        if (!sarus::runtime::isPathOnAllowedDevice(searchDir, rootfsDir)) {
+        if (!sarus::common::isPathOnAllowedDevice(searchDir, rootfsDir)) {
             log(boost::format("The hook is not allowed to write to %s. Ignoring symlinks creation in this path.") % searchDir, sarus::common::LogLevel::WARN);
             continue;
         }

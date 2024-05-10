@@ -18,7 +18,7 @@
 
 #include "common/Utility.hpp"
 #include "hooks/common/Utility.hpp"
-#include "runtime/mount_utilities.hpp"
+#include "common/mount_utilities.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -162,7 +162,7 @@ void AmdGpuHook::performBindMounts() const {
     if (mountPoint.empty())
       continue;
 
-    sarus::runtime::validatedBindMount(mountPoint, mountPoint, userIdentity,
+    sarus::common::validatedBindMount(mountPoint, mountPoint, userIdentity,
                                        rootfsDir);
 
     if (sarus::common::isDeviceFile(mountPoint)) {
