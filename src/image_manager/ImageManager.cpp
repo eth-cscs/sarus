@@ -200,7 +200,7 @@ namespace image_manager {
     }
 
     void ImageManager::issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled() const {
-        if(config->useCentralizedRepository && !common::isCentralizedRepositoryEnabled(*config)) {
+        if(config->useCentralizedRepository && !config->isCentralizedRepositoryEnabled()) {
             SARUS_THROW_ERROR("attempting to perform an operation on the centralized repository,"
                                 " but the centralized repository is disabled. Please contact your system"
                                 " administrator to configure the centralized repository.");

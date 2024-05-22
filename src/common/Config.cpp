@@ -14,6 +14,7 @@
 
 #include "common/Config.hpp"
 #include "common/Error.hpp"
+#include "common/PasswdDB.hpp"
 #include "common/Utility.hpp"
 
 
@@ -33,14 +34,14 @@ void Config::Directories::initialize(bool useCentralizedRepository, const common
     if (useCentralizedRepository) {
         common::logMessage( boost::format("initializing CLI config's directories for centralized repository"),
                             common::LogLevel::DEBUG);
-        repository = common::getCentralizedRepositoryDirectory(config);
+        repository = config.getCentralizedRepositoryDirectory();
         images = repository / "images";
         common::createFoldersIfNecessary(images,config.userIdentity.uid, config.userIdentity.gid);
     }
     else {
         common::logMessage( boost::format("initializing CLI config's directories for local repository"),
                             common::LogLevel::DEBUG);
-        repository = common::getLocalRepositoryDirectory(config);
+        repository = config.getLocalRepositoryDirectory();
         images = repository / "images";
         common::createFoldersIfNecessary(images, config.userIdentity.uid, config.userIdentity.gid);
     }
@@ -74,6 +75,27 @@ boost::filesystem::path Config::getMetadataFileOfImage() const {
     auto key = imageReference.getUniqueKey();
     auto file = boost::filesystem::path(directories.images.string() + "/" + key + ".meta");
     return file;
+}
+
+bool Config::isCentralizedRepositoryEnabled() const {
+    // centralized repository is enabled when a directory is specified
+    return json.HasMember("centralizedRepositoryDir");
+}
+
+boost::filesystem::path Config::getCentralizedRepositoryDirectory() const {
+    if(!isCentralizedRepositoryEnabled()) {
+        SARUS_THROW_ERROR("failed to retrieve directory of centralized repository"
+                            " because such feature is disabled. Please ask your system"
+                            " administrator to enable the central read-only repository.");
+    }
+    return json["centralizedRepositoryDir"].GetString();
+}
+
+boost::filesystem::path Config::getLocalRepositoryDirectory() const {
+    auto baseDir = boost::filesystem::path{ json["localRepositoryBaseDir"].GetString() };
+    auto passwdFile = boost::filesystem::path{ json["prefixDir"].GetString() } / "etc/passwd";
+    auto username = PasswdDB{passwdFile}.getUsername(userIdentity.uid);
+    return baseDir / username / common::Config::BuildTime{}.localRepositoryFolder;
 }
 
 }} // namespaces

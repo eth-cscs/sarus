@@ -83,6 +83,10 @@ class Config {
 
         boost::filesystem::path getImageFile() const;
         boost::filesystem::path getMetadataFileOfImage() const;
+        boost::filesystem::path getCentralizedRepositoryDirectory() const;
+        boost::filesystem::path getLocalRepositoryDirectory() const;
+
+        bool isCentralizedRepositoryEnabled() const;
 
         BuildTime buildTime;
         common::ImageReference imageReference;

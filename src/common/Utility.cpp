@@ -48,7 +48,6 @@
 
 #include "common/Config.hpp"
 #include "common/Error.hpp"
-#include "common/PasswdDB.hpp"
 
 /**
  * Utility functions
@@ -450,27 +449,6 @@ void setOwner(const boost::filesystem::path& path, uid_t uid, gid_t gid) {
     if(chown(path.c_str(), uid, gid) != 0) {
         auto errorMessage = boost::format("failed to change ownership of path: %s") % path;
     }
-}
-
-bool isCentralizedRepositoryEnabled(const common::Config& config) {
-    // centralized repository is enabled when a directory is specified
-    return config.json.HasMember("centralizedRepositoryDir");
-}
-
-boost::filesystem::path getCentralizedRepositoryDirectory(const common::Config& config) {
-    if(!isCentralizedRepositoryEnabled(config)) {
-        SARUS_THROW_ERROR("failed to retrieve directory of centralized repository"
-                            " because such feature is disabled. Please ask your system"
-                            " administrator to enable the central read-only repository.");
-    }
-    return config.json["centralizedRepositoryDir"].GetString();
-}
-
-boost::filesystem::path getLocalRepositoryDirectory(const common::Config& config) {
-    auto baseDir = boost::filesystem::path{ config.json["localRepositoryBaseDir"].GetString() };
-    auto passwdFile = boost::filesystem::path{ config.json["prefixDir"].GetString() } / "etc/passwd";
-    auto username = PasswdDB{passwdFile}.getUsername(config.userIdentity.uid);
-    return baseDir / username / common::Config::BuildTime{}.localRepositoryFolder;
 }
 
 /**
