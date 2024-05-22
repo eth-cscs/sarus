@@ -17,11 +17,11 @@
 
 #include "common/Error.hpp"
 #include "common/Mount.hpp"
-#include "cli/Utility.hpp"
+#include "common/Utility.hpp"
 
 
 namespace sarus {
-namespace cli {
+namespace common {
 
 /**
  * Constructor with Config pointer and user/site mount switch is intended to be called by Sarus CLI code
@@ -64,13 +64,13 @@ MountParser::MountParser(const boost::filesystem::path& rootfsDir, const common:
  */
 std::unique_ptr<common::Mount> MountParser::parseMountRequest(const std::unordered_map<std::string, std::string>& requestMap) {
     auto message = boost::format("Parsing mount request '%s'") % convertRequestMapToString(requestMap);
-    utility::printLog(message, common::LogLevel::DEBUG);
+    logMessage(message, common::LogLevel::DEBUG);
 
     // The request has to specify the mount type
     if (requestMap.count("type") == 0) {
         auto message = boost::format("Invalid mount request '%s': 'type' must be specified")
             % convertRequestMapToString(requestMap);
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        logMessage(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
@@ -81,7 +81,7 @@ std::unique_ptr<common::Mount> MountParser::parseMountRequest(const std::unorder
     else {
         auto message = boost::format("Invalid mount request '%s': '%s' is not a valid mount type")
             % convertRequestMapToString(requestMap) % requestMap.at("type");
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        logMessage(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 }
@@ -118,7 +118,7 @@ unsigned long MountParser::convertBindMountFlags(const std::unordered_map<std::s
         else {
             auto message = boost::format("Invalid mount request '%s': '%s' is not a valid bind mount option")
                 % convertRequestMapToString(requestMap) % opt.first;
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            logMessage(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
     }
@@ -135,7 +135,7 @@ boost::filesystem::path MountParser::getValidatedMountSource(const std::unordere
         auto message = boost::format("Invalid mount request '%s': multiple formats used to specify mount source. "
                                      "Use either 'source' or 'src'.")
             % convertRequestMapToString(requestMap);
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        logMessage(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
     else if(requestMap.count("source")) {
@@ -147,21 +147,21 @@ boost::filesystem::path MountParser::getValidatedMountSource(const std::unordere
     else {
         auto message = boost::format("Invalid mount request '%s': no source specified. Use either 'source' or 'src'.")
             % convertRequestMapToString(requestMap);
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        logMessage(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
     if (source.empty()) {
         auto message = boost::format("Invalid mount request '%s': source is empty")
             % convertRequestMapToString(requestMap);
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        logMessage(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
     if (source.is_relative()) {
         auto message = boost::format("Invalid mount request '%s': source must be an absolute path")
             % convertRequestMapToString(requestMap);
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        logMessage(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
@@ -171,7 +171,7 @@ boost::filesystem::path MountParser::getValidatedMountSource(const std::unordere
                 % convertRequestMapToString(requestMap)
                 % source.string()
                 % disallowed_prefix;
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            logMessage(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
     }
@@ -180,7 +180,7 @@ boost::filesystem::path MountParser::getValidatedMountSource(const std::unordere
             auto message = boost::format("Invalid mount request '%s': '%s' is not allowed as mount source")
                 % convertRequestMapToString(requestMap)
                 % disallowed;
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            logMessage(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
     }
@@ -197,7 +197,7 @@ boost::filesystem::path MountParser::getValidatedMountDestination(const std::uno
         auto message = boost::format("Invalid mount request '%s': multiple formats used to specify mount destination."
                                      " Use one of 'destination', 'dst' or 'target'.")
             % convertRequestMapToString(requestMap);
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        logMessage(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
     else if (requestMap.count("destination")) {
@@ -212,21 +212,21 @@ boost::filesystem::path MountParser::getValidatedMountDestination(const std::uno
     else {
         auto message = boost::format("Invalid mount request '%s': no destination specified. Use either 'destination', 'dst' or 'target'.")
             % convertRequestMapToString(requestMap);
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        logMessage(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
     if (destination.empty()) {
         auto message = boost::format("Invalid mount request '%s': destination is empty")
             % convertRequestMapToString(requestMap);
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        logMessage(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
     if (destination.is_relative()) {
         auto message = boost::format("Invalid mount request '%s': destination must be an absolute path")
             % convertRequestMapToString(requestMap);
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        logMessage(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
@@ -235,7 +235,7 @@ boost::filesystem::path MountParser::getValidatedMountDestination(const std::uno
             auto message = boost::format("Invalid mount request '%s': destination cannot be a subdirectory of '%s'")
                 % convertRequestMapToString(requestMap)
                 % disallowed_prefix;
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            logMessage(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
     }
@@ -244,7 +244,7 @@ boost::filesystem::path MountParser::getValidatedMountDestination(const std::uno
             auto message = boost::format("Invalid mount request '%s': '%s' is not allowed as mount destination")
                 % convertRequestMapToString(requestMap)
                 % disallowed;
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+            logMessage(message, common::LogLevel::GENERAL, std::cerr);
             SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
         }
     }

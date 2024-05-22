@@ -9,13 +9,13 @@
  */
 
 #include "common/Logger.hpp"
-#include "cli/MountParser.hpp"
+#include "common/MountParser.hpp"
 #include "MountParserChecker.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
 
 namespace sarus {
-namespace cli {
+namespace common {
 namespace custom_mounts {
 namespace test {
 
@@ -105,8 +105,8 @@ TEST(MountParserTestGroup, constructors) {
     auto requestString = std::string("type=bind,src=/src,dst=/dest,readonly");
     auto requestMap = common::parseMap(requestString);
 
-    auto ctor1 = cli::MountParser{true, configRAII.config}.parseMountRequest(requestMap);
-    auto ctor2 = cli::MountParser{rootfsDir, userIdentity}.parseMountRequest(requestMap);;
+    auto ctor1 = MountParser{true, configRAII.config}.parseMountRequest(requestMap);
+    auto ctor2 = MountParser{rootfsDir, userIdentity}.parseMountRequest(requestMap);;
 
     CHECK(ctor1->source      == ctor2->source);
     CHECK(ctor1->destination == ctor2->destination);

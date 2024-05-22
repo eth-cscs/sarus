@@ -19,13 +19,13 @@
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 
-#include "common/Utility.hpp"
 #include "common/Config.hpp"
 #include "common/CLIArguments.hpp"
+#include "common/DeviceParser.hpp"
+#include "common/MountParser.hpp"
+#include "common/Utility.hpp"
 #include "cli/Utility.hpp"
 #include "cli/Command.hpp"
-#include "cli/MountParser.hpp"
-#include "cli/DeviceParser.hpp"
 #include "cli/HelpMessage.hpp"
 #include "image_manager/ImageStore.hpp"
 #include "runtime/Runtime.hpp"
@@ -348,7 +348,7 @@ private:
 
     void makeSiteMountObjects() {
         bool isUserMount = false;
-        auto parser = cli::MountParser{isUserMount, conf};
+        auto parser = sarus::common::MountParser{isUserMount, conf};
         for(const auto& map : convertJSONSiteMountsToMaps()) {
             conf->commandRun.mounts.push_back(parser.parseMountRequest(map));
         }
@@ -356,7 +356,7 @@ private:
 
     void makeUserMountObjects() {
         bool isUserMount = true;
-        auto parser = cli::MountParser{isUserMount, conf};
+        auto parser = sarus::common::MountParser{isUserMount, conf};
         for (const auto& mountString : conf->commandRun.userMounts) {
             auto map = common::parseMap(mountString);
             conf->commandRun.mounts.push_back(parser.parseMountRequest(map));
@@ -394,7 +394,7 @@ private:
     }
 
     void makeSiteDeviceMountObjects() {
-        auto parser = cli::DeviceParser{conf};
+        auto parser = sarus::common::DeviceParser{conf};
         for (const auto& requestString : convertJSONSiteDevicesToStrings()) {
             try {
                 conf->commandRun.deviceMounts.push_back(parser.parseDeviceRequest(requestString));
@@ -409,7 +409,7 @@ private:
     }
 
     void makeUserDeviceMountObjects() {
-        auto parser = cli::DeviceParser{conf};
+        auto parser = sarus::common::DeviceParser{conf};
         auto siteDevices = conf->commandRun.deviceMounts;
         for (const auto& requestString : deviceMounts) {
             auto deviceMount = std::move(parser.parseDeviceRequest(requestString));

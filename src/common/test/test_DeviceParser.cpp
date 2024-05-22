@@ -10,14 +10,14 @@
 
 #include "common/Logger.hpp"
 #include "common/PathRAII.hpp"
-#include "cli/DeviceParser.hpp"
+#include "common/DeviceParser.hpp"
 #include "DeviceParserChecker.hpp"
 #include "test_utility/filesystem.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
 
 namespace sarus {
-namespace cli {
+namespace common {
 namespace test {
 
 TEST_GROUP(DeviceParserTestGroup) {
@@ -120,8 +120,8 @@ IGNORE_TEST(DeviceParserTestGroup, constructors) {
 
      auto requestString = std::string("/dev/sarusTestDevice0:/dev/containerDevice:r");
 
-     auto ctor1 = cli::DeviceParser{configRAII.config}.parseDeviceRequest(requestString);
-     auto ctor2 = cli::DeviceParser{rootfsDir, userIdentity}.parseDeviceRequest(requestString);
+     auto ctor1 = DeviceParser{configRAII.config}.parseDeviceRequest(requestString);
+     auto ctor2 = DeviceParser{rootfsDir, userIdentity}.parseDeviceRequest(requestString);
 
      CHECK(ctor1->source               == ctor2->source);
      CHECK(ctor1->destination          == ctor2->destination);

@@ -14,10 +14,10 @@
 #include <boost/filesystem.hpp>
 
 #include "common/Error.hpp"
-#include "cli/Utility.hpp"
+#include "common/Utility.hpp"
 
 namespace sarus {
-namespace cli {
+namespace common {
 
 DeviceParser::DeviceParser(const boost::filesystem::path& rootfsDir, const common::UserIdentity& userIdentity)
     : rootfsDir{rootfsDir}
@@ -33,11 +33,11 @@ DeviceParser::DeviceParser(std::shared_ptr<const common::Config> conf)
 
 std::unique_ptr<common::DeviceMount> DeviceParser::parseDeviceRequest(const std::string& requestString) const {
     auto message = boost::format("Parsing device request '%s'") % requestString;
-    utility::printLog(message, common::LogLevel::DEBUG);
+    logMessage(message, common::LogLevel::DEBUG);
 
     if (requestString.empty()) {
         auto message = boost::format("Invalid device request: no values provided");
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        logMessage(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
@@ -48,7 +48,7 @@ std::unique_ptr<common::DeviceMount> DeviceParser::parseDeviceRequest(const std:
         auto message = boost::format("Invalid device request '%s': too many tokens provided. "
             "The format of the option value must be at most '<host device>:<container device>:<access>'")
             % requestString;
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        logMessage(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
     }
 
@@ -82,7 +82,7 @@ std::unique_ptr<common::DeviceMount> DeviceParser::parseDeviceRequest(const std:
     }
     catch (const common::Error& e) {
         auto message = boost::format("Invalid device request '%s': %s") % requestString %  e.getErrorTrace().back().errorMessage;
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
+        logMessage(message, common::LogLevel::GENERAL, std::cerr);
         SARUS_RETHROW_ERROR(e, message.str(), common::LogLevel::INFO);
     }
 }

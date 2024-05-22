@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef sarus_cli_MountParser_hpp
-#define sarus_cli_MountParser_hpp
+#ifndef sarus_common_MountParser_hpp
+#define sarus_common_MountParser_hpp
 
 #include <memory>
 #include <string>
@@ -24,7 +24,7 @@
 
 
 namespace sarus {
-namespace cli {
+namespace common {
 
 class MountParser {
 public:

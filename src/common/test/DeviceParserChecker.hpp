@@ -8,20 +8,20 @@
  *
  */
 
-#ifndef sarus_cli_test_DeviceParserChecker_hpp
-#define sarus_cli_test_DeviceParserChecker_hpp
+#ifndef sarus_common_test_DeviceParserChecker_hpp
+#define sarus_common_test_DeviceParserChecker_hpp
 
 #include <boost/optional.hpp>
 
 #include "test_utility/config.hpp"
 #include "common/Error.hpp"
-#include "cli/DeviceParser.hpp"
+#include "common/DeviceParser.hpp"
 
 #include <CppUTest/CommandLineTestRunner.h> // boost library must be included before CppUTest
 
 
 namespace sarus {
-namespace cli {
+namespace common {
 namespace test {
 
 class DeviceParserChecker {
@@ -56,7 +56,7 @@ public:
         auto rootfsDir = boost::filesystem::path{ configRAII.config->json["OCIBundleDir"].GetString() }
                          / configRAII.config->json["rootfsFolder"].GetString();
 
-        auto parser = cli::DeviceParser{configRAII.config};
+        auto parser = common::DeviceParser{configRAII.config};
 
         if(isParseErrorExpected) {
             CHECK_THROWS(sarus::common::Error, parser.parseDeviceRequest(deviceRequest));

@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef sarus_cli_test_MountParserChecker_hpp
-#define sarus_cli_test_MountParserChecker_hpp
+#ifndef sarus_common_test_MountParserChecker_hpp
+#define sarus_common_test_MountParserChecker_hpp
 
 #include <memory>
 #include <algorithm>
@@ -23,13 +23,13 @@
 #include "common/Config.hpp"
 #include "common/Error.hpp"
 #include "common/Mount.hpp"
-#include "cli/MountParser.hpp"
+#include "common/MountParser.hpp"
 
 #include <CppUTest/CommandLineTestRunner.h> // boost library must be included before CppUTest
 
 
 namespace sarus {
-namespace cli {
+namespace common {
 namespace custom_mounts {
 namespace test {
 
@@ -70,7 +70,7 @@ public:
         auto rootfsDir = boost::filesystem::path{ configRAII.config->json["OCIBundleDir"].GetString() }
                          / configRAII.config->json["rootfsFolder"].GetString();
 
-        auto parser = cli::MountParser{!isSiteMount, configRAII.config};
+        auto parser = common::MountParser{!isSiteMount, configRAII.config};
 
         auto map = common::parseMap(mountRequest);
 

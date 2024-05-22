@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef sarus_cli_DeviceParser_hpp
-#define sarus_cli_DeviceParser_hpp
+#ifndef sarus_common_DeviceParser_hpp
+#define sarus_common_DeviceParser_hpp
 
 #include <string>
 #include <vector>
@@ -19,7 +19,7 @@
 
 
 namespace sarus {
-namespace cli {
+namespace common {
 
 class DeviceParser {
 public:

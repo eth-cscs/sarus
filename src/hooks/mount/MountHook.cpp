@@ -19,8 +19,8 @@
 #include "common/Logger.hpp"
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
-#include "cli/MountParser.hpp"
-#include "cli/DeviceParser.hpp"
+#include "common/MountParser.hpp"
+#include "common/DeviceParser.hpp"
 #include "hooks/common/Utility.hpp"
 
 namespace sarus {
@@ -99,14 +99,14 @@ void MountHook::parseCliArguments(const sarus::common::CLIArguments& args) {
     boost::program_options::store(parsed, values);
     boost::program_options::notify(values);
 
-    auto mountParser = sarus::cli::MountParser{rootfsDir, userIdentity};
+    auto mountParser = sarus::common::MountParser{rootfsDir, userIdentity};
     for (const auto& mountString : inputMounts) {
         auto parseCandidate = replaceStringWildcards(mountString);
         auto map = sarus::common::parseMap(parseCandidate);
         bindMounts.push_back(mountParser.parseMountRequest(map));
     }
 
-    auto deviceParser = cli::DeviceParser{rootfsDir, userIdentity};
+    auto deviceParser = sarus::common::DeviceParser{rootfsDir, userIdentity};
     for (const auto& deviceString : cliDeviceMounts) {
         deviceMounts.push_back(deviceParser.parseDeviceRequest(deviceString));
     }
