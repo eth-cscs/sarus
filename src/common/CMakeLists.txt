@@ -1,7 +1,7 @@
 
 configure_file(ConfigBuildTime.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/ConfigBuildTime.cpp)
 
-file(GLOB common_srcs "*.cpp" "*.c")
+file(GLOB common_srcs "*.cpp" "*.c" "utility/*.cpp")
 add_library(common_library STATIC ${common_srcs})
 target_link_libraries(common_library ${Boost_LIBRARIES})
 

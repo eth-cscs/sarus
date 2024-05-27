@@ -22,6 +22,7 @@ cache/
 src/common/ConfigBuildTime.cpp
 RELEASE_NOTES.md
 
-# Sarus local testing archives
+# Sarus local testing
 sarus-Debug.tar.gz
 sarus-Release.tar.gz
+standalone/README.md
