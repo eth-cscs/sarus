@@ -10,6 +10,7 @@
 
 #include "filesystem.hpp"
 
+#include <fstream>
 #include <sys/stat.h>
 
 #include <boost/regex.hpp>

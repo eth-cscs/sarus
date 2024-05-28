@@ -10,6 +10,7 @@
 
 #include "json.hpp"
 
+#include <fstream>
 #include <sstream>
 
 #include <rapidjson/istreamwrapper.h>

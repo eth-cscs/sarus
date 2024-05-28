@@ -13,6 +13,7 @@
 #include <sstream>
 
 #include <fcntl.h>
+#include <grp.h>
 #include <termios.h>
 #include <sys/fsuid.h>
 #include <sys/stat.h>
