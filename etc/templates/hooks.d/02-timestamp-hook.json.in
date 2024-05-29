@@ -9,5 +9,5 @@
     "when": {
         "always": true
     },
-    "stages": ["prestart"]
+    "stages": ["createContainer"]
 }

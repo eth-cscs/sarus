@@ -12,5 +12,5 @@
             "^com.hooks.slurm-global-sync.enabled$": "^true$"
         }
     },
-    "stages": ["prestart"]
+    "stages": ["createContainer"]
 }

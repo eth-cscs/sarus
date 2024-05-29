@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+
+## [Unreleased]
+
+### [Changed]
+
+- Configuration templates and documentation for OCI hooks now use createRuntime, createContainer or startContainer execution stages, instead of the prestart stage which has been deprecated since version 1.0.2 of the OCI Runtime specification. The only exception is the NVIDIA container toolkit hook.
+
 ## [1.6.4]
 
 ### Added

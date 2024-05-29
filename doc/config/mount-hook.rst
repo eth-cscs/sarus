@@ -51,7 +51,7 @@ In short, no specific action is required to install the MPI hook.
 Hook configuration
 ==================
 
-The program is meant to be run as a **prestart** hook and accepts option
+The program is meant to be run as a **createContainer** hook and accepts option
 arguments with the same formats as the :ref:`--mount <user-custom-mounts>`
 or :ref:`--device <user-device-mounts>` options of :program:`sarus run`.
 

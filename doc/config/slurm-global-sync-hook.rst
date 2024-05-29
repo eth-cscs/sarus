@@ -43,7 +43,7 @@ In short, no specific action is required to install the Slurm global sync hook.
 Sarus configuration
 -------------------
 
-The program is meant to be run as a **prestart** hook and does not accept any
+The program is meant to be run as a **createContainer** hook and does not accept any
 argument. The following environment variables must be defined:
 
 * ``HOOK_BASE_DIR``: Absolute base path to the directory where the hook will create and access the synchronization

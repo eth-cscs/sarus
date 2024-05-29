@@ -106,7 +106,6 @@ AmdGpuHook::AmdGpuHook() {
 
   std::tie(bundleDir, pidOfContainer) =
       hooks::common::utility::parseStateOfContainerFromStdin();
-  sarus::hooks::common::utility::enterMountNamespaceOfProcess(pidOfContainer);
   parseConfigJSONOfBundle();
 
   log("Successfully initialized hook", sarus::common::LogLevel::INFO);

@@ -17,36 +17,20 @@ from integration_tests.test_device_access import Device
 DeviceLink = collections.namedtuple('Device', ['source', 'destination'])
 
 
-def create_paths_for_devices(devices, device_links):
-    # devices
-    paths = {os.path.dirname(dev.path)
-             for dev in devices if os.path.dirname(dev.path) != '/dev'}
-    for p in paths:
-        os.makedirs(p, exist_ok=True)
-    # links
-    paths = {
-        os.path.dirname(dev.destination) for dev in device_links if
-        os.path.dirname(dev.destination) != '/dev'
-    }
-    for p in paths:
-        os.makedirs(p, exist_ok=True)
+def create_paths_for_devices():
+    try:
+        os.makedirs("/dev", exist_ok=True)
+        os.makedirs("/dev/dri", exist_ok=True)
+        os.makedirs("/dev/dri/by-path", exist_ok=True)
+    except OSError as e:
+        print(e)
 
 
-def remove_paths_for_devices(devices, device_links):
-
-    def remove_paths(paths):
-        for p in sorted(paths, reverse=True):
-            try:
-                os.rmdir(p)
-            except OSError as e:
-                print(e)
-
-    paths = {os.path.dirname(dev.destination) for dev in device_links}
-    remove_paths(paths)
-
-    paths = {os.path.dirname(dev.path)
-             for dev in devices if os.path.dirname(dev.path) != '/dev'}
-    remove_paths(paths)
+def remove_paths_for_devices():
+    try:
+        os.rmdir("/dev/dri")
+    except OSError as e:
+        print(e)
 
 
 def create_device_files(devices, device_links):
@@ -100,7 +84,7 @@ def create_hook_file(oci_hook_config_file):
         "when": {
             "always": True
         },
-        "stages": ["prestart"]
+        "stages": ["createContainer"]
     }
     util.create_hook_file(hook, oci_hook_config_file)
 
@@ -139,25 +123,20 @@ class TestAmdGpuHook(unittest.TestCase):
 
     OCIHOOK_CONFIG_FILE = "/opt/sarus/default/etc/hooks.d/amdgpu_hook.json"
 
-    @classmethod
-    def setUpClass(cls):
-        create_paths_for_devices(cls.DEVICES, cls.DEVICE_LINKS)
-        create_hook_file(cls.OCIHOOK_CONFIG_FILE)
+    def setUp(self):
+        create_paths_for_devices()
+        create_device_files(self.DEVICES, self.DEVICE_LINKS)
+        create_hook_file(self.OCIHOOK_CONFIG_FILE)
         try:
             util.pull_image_if_necessary(
-                is_centralized_repository=False, image=cls.CONTAINER_IMAGE)
+                is_centralized_repository=False, image=self.CONTAINER_IMAGE)
         except Exception as e:
             print(e)
 
-    @classmethod
-    def tearDownClass(cls):
-        remove_device_files(cls.DEVICES, cls.DEVICE_LINKS)
-        remove_paths_for_devices(cls.DEVICES, cls.DEVICE_LINKS)
-        remove_hook_file(cls.OCIHOOK_CONFIG_FILE)
-
-    # @classmethod
-    def setUp(self):
-        create_device_files(self.DEVICES, self.DEVICE_LINKS)
+    def tearDown(self):
+        remove_device_files(self.DEVICES, self.DEVICE_LINKS)
+        remove_paths_for_devices()
+        remove_hook_file(self.OCIHOOK_CONFIG_FILE)
 
     def test_absence_of_dev_kfd_disables_hook(self):
         remove_device_files([Device("/dev/kfd", 511)], [])
@@ -167,7 +146,7 @@ class TestAmdGpuHook(unittest.TestCase):
             image=self.CONTAINER_IMAGE,
             command=["ls", "/dev"]
         )
-        assert "dri" not in output
+        self.assertNotIn("dri", output)
 
     def test_mount_subset_of_devices(self):
         def test_mount_subset_of_devices_impl(visible_devices):
@@ -185,7 +164,9 @@ class TestAmdGpuHook(unittest.TestCase):
                 )
             except Exception as e:
                 assert False, e
-            assert all(dev in output for dev in ['kfd', 'dri'])
+
+            for dev in ['kfd', 'dri']:
+                self.assertIn(dev, output)
 
             try:
                 output = util.run_command_in_container(
@@ -200,7 +181,7 @@ class TestAmdGpuHook(unittest.TestCase):
             expects |= {
                 f"renderD{128+device_id}" for device_id in visible_devices}
 
-            assert sorted(expects) == sorted(output)
+            self.assertEqual(sorted(expects), sorted(output))
 
         test_mount_subset_of_devices_impl([0, 1, 2])
         test_mount_subset_of_devices_impl([0, 1, 3])
@@ -217,7 +198,9 @@ class TestAmdGpuHook(unittest.TestCase):
             )
         except Exception as e:
             assert False, e
-        assert all(dev in output for dev in ['kfd', 'dri'])
+        
+        for dev in ['kfd', 'dri']:
+            self.assertIn(dev, output)
 
         try:
             output = util.run_command_in_container(
@@ -231,7 +214,7 @@ class TestAmdGpuHook(unittest.TestCase):
         expects = {f"card{device_id}" for device_id in range(0, 4)}
         expects |= {f"renderD{128+device_id}" for device_id in range(0, 4)}
 
-        assert sorted(expects) == sorted(output)
+        self.assertEqual(sorted(expects), sorted(output))
 
     def test_whitelist_devices(self):
         devices_list = util.run_command_in_container(
@@ -239,7 +222,7 @@ class TestAmdGpuHook(unittest.TestCase):
             image=self.CONTAINER_IMAGE,
             command=["cat", "/sys/fs/cgroup/devices/devices.list"]
         )
-        assert "c 511:511 rw" in devices_list
+        self.assertIn("c 511:511 rw", devices_list)
 
     def test_mounted_devices_have_same_stat_as_original(self):
         host_devices = {dev.path: dev.stat()

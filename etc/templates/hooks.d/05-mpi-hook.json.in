@@ -14,5 +14,5 @@
             "^com.hooks.mpi.enabled$": "^true$"
         }
     },
-    "stages": ["prestart"]
+    "stages": ["createContainer"]
 }

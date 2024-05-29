@@ -135,7 +135,7 @@ class TestGlibcHook(unittest.TestCase):
                     "^com.hooks.glibc.enabled$": "^true$"
                 }
             },
-            "stages": ["prestart"]
+            "stages": ["createContainer"]
         }
 
         util.create_hook_file(hook, cls._OCIHOOK_CONFIG_FILE)

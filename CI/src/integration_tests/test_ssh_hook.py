@@ -32,7 +32,7 @@ def generate_hook_config():
                 "^com.hooks.ssh.enabled$": "^true$"
             }
         },
-        "stages": ["prestart"]
+        "stages": ["createRuntime"]
     }
     return hook_config
 

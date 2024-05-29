@@ -31,7 +31,6 @@ MountHook::MountHook(const sarus::common::CLIArguments& args) {
     log("Initializing hook", sarus::common::LogLevel::INFO);
 
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
-    hooks::common::utility::enterMountNamespaceOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
     parseEnvironmentVariables();
     parseCliArguments(args);

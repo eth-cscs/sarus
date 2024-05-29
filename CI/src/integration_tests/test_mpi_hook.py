@@ -99,7 +99,7 @@ class TestMPIHook(unittest.TestCase):
                     "^com.hooks.mpi.enabled$": "^true$"
                 }
             },
-            "stages": ["prestart"]
+            "stages": ["createContainer"]
         }
 
         return hook_config

@@ -39,32 +39,34 @@ TEST(OCIHooksTestGroup, create_hook_with_schema_incompatibility) {
     // missing "stages" property
     {
         auto os = std::ofstream(jsonFile.c_str());
-        os << "{"
-        "   \"version\": \"1.0.0\","
-        "   \"hook\": {"
-        "       \"path\": \"/dir/test_hook\""
-        "   },"
-        "   \"when\": {"
-        "       \"always\": true"
-        "   }"
-        "}";
+        os << R"(
+        {
+           "version": "1.0.0",
+           "hook": {
+               "path": "/dir/test_hook"
+           },
+           "when": {
+               "always": true
+           }
+        })";
         os.close();
         CHECK_THROWS(common::Error, OCIHooksFactory{}.createHook(jsonFile, schemaFile));
     }
     // undesired "extra" property
     {
         auto os = std::ofstream(jsonFile.c_str());
-        os << "{"
-        "   \"version\": \"1.0.0\","
-        "   \"hook\": {"
-        "       \"path\": \"/dir/test_hook\""
-        "   },"
-        "   \"when\": {"
-        "       \"always\": true"
-        "   },"
-        "   \"stages\": [\"prestart\"],"
-        "   \"extra\": true"
-        "}";
+        os << R"(
+        {
+           "version": "1.0.0",
+           "hook": {
+               "path": "/dir/test_hook"
+           },
+           "when": {
+               "always": true
+           },
+           "stages": ["createRuntime"],
+           "extra": true
+        })";
         os.close();
         CHECK_THROWS(common::Error, OCIHooksFactory{}.createHook(jsonFile, schemaFile));
     }
@@ -73,16 +75,17 @@ TEST(OCIHooksTestGroup, create_hook_with_schema_incompatibility) {
 TEST(OCIHooksTestGroup, create_hook_with_bad_version) {
     common::createFoldersIfNecessary(jsonFile.parent_path());
     auto os = std::ofstream(jsonFile.c_str());
-    os << "{"
-    "   \"version\": \"2.0.0\","
-    "   \"hook\": {"
-    "       \"path\": \"/dir/test_hook\""
-    "   },"
-    "   \"when\": {"
-    "       \"always\": true"
-    "   },"
-    "   \"stages\": [\"prestart\", \"poststop\"]"
-    "}";
+    os << R"(
+    {
+       "version": "2.0.0",
+       "hook": {
+           "path": "/dir/test_hook"
+       },
+       "when": {
+           "always": true
+       },
+       "stages": ["createRuntime", "poststop"]
+    })";
     os.close();
 
     CHECK_THROWS(common::Error, OCIHooksFactory{}.createHook(jsonFile, schemaFile));
@@ -94,18 +97,19 @@ TEST(OCIHooksTestGroup, create_hook_with_bad_version) {
 TEST(OCIHooksTestGroup, create_hook_with_unsupported_regex) {
     common::createFoldersIfNecessary(jsonFile.parent_path());
     auto os = std::ofstream(jsonFile.c_str());
-    os << "{"
-    "   \"version\": \"1.0.0\","
-    "   \"hook\": {"
-    "       \"path\": \"/dir/test_hook\""
-    "   },"
-    "   \"when\": {"
-    "       \"annotations\": {"
-    "           \"^com\\.oci\\.hooks\\.test_hook\\.enabled$\": \"^true$\""
-    "       }"
-    "   },"
-    "   \"stages\": [\"prestart\"]"
-    "}";
+    os << R"(
+    {
+       "version": "1.0.0",
+       "hook": {
+           "path": "/dir/test_hook"
+       },
+       "when": {
+           "annotations": {
+               "^com\.oci\.hooks\.test_hook\.enabled$": "^true$"
+           }
+       },
+       "stages": ["createRuntime"]
+    })";
     os.close();
     CHECK_THROWS(common::Error, OCIHooksFactory{}.createHook(jsonFile, schemaFile));
 }
@@ -113,27 +117,28 @@ TEST(OCIHooksTestGroup, create_hook_with_unsupported_regex) {
 TEST(OCIHooksTestGroup, create_hook_and_check_members) {
     common::createFoldersIfNecessary(jsonFile.parent_path());
     auto os = std::ofstream(jsonFile.c_str());
-    os << "{"
-    "   \"version\": \"1.0.0\","
-    "   \"hook\": {"
-    "       \"path\": \"/dir/test_hook\","
-    "       \"args\": [\"test_hook\", \"arg\"],"
-    "       \"env\": ["
-    "           \"KEY0=VALUE0\","
-    "           \"KEY1=VALUE1\""
-    "       ],"
-    "       \"timeout\": 3"
-    "   },"
-    "   \"when\": {"
-    "       \"always\": true,"
-    "       \"annotations\": {"
-    "           \"^com.oci.hooks.test_hook.enabled$\": \"^true$\""
-    "       },"
-    "       \"commands\": [\"regex0\", \"regex1\"],"
-    "       \"hasBindMounts\": true"
-    "   },"
-    "   \"stages\": [\"prestart\", \"poststop\"]"
-    "}";
+    os << R"(
+    {
+       "version": "1.0.0",
+       "hook": {
+           "path": "/dir/test_hook",
+           "args": ["test_hook", "arg"],
+           "env": [
+               "KEY0=VALUE0",
+               "KEY1=VALUE1"
+           ],
+           "timeout": 3
+       },
+       "when": {
+           "always": true,
+           "annotations": {
+               "^com.oci.hooks.test_hook.enabled$": "^true$"
+           },
+           "commands": ["regex0", "regex1"],
+           "hasBindMounts": true
+       },
+       "stages": ["createRuntime", "poststop"]
+    })";
     os.close();
 
     auto hook = OCIHooksFactory{}.createHook(jsonFile, schemaFile);
@@ -157,27 +162,28 @@ TEST(OCIHooksTestGroup, create_hook_and_check_members) {
     CHECK(dynamic_cast<OCIHook::ConditionCommands*>(hook.conditions[2].get()) != nullptr);
     CHECK(dynamic_cast<OCIHook::ConditionHasBindMounts*>(hook.conditions[3].get()) != nullptr);
 
-    CHECK((hook.stages == std::vector<std::string>{"prestart", "poststop"}));
+    CHECK((hook.stages == std::vector<std::string>{"createRuntime", "poststop"}));
 }
 
 TEST(OCIHooksTestGroup, create_hook_and_check_activation) {
     common::createFoldersIfNecessary(jsonFile.parent_path());
     auto os = std::ofstream(jsonFile.c_str());
-    os << "{"
-    "   \"version\": \"1.0.0\","
-    "   \"hook\": {"
-    "       \"path\": \"/dir/test_hook\""
-    "   },"
-    "   \"when\": {"
-    "       \"always\": true,"
-    "       \"annotations\": {"
-    "           \"^com.oci.hooks.test_hook.enabled$\": \"^true$\""
-    "       },"
-    "       \"commands\": [\".*/app0\"],"
-    "       \"hasBindMounts\": true"
-    "   },"
-    "   \"stages\": [\"prestart\"]"
-    "}";
+    os << R"(
+    {
+       "version": "1.0.0",
+       "hook": {
+           "path": "/dir/test_hook"
+       },
+       "when": {
+           "always": true,
+           "annotations": {
+               "^com.oci.hooks.test_hook.enabled$": "^true$"
+           },
+           "commands": [".*/app0"],
+           "hasBindMounts": true
+       },
+       "stages": ["createRuntime"]
+    })";
     os.close();
 
     auto hook = OCIHooksFactory{}.createHook(jsonFile, schemaFile);

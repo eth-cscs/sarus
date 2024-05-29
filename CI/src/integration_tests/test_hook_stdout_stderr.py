@@ -41,7 +41,7 @@ class TestHookStdoutStderr(unittest.TestCase):
             "when": {
                 "always": True
             },
-            "stages": ["prestart"]
+            "stages": ["createContainer"]
         }
 
         util.create_hook_file(hook, cls._OCIHOOK_CONFIG_FILE)

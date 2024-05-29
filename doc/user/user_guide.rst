@@ -1090,10 +1090,13 @@ be used to list the currently configured hooks:
 
     $ sarus hooks
     NAME                               PATH                                            STAGES
+    01-glibc-hook                      /opt/sarus/default/bin/glibc_hook               createContainer
     03-nvidia-container-runtime-hook   /usr/bin/nvidia-container-runtime-hook          prestart
-    05-mpi-hook                        /opt/sarus/default/bin/mpi_hook                 prestart
-    07-ssh-hook                        /opt/sarus/default/bin/ssh_hook                 prestart
-    09-slurm-global-sync-hook          /opt/sarus/default/bin/slurm_global_sync_hook   prestart
+    05-mpi-hook                        /opt/sarus/default/bin/mpi_hook                 createContainer
+    07-ssh-hook                        /opt/sarus/default/bin/ssh_hook                 createRuntime
+    09-slurm-global-sync-hook          /opt/sarus/default/bin/slurm_global_sync_hook   createContainer
+    11-amdgpu-hook                     /opt/sarus/default/bin/amdgpu_hook              createContainer
+    12-mount-hook                      /opt/sarus/default/bin/mount_hook               createContainer
 
 Please refer to your site documentation or your system administrator for information
 about the conditions to enable hooks on a specific system.

@@ -36,8 +36,8 @@ Sarus configuration
 -------------------
 
 The Timestamp hook can be configured to run at any of the container lifecycle
-phases supported for hook execution (prestart, poststart, poststop), since it is
-not tied to the workings of other hooks or the container application.
+phases which resolve hook paths in the runtime namespace (createRuntime, createContainer, poststart, poststop),
+since it is not tied to the workings of other hooks or the container application.
 
 The hook optionally supports the following environment variable:
 

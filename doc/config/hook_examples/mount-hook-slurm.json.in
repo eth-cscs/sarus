@@ -54,5 +54,5 @@
             "^com.hooks.slurm.activate$": "^true$"
         }
     },
-    "stages": ["prestart"]
+    "stages": ["createContainer"]
 }

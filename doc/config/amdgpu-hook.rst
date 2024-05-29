@@ -15,7 +15,7 @@ Thus, there is no specific action required to install the AMD GPU hook.
 
 Hook configuration
 -------------------
-The hook is designed to run as a **prestart** hook and does not accept any arguments. 
+The hook is designed to run as a **createContainer** hook and does not accept any arguments. 
 To enable the AMD GPU hook, use the following example of an OCI hook JSON configuration file:
 
 .. literalinclude:: /config/hook_examples/11-amdgpu-hook.json

@@ -65,7 +65,7 @@
     ],
     "definitions" : {
         "Stage": {
-            "enum": ["prestart", "poststart", "poststop"]
+            "enum": ["prestart", "createRuntime", "createContainer", "startContainer", "poststart", "poststop"]
         }
     }
 }

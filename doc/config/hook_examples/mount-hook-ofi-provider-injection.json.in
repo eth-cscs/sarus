@@ -27,5 +27,5 @@
             "^com.hooks.mpi.type$": "^libfabric$"
         }
     },
-    "stages": ["prestart"]
+    "stages": ["createContainer"]
 }

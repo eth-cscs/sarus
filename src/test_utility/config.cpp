@@ -158,22 +158,22 @@ void createOCIHook(const boost::filesystem::path& hooksDir) {
     auto hook = hooksDir / "test-hook.json";
     auto os = std::ofstream{ hook.c_str() };
 
-    os <<
-    "{"
-    "   \"version\": \"1.0.0\","
-    "   \"hook\": {"
-    "       \"path\": \"/dir/test_hook\","
-    "       \"args\": [\"test_hook\", \"arg\"],"
-    "       \"env\": ["
-    "           \"KEY0=VALUE0\","
-    "           \"KEY1=VALUE1\""
-    "       ]"
-    "   },"
-    "   \"when\": {"
-    "       \"always\": true"
-    "   },"
-    "   \"stages\": [\"prestart\", \"poststop\"]"
-    "}";
+    os << R"(
+    {
+       "version": "1.0.0",
+       "hook": {
+           "path": "/dir/test_hook",
+           "args": ["test_hook", "arg"],
+           "env": [
+               "KEY0=VALUE0",
+               "KEY1=VALUE1"
+           ]
+       },
+       "when": {
+           "always": true
+       },
+       "stages": ["prestart", "createRuntime", "createContainer", "startContainer", "poststart", "poststop"]
+    })";
 }
 
 ConfigRAII makeConfig() {
@@ -206,11 +206,12 @@ ConfigRAII makeConfig() {
     raii.config->imageReference = common::ImageReference{"test", "test", "test", "test_image"};
     common::createFileIfNecessary(raii.config->getMetadataFileOfImage());
     std::ofstream metadataStream(raii.config->getMetadataFileOfImage().c_str());
-    metadataStream << "{"
-    "    \"Labels\": {"
-    "        \"com.test.image.key\": \"image_value\""
-    "    }"
-    "}";
+    metadataStream << R"(
+    {
+        "Labels": {
+            "com.test.image.key": "image_value"
+        }
+    })";
     metadataStream.close();
 
     raii.config->commandRun.hostEnvironment = {{"key", "value"}};

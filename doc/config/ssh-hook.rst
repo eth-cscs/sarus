@@ -25,7 +25,7 @@ files and directories.
 Hook configuration
 ==================
 
-The SSH hook must be configured to run as a **prestart** hook. It expects to
+The SSH hook must be configured to run as a **createRuntime** hook. It expects to
 receive its own name/location as the first argument, and the string
 ``start-ssh-daemon`` as positional argument. In addition, the following
 environment variables must be defined:

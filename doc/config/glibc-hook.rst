@@ -36,7 +36,7 @@ In short, no specific action is required to install the glibc hook.
 Hook configuration
 ==================
 
-The program is meant to be run as a **prestart** hook and does not accept
+The program is meant to be run as a **createContainer** hook and does not accept
 arguments, but its actions are controlled through a few environment variables:
 
 * ``LDD_PATH``: Absolute path to a trusted ``ldd``

@@ -47,7 +47,7 @@ class TestMountHook(unittest.TestCase):
             "when": {
                 "always": True
             },
-            "stages": ["prestart"]
+            "stages": ["createContainer"]
         }
         if with_ldconfig:
             hook_config["hook"]["env"] = ["LDCONFIG_PATH=" + shutil.which("ldconfig")]

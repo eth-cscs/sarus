@@ -81,7 +81,7 @@ class TestSecurityChecks(unittest.TestCase):
             "when": {
                 "always": True
             },
-            "stages": ["prestart"]
+            "stages": ["createContainer"]
         }
         hook_config_file = "/opt/sarus/default/etc/hooks.d/00-timestamp-hook.json"
         with util.temporary_hook_files((hook_config, hook_config_file)):

@@ -37,7 +37,6 @@ MpiHook::MpiHook() {
     log("Initializing hook", sarus::common::LogLevel::INFO);
 
     std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
-    hooks::common::utility::enterMountNamespaceOfProcess(pidOfContainer);
     parseConfigJSONOfBundle();
     parseEnvironmentVariables();
     log("Getting list of shared libs from the container's dynamic linker cache", sarus::common::LogLevel::DEBUG);

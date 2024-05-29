@@ -14,5 +14,5 @@
             "^com.hooks.glibc.enabled$": "^true$"
         }
     },
-    "stages": ["prestart"]
+    "stages": ["createContainer"]
 }

@@ -70,7 +70,7 @@ class TestSshHook(unittest.TestCase):
                     "^com.hooks.ssh.enabled$": "^true$"
                 }
             },
-            "stages": ["prestart"]
+            "stages": ["createRuntime"]
         }
         return hook_config
 
@@ -90,7 +90,7 @@ class TestSshHook(unittest.TestCase):
                     "^com.hooks.slurm-global-sync.enabled$": "^true$"
                 }
             },
-            "stages": ["prestart"]
+            "stages": ["createContainer"]
         }
         return hook_config
 

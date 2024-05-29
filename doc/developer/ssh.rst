@@ -95,7 +95,7 @@ How the SSH daemon and SSH client are setup in the container
 ------------------------------------------------------------
 
 When the command "sarus run --ssh <image> <command>" is issued, Sarus sets up the OCI bundle and executes
-runc. Then runc executes the OCI prestart hooks specified in sarus.json. The system administrator should have
+runc. Then runc executes the OCI createRuntime hooks specified in sarus.json. The system administrator should have
 specified the SSH hook with the "start-ssh-daemon" CLI argument.
 
 The hook performs the following operations:
