@@ -19,6 +19,27 @@ namespace sarus {
 namespace hooks {
 namespace mpi {
 
+// Strictly speaking, the following are not exact comparisons for major and full ABI compatibity. 
+// For example, missing major or minor numbers are interpreted as "0". The same applies to the 
+// class member SharedLibrary::hasMajorVersion.
+// Nevertheless, these adjustments have been made in order to take care of corner cases that were
+// experienced in user applications and "documented" thanks to unit tests.
+
+bool areMajorAbiCompatible(const SharedLibrary& host, const SharedLibrary& container) {
+    return host.getLinkerName() == container.getLinkerName() &&
+            host.getMajorVersion() == container.getMajorVersion();
+}
+
+bool areFullAbiCompatible(const SharedLibrary& host, const SharedLibrary& container) {
+    return areMajorAbiCompatible(host, container) &&
+        host.getMinorVersion() >= container.getMinorVersion();
+}
+
+bool areStrictlyAbiCompatible(const SharedLibrary& host, const SharedLibrary& container) {
+    return areMajorAbiCompatible(host, container) &&
+        host.getMinorVersion() == container.getMinorVersion();
+}
+
 SharedLibrary::SharedLibrary(const boost::filesystem::path& path, const boost::filesystem::path& rootDir) : path(path) {
     linkerName = sarus::common::getSharedLibLinkerName(path).string();
     auto abi = sarus::common::resolveSharedLibAbi(path, rootDir);
@@ -39,15 +60,12 @@ bool SharedLibrary::hasMajorVersion() const {
     return realName != linkerName;
 }
 
-bool SharedLibrary::isFullAbiCompatible(const SharedLibrary& sl) const{
-    return linkerName == sl.getLinkerName() &&
-           major == sl.major &&
-           minor <= sl.minor;
+bool SharedLibrary::isFullAbiCompatible(const SharedLibrary& hostLibrary) const{
+    return areFullAbiCompatible(hostLibrary, *this);
 }
 
-bool SharedLibrary::isMajorAbiCompatible(const SharedLibrary& sl) const{
-    return linkerName == sl.getLinkerName() &&
-           major == sl.major;
+bool SharedLibrary::isMajorAbiCompatible(const SharedLibrary& hostLibrary) const{
+    return areMajorAbiCompatible(hostLibrary, *this);
 }
 
 SharedLibrary SharedLibrary::pickNewestAbiCompatibleLibrary(const std::vector<SharedLibrary>& candidates) const{

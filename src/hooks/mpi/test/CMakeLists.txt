@@ -5,3 +5,4 @@ set(object_files_directory "${CMAKE_BINARY_DIR}/src/hooks/mpi/CMakeFiles/hooks_m
 
 add_unit_test(hooks_mpi_MPIHook_AsRoot test_MPIHook.cpp "${link_libraries}")
 add_unit_test(hooks_mpi_SharedLibrary test_SharedLibrary.cpp "${link_libraries}")
+add_unit_test(hooks_mpi_AbiChecker test_AbiChecker.cpp "${link_libraries}")

@@ -11,6 +11,7 @@
 #ifndef sarus_hooks_mpi_test_Checker_hpp
 #define sarus_hooks_mpi_test_Checker_hpp
 
+#include <algorithm>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -75,6 +76,11 @@ public:
         return *this;
     }
 
+    Checker& setExtraEnvironmentVariables(const std::unordered_map<std::string, std::string>& environmentVariables) {
+        this->environmentVariables = environmentVariables;
+        return *this;
+    }
+
     void checkSuccessful() const {
         setupTestEnvironment();
         MpiHook{}.activateMpiSupport();
@@ -110,6 +116,9 @@ private:
         sarus::common::setEnvironmentVariable("MPI_LIBS", sarus::common::makeColonSeparatedListOfPaths(hostMpiLibs));
         sarus::common::setEnvironmentVariable("MPI_DEPENDENCY_LIBS", sarus::common::makeColonSeparatedListOfPaths(hostDependencyLibs));
         sarus::common::setEnvironmentVariable("BIND_MOUNTS", sarus::common::makeColonSeparatedListOfPaths(bindMounts));
+        for(auto& environmentVariable: environmentVariables) {
+            sarus::common::setEnvironmentVariable(environmentVariable.first, environmentVariable.second);
+        }
     }
 
     void createLibraries() const {
@@ -144,23 +153,22 @@ private:
     }
 
     void checkOnlyExpectedLibrariesAreInRootfs() const {
-        auto expected = *expectedPostHookContainerLibs;
-        for(auto& lib : expected) {
-            lib = rootfsDir / lib;
+        std::vector<std::string> expected, actual;
+        for(auto& lib : *expectedPostHookContainerLibs) {
+            expected.push_back((rootfsDir / lib).string());
         }
-        std::sort(expected.begin(), expected.end());
-
         auto begin = boost::filesystem::recursive_directory_iterator{rootfsDir};
         auto end = boost::filesystem::recursive_directory_iterator{};
-        auto actual = std::vector<boost::filesystem::path>{};
-        std::copy_if(begin, end, std::back_inserter(actual), sarus::common::isSharedLib);
+        auto actual_p = std::vector<boost::filesystem::path>{};
+        std::copy_if(begin, end, std::back_inserter(actual_p), sarus::common::isSharedLib);
+        for(auto& entry: actual_p) {
+            actual.push_back(entry.string());
+        }
+
+        std::sort(expected.begin(), expected.end());
         std::sort(actual.begin(), actual.end());
 
-        auto actual_s   = std::string{};
-        for (auto i : actual) actual_s.append(i.filename().string());
-        auto expected_s = std::string{};
-        for (auto i : expected) expected_s.append(i.filename().string());
-        CHECK_EQUAL(expected_s, actual_s);
+        CHECK_TRUE(std::equal(actual.begin(), actual.end(), expected.begin()));
     }
 
     void checkInjectedAndPreservedLibrariesAsExpected() const {
@@ -231,6 +239,7 @@ private:
     boost::optional<std::vector<boost::filesystem::path>> expectedPostHookContainerLibs;
     std::vector<boost::filesystem::path> preservedPostHookContainerLibs;
     std::vector<boost::filesystem::path> bindMounts;
+    std::unordered_map<std::string, std::string> environmentVariables;
 };
 
 }}}} // namespace

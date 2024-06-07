@@ -13,14 +13,15 @@
 
 #include <vector>
 #include <unordered_map>
-#include <boost/format.hpp>
-#include <boost/filesystem.hpp>
-#include <sys/types.h>
 
+#include "AbiChecker.hpp"
+#include "SharedLibrary.hpp"
 #include "common/LogLevel.hpp"
 #include "common/PathHash.hpp"
 #include "common/UserIdentity.hpp"
-#include "SharedLibrary.hpp"
+
+#include <boost/format.hpp>
+#include <boost/filesystem.hpp>
 
 namespace sarus {
 namespace hooks {
@@ -45,12 +46,11 @@ private:
     void checkContainerMpiLibrariesHaveAbiVersion() const;
     void checkHostContainerAbiCompatibility(const HostToContainerLibsMap& hostToContainerLibs) const;
     void injectHostLibraries(const std::vector<SharedLibrary>& hostLibs,
-                             const HostToContainerLibsMap& hostToContainerLibs) const;
+                             const HostToContainerLibsMap& hostToContainerLibs,
+                             const std::string& checkerType) const;
     void injectHostLibrary(const SharedLibrary& hostLib,
-                           const HostToContainerLibsMap& hostToContainerLibs) const;
-    bool injectHostLibrary(
-        const boost::filesystem::path& hostLib,
-        const std::function<bool(const boost::filesystem::path&, const boost::filesystem::path&)>& abiCompatibilityCheck) const;
+                           const HostToContainerLibsMap& hostToContainerLibs,
+                           std::unique_ptr<AbiCompatibilityChecker> abiCompatibilityChecker) const;
     void performBindMounts() const;
     void createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesystem::path& target,
                                                         const boost::filesystem::path& linkFilename,
@@ -71,6 +71,7 @@ private:
     HostToContainerLibsMap hostToContainerMpiLibs;
     HostToContainerLibsMap hostToContainerDependencyLibs;
     bool containerHasIncompatibleLibraryVersion(const SharedLibrary& hostLib, const std::vector<SharedLibrary>& containerLibraries) const;
+    std::string abiCompatibilityCheckerType{"major"};
 };
 
 }}} // namespace

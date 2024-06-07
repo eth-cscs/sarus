@@ -40,17 +40,35 @@ arguments, but its actions are controlled through a few environment variables:
 * ``MPI_LIBS``: Colon separated list of full paths to the host's
   libraries that will substitute the container's libraries. The ABI
   compatibility check is performed by comparing the version numbers specified in
-  the libraries' file names as follows:
+  the libraries' file names according to the specifications selected with the 
+  variable ``MPI_COMPATIBILITY_TYPE``
 
-      - The major numbers (first from the left) must be equal.
-      - The host's minor number (second from the left) must be greater or equal
-        to the container's minor number. In case the minor number from the
-        container is greater than the host's minor number, the hook will print
-        a warning but will proceed in the attempt to let the container
-        application run.
-      - If the host's library name does not contain the version numbers or
-        contains only the major version number, the missing numbers are assumed
-        to be zero.
+* ``MPI_COMPATIBILITY_TYPE``: Option for the ABI compatibility check, must be one of
+  ``major``, ``full``, ``strict``. The checks performed for the compatibility in each
+  case are the following:
+
+  * ``major``
+
+    - The major numbers (first from the left) must be present and equal.
+
+    This is equivalent to checking that the ``soname`` of the libraries are the same.
+
+  * ``full``
+
+    - The major numbers (first from the left) must be present and equal.
+
+    - The host's minor number (second from the left) must be present and greater or equal
+      to the container's minor number. In case the minor number from the
+      container is greater than the host's minor number, the hook will print
+      a warning but will proceed in the attempt to let the container
+      application run.
+    
+  * ``strict``
+  
+    - The major numbers (first from the left) must be present and equal.
+
+    - The host's minor number (second from the left) must be present and equal
+      to the container's minor number. 
 
   This compatibility check is in agreement with the MPICH ABI version number
   schema.

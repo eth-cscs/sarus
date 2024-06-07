@@ -10,10 +10,6 @@
 
 #include "hooks/mpi/MpiHook.hpp"
 
-#include <vector>
-#include <fstream>
-#include <sstream>
-#include <cstring>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -25,9 +21,8 @@
 #include "common/Logger.hpp"
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
-#include "hooks/common/Utility.hpp"
 #include "common/mount_utilities.hpp"
-#include "SharedLibrary.hpp"
+#include "hooks/common/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -71,8 +66,8 @@ void MpiHook::activateMpiSupport() {
     checkHostMpiLibrariesHaveAbiVersion();
     checkContainerMpiLibrariesHaveAbiVersion();
     checkHostContainerAbiCompatibility(hostToContainerMpiLibs);
-    injectHostLibraries(hostMpiLibs, hostToContainerMpiLibs);
-    injectHostLibraries(hostDepLibs, hostToContainerDependencyLibs);
+    injectHostLibraries(hostMpiLibs, hostToContainerMpiLibs, abiCompatibilityCheckerType);
+    injectHostLibraries(hostDepLibs, hostToContainerDependencyLibs, "dependencies");
     performBindMounts();
     sarus::common::executeCommand(ldconfig.string() + " -r " + rootfsDir.string()); // update container's dynamic linker
 
@@ -127,6 +122,12 @@ void MpiHook::parseEnvironmentVariables() {
 
     if((p = getenv("BIND_MOUNTS")) != nullptr && std::strcmp(p, "") != 0) {
         boost::split(bindMounts, p, boost::is_any_of(":"), boost::token_compress_on);
+    }
+
+    AbiCheckerFactory checkerFactory;
+    if((p = getenv("MPI_COMPATIBILITY_TYPE")) != nullptr && 
+        checkerFactory.getCheckerTypes().find(std::string(p)) != checkerFactory.getCheckerTypes().end()) {
+        abiCompatibilityCheckerType = std::string(p);
     }
 
     log("Successfully parsed environment variables", sarus::common::LogLevel::INFO);
@@ -210,28 +211,18 @@ void MpiHook::checkHostContainerAbiCompatibility(const HostToContainerLibsMap& h
     log("Checking shared libs ABI compatibility (host -> container)",
         sarus::common::LogLevel::INFO);
 
+    auto abiCompatibilityChecker{AbiCheckerFactory{}.create(abiCompatibilityCheckerType)};
     for(const auto& entry : hostToContainerLibs) {
         const auto& hostLib = SharedLibrary(entry.first);
         for(const auto& containerLib : entry.second) {
-            if (containerLib.isFullAbiCompatible(hostLib)){
-                continue;
-            }
-            if (containerLib.isMajorAbiCompatible(hostLib)){
-                auto message = boost::format("Partial ABI compatibility detected. Host's MPI library %s is older than"
-                        " the container's MPI library %s. The hook will attempt to proceed with the library replacement."
-                        " Be aware that applications are likely to fail if they use symbols which are only present in the container's library."
-                        " More information available at https://sarus.readthedocs.io/en/stable/user/abi_compatibility.html")
-                        % hostLib.getRealName()
-                        % containerLib.getRealName();
-                log(message, sarus::common::LogLevel::WARN);
-            }
-            else {
-                auto message = boost::format(
-                    "Failed to activate MPI support. Host's MPI library %s is not ABI"
-                    " compatible with container's MPI library %s.")
-                    % hostLib.getRealName()
-                    % containerLib.getRealName();
-                SARUS_THROW_ERROR(message.str());
+            try{
+                abiCompatibilityChecker->check(hostLib, containerLib);
+                auto value = abiCompatibilityChecker->check(hostLib, containerLib);
+                if(!value.second && value.second) {
+                    log(value.second.get(), sarus::common::LogLevel::WARN);
+                }
+            } catch (const sarus::common::Error&e ) {
+                SARUS_THROW_ERROR(e.what());
             }
         }
     }
@@ -241,18 +232,21 @@ void MpiHook::checkHostContainerAbiCompatibility(const HostToContainerLibsMap& h
 }
 
 void MpiHook::injectHostLibraries(const std::vector<SharedLibrary>& hostLibs,
-                                  const HostToContainerLibsMap& hostToContainerLibs) const {
+                                  const HostToContainerLibsMap& hostToContainerLibs,
+                                  const std::string& checkerType ) const {
     log("Injecting host's shared libs", sarus::common::LogLevel::INFO);
 
+    AbiCheckerFactory checkerFactory;
     for(const auto& lib : hostLibs) {
-        injectHostLibrary(lib, hostToContainerLibs);
+        injectHostLibrary(lib, hostToContainerLibs, std::move(checkerFactory.create(checkerType)));
     }
 
     log("Successfully injected host's shared libs", sarus::common::LogLevel::INFO);
 }
 
 void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
-                                const HostToContainerLibsMap& hostToContainerLibs) const {
+                                const HostToContainerLibsMap& hostToContainerLibs,
+                                std::unique_ptr<AbiCompatibilityChecker> abiCompatibilityChecker) const {
     log(boost::format{"Injecting host's shared lib %s"} % hostLib.getPath(), sarus::common::LogLevel::DEBUG);
 
     const auto it = hostToContainerLibs.find(hostLib.getPath());
@@ -269,41 +263,32 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
     log(boost::format{"for host lib %s, the best candidate lib in container is %s"} % hostLib.getPath() % bestCandidateLib.getPath(), sarus::common::LogLevel::DEBUG);
     bool containerHasLibsWithIncompatibleVersion = containerHasIncompatibleLibraryVersion(hostLib, it->second);
 
-    if (bestCandidateLib.isFullAbiCompatible(hostLib)){
-        // safe replacement, all good.
-        log(boost::format{"abi-compatible => bind mounting host lib (%s) on top of container lib (%s) (i.e. override)"} % hostLib.getPath() % bestCandidateLib.getPath(), sarus::common::LogLevel::DEBUG);
+    auto areCompatible{abiCompatibilityChecker->check(hostLib, bestCandidateLib)};
+    if(areCompatible.second == boost::none) {
+        log(boost::format{"abi-compatible => bind mount host lib (%s) on top of container lib (%s) (i.e. override)"} % hostLib.getPath() % bestCandidateLib.getPath(), sarus::common::LogLevel::DEBUG);
         sarus::common::validatedBindMount(hostLib.getPath(), bestCandidateLib.getPath(), userIdentity, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs(bestCandidateLib.getPath(), hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
+        log("Successfully injected host's shared lib", sarus::common::LogLevel::DEBUG);
+        return;
     }
-    else if (bestCandidateLib.isMajorAbiCompatible(hostLib)){
-        // risky replacement, issue notice.
-        log(boost::format{"Container lib (%s) is major-only-abi-compatible => bind mounting host lib (%s) into /lib"} % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::INFO);
-        auto containerLib = "/lib" / hostLib.getPath().filename();
-        sarus::common::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
+    log(areCompatible.second.get(), sarus::common::LogLevel::INFO);
+    auto containerLib = "/lib" / hostLib.getPath().filename();
+    sarus::common::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
+    if (areCompatible.first) {
         createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
-    }
-    else {
-        // inject with notice
-        // NOTE: This branch is only for MPI dependency libraries. MPI libraries compatibility was already checked before at checkHostContainerAbiCompatibility. Hint for future refactoring.
-        log(boost::format{"Could not find ABI-compatible counterpart for host lib (%s) inside container (best candidate found: %s) => adding host lib (%s) into container's /lib via bind mount "}
-            % hostLib.getPath() % bestCandidateLib.getPath() % hostLib.getPath(), sarus::common::LogLevel::INFO);
-        auto containerLib = "/lib" / hostLib.getPath().filename();
-        sarus::common::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
+    } else {
         createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), true);
     }
-
     log("Successfully injected host's shared lib", sarus::common::LogLevel::DEBUG);
 }
 
 bool MpiHook::containerHasIncompatibleLibraryVersion(const SharedLibrary& hostLib, const std::vector<SharedLibrary>& containerLibraries) const{
-    bool containerHasLibsWithIncompatibleVersion = false;
     for (const auto& containerLib : containerLibraries) {
-        if (containerLib.hasMajorVersion() && !containerLib.isFullAbiCompatible(hostLib)){
-            containerHasLibsWithIncompatibleVersion = true;
-            break;
+        if (containerLib.hasMajorVersion() && !areFullAbiCompatible(hostLib, containerLib)){
+            return true;
         }
     }
-    return containerHasLibsWithIncompatibleVersion;
+    return false;
 }
 
 void MpiHook::performBindMounts() const {

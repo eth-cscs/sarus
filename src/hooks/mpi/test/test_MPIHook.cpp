@@ -315,6 +315,7 @@ TEST(MPIHookTestGroup, test_library_injection_preserves_rootlink) {
         })
         .checkSuccessful();
     }
+
     // Major-only Compatible
     for (auto& p : commonPaths){
         Checker{}
@@ -388,7 +389,7 @@ TEST(MPIHookTestGroup, test_bind_mounts) {
         .checkSuccessful();
 }
 
-TEST(MPIHookTestGroup, test_abi_compatibility_check) {
+TEST(MPIHookTestGroup, test_default_major_abi_compatibility_check) {
     // compatible libraries (same MAJOR, MINOR, PATCH)
     Checker{}
         .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
@@ -455,6 +456,167 @@ TEST(MPIHookTestGroup, test_abi_compatibility_check) {
         .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.1"})
         .checkSuccessful();
 }
+
+TEST(MPIHookTestGroup, test_full_abi_compatibility_check) {
+    // compatible libraries (same MAJOR, MINOR, PATCH)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.5.5"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "full"}})
+        .checkSuccessful();
+
+    // compatible libraries (same MAJOR, MINOR, compatible PATCH)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.5.0"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "full"}})
+        .checkSuccessful();
+
+    // compatible libraries (same MAJOR, MINOR, compatible PATCH)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.5.10"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "full"}})
+        .checkSuccessful();
+
+    // compatible libraries (same MAJOR, compatible MINOR)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.4.0"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "full"}})
+        .checkSuccessful();
+
+    // incompatible libraries (same MAJOR, incompatible MINOR)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.6"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "full"}})
+        .checkSuccessful();
+
+    // incompatible libraries (incompatible MAJOR)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.11.5.5"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "full"}})
+        .checkFailure();
+
+    // incompatible libraries (incompatible MAJOR)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.13.5.5"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "full"}})
+        .checkFailure();
+
+    // impossible combatibility check (must have at least MAJOR)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/lib/libmpi.so"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "full"}})
+        .checkFailure();
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so"})
+        .setPreHookContainerLibraries({"/lib/libmpi.so.12.5.5"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE","full"}})
+        .checkFailure();
+
+    // only major available (default MINOR = 0)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.1"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE","full"}})
+        .checkSuccessful();
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.0"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE","full"}})
+        .checkSuccessful();
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.1"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE","full"}})
+        .checkSuccessful();
+}
+
+TEST(MPIHookTestGroup, test_strict_abi_compatibility_check) {
+    // compatible libraries (same MAJOR, MINOR, PATCH)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.5.5"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "strict"}})
+        .checkSuccessful();
+
+    // compatible libraries (same MAJOR, MINOR, compatible PATCH)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.5.0"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "strict"}})
+        .checkSuccessful();
+
+    // compatible libraries (same MAJOR, MINOR, compatible PATCH)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.5.10"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "strict"}})
+        .checkSuccessful();
+
+    // compatible libraries (same MAJOR, compatible MINOR)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.4.0"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "strict"}})
+        .checkFailure();
+
+    // incompatible libraries (same MAJOR, incompatible MINOR)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.6"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "strict"}})
+        .checkFailure();
+
+    // incompatible libraries (incompatible MAJOR)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.11.5.5"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "strict"}})
+        .checkFailure();
+
+    // incompatible libraries (incompatible MAJOR)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.13.5.5"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "strict"}})
+        .checkFailure();
+
+    // impossible combatibility check (must have at least MAJOR)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.5.5"})
+        .setPreHookContainerLibraries({"/lib/libmpi.so"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE", "strict"}})
+        .checkFailure();
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so"})
+        .setPreHookContainerLibraries({"/lib/libmpi.so.12.5.5"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE","strict"}})
+        .checkFailure();
+
+    // only major available (default MINOR = 0)
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12.1"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE","strict"}})
+        .checkFailure();
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.0"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE","strict"}})
+        .checkFailure();
+    Checker{}
+        .setHostMpiLibraries({"/lib/libmpi.so.12"})
+        .setPreHookContainerLibraries({"/usr/lib/libmpi.so.12.1"})
+        .setExtraEnvironmentVariables({{"MPI_COMPATIBILITY_TYPE","strict"}})
+        .checkFailure();
+}
+
 
 }}}} // namespace
 

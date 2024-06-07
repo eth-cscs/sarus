@@ -79,10 +79,10 @@ TEST(SharedLibraryTestGroup, fullAbiCompatibility) {
     CHECK_TRUE(SharedLibrary{"/lib/libfoo.so.4.2.8"}.isFullAbiCompatible(SharedLibrary{"/lib/libfoo.so.4.3.1"}));
     CHECK_TRUE(SharedLibrary{"/lib/libfoo.so.12.200"}.isFullAbiCompatible(SharedLibrary{"/lib/libfoo.so.12.350.5"}));
 
-    // path does not matter
+    // patch number does not matter
     CHECK_TRUE(SharedLibrary{"/lib/libfoo.so.4.2.8"}.isFullAbiCompatible(SharedLibrary{"/usr/lib/libfoo.so.4.3.1"}));
 
-    // libs without minor still can be fullAbiCompatible
+    // libs without minor are fullAbiCompatible
     CHECK_TRUE(SharedLibrary{"/lib/libfoo-2.0.so.0"}.isFullAbiCompatible(SharedLibrary{"/lib/libfoo-2.0.so.0"}));
 }
 
@@ -187,6 +187,52 @@ TEST(SharedLibraryTestGroup, bestAbiMatch) {
     auto best = SharedLibrary{"/lib/libfoo.so.2.20"}.pickNewestAbiCompatibleLibrary(candidates);
     CHECK_EQUAL(best.getRealName(), "libfoo.so.2.10"); // check for typical string-comparison pitfalls
     }
+}
+
+TEST(SharedLibraryTestGroup, areMajorCompatible) {
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so"},SharedLibrary{"libfoo.so"}));
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2"},SharedLibrary{"libfoo.so.2"}));
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2.10"},SharedLibrary{"libfoo.so.2.10"}));
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2.10.5"},SharedLibrary{"libfoo.so.2.10.5"}));
+
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2.11"},SharedLibrary{"libfoo.so.2.10"}));
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2.11.5"},SharedLibrary{"libfoo.so.2.10.5"}));
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2.10.6"},SharedLibrary{"libfoo.so.2.10.5"}));
+
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2.10"},SharedLibrary{"libfoo.so.2.11"}));
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2.10.5"},SharedLibrary{"libfoo.so.2.11.5"}));
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2.10.5"},SharedLibrary{"libfoo.so.2.10.6"}));
+
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2"},SharedLibrary{"libfoo.so.2.10.5"}));
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2.10"},SharedLibrary{"libfoo.so.2.10.5"}));
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2"},SharedLibrary{"libfoo.so.2.10"}));
+    
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2.10.5"},SharedLibrary{"libfoo.so.2"}));
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2.10.5"},SharedLibrary{"libfoo.so.2.10"}));
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so.2.10"},SharedLibrary{"libfoo.so.2"}));
+}
+
+TEST(SharedLibraryTestGroup, areFullCompatible) {
+    CHECK(areMajorAbiCompatible(SharedLibrary{"libfoo.so"},SharedLibrary{"libfoo.so"}));
+    CHECK(areFullAbiCompatible(SharedLibrary{"libfoo.so.2"},SharedLibrary{"libfoo.so.2"}));
+    CHECK(areFullAbiCompatible(SharedLibrary{"libfoo.so.2.10"},SharedLibrary{"libfoo.so.2.10"}));
+    CHECK(areFullAbiCompatible(SharedLibrary{"libfoo.so.2.10.5"},SharedLibrary{"libfoo.so.2.10.5"}));
+
+    CHECK(areFullAbiCompatible(SharedLibrary{"libfoo.so.2.11"},SharedLibrary{"libfoo.so.2.10"}));
+    CHECK(areFullAbiCompatible(SharedLibrary{"libfoo.so.2.11.5"},SharedLibrary{"libfoo.so.2.10.5"}));
+    CHECK(areFullAbiCompatible(SharedLibrary{"libfoo.so.2.10.6"},SharedLibrary{"libfoo.so.2.10.5"}));
+
+    CHECK_FALSE(areFullAbiCompatible(SharedLibrary{"libfoo.so.2.10"},SharedLibrary{"libfoo.so.2.11"}));
+    CHECK_FALSE(areFullAbiCompatible(SharedLibrary{"libfoo.so.2.10.5"},SharedLibrary{"libfoo.so.2.11.5"}));
+    CHECK(areFullAbiCompatible(SharedLibrary{"libfoo.so.2.10.5"},SharedLibrary{"libfoo.so.2.10.6"}));
+
+    CHECK_FALSE(areFullAbiCompatible(SharedLibrary{"libfoo.so.2"},SharedLibrary{"libfoo.so.2.10.5"}));
+    CHECK(areFullAbiCompatible(SharedLibrary{"libfoo.so.2.10"},SharedLibrary{"libfoo.so.2.10.5"}));
+    CHECK_FALSE(areFullAbiCompatible(SharedLibrary{"libfoo.so.2"},SharedLibrary{"libfoo.so.2.10"}));
+    
+    CHECK(areFullAbiCompatible(SharedLibrary{"libfoo.so.2.10.5"},SharedLibrary{"libfoo.so.2"}));
+    CHECK(areFullAbiCompatible(SharedLibrary{"libfoo.so.2.10.5"},SharedLibrary{"libfoo.so.2.10"}));
+    CHECK(areFullAbiCompatible(SharedLibrary{"libfoo.so.2.10"},SharedLibrary{"libfoo.so.2"}));
 }
 
 }}}} // namespace

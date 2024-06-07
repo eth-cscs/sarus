@@ -7,9 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### [Changed]
+### Added
+
+- MPI hook: added support for the environment variable `MPI_COMPATIBILITY_TYPE` that defines the behaviour of the compatibility check of the libraries
+  that the hook mounts. Valid values are `major`, `full` and `strict`. Default value is `major`.
+
+### Changed
 
 - Configuration templates and documentation for OCI hooks now use createRuntime, createContainer or startContainer execution stages, instead of the prestart stage which has been deprecated since version 1.0.2 of the OCI Runtime specification. The only exception is the NVIDIA container toolkit hook.
+
 
 ## [1.6.4]
 
