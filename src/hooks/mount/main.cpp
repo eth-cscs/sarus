@@ -11,7 +11,6 @@
 #include "common/CLIArguments.hpp"
 #include "common/Error.hpp"
 #include "common/Logger.hpp"
-#include "hooks/common/Utility.hpp"
 #include "MountHook.hpp"
 
 int main(int argc, char* argv[]) {

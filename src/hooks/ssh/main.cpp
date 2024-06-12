@@ -15,7 +15,6 @@
 #include "common/Error.hpp"
 #include "common/Logger.hpp"
 #include "common/Utility.hpp"
-#include "hooks/common/Utility.hpp"
 #include "SshHook.hpp"
 
 static void parseKeygenCLIOptions(int argc, char* argv[], bool * const overwrite);

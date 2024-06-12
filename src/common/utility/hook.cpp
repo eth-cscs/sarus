@@ -8,7 +8,7 @@
  *
  */
 
-#include "Utility.hpp"
+#include "hook.hpp"
 
 #include <iostream>
 #include <cstring>
@@ -23,14 +23,15 @@
 #include <rapidjson/istreamwrapper.h>
 
 #include "common/Error.hpp"
-#include "common/Utility.hpp"
+#include "common/utility/environment.hpp"
+#include "common/utility/filesystem.hpp"
+#include "common/utility/json.hpp"
 
 namespace rj = rapidjson;
 
 namespace sarus {
-namespace hooks {
 namespace common {
-namespace utility {
+namespace hook {
 
 static void replaceFd(int oldfd, int newfd) {
     if(dup2(newfd, oldfd) == -1) {
@@ -144,7 +145,7 @@ void enterPidNamespaceOfProcess(pid_t pid) {
 std::tuple<boost::filesystem::path, boost::filesystem::path> findSubsystemMountPaths(const std::string& subsystemName,
         const boost::filesystem::path& procPrefixDir, const pid_t pid) {
     auto mountinfoPath = boost::filesystem::path(procPrefixDir / "proc" / std::to_string(pid) / "mountinfo");
-    utility::logMessage(boost::format("Parsing %s for \"%s\" cgroup subsystem mount paths") % mountinfoPath % subsystemName,
+    hook::logMessage(boost::format("Parsing %s for \"%s\" cgroup subsystem mount paths") % mountinfoPath % subsystemName,
                         sarus::common::LogLevel::DEBUG);
 
     auto mountinfoText = sarus::common::readFile(mountinfoPath);
@@ -179,9 +180,9 @@ std::tuple<boost::filesystem::path, boost::filesystem::path> findSubsystemMountP
             SARUS_THROW_ERROR(message.str());
         }
 
-        utility::logMessage(boost::format("Found \"%s\" cgroup subsystem mount root: %s") % subsystemName % mountRoot,
+        hook::logMessage(boost::format("Found \"%s\" cgroup subsystem mount root: %s") % subsystemName % mountRoot,
                             sarus::common::LogLevel::DEBUG);
-        utility::logMessage(boost::format("Found \"%s\" cgroup subsystem mount point: %s") % subsystemName % mountPoint,
+        hook::logMessage(boost::format("Found \"%s\" cgroup subsystem mount point: %s") % subsystemName % mountPoint,
                             sarus::common::LogLevel::DEBUG);
         return std::tuple<boost::filesystem::path, boost::filesystem::path>{mountRoot, mountPoint};
     }
@@ -199,7 +200,7 @@ std::tuple<boost::filesystem::path, boost::filesystem::path> findSubsystemMountP
 boost::filesystem::path findCgroupPathInHierarchy(const std::string& subsystemName, const boost::filesystem::path& procPrefixDir,
         const boost::filesystem::path& subsystemMountRoot, const pid_t pid) {
     auto procFilePath = boost::filesystem::path(procPrefixDir / "proc" / std::to_string(pid) / "cgroup");
-    utility::logMessage(boost::format("Parsing %s for \"%s\" cgroup path relative to hierarchy mount point") % procFilePath % subsystemName,
+    hook::logMessage(boost::format("Parsing %s for \"%s\" cgroup path relative to hierarchy mount point") % procFilePath % subsystemName,
                         sarus::common::LogLevel::DEBUG);
 
     auto cgroupPath = boost::filesystem::path("/");
@@ -232,7 +233,7 @@ boost::filesystem::path findCgroupPathInHierarchy(const std::string& subsystemNa
             cgroupPath = boost::filesystem::path(cgroupPathStr);
         }
 
-        utility::logMessage(boost::format("Found \"%s\" cgroup relative path for process %d: %s")
+        hook::logMessage(boost::format("Found \"%s\" cgroup relative path for process %d: %s")
                                           % subsystemName % pid % cgroupPath,
                             sarus::common::LogLevel::DEBUG);
         return boost::filesystem::path(cgroupPath);
@@ -245,7 +246,7 @@ boost::filesystem::path findCgroupPathInHierarchy(const std::string& subsystemNa
 
 // Find the absolute path of a cgroup given a subsystem name, a prefix path for the location of a /proc filesystem and a pid
 boost::filesystem::path findCgroupPath(const std::string& subsystemName, const boost::filesystem::path& procPrefixDir, const pid_t pid) {
-    utility::logMessage(boost::format("Searching for cgroup \"%s\" subsystem under %s for process %d")
+    hook::logMessage(boost::format("Searching for cgroup \"%s\" subsystem under %s for process %d")
                         % subsystemName % procPrefixDir % pid, sarus::common::LogLevel::DEBUG);
 
     boost::filesystem::path subsystemMountRoot;
@@ -261,7 +262,7 @@ boost::filesystem::path findCgroupPath(const std::string& subsystemName, const b
         SARUS_THROW_ERROR(message.str());
     }
 
-    utility::logMessage(boost::format("Found cgroups \"%s\" subsystem for process %d in %s") % subsystemName  % pid % cgroupPath,
+    hook::logMessage(boost::format("Found cgroups \"%s\" subsystem for process %d in %s") % subsystemName  % pid % cgroupPath,
             sarus::common::LogLevel::DEBUG);
     return cgroupPath;
 }
@@ -272,7 +273,7 @@ boost::filesystem::path findCgroupPath(const std::string& subsystemName, const b
  * - https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/devices.html
  */
 void whitelistDeviceInCgroup(const boost::filesystem::path& cgroupPath, const boost::filesystem::path& deviceFile) {
-    utility::logMessage(boost::format("Whitelisting device %s for rw access in cgroup %s") % deviceFile % cgroupPath,
+    hook::logMessage(boost::format("Whitelisting device %s for rw access in cgroup %s") % deviceFile % cgroupPath,
             sarus::common::LogLevel::DEBUG);
 
     char deviceType;
@@ -286,12 +287,12 @@ void whitelistDeviceInCgroup(const boost::filesystem::path& cgroupPath, const bo
 
     auto deviceID = sarus::common::getDeviceID(deviceFile);
     auto entry = boost::format("%c %u:%u rw") % deviceType % major(deviceID) % minor(deviceID);
-    utility::logMessage(boost::format("Whitelist entry: %s") % entry.str(), sarus::common::LogLevel::DEBUG);
+    hook::logMessage(boost::format("Whitelist entry: %s") % entry.str(), sarus::common::LogLevel::DEBUG);
 
     auto allowFile = cgroupPath / "devices.allow";
     sarus::common::writeTextFile(entry.str(), allowFile, std::ios_base::app);
 
-    utility::logMessage(boost::format("Successfully whitelisted device %s for rw access") % deviceFile,
+    hook::logMessage(boost::format("Successfully whitelisted device %s for rw access") % deviceFile,
             sarus::common::LogLevel::DEBUG);
 }
 
@@ -355,12 +356,12 @@ std::tuple<unsigned int, unsigned int> parseLibcVersionFromLddOutput(const std::
 }
 
 void logMessage(const boost::format& message, sarus::common::LogLevel level, std::ostream& out, std::ostream& err) {
-    utility::logMessage(message.str(), level, out, err);
+    hook::logMessage(message.str(), level, out, err);
 }
 
 void logMessage(const std::string& message, sarus::common::LogLevel level, std::ostream& out, std::ostream& err) {
-    auto subsystemName = "HooksUtility";
+    auto subsystemName = "hook";
     sarus::common::Logger::getInstance().log(message, subsystemName, level, out, err);
 }
 
-}}}} // namespace
+}}} // namespace

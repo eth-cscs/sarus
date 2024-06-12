@@ -19,7 +19,6 @@
 #include <sys/fsuid.h>
 
 #include "common/Utility.hpp"
-#include "common/mount_utilities.hpp"
 
 
 namespace sarus {

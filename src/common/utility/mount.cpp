@@ -12,7 +12,7 @@
  *  @brief General utility functions for custom mounts
  */
 
-#include "mount_utilities.hpp"
+#include "mount.hpp"
 
 #include <errno.h>
 

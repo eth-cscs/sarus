@@ -17,8 +17,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include "common/Utility.hpp"
-#include "hooks/common/Utility.hpp"
-#include "common/mount_utilities.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -63,7 +61,7 @@ std::vector<std::string> getRocrVisibleDevicesId(const fs::path& bundleDir) {
   std::string rocrVisibleDevices;
   try {
     auto containerEnvironment =
-        hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(
+        common::hook::parseEnvironmentVariablesFromOCIBundle(
             bundleDir);
     rocrVisibleDevices = containerEnvironment["ROCR_VISIBLE_DEVICES"];
   } catch (sarus::common::Error& e) {
@@ -105,7 +103,7 @@ AmdGpuHook::AmdGpuHook() {
   log("Initializing hook", sarus::common::LogLevel::INFO);
 
   std::tie(bundleDir, pidOfContainer) =
-      hooks::common::utility::parseStateOfContainerFromStdin();
+    common::hook::parseStateOfContainerFromStdin();
   parseConfigJSONOfBundle();
 
   log("Successfully initialized hook", sarus::common::LogLevel::INFO);
@@ -132,7 +130,7 @@ void AmdGpuHook::parseConfigJSONOfBundle() {
 
   auto json = sarus::common::readJSON(bundleDir / "config.json");
 
-  hooks::common::utility::applyLoggingConfigIfAvailable(json);
+  common::hook::applyLoggingConfigIfAvailable(json);
 
   auto root = fs::path{json["root"]["path"].GetString()};
   if (root.is_absolute()) {
@@ -167,10 +165,10 @@ void AmdGpuHook::performBindMounts() const {
     if (sarus::common::isDeviceFile(mountPoint)) {
       if (devicesCgroupPath.empty()) {
         devicesCgroupPath =
-            common::utility::findCgroupPath("devices", "/", pidOfContainer);
+            common::hook::findCgroupPath("devices", "/", pidOfContainer);
       }
 
-      common::utility::whitelistDeviceInCgroup(devicesCgroupPath, mountPoint);
+      common::hook::whitelistDeviceInCgroup(devicesCgroupPath, mountPoint);
     }
   }
 

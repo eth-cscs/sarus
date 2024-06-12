@@ -29,7 +29,6 @@
 #include "common/ImageReference.hpp"
 #include "common/CLIArguments.hpp"
 #include "runtime/Utility.hpp"
-#include "common/mount_utilities.hpp"
 
 
 namespace sarus {

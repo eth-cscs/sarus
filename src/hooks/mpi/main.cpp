@@ -10,7 +10,6 @@
 
 #include "common/Error.hpp"
 #include "common/Logger.hpp"
-#include "hooks/common/Utility.hpp"
 #include "MpiHook.hpp"
 
 int main(int argc, char* argv[]) {

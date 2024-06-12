@@ -1,6 +1,5 @@
 
 add_subdirectory(amdgpu)
-add_subdirectory(common)
 add_subdirectory(glibc)
 add_subdirectory(mount)
 add_subdirectory(mpi)

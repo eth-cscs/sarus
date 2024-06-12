@@ -21,7 +21,6 @@
 #include "common/Logger.hpp"
 #include "common/Utility.hpp"
 #include "common/PasswdDB.hpp"
-#include "hooks/common/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -30,7 +29,7 @@ namespace slurm_global_sync {
 Hook::Hook() {
     log("Initializing hook", sarus::common::LogLevel::INFO);
 
-    std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
+    std::tie(bundleDir, pidOfContainer) = common::hook::parseStateOfContainerFromStdin();
     parseConfigJSONOfBundle();
 
     log("Successfully initialized hook", sarus::common::LogLevel::INFO);
@@ -142,10 +141,10 @@ size_t Hook::countFilesInDirectory(const boost::filesystem::path& directory) con
 void Hook::parseConfigJSONOfBundle() {
     auto json = sarus::common::readJSON(bundleDir / "config.json");
 
-    hooks::common::utility::applyLoggingConfigIfAvailable(json);
+    common::hook::applyLoggingConfigIfAvailable(json);
 
     // get environment variables
-    auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
+    auto env = common::hook::parseEnvironmentVariablesFromOCIBundle(bundleDir);
 
     if (env.find("SLURM_JOB_ID") == env.cend()
         || env.find("SLURM_STEPID") == env.cend()

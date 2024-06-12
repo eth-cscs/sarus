@@ -22,8 +22,6 @@
 #include "common/Config.hpp"
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
-#include "hooks/common/Utility.hpp"
-#include "common/mount_utilities.hpp"
 #include "hooks/ssh/SshHook.hpp"
 #include "test_utility/Misc.hpp"
 #include "test_utility/config.hpp"

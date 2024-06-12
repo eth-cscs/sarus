@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef sarus_common_mount_utilities_hpp
-#define sarus_common_mount_utilities_hpp
+#ifndef sarus_common_utility_Mount_hpp
+#define sarus_common_utility_Mount_hpp
 
 #include <cstddef>
 #include <sys/stat.h>

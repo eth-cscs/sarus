@@ -15,7 +15,6 @@
 
 #include "common/Utility.hpp"
 #include "common/Logger.hpp"
-#include "hooks/common/Utility.hpp"
 
 
 namespace sarus {
@@ -23,7 +22,7 @@ namespace hooks {
 namespace timestamp {
 
 void TimestampHook::activate() {
-    std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
+    std::tie(bundleDir, pidOfContainer) = common::hook::parseStateOfContainerFromStdin();
     parseConfigJSONOfBundle();
     if(!isHookEnabled) {
         return;
@@ -35,14 +34,14 @@ void TimestampHook::activate() {
 void TimestampHook::parseConfigJSONOfBundle() {
     auto json = sarus::common::readJSON(bundleDir / "config.json");
 
-    hooks::common::utility::applyLoggingConfigIfAvailable(json);
+    common::hook::applyLoggingConfigIfAvailable(json);
 
     // get uid + gid of user
     uidOfUser = json["process"]["user"]["uid"].GetInt();
     gidOfUser = json["process"]["user"]["gid"].GetInt();
 
     // get environment variables
-    auto env = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
+    auto env = common::hook::parseEnvironmentVariablesFromOCIBundle(bundleDir);
     if(env.find("TIMESTAMP_HOOK_LOGFILE") != env.cend()) {
         logFilePath = env["TIMESTAMP_HOOK_LOGFILE"];
         isHookEnabled = true;

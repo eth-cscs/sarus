@@ -20,7 +20,6 @@
 #include "test_utility/filesystem.hpp"
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
-#include "common/mount_utilities.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
 

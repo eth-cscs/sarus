@@ -14,7 +14,6 @@
 
 #include "common/PathRAII.hpp"
 #include "common/Utility.hpp"
-#include "hooks/common/Utility.hpp"
 #include "hooks/timestamp/TimestampHook.hpp"
 #include "test_utility/Misc.hpp"
 #include "test_utility/config.hpp"

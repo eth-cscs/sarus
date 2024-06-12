@@ -10,7 +10,6 @@
 
 #include "common/PathRAII.hpp"
 #include "common/PasswdDB.hpp"
-#include "hooks/common/Utility.hpp"
 #include "hooks/slurm_global_sync/Hook.hpp"
 #include "test_utility/Misc.hpp"
 #include "test_utility/config.hpp"

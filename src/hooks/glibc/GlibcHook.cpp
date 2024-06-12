@@ -25,8 +25,6 @@
 
 #include "common/CLIArguments.hpp"
 #include "common/Utility.hpp"
-#include "hooks/common/Utility.hpp"
-#include "common/mount_utilities.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -35,7 +33,7 @@ namespace glibc {
 GlibcHook::GlibcHook() {
     logMessage("Initializing hook", sarus::common::LogLevel::INFO);
 
-    std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
+    std::tie(bundleDir, pidOfContainer) = common::hook::parseStateOfContainerFromStdin();
     parseConfigJSONOfBundle();
     parseEnvironmentVariables();
 
@@ -75,7 +73,7 @@ void GlibcHook::parseConfigJSONOfBundle() {
 
     auto json = sarus::common::readJSON(bundleDir / "config.json");
 
-    hooks::common::utility::applyLoggingConfigIfAvailable(json);
+    common::hook::applyLoggingConfigIfAvailable(json);
 
     // get rootfs
     auto root = boost::filesystem::path{ json["root"]["path"].GetString() };
@@ -177,7 +175,7 @@ static std::tuple<unsigned int, unsigned int> detectLibcVersion(
             % context % lddCommand % status;
         SARUS_THROW_ERROR(message.str());
     }
-    return hooks::common::utility::parseLibcVersionFromLddOutput(lddOutput.str());
+    return common::hook::parseLibcVersionFromLddOutput(lddOutput.str());
 }
 
 std::tuple<unsigned int, unsigned int> GlibcHook::detectHostLibcVersion() const {
@@ -197,7 +195,7 @@ std::tuple<unsigned int, unsigned int> GlibcHook::detectContainerLibcVersion() c
                 % rootfsDir % strerror(errno);
             SARUS_THROW_ERROR(message.str());
         }
-        hooks::common::utility::switchToUnprivilegedProcess(userIdentity.uid, userIdentity.gid);
+        common::hook::switchToUnprivilegedProcess(userIdentity.uid, userIdentity.gid);
         sarus::common::changeDirectory("/");
     };
     return detectLibcVersion("/usr/bin/ldd", preExecActions, "container");

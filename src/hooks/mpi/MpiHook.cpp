@@ -21,8 +21,7 @@
 #include "common/Logger.hpp"
 #include "common/Error.hpp"
 #include "common/Utility.hpp"
-#include "common/mount_utilities.hpp"
-#include "hooks/common/Utility.hpp"
+#include "SharedLibrary.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -31,7 +30,7 @@ namespace mpi {
 MpiHook::MpiHook() {
     log("Initializing hook", sarus::common::LogLevel::INFO);
 
-    std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
+    std::tie(bundleDir, pidOfContainer) = common::hook::parseStateOfContainerFromStdin();
     parseConfigJSONOfBundle();
     parseEnvironmentVariables();
     log("Getting list of shared libs from the container's dynamic linker cache", sarus::common::LogLevel::DEBUG);
@@ -79,7 +78,7 @@ void MpiHook::parseConfigJSONOfBundle() {
 
     auto json = sarus::common::readJSON(bundleDir / "config.json");
 
-    hooks::common::utility::applyLoggingConfigIfAvailable(json);
+    common::hook::applyLoggingConfigIfAvailable(json);
 
     auto root = boost::filesystem::path{ json["root"]["path"].GetString() };
     if(root.is_absolute()) {
@@ -301,10 +300,10 @@ void MpiHook::performBindMounts() const {
 
         if (sarus::common::isDeviceFile(mount)) {
             if (devicesCgroupPath.empty()) {
-                devicesCgroupPath = common::utility::findCgroupPath("devices", "/", pidOfContainer);
+                devicesCgroupPath = common::hook::findCgroupPath("devices", "/", pidOfContainer);
             }
 
-            common::utility::whitelistDeviceInCgroup(devicesCgroupPath, mount);
+            common::hook::whitelistDeviceInCgroup(devicesCgroupPath, mount);
         }
     }
 

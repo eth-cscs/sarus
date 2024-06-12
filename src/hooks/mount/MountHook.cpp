@@ -21,7 +21,6 @@
 #include "common/Utility.hpp"
 #include "common/MountParser.hpp"
 #include "common/DeviceParser.hpp"
-#include "hooks/common/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -30,7 +29,7 @@ namespace mount {
 MountHook::MountHook(const sarus::common::CLIArguments& args) {
     log("Initializing hook", sarus::common::LogLevel::INFO);
 
-    std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
+    std::tie(bundleDir, pidOfContainer) = common::hook::parseStateOfContainerFromStdin();
     parseConfigJSONOfBundle();
     parseEnvironmentVariables();
     parseCliArguments(args);
@@ -43,7 +42,7 @@ void MountHook::parseConfigJSONOfBundle() {
 
     auto json = sarus::common::readJSON(bundleDir / "config.json");
 
-    hooks::common::utility::applyLoggingConfigIfAvailable(json);
+    common::hook::applyLoggingConfigIfAvailable(json);
 
     auto root = boost::filesystem::path{ json["root"]["path"].GetString() };
     if(root.is_absolute()) {
@@ -57,7 +56,7 @@ void MountHook::parseConfigJSONOfBundle() {
     gid_t gidOfUser = json["process"]["user"]["gid"].GetInt();
     userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
 
-    auto fiProviderPathEnv = hooks::common::utility::getEnvironmentVariableValueFromOCIBundle("FI_PROVIDER_PATH", bundleDir);
+    auto fiProviderPathEnv = common::hook::getEnvironmentVariableValueFromOCIBundle("FI_PROVIDER_PATH", bundleDir);
     if (fiProviderPathEnv && !(*fiProviderPathEnv).empty()) {
         fiProviderPath = *fiProviderPathEnv;
         auto message = boost::format("Found FI_PROVIDER_PATH in the container's environment: %s") % fiProviderPath;
@@ -188,10 +187,10 @@ void MountHook::performDeviceMounts() const {
     }
 
     log("Performing device mounts", sarus::common::LogLevel::INFO);
-    auto devicesCgroupPath = common::utility::findCgroupPath("devices", "/", pidOfContainer);
+    auto devicesCgroupPath = common::hook::findCgroupPath("devices", "/", pidOfContainer);
     for(const auto& mount : deviceMounts) {
         mount->performMount();
-        common::utility::whitelistDeviceInCgroup(devicesCgroupPath, rootfsDir / mount->destination);
+        common::hook::whitelistDeviceInCgroup(devicesCgroupPath, rootfsDir / mount->destination);
     }
     log("Successfully performed device mounts", sarus::common::LogLevel::INFO);
 }

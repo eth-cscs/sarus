@@ -19,7 +19,6 @@
 #include <unistd.h>
 #include <sys/mount.h>
 
-#include "hooks/common/Utility.hpp"
 #include "hooks/mpi/MpiHook.hpp"
 #include "test_utility/Misc.hpp"
 #include "test_utility/config.hpp"

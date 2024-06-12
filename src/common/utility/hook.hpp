@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef sarus_hooks_common_Utility_hpp
-#define sarus_hooks_common_Utility_hpp
+#ifndef sarus_common_utility_Hook_hpp
+#define sarus_common_utility_Hook_hpp
 
 #include <tuple>
 #include <string>
@@ -23,9 +23,8 @@
 #include "common/UserIdentity.hpp"
 
 namespace sarus {
-namespace hooks {
 namespace common {
-namespace utility {
+namespace hook {
 
 void applyLoggingConfigIfAvailable(const rapidjson::Document&);
 std::tuple<boost::filesystem::path, pid_t> parseStateOfContainerFromStdin();
@@ -48,6 +47,6 @@ void logMessage(const boost::format& message, sarus::common::LogLevel level,
 void logMessage(const std::string& message, sarus::common::LogLevel level,
         std::ostream& out=std::cout, std::ostream& err=std::cerr);
 
-}}}} // namespace
+}}} // namespace
 
 #endif

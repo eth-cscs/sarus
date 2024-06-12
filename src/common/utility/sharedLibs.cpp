@@ -8,7 +8,7 @@
  *
  */
 
-#include "shared_libs.hpp"
+#include "sharedLibs.hpp"
 
 #include <sstream>
 

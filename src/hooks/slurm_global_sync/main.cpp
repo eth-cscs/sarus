@@ -10,7 +10,6 @@
 
 #include "common/Error.hpp"
 #include "common/Logger.hpp"
-#include "hooks/common/Utility.hpp"
 #include "Hook.hpp"
 
 

@@ -17,7 +17,6 @@
 #include <unistd.h>
 #include <sys/mount.h>
 
-#include "hooks/common/Utility.hpp"
 #include "hooks/glibc/GlibcHook.hpp"
 #include "test_utility/Misc.hpp"
 #include "test_utility/config.hpp"

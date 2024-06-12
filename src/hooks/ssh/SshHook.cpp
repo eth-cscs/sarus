@@ -22,8 +22,6 @@
 #include "common/Utility.hpp"
 #include "common/Lockfile.hpp"
 #include "common/PasswdDB.hpp"
-#include "common/mount_utilities.hpp"
-#include "hooks/common/Utility.hpp"
 
 
 namespace sarus {
@@ -96,10 +94,10 @@ void SshHook::startSshDaemon() {
         auto envJoinNamespaces = sarus::common::getEnvironmentVariable("JOIN_NAMESPACES");
         joinNamespaces = (boost::algorithm::to_upper_copy(envJoinNamespaces) == std::string("TRUE"));
     } catch (sarus::common::Error&) {}
-    std::tie(bundleDir, pidOfContainer) = hooks::common::utility::parseStateOfContainerFromStdin();
+    std::tie(bundleDir, pidOfContainer) = common::hook::parseStateOfContainerFromStdin();
     if (joinNamespaces) {
-        hooks::common::utility::enterMountNamespaceOfProcess(pidOfContainer);
-        hooks::common::utility::enterPidNamespaceOfProcess(pidOfContainer);
+        common::hook::enterMountNamespaceOfProcess(pidOfContainer);
+        common::hook::enterPidNamespaceOfProcess(pidOfContainer);
     }
     parseConfigJSONOfBundle();
     username = getUsername(uidOfUser);
@@ -122,7 +120,7 @@ void SshHook::parseConfigJSONOfBundle() {
 
     auto json = sarus::common::readJSON(bundleDir / "config.json");
 
-    hooks::common::utility::applyLoggingConfigIfAvailable(json);
+    common::hook::applyLoggingConfigIfAvailable(json);
 
     // get rootfs
     auto root = boost::filesystem::path{ json["root"]["path"].GetString() };
@@ -375,7 +373,7 @@ void SshHook::createEnvironmentFile() const {
         sarus::common::LogLevel::INFO);
 
     // create file
-    auto containerEnvironment = hooks::common::utility::parseEnvironmentVariablesFromOCIBundle(bundleDir);
+    auto containerEnvironment = common::hook::parseEnvironmentVariablesFromOCIBundle(bundleDir);
     auto ofs = std::ofstream((dropbearDirInContainer / "environment").c_str());
     ofs << "#!/bin/sh" << std::endl;
     for (const auto& variable : containerEnvironment) {
@@ -422,7 +420,7 @@ void SshHook::startSshDaemonInContainer() const {
             SARUS_THROW_ERROR(message.str());
         }
 
-        hooks::common::utility::switchToUnprivilegedProcess(uidOfUser, gidOfUser);
+        common::hook::switchToUnprivilegedProcess(uidOfUser, gidOfUser);
     };
 
     auto sshKeysPathWithinContainer = "/" / boost::filesystem::relative(sshKeysDirInContainer, rootfsDir);

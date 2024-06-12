@@ -19,10 +19,12 @@
 
 #include "common/utility/environment.hpp"
 #include "common/utility/filesystem.hpp"
+#include "common/utility/hook.hpp"
 #include "common/utility/json.hpp"
 #include "common/utility/logging.hpp"
+#include "common/utility/mount.hpp"
 #include "common/utility/process.hpp"
-#include "common/utility/shared_libs.hpp"
+#include "common/utility/sharedLibs.hpp"
 #include "common/utility/string.hpp"
 
 #endif
