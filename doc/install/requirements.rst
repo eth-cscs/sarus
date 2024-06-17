@@ -102,7 +102,7 @@ Boost libraries
 
 `Boost libraries <https://www.boost.org/>`_ are required to be version **1.60.x**
 or later. The recommended version, which is used routinely for build
-integration and testing, is **1.77.x**.
+integration and testing, is **1.85.x**.
 
 It is especially important to note that when building on ARM architecture, Boost
 version **1.77.x** or later is required.
@@ -146,13 +146,14 @@ Sarus internally relies on an OCI-compliant runtime to spawn a container.
 
 Here we will provide some indications to install `runc
 <https://github.com/opencontainers/runc>`_, the reference implementation from
-the Open Container Initiative. The recommended version is **v1.1.12**.
+the Open Container Initiative. The recommended version is **v1.1.13**.
 
 .. important::
-    Due to the changes and hardening measures it introduces,
-    runc 1.1.12 is not compatible with Sarus (and its hooks) versions 1.6.2 and earlier.
+    Due to the changes and hardening measures they introduced,
+    runc 1.1.12 and later are not compatible with Sarus (and its hooks)
+    versions 1.6.2 and earlier.
 
-    Sarus 1.6.3 and later should be used alongside runc 1.1.12.
+    Sarus 1.6.3 and later should be used alongside runc >=1.1.12.
 
 The simplest solution is to download a pre-built binary release from the
 project's GitHub page:

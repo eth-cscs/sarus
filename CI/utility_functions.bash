@@ -120,7 +120,7 @@ build_sarus_archive() {
 
     # runc is statically linked with libseccomp, which is licensed under GNU LGPL-2.1.
     # To comply with LGPL-2.1 (§6(a)), include the libseccomp source code in the licenses folder.
-    wget -O ${prefix_dir}/licenses/libseccomp-2.5.4.tar.gz https://github.com/opencontainers/runc/releases/download/v1.1.12/libseccomp-2.5.4.tar.gz
+    wget -O ${prefix_dir}/licenses/libseccomp-2.5.5.tar.gz https://github.com/opencontainers/runc/releases/download/v1.1.13/libseccomp-2.5.5.tar.gz
 
     mkdir -pv ${prefix_dir}/var/OCIBundleDir
 

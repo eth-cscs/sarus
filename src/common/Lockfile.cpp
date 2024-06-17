@@ -88,10 +88,8 @@ Lockfile::~Lockfile() {
 }
 
 boost::filesystem::path Lockfile::convertToLockfile(const boost::filesystem::path& file) const {
-    auto lockfileLeaf = file.leaf().string() + ".lock";
     auto lockfile = file;
-    lockfile.remove_leaf();
-    lockfile /= lockfileLeaf;
+    lockfile += ".lock";
 
     auto message = boost::format("converted filename %s to lockfile %s") % file % lockfile;
     logger->log(message.str(), loggerSubsystemName, common::LogLevel::DEBUG);

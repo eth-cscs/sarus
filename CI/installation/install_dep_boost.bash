@@ -4,10 +4,10 @@ pwd_bak=$PWD
 
 # Install boost
 cd /tmp && \
-    mkdir -p boost/1_77_0 && cd boost/1_77_0 && \
-    wget https://downloads.sourceforge.net/project/boost/boost/1.77.0/boost_1_77_0.tar.bz2 && \
-    tar xf boost_1_77_0.tar.bz2 && \
-    mv boost_1_77_0 src && cd src && \
+    mkdir -p boost/1_85_0 && cd boost/1_85_0 && \
+    wget https://downloads.sourceforge.net/project/boost/boost/1.85.0/boost_1_85_0.tar.bz2 && \
+    tar xf boost_1_85_0.tar.bz2 && \
+    mv boost_1_85_0 src && cd src && \
     ./bootstrap.sh && \
     sudo ./b2 -j$(nproc) \
         --with-filesystem \
