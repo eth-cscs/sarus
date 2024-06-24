@@ -11,7 +11,6 @@
 #ifndef sarus_hooks_ssh_SshHook_hpp
 #define sarus_hooks_ssh_SshHook_hpp
 
-#include "common/Utility.hpp"
 #include <tuple>
 #include <memory>
 #include <unordered_set>
@@ -20,8 +19,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
-#include <common/Error.hpp>
-#include <common/Logger.hpp>
+#include <libsarus/Error.hpp>
+#include <libsarus/Logger.hpp>
+#include <libsarus/Utility.hpp>
 
 namespace sarus {
 namespace hooks {
@@ -52,11 +52,11 @@ private:
     void createEtcProfileModule() const;
     void startSshDaemonInContainer() const;
     void stopSshDaemon();
-    void log(const boost::format& message, sarus::common::LogLevel level) const;
-    void log(const std::string& message, sarus::common::LogLevel level) const;
+    void log(const boost::format& message, libsarus::LogLevel level) const;
+    void log(const std::string& message, libsarus::LogLevel level) const;
 
 private:
-    common::hook::ContainerState containerState;
+    libsarus::hook::ContainerState containerState;
     bool isHookEnabled = false;
     std::string username;
     boost::filesystem::path pidfileHost;

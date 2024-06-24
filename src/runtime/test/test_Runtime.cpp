@@ -14,10 +14,10 @@
 #include <linux/magic.h>
 
 #include "test_utility/config.hpp"
-#include "common/Logger.hpp"
+#include "libsarus/Logger.hpp"
 #include "common/Config.hpp"
-#include "common/PathRAII.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/PathRAII.hpp"
+#include "libsarus/Utility.hpp"
 #include "runtime/Runtime.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
@@ -57,7 +57,7 @@ IGNORE_TEST(RuntimeTestGroup, setupOCIBundle) {
     // configure
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
-    config->commandRun.execArgs = common::CLIArguments{"/bin/bash"};
+    config->commandRun.execArgs = libsarus::CLIArguments{"/bin/bash"};
     // hack to make the resulting image's file path = <repository dir>////test-image.squashfs
     config->directories.images = boost::filesystem::path{__FILE__}.parent_path();
     config->imageReference = common::ImageReference{"", "", "", "test_image"};
@@ -68,14 +68,14 @@ IGNORE_TEST(RuntimeTestGroup, setupOCIBundle) {
     auto prefixDir = boost::filesystem::path{config->json["prefixDir"].GetString()};
 
     // create test folders / files
-    common::createFoldersIfNecessary(bundleDir);
-    common::createFileIfNecessary(prefixDir / "etc/container/nsswitch.conf");
-    common::createFileIfNecessary(prefixDir / "etc/passwd");
-    common::createFileIfNecessary(prefixDir / "etc/group");
+    libsarus::createFoldersIfNecessary(bundleDir);
+    libsarus::createFileIfNecessary(prefixDir / "etc/container/nsswitch.conf");
+    libsarus::createFileIfNecessary(prefixDir / "etc/passwd");
+    libsarus::createFileIfNecessary(prefixDir / "etc/group");
 
     // create dummy metadata file in image repo
-    auto metadataFileRAII = common::PathRAII{boost::filesystem::path(config->directories.images / (config->imageReference.getUniqueKey() + ".meta"))};
-    common::createFileIfNecessary(metadataFileRAII.getPath());
+    auto metadataFileRAII = libsarus::PathRAII{boost::filesystem::path(config->directories.images / (config->imageReference.getUniqueKey() + ".meta"))};
+    libsarus::createFileIfNecessary(metadataFileRAII.getPath());
     std::ofstream metadataStream(metadataFileRAII.getPath().c_str());
     metadataStream << "{}";
     metadataStream.close();
@@ -101,7 +101,7 @@ IGNORE_TEST(RuntimeTestGroup, setupOCIBundle) {
 
     // check that rootfs is writable
     auto fileToCreate = rootfsDir / "file_to_create";
-    common::executeCommand("touch " + fileToCreate.string());
+    libsarus::executeCommand("touch " + fileToCreate.string());
 
     // check that bundle's config file exists
     CHECK(boost::filesystem::exists(bundleDir / "config.json"));

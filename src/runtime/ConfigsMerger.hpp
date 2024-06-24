@@ -18,7 +18,7 @@
 
 #include "common/Config.hpp"
 #include "common/ImageMetadata.hpp"
-#include "common/CLIArguments.hpp"
+#include "libsarus/CLIArguments.hpp"
 
 
 namespace sarus {
@@ -35,7 +35,7 @@ public:
     boost::filesystem::path getWorkdirInContainer() const;
     std::unordered_map<std::string, std::string> getEnvironmentInContainer() const;
     std::unordered_map<std::string, std::string> getBundleAnnotations() const;
-    common::CLIArguments getCommandToExecuteInContainer() const;
+    libsarus::CLIArguments getCommandToExecuteInContainer() const;
 
 private:
     std::shared_ptr<const common::Config> config;

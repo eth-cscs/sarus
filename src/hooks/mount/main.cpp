@@ -8,17 +8,17 @@
  *
  */
 
-#include "common/CLIArguments.hpp"
-#include "common/Error.hpp"
-#include "common/Logger.hpp"
+#include "libsarus/CLIArguments.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Logger.hpp"
 #include "MountHook.hpp"
 
 int main(int argc, char* argv[]) {
     try {
-        auto args = sarus::common::CLIArguments(argc, argv);
+        auto args = libsarus::CLIArguments(argc, argv);
         sarus::hooks::mount::MountHook{args}.activate();
-    } catch(const sarus::common::Error& e) {
-        sarus::common::Logger::getInstance().logErrorTrace(e, "Mount hook");
+    } catch(const libsarus::Error& e) {
+        libsarus::Logger::getInstance().logErrorTrace(e, "Mount hook");
         exit(EXIT_FAILURE);
     }
     return 0;

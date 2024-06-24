@@ -16,18 +16,18 @@
 #include <boost/format.hpp>
 
 #include "common/Config.hpp"
-#include "common/Logger.hpp"
-#include "common/Mount.hpp"
+#include "libsarus/Logger.hpp"
+#include "libsarus/Mount.hpp"
 
 namespace sarus {
 namespace runtime {
 namespace utility {
 
 void setupSignalProxying(const pid_t childPid);
-std::vector<std::unique_ptr<common::Mount>> generatePMIxMounts(std::shared_ptr<const common::Config>);
-void logMessage(const boost::format&, common::LogLevel,
+std::vector<std::unique_ptr<libsarus::Mount>> generatePMIxMounts(std::shared_ptr<const common::Config>);
+void logMessage(const boost::format&, libsarus::LogLevel,
                 std::ostream& out=std::cout, std::ostream& err=std::cerr);
-void logMessage(const std::string&, common::LogLevel,
+void logMessage(const std::string&, libsarus::LogLevel,
                 std::ostream& out=std::cout, std::ostream& err=std::cerr);
 
 } // namespace

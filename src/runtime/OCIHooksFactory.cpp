@@ -12,8 +12,8 @@
 
 #include <boost/format.hpp>
 
-#include "common/Error.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Utility.hpp"
 #include "runtime/Utility.hpp"
 
 namespace sarus {
@@ -22,7 +22,7 @@ namespace runtime {
 std::vector<OCIHook> OCIHooksFactory::createHooks(const boost::filesystem::path& hooksDir,
                                                   const boost::filesystem::path& schemaFile) const {
     utility::logMessage(boost::format{"Creating OCI hooks from %s"} % hooksDir,
-                        common::LogLevel::INFO);
+                        libsarus::LogLevel::INFO);
 
     if(!boost::filesystem::is_directory(hooksDir)) {
         auto message = boost::format{"Specified hooks directory %s is not valid"} % hooksDir;
@@ -35,7 +35,7 @@ std::vector<OCIHook> OCIHooksFactory::createHooks(const boost::filesystem::path&
         ++entry) {
         if(entry->path().extension() == ".json") {
             utility::logMessage(boost::format{"Found OCI hook's config file %s"} % entry->path(),
-                                common::LogLevel::DEBUG);
+                                libsarus::LogLevel::DEBUG);
             jsonFiles.push_back(entry->path());
         }
     }
@@ -48,7 +48,7 @@ std::vector<OCIHook> OCIHooksFactory::createHooks(const boost::filesystem::path&
     }
 
     utility::logMessage(boost::format{"Successfully created %d OCI hooks"} % hooks.size(),
-                        common::LogLevel::INFO);
+                        libsarus::LogLevel::INFO);
 
     return hooks;
 }
@@ -56,8 +56,8 @@ std::vector<OCIHook> OCIHooksFactory::createHooks(const boost::filesystem::path&
 OCIHook OCIHooksFactory::createHook(const boost::filesystem::path& jsonFile,
                                     const boost::filesystem::path& schemaFile) const {
     utility::logMessage(boost::format{"Creating OCI hook object from %s"} % jsonFile,
-                        common::LogLevel::INFO);
-    auto json = common::readAndValidateJSON(jsonFile, schemaFile);
+                        libsarus::LogLevel::INFO);
+    auto json = libsarus::readAndValidateJSON(jsonFile, schemaFile);
     auto hook = OCIHook{};
 
     hook.jsonFile = jsonFile;
@@ -83,7 +83,7 @@ OCIHook OCIHooksFactory::createHook(const boost::filesystem::path& jsonFile,
     }
 
     utility::logMessage(boost::format{"Successfully created OCI hook object"},
-                        common::LogLevel::INFO);
+                        libsarus::LogLevel::INFO);
 
     return hook;
 }

@@ -15,18 +15,18 @@
 
 #include <rapidjson/prettywriter.h>
 
-#include "common/Error.hpp"
-#include "common/Utility.hpp"
-#include "common/PasswdDB.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Utility.hpp"
+#include "libsarus/PasswdDB.hpp"
 
 
 namespace test_utility {
 namespace misc {
 
 std::tuple<uid_t, gid_t> getNonRootUserIds() {
-    auto out = sarus::common::executeCommand("getent passwd");
+    auto out = libsarus::executeCommand("getent passwd");
     std::stringstream ss{out};
-    auto passwd = sarus::common::PasswdDB{ss};
+    auto passwd = libsarus::PasswdDB{ss};
 
     for(const auto& entry : passwd.getEntries()) {
         if(entry.uid != 0) {

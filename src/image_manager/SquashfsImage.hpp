@@ -24,7 +24,7 @@ namespace image_manager {
  */
 class SquashfsImage {
 public:
-    static common::CLIArguments generateMksquashfsArgs(const common::Config& config,
+    static libsarus::CLIArguments generateMksquashfsArgs(const common::Config& config,
                                                        const boost::filesystem::path& sourcePath,
                                                        const boost::filesystem::path& destinationPath);
 
@@ -34,7 +34,7 @@ public:
     boost::filesystem::path getPathOfImage() const;
 
 private:
-    void log(const boost::format &message, common::LogLevel level) const;
+    void log(const boost::format &message, libsarus::LogLevel level) const;
 
 private:
     boost::filesystem::path pathOfImage;

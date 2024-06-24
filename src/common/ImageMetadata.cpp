@@ -18,54 +18,54 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 
-#include "common/Error.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Utility.hpp"
 
 namespace sarus {
 namespace common {
 
 
-ImageMetadata::ImageMetadata(const boost::filesystem::path& path, const common::UserIdentity& identity) {
+ImageMetadata::ImageMetadata(const boost::filesystem::path& path, const libsarus::UserIdentity& identity) {
     auto message = boost::format("Creating image metadata from file %s") % path;
-    logMessage(message, LogLevel::INFO);
+    logMessage(message, libsarus::LogLevel::INFO);
 
-    auto rootIdentity = common::UserIdentity{};
+    auto rootIdentity = libsarus::UserIdentity{};
     try {
         // switch to user identity to make sure we can access files on root_squashed filesystems
-        common::setFilesystemUid(identity);
+        libsarus::setFilesystemUid(identity);
 
-        auto json = common::readJSON(path);
+        auto json = libsarus::readJSON(path);
 
-        common::setFilesystemUid(rootIdentity);
+        libsarus::setFilesystemUid(rootIdentity);
 
         parseJSON(json);
     }
-    catch (const common::Error& e) {
-        common::setFilesystemUid(rootIdentity);
+    catch (const libsarus::Error& e) {
+        libsarus::setFilesystemUid(rootIdentity);
         auto message = boost::format("Error creating image metadata from file %s") % path;
         SARUS_RETHROW_ERROR(e, message.str());
     }
 
-    logMessage("Successfully created image metadata", LogLevel::INFO);
+    logMessage("Successfully created image metadata", libsarus::LogLevel::INFO);
 }
 
 ImageMetadata::ImageMetadata(const rapidjson::Value& metadata) {
-    logMessage("Creating image metadata from JSON object", LogLevel::INFO);
+    logMessage("Creating image metadata from JSON object", libsarus::LogLevel::INFO);
 
     try {
         parseJSON(metadata);
     }
-    catch (const common::Error& e) {
+    catch (const libsarus::Error& e) {
         auto message = boost::format("Error creating image metadata from JSON object ");
         SARUS_RETHROW_ERROR(e, message.str());
     }
 
-    logMessage("Successfully created image metadata from JSON object", LogLevel::INFO);
+    logMessage("Successfully created image metadata from JSON object", libsarus::LogLevel::INFO);
 }
 
 void ImageMetadata::write(const boost::filesystem::path& path) const {
     auto message = boost::format("Writing image metadata file %s") % path;
-    logMessage(message, LogLevel::INFO);
+    logMessage(message, libsarus::LogLevel::INFO);
 
     auto json = rapidjson::Document(rapidjson::kObjectType);
     auto& allocator = json.GetAllocator();
@@ -109,9 +109,9 @@ void ImageMetadata::write(const boost::filesystem::path& path) const {
         }
     }
 
-    common::writeJSON(json, path);
+    libsarus::writeJSON(json, path);
 
-    logMessage("Successfully written image metadata file", LogLevel::INFO);
+    logMessage("Successfully written image metadata file", libsarus::LogLevel::INFO);
 }
 
 void ImageMetadata::parseJSON(const rapidjson::Value& json) {
@@ -127,13 +127,13 @@ void ImageMetadata::parseJSON(const rapidjson::Value& json) {
     if (json.HasMember("Cmd")
         && serialize(json["Cmd"]) != "null") {
         std::stringstream is(serialize(json["Cmd"]));
-        cmd = common::CLIArguments{};
+        cmd = libsarus::CLIArguments{};
         is >> *cmd;
     }
     if (json.HasMember("Entrypoint")
         && serialize(json["Entrypoint"]) != "null") {
         std::stringstream is(serialize(json["Entrypoint"]));
-        entry = common::CLIArguments{};
+        entry = libsarus::CLIArguments{};
         is >> *entry;
     }
     if (json.HasMember("WorkingDir")
@@ -146,7 +146,7 @@ void ImageMetadata::parseJSON(const rapidjson::Value& json) {
         for (const auto& v : json["Env"].GetArray()) {
             std::string variable = v.GetString();
             std::string key, value;
-            std::tie(key, value) = common::parseEnvironmentVariable(variable);
+            std::tie(key, value) = libsarus::parseEnvironmentVariable(variable);
             env[key] = value;
         }
     }

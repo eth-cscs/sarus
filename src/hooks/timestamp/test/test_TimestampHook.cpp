@@ -12,8 +12,8 @@
 
 #include <boost/regex.hpp>
 
-#include "common/PathRAII.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/PathRAII.hpp"
+#include "libsarus/Utility.hpp"
 #include "hooks/timestamp/TimestampHook.hpp"
 #include "test_utility/Misc.hpp"
 #include "test_utility/config.hpp"
@@ -30,7 +30,7 @@ TEST_GROUP(TimestampTestGroup) {
     std::tuple<uid_t, gid_t> idsOfUser = test_utility::misc::getNonRootUserIds();
     test_utility::config::ConfigRAII configRAII = test_utility::config::makeConfig();
     boost::filesystem::path bundleDir = configRAII.config->json["OCIBundleDir"].GetString();
-    sarus::common::PathRAII logFileRAII = sarus::common::PathRAII{boost::filesystem::absolute("./timestamp_test.log")};
+    libsarus::PathRAII logFileRAII = libsarus::PathRAII{boost::filesystem::absolute("./timestamp_test.log")};
     boost::filesystem::path logFile = logFileRAII.getPath();
 };
 
@@ -42,7 +42,7 @@ void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir, const s
         doc["process"]["env"].PushBack(rj::Value{logVar.c_str(), allocator}, allocator);
     }
 
-    sarus::common::writeJSON(doc, bundleDir / "config.json");
+    libsarus::writeJSON(doc, bundleDir / "config.json");
 }
 
 TEST(TimestampTestGroup, test_disabled_hook) {
@@ -68,7 +68,7 @@ TEST(TimestampTestGroup, test_existing_file) {
 
     // Set the expected message
     auto expectedMessage = std::string{"unit test"};
-    sarus::common::setEnvironmentVariable("TIMESTAMP_HOOK_MESSAGE", expectedMessage);
+    libsarus::setEnvironmentVariable("TIMESTAMP_HOOK_MESSAGE", expectedMessage);
 
     // Create and call hook
     auto hook = TimestampHook{};
@@ -76,7 +76,7 @@ TEST(TimestampTestGroup, test_existing_file) {
 
     // Read logfile and check contents
     {
-        auto logFileContent = sarus::common::readFile(logFile);
+        auto logFileContent = libsarus::readFile(logFile);
 
         auto initialPattern = "Line 1\nLine 2\n";
         auto timestampPattern = "\\[.*\\..*\\] \\[.*\\] \\[hook\\] \\[INFO\\] Timestamp hook: " + expectedMessage + "\n";
@@ -95,7 +95,7 @@ TEST(TimestampTestGroup, test_non_existing_file) {
 
     // Set the expected message
     auto expectedMessage = std::string{"unit test"};
-    sarus::common::setEnvironmentVariable("TIMESTAMP_HOOK_MESSAGE", expectedMessage);
+    libsarus::setEnvironmentVariable("TIMESTAMP_HOOK_MESSAGE", expectedMessage);
 
     // Create and call hook
     auto hook = TimestampHook{};
@@ -103,11 +103,11 @@ TEST(TimestampTestGroup, test_non_existing_file) {
 
     // Basic file checks
     CHECK(boost::filesystem::exists(logFile));
-    CHECK(sarus::common::getOwner(logFile) == idsOfUser);
+    CHECK(libsarus::getOwner(logFile) == idsOfUser);
 
     // Read logfile and check contents
     {
-        auto logFileContent = sarus::common::readFile(logFile);
+        auto logFileContent = libsarus::readFile(logFile);
 
         auto timestampPattern = "\\[.*\\..*\\] \\[.*\\] \\[hook\\] \\[INFO\\] Timestamp hook: " + expectedMessage + "\n";
         auto regex = boost::regex(timestampPattern);

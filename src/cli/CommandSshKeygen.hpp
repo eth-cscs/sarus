@@ -13,8 +13,8 @@
 
 #include <memory>
 
-#include "common/Logger.hpp"
-#include "common/CLIArguments.hpp"
+#include "libsarus/Logger.hpp"
+#include "libsarus/CLIArguments.hpp"
 #include "cli/Command.hpp"
 #include "cli/Utility.hpp"
 #include "cli/HelpMessage.hpp"
@@ -29,7 +29,7 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandSshKeygen(const common::CLIArguments& args, std::shared_ptr<common::Config> config)
+    CommandSshKeygen(const libsarus::CLIArguments& args, std::shared_ptr<common::Config> config)
         : conf{std::move(config)}
     {
         initializeOptionsDescription();
@@ -39,24 +39,24 @@ public:
     }
 
     void execute() override {
-        common::setEnvironmentVariable("HOOK_BASE_DIR", conf->json["localRepositoryBaseDir"].GetString());
+        libsarus::setEnvironmentVariable("HOOK_BASE_DIR", conf->json["localRepositoryBaseDir"].GetString());
         auto passwdFile = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "etc/passwd";
-        common::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
+        libsarus::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
         auto dropbearDir = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "dropbear";
-        common::setEnvironmentVariable("DROPBEAR_DIR", dropbearDir.string());
+        libsarus::setEnvironmentVariable("DROPBEAR_DIR", dropbearDir.string());
 
         auto sshHook = boost::filesystem::path{conf->json["prefixDir"].GetString()} / "bin/ssh_hook";
-        auto args = common::CLIArguments{sshHook.string(), "keygen"};
+        auto args = libsarus::CLIArguments{sshHook.string(), "keygen"};
         if(overwriteSshKeysIfExist) {
             args.push_back("--overwrite");
         }
-        if(sarus::common::Logger::getInstance().getLevel() == sarus::common::LogLevel::INFO) {
+        if(libsarus::Logger::getInstance().getLevel() == libsarus::LogLevel::INFO) {
             args.push_back("--verbose");
         }
-        else if(sarus::common::Logger::getInstance().getLevel() == sarus::common::LogLevel::DEBUG) {
+        else if(libsarus::Logger::getInstance().getLevel() == libsarus::LogLevel::DEBUG) {
             args.push_back("--debug");
         }
-        common::forkExecWait(args);
+        libsarus::forkExecWait(args);
     }
 
     bool requiresRootPrivileges() const override {
@@ -81,10 +81,10 @@ private:
             ("overwrite", "Overwrite the SSH keys if they already exist");
     }
 
-    void parseCommandArguments(const common::CLIArguments& args) {
-        cli::utility::printLog(boost::format("parsing CLI arguments of ssh-keygen command"), common::LogLevel::DEBUG);
+    void parseCommandArguments(const libsarus::CLIArguments& args) {
+        cli::utility::printLog(boost::format("parsing CLI arguments of ssh-keygen command"), libsarus::LogLevel::DEBUG);
 
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
 
         // the ssh-keygen command doesn't support positional arguments
@@ -106,11 +106,11 @@ private:
         }
         catch(std::exception& e) {
             auto message = boost::format("%s\nSee 'sarus help ssh-keygen'") % e.what();
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
         }
 
-        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
+        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), libsarus::LogLevel::DEBUG);
     }
 
 private:

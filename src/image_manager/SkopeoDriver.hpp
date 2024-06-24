@@ -18,9 +18,9 @@
 #include <boost/filesystem.hpp>
 
 #include "common/Config.hpp"
-#include "common/Lockfile.hpp"
-#include "common/LogLevel.hpp"
-#include "common/CLIArguments.hpp"
+#include "libsarus/Lockfile.hpp"
+#include "libsarus/LogLevel.hpp"
+#include "libsarus/CLIArguments.hpp"
 
 
 namespace sarus {
@@ -35,16 +35,16 @@ public:
     std::string manifestDigest(const boost::filesystem::path& manifestPath) const;
     boost::filesystem::path acquireAuthFile(const common::Config::Authentication& auth, const common::ImageReference& reference);
     std::string filterInspectOutput(const std::string& inspectOutput) const;
-    common::CLIArguments generateBaseArgs() const;
+    libsarus::CLIArguments generateBaseArgs() const;
 
 private:
     std::string getVerbosityOption() const;
-    common::CLIArguments getPolicyOption() const;
-    common::CLIArguments getRegistriesDOption() const;
+    libsarus::CLIArguments getPolicyOption() const;
+    libsarus::CLIArguments getRegistriesDOption() const;
     std::string getTransportString(const std::string& transport) const;
-    void printLog(const boost::format &message, common::LogLevel,
+    void printLog(const boost::format &message, libsarus::LogLevel,
                   std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
-    void printLog(const std::string& message, common::LogLevel,
+    void printLog(const std::string& message, libsarus::LogLevel,
                   std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
 
 private:

@@ -8,7 +8,7 @@
  *
  */
 
-#include "common/Logger.hpp"
+#include "libsarus/Logger.hpp"
 #include "Checker.hpp"
 #include "test_utility/unittest_main_function.hpp"
 

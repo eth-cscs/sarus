@@ -18,11 +18,11 @@
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 
-#include "common/Utility.hpp"
+#include "libsarus/Utility.hpp"
 #include "cli/Utility.hpp"
 #include "common/Config.hpp"
 #include "cli/Command.hpp"
-#include "common/CLIArguments.hpp"
+#include "libsarus/CLIArguments.hpp"
 #include "cli/HelpMessage.hpp"
 #include "image_manager/ImageManager.hpp"
 
@@ -36,7 +36,7 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandPull(const common::CLIArguments& args, std::shared_ptr<common::Config> conf)
+    CommandPull(const libsarus::CLIArguments& args, std::shared_ptr<common::Config> conf)
         : conf{std::move(conf)}
     {
         initializeOptionsDescription();
@@ -83,10 +83,10 @@ private:
         allOptionsDescription.add(visibleOptionsDescription).add(hiddenOptionsDescription);
     }
 
-    void parseCommandArguments(const common::CLIArguments& args) {
-        cli::utility::printLog(boost::format("parsing CLI arguments of pull command"), common::LogLevel::DEBUG);
+    void parseCommandArguments(const libsarus::CLIArguments& args) {
+        cli::utility::printLog(boost::format("parsing CLI arguments of pull command"), libsarus::LogLevel::DEBUG);
 
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, allOptionsDescription);
 
         // the pull command expects exactly one positional argument
@@ -133,18 +133,18 @@ private:
         }
         catch (std::exception& e) {
             auto message = boost::format("%s\nSee 'sarus help pull'") % e.what();
-            cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            cli::utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
         }
 
-        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
+        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), libsarus::LogLevel::DEBUG);
     }
 
     /**
      * Get the username/password from user input, and store into config.
      */
     void readUserCredentialsFromCLI(common::Config::Authentication& authentication) {
-        cli::utility::printLog(boost::format("reading user credentials from CLI"), common::LogLevel::DEBUG);
+        cli::utility::printLog(boost::format("reading user credentials from CLI"), libsarus::LogLevel::DEBUG);
 
         std::cout << "username: ";
         if (username.empty()) {
@@ -161,7 +161,7 @@ private:
         authentication.password = readPasswordFromStdin();
         std::cout << std::endl;
 
-        cli::utility::printLog(boost::format("successfully read user credentials"), common::LogLevel::DEBUG);
+        cli::utility::printLog(boost::format("successfully read user credentials"), libsarus::LogLevel::DEBUG);
     }
 
     void validateUsername(const std::string& username) {
@@ -174,9 +174,9 @@ private:
     std::string readPasswordFromStdin() {
         auto password = std::string{};
 
-        common::setStdinEcho(false);  // disable echo
+        libsarus::setStdinEcho(false);  // disable echo
         std::getline(std::cin, password);
-        common::setStdinEcho(true);   // enable echo
+        libsarus::setStdinEcho(true);   // enable echo
 
         if(password.empty()) {
             SARUS_THROW_ERROR("Failed to read password from stdin: empty value provided");

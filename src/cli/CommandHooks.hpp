@@ -25,7 +25,7 @@
 #include <rapidjson/pointer.h>
 
 #include "common/Config.hpp"
-#include "common/CLIArguments.hpp"
+#include "libsarus/CLIArguments.hpp"
 #include "cli/Utility.hpp"
 #include "cli/Command.hpp"
 #include "cli/HelpMessage.hpp"
@@ -41,7 +41,7 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandHooks(const common::CLIArguments& args, std::shared_ptr<common::Config> conf)
+    CommandHooks(const libsarus::CLIArguments& args, std::shared_ptr<common::Config> conf)
         : conf{std::move(conf)}
     {
         initializeOptionsDescription();
@@ -121,10 +121,10 @@ private:
             ("mpi,m", "Only list MPI hooks and display corresponding MPI types");
     }
 
-    void parseCommandArguments(const common::CLIArguments& args) {
-        cli::utility::printLog(boost::format("parsing CLI arguments of hooks command"), common::LogLevel::DEBUG);
+    void parseCommandArguments(const libsarus::CLIArguments& args) {
+        cli::utility::printLog(boost::format("parsing CLI arguments of hooks command"), libsarus::LogLevel::DEBUG);
 
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
 
         // the hooks command doesn't support positional arguments
@@ -145,11 +145,11 @@ private:
         }
         catch(std::exception& e) {
             auto message = boost::format("%s\nSee 'sarus help hooks'") % e.what();
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
         }
 
-        cli::utility::printLog( boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
+        cli::utility::printLog( boost::format("successfully parsed CLI arguments"), libsarus::LogLevel::DEBUG);
     }
 
     boost::format makeFormat(const std::vector<runtime::OCIHook>& hooks,

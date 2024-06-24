@@ -38,8 +38,8 @@ public:
     Checker& addHostLibcAndSymlink( const boost::filesystem::path& dummyLib,
                                     const boost::filesystem::path& hostLib,
                                     const boost::filesystem::path& hostSymlink) {
-        sarus::common::createFoldersIfNecessary((bundleDir / hostLib).parent_path());
-        sarus::common::createFoldersIfNecessary((bundleDir / hostSymlink).parent_path());
+        libsarus::createFoldersIfNecessary((bundleDir / hostLib).parent_path());
+        libsarus::createFoldersIfNecessary((bundleDir / hostSymlink).parent_path());
         boost::filesystem::copy_file(dummyLibsDir / dummyLib, bundleDir / hostLib);
         boost::filesystem::create_symlink(bundleDir / hostLib, bundleDir / hostSymlink);
         hostLibs.push_back(bundleDir / hostSymlink);
@@ -48,7 +48,7 @@ public:
 
     Checker& addHostLib(const boost::filesystem::path& dummyLib,
                         const boost::filesystem::path& hostLib) {
-        sarus::common::createFoldersIfNecessary((bundleDir / hostLib).parent_path());
+        libsarus::createFoldersIfNecessary((bundleDir / hostLib).parent_path());
         boost::filesystem::copy_file(dummyLibsDir / dummyLib, bundleDir / hostLib);
         hostLibs.push_back(bundleDir / hostLib);
         return *this;
@@ -58,8 +58,8 @@ public:
                                         const boost::filesystem::path& containerLib,
                                         const boost::filesystem::path& containerSymlink,
                                         const boost::filesystem::path& expectedContainerLibAfterInjection) {
-        sarus::common::createFoldersIfNecessary((rootfsDir / containerLib).parent_path());
-        sarus::common::createFoldersIfNecessary((rootfsDir / containerSymlink).parent_path());
+        libsarus::createFoldersIfNecessary((rootfsDir / containerLib).parent_path());
+        libsarus::createFoldersIfNecessary((rootfsDir / containerSymlink).parent_path());
         boost::filesystem::copy_file(dummyLibsDir / dummyLib, rootfsDir / containerLib);
         boost::filesystem::create_symlink(rootfsDir / containerLib, rootfsDir / containerSymlink);
         expectContainerLib(containerSymlink, expectedContainerLibAfterInjection);
@@ -69,7 +69,7 @@ public:
     Checker& addContainerLib(   const boost::filesystem::path& dummyLib,
                                 const boost::filesystem::path& containerLib,
                                 const boost::filesystem::path& expectedContainerLibAfterInjection) {
-        sarus::common::createFoldersIfNecessary((rootfsDir / containerLib).parent_path());
+        libsarus::createFoldersIfNecessary((rootfsDir / containerLib).parent_path());
         boost::filesystem::copy_file(dummyLibsDir / dummyLib, rootfsDir / containerLib);
         expectContainerLib(containerLib, expectedContainerLibAfterInjection);
         return *this;
@@ -83,25 +83,25 @@ public:
     }
 
     Checker& runLdconfigInContainer() {
-        sarus::common::createFoldersIfNecessary(rootfsDir / "etc");
-        sarus::common::executeCommand("echo '/lib' >> " + (rootfsDir / "etc/ld.so.conf").string());
-        sarus::common::executeCommand("echo '/lib64' >> " + (rootfsDir / "etc/ld.so.conf").string());
-        sarus::common::executeCommand("ldconfig -r " + rootfsDir.string()); // run ldconfig in rootfs
+        libsarus::createFoldersIfNecessary(rootfsDir / "etc");
+        libsarus::executeCommand("echo '/lib' >> " + (rootfsDir / "etc/ld.so.conf").string());
+        libsarus::executeCommand("echo '/lib64' >> " + (rootfsDir / "etc/ld.so.conf").string());
+        libsarus::executeCommand("ldconfig -r " + rootfsDir.string()); // run ldconfig in rootfs
         return *this;
     }
 
     Checker& mockLddWithOlderVersion() {
-        sarus::common::copyFile(boost::filesystem::current_path() / "mocks/lddMockOlder", rootfsDir / lddPath);
+        libsarus::copyFile(boost::filesystem::current_path() / "mocks/lddMockOlder", rootfsDir / lddPath);
         return *this;
     }
 
     Checker& mockLddWithEqualVersion() {
-        sarus::common::copyFile(boost::filesystem::current_path() / "mocks/lddMockEqual", rootfsDir / lddPath);
+        libsarus::copyFile(boost::filesystem::current_path() / "mocks/lddMockEqual", rootfsDir / lddPath);
         return *this;
     }
 
     Checker& mockLddWithNewerVersion() {
-        sarus::common::copyFile(boost::filesystem::current_path() / "mocks/lddMockNewer", rootfsDir / lddPath);
+        libsarus::copyFile(boost::filesystem::current_path() / "mocks/lddMockNewer", rootfsDir / lddPath);
         return *this;
     }
 
@@ -126,15 +126,15 @@ public:
 private:
     void setupTestEnvironment() const {
         auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
-        sarus::common::writeJSON(doc, bundleDir / "config.json");
+        libsarus::writeJSON(doc, bundleDir / "config.json");
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
-        sarus::common::setEnvironmentVariable("LDD_PATH", (boost::filesystem::current_path() / "mocks/lddMockEqual").string());
-        sarus::common::setEnvironmentVariable("LDCONFIG_PATH", "ldconfig");
-        sarus::common::setEnvironmentVariable("READELF_PATH", "readelf");
-        sarus::common::setEnvironmentVariable("GLIBC_LIBS", sarus::common::makeColonSeparatedListOfPaths(hostLibs));
+        libsarus::setEnvironmentVariable("LDD_PATH", (boost::filesystem::current_path() / "mocks/lddMockEqual").string());
+        libsarus::setEnvironmentVariable("LDCONFIG_PATH", "ldconfig");
+        libsarus::setEnvironmentVariable("READELF_PATH", "readelf");
+        libsarus::setEnvironmentVariable("GLIBC_LIBS", libsarus::makeColonSeparatedListOfPaths(hostLibs));
 
-        sarus::common::createFoldersIfNecessary(rootfsDir / "tmp",
+        libsarus::createFoldersIfNecessary(rootfsDir / "tmp",
                                                 doc["process"]["user"]["uid"].GetInt(),
                                                 doc["process"]["user"]["gid"].GetInt());
     }

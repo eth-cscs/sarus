@@ -16,33 +16,33 @@
 #include <boost/program_options.hpp>
 #include <rapidjson/document.h>
 
-#include "common/Logger.hpp"
-#include "common/Error.hpp"
-#include "common/Utility.hpp"
-#include "common/MountParser.hpp"
-#include "common/DeviceParser.hpp"
+#include "libsarus/Logger.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Utility.hpp"
+#include "libsarus/MountParser.hpp"
+#include "libsarus/DeviceParser.hpp"
 
 namespace sarus {
 namespace hooks {
 namespace mount {
 
-MountHook::MountHook(const sarus::common::CLIArguments& args) {
-    log("Initializing hook", sarus::common::LogLevel::INFO);
+MountHook::MountHook(const libsarus::CLIArguments& args) {
+    log("Initializing hook", libsarus::LogLevel::INFO);
 
-    containerState = common::hook::parseStateOfContainerFromStdin();
+    containerState = libsarus::hook::parseStateOfContainerFromStdin();
     parseConfigJSONOfBundle();
     parseEnvironmentVariables();
     parseCliArguments(args);
 
-    log("Successfully initialized hook", sarus::common::LogLevel::INFO);
+    log("Successfully initialized hook", libsarus::LogLevel::INFO);
 }
 
 void MountHook::parseConfigJSONOfBundle() {
-    log("Parsing bundle's config.json", sarus::common::LogLevel::INFO);
+    log("Parsing bundle's config.json", libsarus::LogLevel::INFO);
 
-    auto json = sarus::common::readJSON(containerState.bundle() / "config.json");
+    auto json = libsarus::readJSON(containerState.bundle() / "config.json");
 
-    common::hook::applyLoggingConfigIfAvailable(json);
+    libsarus::hook::applyLoggingConfigIfAvailable(json);
 
     auto root = boost::filesystem::path{ json["root"]["path"].GetString() };
     if(root.is_absolute()) {
@@ -54,29 +54,29 @@ void MountHook::parseConfigJSONOfBundle() {
 
     uid_t uidOfUser = json["process"]["user"]["uid"].GetInt();
     gid_t gidOfUser = json["process"]["user"]["gid"].GetInt();
-    userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
+    userIdentity = libsarus::UserIdentity(uidOfUser, gidOfUser, {});
 
-    auto fiProviderPathEnv = common::hook::getEnvironmentVariableValueFromOCIBundle("FI_PROVIDER_PATH", containerState.bundle());
+    auto fiProviderPathEnv = libsarus::hook::getEnvironmentVariableValueFromOCIBundle("FI_PROVIDER_PATH", containerState.bundle());
     if (fiProviderPathEnv && !(*fiProviderPathEnv).empty()) {
         fiProviderPath = *fiProviderPathEnv;
         auto message = boost::format("Found FI_PROVIDER_PATH in the container's environment: %s") % fiProviderPath;
-        log(message, sarus::common::LogLevel::INFO);
+        log(message, libsarus::LogLevel::INFO);
     }
 
-    log("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);
+    log("Successfully parsed bundle's config.json", libsarus::LogLevel::INFO);
 }
 
 void MountHook::parseEnvironmentVariables() {
-    log("Parsing environment variables", sarus::common::LogLevel::INFO);
+    log("Parsing environment variables", libsarus::LogLevel::INFO);
     try{
-        ldconfigPath = sarus::common::getEnvironmentVariable("LDCONFIG_PATH");
+        ldconfigPath = libsarus::getEnvironmentVariable("LDCONFIG_PATH");
     }
-    catch (sarus::common::Error& e) {}
-    log("Successfully parsed environment variables", sarus::common::LogLevel::INFO);
+    catch (libsarus::Error& e) {}
+    log("Successfully parsed environment variables", libsarus::LogLevel::INFO);
 }
 
-void MountHook::parseCliArguments(const sarus::common::CLIArguments& args) {
-    log("Parsing CLI arguments", sarus::common::LogLevel::INFO);
+void MountHook::parseCliArguments(const libsarus::CLIArguments& args) {
+    log("Parsing CLI arguments", libsarus::LogLevel::INFO);
 
     std::vector<std::string> inputMounts, cliDeviceMounts;
     boost::program_options::options_description optionsDescription{"Options"};
@@ -97,19 +97,19 @@ void MountHook::parseCliArguments(const sarus::common::CLIArguments& args) {
     boost::program_options::store(parsed, values);
     boost::program_options::notify(values);
 
-    auto mountParser = sarus::common::MountParser{rootfsDir, userIdentity};
+    auto mountParser = libsarus::MountParser{rootfsDir, userIdentity};
     for (const auto& mountString : inputMounts) {
         auto parseCandidate = replaceStringWildcards(mountString);
-        auto map = sarus::common::parseMap(parseCandidate);
+        auto map = libsarus::parseMap(parseCandidate);
         bindMounts.push_back(mountParser.parseMountRequest(map));
     }
 
-    auto deviceParser = sarus::common::DeviceParser{rootfsDir, userIdentity};
+    auto deviceParser = libsarus::DeviceParser{rootfsDir, userIdentity};
     for (const auto& deviceString : cliDeviceMounts) {
         deviceMounts.push_back(deviceParser.parseDeviceRequest(deviceString));
     }
 
-    log("Successfully parsed CLI arguments", sarus::common::LogLevel::INFO);
+    log("Successfully parsed CLI arguments", libsarus::LogLevel::INFO);
 }
 
 std::string MountHook::replaceStringWildcards(const std::string& input) {
@@ -122,18 +122,18 @@ std::string MountHook::replaceStringWildcards(const std::string& input) {
 }
 
 std::string MountHook::replaceFiProviderPathWildcard(const std::string& input) {
-    log(boost::format("Replacing <FI_PROVIDER_PATH> wildcard in '%s'") % input, sarus::common::LogLevel::DEBUG);
+    log(boost::format("Replacing <FI_PROVIDER_PATH> wildcard in '%s'") % input, libsarus::LogLevel::DEBUG);
     if (fiProviderPath.empty()) {
         try {
             // The default libfabric search path for external providers is "<libdir>/libfabric".
             // E.g. if the library is installed at /usr/lib/libfabric.so.1, the search path is /usr/lib/libfabric
             fiProviderPath = findLibfabricLibdir() / "libfabric";
         }
-        catch (const sarus::common::Error& e) {
+        catch (const libsarus::Error& e) {
             fiProviderPath = boost::filesystem::path("/usr/lib");
         }
         auto message = boost::format("Resolved <FI_PROVIDER_PATH> wildcard to %s") % fiProviderPath;
-        log(message, sarus::common::LogLevel::INFO);
+        log(message, libsarus::LogLevel::INFO);
     }
     return boost::regex_replace(input, boost::regex("<FI_PROVIDER_PATH>"), fiProviderPath.string());
 }
@@ -149,67 +149,67 @@ boost::filesystem::path MountHook::findLibfabricLibdir() const {
     if (ldconfigPath.empty()) {
         std::string message("Failed to find existing libfabric path in the container's dynamic linker cache:"
                             " no ldconfig path configured for the hook");
-        log(message, sarus::common::LogLevel::INFO);
-        SARUS_THROW_ERROR(message, sarus::common::LogLevel::INFO);
+        log(message, libsarus::LogLevel::INFO);
+        SARUS_THROW_ERROR(message, libsarus::LogLevel::INFO);
     }
-    auto containerLibPaths = sarus::common::getSharedLibsFromDynamicLinker(ldconfigPath, rootfsDir);
+    auto containerLibPaths = libsarus::getSharedLibsFromDynamicLinker(ldconfigPath, rootfsDir);
     boost::smatch match;
     for (const auto& p : containerLibPaths){
         if (boost::regex_search(p.string(), match, boost::regex("libfabric\\.so(?:\\.\\d+)+$"))
-                && boost::filesystem::exists(rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, p))) {
+                && boost::filesystem::exists(rootfsDir / libsarus::realpathWithinRootfs(rootfsDir, p))) {
             auto message = boost::format("Found existing libfabric from the container's dynamic linker cache: %s") % p;
-            log(message, sarus::common::LogLevel::DEBUG);
+            log(message, libsarus::LogLevel::DEBUG);
             return p.parent_path();
         }
     }
     std::string message("Failed to find existing libfabric path in the container's dynamic linker cache");
-    log(message, sarus::common::LogLevel::INFO);
-    SARUS_THROW_ERROR(message, sarus::common::LogLevel::INFO);
+    log(message, libsarus::LogLevel::INFO);
+    SARUS_THROW_ERROR(message, libsarus::LogLevel::INFO);
 }
 
 void MountHook::performBindMounts() const {
     if (bindMounts.empty()) {
-        log("No bind mounts to perform", sarus::common::LogLevel::INFO);
+        log("No bind mounts to perform", libsarus::LogLevel::INFO);
         return;
     }
 
-    log("Performing bind mounts", sarus::common::LogLevel::INFO);
+    log("Performing bind mounts", libsarus::LogLevel::INFO);
     for(const auto& mount : bindMounts) {
         mount->performMount();
     }
-    log("Successfully performed bind mounts", sarus::common::LogLevel::INFO);
+    log("Successfully performed bind mounts", libsarus::LogLevel::INFO);
 }
 
 void MountHook::performDeviceMounts() const {
     if (deviceMounts.empty()) {
-        log("No device mounts to perform", sarus::common::LogLevel::INFO);
+        log("No device mounts to perform", libsarus::LogLevel::INFO);
         return;
     }
 
-    log("Performing device mounts", sarus::common::LogLevel::INFO);
-    auto devicesCgroupPath = common::hook::findCgroupPath("devices", "/", containerState.pid());
+    log("Performing device mounts", libsarus::LogLevel::INFO);
+    auto devicesCgroupPath = libsarus::hook::findCgroupPath("devices", "/", containerState.pid());
     for(const auto& mount : deviceMounts) {
         mount->performMount();
-        common::hook::whitelistDeviceInCgroup(devicesCgroupPath, rootfsDir / mount->destination);
+        libsarus::hook::whitelistDeviceInCgroup(devicesCgroupPath, rootfsDir / mount->destination);
     }
-    log("Successfully performed device mounts", sarus::common::LogLevel::INFO);
+    log("Successfully performed device mounts", libsarus::LogLevel::INFO);
 }
 
 void MountHook::activate() const {
     performBindMounts();
     performDeviceMounts();
     if (!ldconfigPath.empty()) {
-        log("Updating container's dynamic linker cache", sarus::common::LogLevel::INFO);
-        sarus::common::executeCommand(ldconfigPath.string() + " -r " + rootfsDir.string());
+        log("Updating container's dynamic linker cache", libsarus::LogLevel::INFO);
+        libsarus::executeCommand(ldconfigPath.string() + " -r " + rootfsDir.string());
     }
 }
 
-void MountHook::log(const std::string& message, sarus::common::LogLevel level) const {
-    sarus::common::Logger::getInstance().log(message, "Mount hook", level);
+void MountHook::log(const std::string& message, libsarus::LogLevel level) const {
+    libsarus::Logger::getInstance().log(message, "Mount hook", level);
 }
 
-void MountHook::log(const boost::format& message, sarus::common::LogLevel level) const {
-    sarus::common::Logger::getInstance().log(message.str(), "Mount hook", level);
+void MountHook::log(const boost::format& message, libsarus::LogLevel level) const {
+    libsarus::Logger::getInstance().log(message.str(), "Mount hook", level);
 }
 
 }}} // namespace

@@ -16,7 +16,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "common/Utility.hpp"
+#include "libsarus/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -32,16 +32,16 @@ std::unordered_map<std::string, std::string> mapDevicesIdToRenderD(
 
   fs::path byPath(path + "/by-path");
   for (fs::directory_iterator itr(byPath); itr != end_itr; ++itr) {
-    if (!sarus::common::isSymlink(itr->path()) ||
+    if (!libsarus::isSymlink(itr->path()) ||
         itr->path().string().find("card") == std::string::npos)
       continue;
 
     cardId = fs::path(fs::read_symlink(itr->path())).filename().string();
 
-    sarus::common::replaceString(cardId, "card", "");
+    libsarus::replaceString(cardId, "card", "");
 
     auto renderNName{itr->path().string()};
-    sarus::common::replaceString(renderNName, "card", "render");
+    libsarus::replaceString(renderNName, "card", "render");
     auto renderNPath{fs::path(renderNName)};
 
     try {
@@ -50,8 +50,8 @@ std::unordered_map<std::string, std::string> mapDevicesIdToRenderD(
           fs::canonical(fs::absolute(fs::read_symlink(renderNPath), byPath))
               .string());
     } catch (std::exception& e) {
-      sarus::common::Logger::getInstance().log(e.what(), "AMD GPU hook",
-                                               sarus::common::LogLevel::WARN);
+      libsarus::Logger::getInstance().log(e.what(), "AMD GPU hook",
+                                               libsarus::LogLevel::WARN);
     }
   }
   return devicesIdToRenderD;
@@ -61,12 +61,12 @@ std::vector<std::string> getRocrVisibleDevicesId(const fs::path& bundleDir) {
   std::string rocrVisibleDevices;
   try {
     auto containerEnvironment =
-        common::hook::parseEnvironmentVariablesFromOCIBundle(
+        libsarus::hook::parseEnvironmentVariablesFromOCIBundle(
             bundleDir);
     rocrVisibleDevices = containerEnvironment["ROCR_VISIBLE_DEVICES"];
-  } catch (sarus::common::Error& e) {
-    sarus::common::Logger::getInstance().log(e.what(), "AMD GPU hook",
-                                             sarus::common::LogLevel::INFO);
+  } catch (libsarus::Error& e) {
+    libsarus::Logger::getInstance().log(e.what(), "AMD GPU hook",
+                                             libsarus::LogLevel::INFO);
   }
 
   std::vector<std::string> rocrVisibleDevicesId;
@@ -100,36 +100,36 @@ std::vector<std::string> getRenderDDevices(const std::string& path,
 }
 
 AmdGpuHook::AmdGpuHook() {
-  log("Initializing hook", sarus::common::LogLevel::INFO);
+  log("Initializing hook", libsarus::LogLevel::INFO);
 
-  containerState =  common::hook::parseStateOfContainerFromStdin();
+  containerState = libsarus::hook::parseStateOfContainerFromStdin();
   parseConfigJSONOfBundle();
 
-  log("Successfully initialized hook", sarus::common::LogLevel::INFO);
+  log("Successfully initialized hook", libsarus::LogLevel::INFO);
 }
 
 void AmdGpuHook::activate() {
-  log("Activating AMD GPU support", sarus::common::LogLevel::INFO);
+  log("Activating AMD GPU support", libsarus::LogLevel::INFO);
 
   try {
-    if (!sarus::common::isDeviceFile(fs::path{"/dev/kfd"})) {
+    if (!libsarus::isDeviceFile(fs::path{"/dev/kfd"})) {
       return;
     }
-  } catch (const sarus::common::Error& e) {
-    log(e.what(), sarus::common::LogLevel::INFO);
+  } catch (const libsarus::Error& e) {
+    log(e.what(), libsarus::LogLevel::INFO);
     return;
   }
   performBindMounts();
 
-  log("Successfully activated AMD GPU support", sarus::common::LogLevel::INFO);
+  log("Successfully activated AMD GPU support", libsarus::LogLevel::INFO);
 }
 
 void AmdGpuHook::parseConfigJSONOfBundle() {
-  log("Parsing bundle's config.json", sarus::common::LogLevel::INFO);
+  log("Parsing bundle's config.json", libsarus::LogLevel::INFO);
 
-  auto json = sarus::common::readJSON(containerState.bundle() / "config.json");
+  auto json = libsarus::readJSON(containerState.bundle() / "config.json");
 
-  common::hook::applyLoggingConfigIfAvailable(json);
+  libsarus::hook::applyLoggingConfigIfAvailable(json);
 
   auto root = fs::path{json["root"]["path"].GetString()};
   if (root.is_absolute()) {
@@ -140,14 +140,14 @@ void AmdGpuHook::parseConfigJSONOfBundle() {
 
   auto uidOfUser{json["process"]["user"]["uid"].GetInt()};
   auto gidOfUser{json["process"]["user"]["gid"].GetInt()};
-  userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
+  userIdentity = libsarus::UserIdentity(uidOfUser, gidOfUser, {});
 
   log("Successfully parsed bundle's config.json",
-      sarus::common::LogLevel::INFO);
+      libsarus::LogLevel::INFO);
 }
 
 void AmdGpuHook::performBindMounts() const {
-  log("Performing bind mounts", sarus::common::LogLevel::INFO);
+  log("Performing bind mounts", libsarus::LogLevel::INFO);
   auto devicesCgroupPath = fs::path{};
 
   std::vector<std::string> mountPoints{
@@ -158,30 +158,30 @@ void AmdGpuHook::performBindMounts() const {
     if (mountPoint.empty())
       continue;
 
-    sarus::common::validatedBindMount(mountPoint, mountPoint, userIdentity,
+    libsarus::validatedBindMount(mountPoint, mountPoint, userIdentity,
                                        rootfsDir);
 
-    if (sarus::common::isDeviceFile(mountPoint)) {
+    if (libsarus::isDeviceFile(mountPoint)) {
       if (devicesCgroupPath.empty()) {
         devicesCgroupPath =
-            common::hook::findCgroupPath("devices", "/", containerState.pid());
+            libsarus::hook::findCgroupPath("devices", "/", containerState.pid());
       }
 
-      common::hook::whitelistDeviceInCgroup(devicesCgroupPath, mountPoint);
+      libsarus::hook::whitelistDeviceInCgroup(devicesCgroupPath, mountPoint);
     }
   }
 
-  log("Successfully performed bind mounts", sarus::common::LogLevel::INFO);
+  log("Successfully performed bind mounts", libsarus::LogLevel::INFO);
 }
 
 void AmdGpuHook::log(const std::string& message,
-                     sarus::common::LogLevel level) const {
-  sarus::common::Logger::getInstance().log(message, "AMD GPU hook", level);
+                     libsarus::LogLevel level) const {
+  libsarus::Logger::getInstance().log(message, "AMD GPU hook", level);
 }
 
 void AmdGpuHook::log(const boost::format& message,
-                     sarus::common::LogLevel level) const {
-  sarus::common::Logger::getInstance().log(message.str(), "AMD GPU hook",
+                     libsarus::LogLevel level) const {
+  libsarus::Logger::getInstance().log(message.str(), "AMD GPU hook",
                                            level);
 }
 

@@ -15,7 +15,7 @@
 #include <string>
 
 #include "common/Config.hpp"
-#include "common/Logger.hpp"
+#include "libsarus/Logger.hpp"
 #include "common/SarusImage.hpp"
 #include "image_manager/OCIImage.hpp"
 #include "image_manager/ImageStore.hpp"
@@ -31,16 +31,16 @@ public:
     void pullImage(const std::string& transport);
     void loadImage(const std::string& format, const boost::filesystem::path& archive);
     void removeImage();
-    std::vector<common::SarusImage> listImages() const;
+    std::vector<sarus::common::SarusImage> listImages() const;
 
 private:
     void processImage(const OCIImage& image, const common::ImageReference& storageReference);
     std::string retrieveRegistryDigest(const std::string& transport, const common::ImageReference& targetReference) const;
     void issueWarningIfIsCentralizedRepositoryAndIsNotRootUser() const;
     void issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled() const;
-    void printLog(const boost::format& message, common::LogLevel LogLevel,
+    void printLog(const boost::format& message, libsarus::LogLevel LogLevel,
                   std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
-    void printLog(const std::string& message, common::LogLevel LogLevel,
+    void printLog(const std::string& message, libsarus::LogLevel LogLevel,
             std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
 
 private:

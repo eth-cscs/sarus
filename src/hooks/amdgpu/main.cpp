@@ -9,14 +9,14 @@
  */
 
 #include "AmdGpuHook.hpp"
-#include "common/Error.hpp"
-#include "common/Logger.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Logger.hpp"
 
 int main(int argc, char* argv[]) {
   try {
     sarus::hooks::amdgpu::AmdGpuHook{}.activate();
-  } catch (const sarus::common::Error& e) {
-    sarus::common::Logger::getInstance().logErrorTrace(e, "AMD GPU hook");
+  } catch (const libsarus::Error& e) {
+    libsarus::Logger::getInstance().logErrorTrace(e, "AMD GPU hook");
     exit(EXIT_FAILURE);
   }
   return 0;

@@ -8,8 +8,8 @@
  *
  */
 
-#include "common/Logger.hpp"
-#include "common/CLIArguments.hpp"
+#include "libsarus/Logger.hpp"
+#include "libsarus/CLIArguments.hpp"
 #include "image_manager/UmociDriver.hpp"
 #include "test_utility/config.hpp"
 #include "test_utility/unittest_main_function.hpp"
@@ -26,28 +26,28 @@ TEST(UmociDriverTestGroup, generateBaseArgs) {
     auto& config = configRAII.config;
 
     auto driver = image_manager::UmociDriver{config};
-    auto& logger = common::Logger::getInstance();
+    auto& logger = libsarus::Logger::getInstance();
 
     auto expectedUmociPath = std::string(config->json["umociPath"].GetString());
 
-    logger.setLevel(common::LogLevel::DEBUG);
+    logger.setLevel(libsarus::LogLevel::DEBUG);
     auto umociArgs = driver.generateBaseArgs();
-    auto expectedArgs = common::CLIArguments{expectedUmociPath, "--log=debug"};
+    auto expectedArgs = libsarus::CLIArguments{expectedUmociPath, "--log=debug"};
     CHECK(umociArgs == expectedArgs);
 
-    logger.setLevel(common::LogLevel::INFO);
+    logger.setLevel(libsarus::LogLevel::INFO);
     umociArgs = driver.generateBaseArgs();
-    expectedArgs = common::CLIArguments{expectedUmociPath, "--log=info"};
+    expectedArgs = libsarus::CLIArguments{expectedUmociPath, "--log=info"};
     CHECK(umociArgs == expectedArgs);
 
-    logger.setLevel(common::LogLevel::WARN);
+    logger.setLevel(libsarus::LogLevel::WARN);
     umociArgs = driver.generateBaseArgs();
-    expectedArgs = common::CLIArguments{expectedUmociPath, "--log=error"};
+    expectedArgs = libsarus::CLIArguments{expectedUmociPath, "--log=error"};
     CHECK(umociArgs == expectedArgs);
 
-    logger.setLevel(common::LogLevel::ERROR);
+    logger.setLevel(libsarus::LogLevel::ERROR);
     umociArgs = driver.generateBaseArgs();
-    expectedArgs = common::CLIArguments{expectedUmociPath, "--log=error"};
+    expectedArgs = libsarus::CLIArguments{expectedUmociPath, "--log=error"};
     CHECK(umociArgs == expectedArgs);
 }
 

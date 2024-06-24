@@ -17,10 +17,10 @@
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 
-#include "common/Logger.hpp"
-#include "common/Error.hpp"
+#include "libsarus/Logger.hpp"
+#include "libsarus/Error.hpp"
 #include "common/Config.hpp"
-#include "common/CLIArguments.hpp"
+#include "libsarus/CLIArguments.hpp"
 
 namespace sarus {
 namespace cli {
@@ -28,21 +28,21 @@ namespace utility {
 
 bool isValidCLIInputImageReference(const std::string&);
 
-common::ImageReference parseImageReference(const common::CLIArguments& imageArgs);
+common::ImageReference parseImageReference(const libsarus::CLIArguments& imageArgs);
 
 common::ImageReference parseImageReference(const std::string& input);
 
-std::tuple<common::CLIArguments, common::CLIArguments> groupOptionsAndPositionalArguments(
-        const common::CLIArguments&,
+std::tuple<libsarus::CLIArguments, libsarus::CLIArguments> groupOptionsAndPositionalArguments(
+        const libsarus::CLIArguments&,
         const boost::program_options::options_description& optionsDescription);
 
-void validateNumberOfPositionalArguments(const common::CLIArguments& positionalArgs,
+void validateNumberOfPositionalArguments(const libsarus::CLIArguments& positionalArgs,
         const int min, const int max, const std::string& command);
 
-void printLog(  const std::string& message, common::LogLevel LogLevel,
+void printLog(  const std::string& message, libsarus::LogLevel LogLevel,
                 std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr);
 
-void printLog(  const boost::format& message, common::LogLevel LogLevel,
+void printLog(  const boost::format& message, libsarus::LogLevel LogLevel,
                 std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr);
 
 }

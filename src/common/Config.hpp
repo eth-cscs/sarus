@@ -21,11 +21,11 @@
 #include <boost/filesystem.hpp>
 #include <rapidjson/document.h>
 
-#include "common/CLIArguments.hpp"
-#include "common/UserIdentity.hpp"
-#include "common/Logger.hpp"
-#include "common/Mount.hpp"
-#include "common/DeviceMount.hpp"
+#include "libsarus/CLIArguments.hpp"
+#include "libsarus/UserIdentity.hpp"
+#include "libsarus/Logger.hpp"
+#include "libsarus/Mount.hpp"
+#include "libsarus/DeviceMount.hpp"
 #include "ImageReference.hpp"
 
 
@@ -67,12 +67,12 @@ class Config {
             std::unordered_map<std::string, std::string> ociAnnotations;
             std::vector<int> cpuAffinity;
             std::vector<std::string> userMounts;
-            std::vector<std::shared_ptr<common::Mount>> mounts;
-            std::vector<std::shared_ptr<common::DeviceMount>> deviceMounts;
+            std::vector<std::shared_ptr<libsarus::Mount>> mounts;
+            std::vector<std::shared_ptr<libsarus::DeviceMount>> deviceMounts;
             boost::optional<std::string> mpiType;
             boost::optional<boost::filesystem::path> workdir;
-            boost::optional<CLIArguments> entrypoint;
-            CLIArguments execArgs;
+            boost::optional<libsarus::CLIArguments> entrypoint;
+            libsarus::CLIArguments execArgs;
             bool createNewPIDNamespace = false;
             bool allocatePseudoTTY = false;
             bool addInitProcess = false;
@@ -85,6 +85,7 @@ class Config {
         boost::filesystem::path getMetadataFileOfImage() const;
         boost::filesystem::path getCentralizedRepositoryDirectory() const;
         boost::filesystem::path getLocalRepositoryDirectory() const;
+        boost::filesystem::path getRootfsDirectory() const;
 
         bool isCentralizedRepositoryEnabled() const;
 
@@ -92,7 +93,7 @@ class Config {
         common::ImageReference imageReference;
         Directories directories;
         rapidjson::Document json{ rapidjson::kObjectType };
-        UserIdentity userIdentity;
+        libsarus::UserIdentity userIdentity;
         Authentication authentication;
         CommandRun commandRun;
 

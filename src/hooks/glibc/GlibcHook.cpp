@@ -23,26 +23,26 @@
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 
-#include "common/CLIArguments.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/CLIArguments.hpp"
+#include "libsarus/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
 namespace glibc {
 
 GlibcHook::GlibcHook() {
-    logMessage("Initializing hook", sarus::common::LogLevel::INFO);
+    logMessage("Initializing hook", libsarus::LogLevel::INFO);
 
-    auto containerState = common::hook::parseStateOfContainerFromStdin();
+    auto containerState = libsarus::hook::parseStateOfContainerFromStdin();
     bundleDir = containerState.bundle();
     parseConfigJSONOfBundle();
     parseEnvironmentVariables();
 
-    logMessage("Successfully initialized hook", sarus::common::LogLevel::INFO);
+    logMessage("Successfully initialized hook", libsarus::LogLevel::INFO);
 }
 
 void GlibcHook::injectGlibcLibrariesIfNecessary() {
-    logMessage("Replacing container's glibc libraries", sarus::common::LogLevel::INFO);
+    logMessage("Replacing container's glibc libraries", libsarus::LogLevel::INFO);
 
     auto hostLibc = findLibc(hostLibraries);
     if(!hostLibc) {
@@ -50,31 +50,31 @@ void GlibcHook::injectGlibcLibrariesIfNecessary() {
                             " Please contact the system administrator to properly configure the glibc hook");
     }
     if(!containerHasGlibc()) {
-        logMessage("Not replacing glibc libraries (container doesn't have glibc)", sarus::common::LogLevel::INFO);
+        logMessage("Not replacing glibc libraries (container doesn't have glibc)", libsarus::LogLevel::INFO);
         return; // nothing to do
     }
     containerLibraries = get64bitContainerLibraries();
     auto containerLibc = findLibc(containerLibraries);
     if(!containerLibc) {
-        logMessage("Not replacing glibc libraries (container doesn't have 64-bit libc)", sarus::common::LogLevel::INFO);
+        logMessage("Not replacing glibc libraries (container doesn't have 64-bit libc)", libsarus::LogLevel::INFO);
         return; // nothing to do (could be a 32-bit container without a 64-bit libc)
     }
     if(!containerGlibcHasToBeReplaced()) {
-        logMessage("Not replacing glibc libraries (container's glibc is new enough)", sarus::common::LogLevel::INFO);
+        logMessage("Not replacing glibc libraries (container's glibc is new enough)", libsarus::LogLevel::INFO);
         return; // nothing to do
     }
     verifyThatHostAndContainerGlibcAreABICompatible(*hostLibc, *containerLibc);
     replaceGlibcLibrariesInContainer();
 
-    logMessage("Successfully replaced glibc libraries", sarus::common::LogLevel::INFO);
+    logMessage("Successfully replaced glibc libraries", libsarus::LogLevel::INFO);
 }
 
 void GlibcHook::parseConfigJSONOfBundle() {
-    logMessage("Parsing bundle's config.json", sarus::common::LogLevel::INFO);
+    logMessage("Parsing bundle's config.json", libsarus::LogLevel::INFO);
 
-    auto json = sarus::common::readJSON(bundleDir / "config.json");
+    auto json = libsarus::readJSON(bundleDir / "config.json");
 
-    common::hook::applyLoggingConfigIfAvailable(json);
+    libsarus::hook::applyLoggingConfigIfAvailable(json);
 
     // get rootfs
     auto root = boost::filesystem::path{ json["root"]["path"].GetString() };
@@ -87,24 +87,24 @@ void GlibcHook::parseConfigJSONOfBundle() {
 
     uid_t uidOfUser = json["process"]["user"]["uid"].GetInt();
     gid_t gidOfUser = json["process"]["user"]["gid"].GetInt();
-    userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
+    userIdentity = libsarus::UserIdentity(uidOfUser, gidOfUser, {});
 
-    logMessage("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);
+    logMessage("Successfully parsed bundle's config.json", libsarus::LogLevel::INFO);
 }
 
 void GlibcHook::parseEnvironmentVariables() {
-    logMessage("Parsing environment variables", sarus::common::LogLevel::INFO);
+    logMessage("Parsing environment variables", libsarus::LogLevel::INFO);
 
-    lddPath = sarus::common::getEnvironmentVariable("LDD_PATH");
+    lddPath = libsarus::getEnvironmentVariable("LDD_PATH");
 
-    ldconfigPath = sarus::common::getEnvironmentVariable("LDCONFIG_PATH");
+    ldconfigPath = libsarus::getEnvironmentVariable("LDCONFIG_PATH");
 
-    readelfPath = sarus::common::getEnvironmentVariable("READELF_PATH");
+    readelfPath = libsarus::getEnvironmentVariable("READELF_PATH");
 
-    auto hostLibrariesColonSeparated = sarus::common::getEnvironmentVariable("GLIBC_LIBS");
+    auto hostLibrariesColonSeparated = libsarus::getEnvironmentVariable("GLIBC_LIBS");
     boost::split(hostLibraries, hostLibrariesColonSeparated, boost::is_any_of(":"));
 
-    logMessage("Successfully parsed environment variables", sarus::common::LogLevel::INFO);
+    logMessage("Successfully parsed environment variables", libsarus::LogLevel::INFO);
 }
 
 bool GlibcHook::containerHasGlibc() const {
@@ -116,12 +116,12 @@ bool GlibcHook::containerHasGlibc() const {
 
 std::vector<boost::filesystem::path> GlibcHook::get64bitContainerLibraries() const {
     auto isNot64bit = [this](const boost::filesystem::path& lib) {
-        return !sarus::common::is64bitSharedLib(rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, lib), readelfPath);
+        return !libsarus::is64bitSharedLib(rootfsDir / libsarus::realpathWithinRootfs(rootfsDir, lib), readelfPath);
     };
     auto doesNotExist = [this](const boost::filesystem::path& lib) {
-        return !boost::filesystem::exists(rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, lib));
+        return !boost::filesystem::exists(rootfsDir / libsarus::realpathWithinRootfs(rootfsDir, lib));
     };
-    auto libs = sarus::common::getSharedLibsFromDynamicLinker(ldconfigPath, rootfsDir);
+    auto libs = libsarus::getSharedLibsFromDynamicLinker(ldconfigPath, rootfsDir);
     auto newEnd = std::remove_if(libs.begin(), libs.end(), doesNotExist);
     newEnd = std::remove_if(libs.begin(), newEnd, isNot64bit);
     libs.erase(newEnd, libs.cend());
@@ -129,7 +129,7 @@ std::vector<boost::filesystem::path> GlibcHook::get64bitContainerLibraries() con
 }
 
 boost::optional<boost::filesystem::path> GlibcHook::findLibc(const std::vector<boost::filesystem::path>& libs) const {
-    auto it = std::find_if(libs.cbegin(), libs.cend(), sarus::common::isLibc);
+    auto it = std::find_if(libs.cbegin(), libs.cend(), libsarus::isLibc);
     if(it == libs.cend()) {
         return {};
     }
@@ -146,7 +146,7 @@ bool GlibcHook::containerGlibcHasToBeReplaced() const {
                                      " Please consider upgrading the container image to a distribution with glibc >= %3%.%4%.")
             % std::get<0>(containerVersion) % std::get<1>(containerVersion)
             % std::get<0>(hostVersion) % std::get<1>(hostVersion);
-        logMessage(message, sarus::common::LogLevel::GENERAL, std::cerr);
+        logMessage(message, libsarus::LogLevel::GENERAL, std::cerr);
         return true;
     }
     else {
@@ -169,14 +169,14 @@ static std::tuple<unsigned int, unsigned int> detectLibcVersion(
     const boost::optional<std::function<void()>> preExecActions,
     const std::string& context) {
     auto lddOutput = std::stringstream();
-    auto lddCommand = sarus::common::CLIArguments{lddPath.string(), "--version"};
-    auto status = sarus::common::forkExecWait(lddCommand, preExecActions, {}, &lddOutput);
+    auto lddCommand = libsarus::CLIArguments{lddPath.string(), "--version"};
+    auto status = libsarus::forkExecWait(lddCommand, preExecActions, {}, &lddOutput);
     if(status != 0) {
         auto message = boost::format("Failed to detect %s glibc version. Command %s exited with status %d")
             % context % lddCommand % status;
         SARUS_THROW_ERROR(message.str());
     }
-    return common::hook::parseLibcVersionFromLddOutput(lddOutput.str());
+    return libsarus::hook::parseLibcVersionFromLddOutput(lddOutput.str());
 }
 
 std::tuple<unsigned int, unsigned int> GlibcHook::detectHostLibcVersion() const {
@@ -196,8 +196,8 @@ std::tuple<unsigned int, unsigned int> GlibcHook::detectContainerLibcVersion() c
                 % rootfsDir % strerror(errno);
             SARUS_THROW_ERROR(message.str());
         }
-        common::hook::switchToUnprivilegedProcess(userIdentity.uid, userIdentity.gid);
-        sarus::common::changeDirectory("/");
+        libsarus::hook::switchToUnprivilegedProcess(userIdentity.uid, userIdentity.gid);
+        libsarus::changeDirectory("/");
     };
     return detectLibcVersion("/usr/bin/ldd", preExecActions, "container");
 }
@@ -205,8 +205,8 @@ std::tuple<unsigned int, unsigned int> GlibcHook::detectContainerLibcVersion() c
 void GlibcHook::verifyThatHostAndContainerGlibcAreABICompatible(
     const boost::filesystem::path& hostLibc,
     const boost::filesystem::path& containerLibc) const {
-    auto hostSoname = sarus::common::getSharedLibSoname(hostLibc, readelfPath);
-    auto containerSoname = sarus::common::getSharedLibSoname(rootfsDir / containerLibc, readelfPath);
+    auto hostSoname = libsarus::getSharedLibSoname(hostLibc, readelfPath);
+    auto containerSoname = libsarus::getSharedLibSoname(rootfsDir / containerLibc, readelfPath);
     if(hostSoname != containerSoname) {
         auto message = boost::format(
             "Failed to inject glibc libraries. Host's glibc is not ABI compatible with container's glibc."
@@ -218,13 +218,13 @@ void GlibcHook::verifyThatHostAndContainerGlibcAreABICompatible(
 void GlibcHook::replaceGlibcLibrariesInContainer() const {
     for (const auto& hostLib : hostLibraries) {
         auto wasLibraryReplaced = false;
-        auto soname = sarus::common::getSharedLibSoname(hostLib, readelfPath);
+        auto soname = libsarus::getSharedLibSoname(hostLib, readelfPath);
         logMessage(boost::format("Injecting host lib %s with soname %s in the container")
-                   % hostLib % soname, sarus::common::LogLevel::DEBUG);
+                   % hostLib % soname, libsarus::LogLevel::DEBUG);
 
         for (const auto& containerLib : containerLibraries) {
             if (containerLib.filename().string() == soname) {
-                sarus::common::validatedBindMount(hostLib, containerLib, userIdentity, rootfsDir);
+                libsarus::validatedBindMount(hostLib, containerLib, userIdentity, rootfsDir);
                 wasLibraryReplaced = true;
             }
         }
@@ -232,22 +232,22 @@ void GlibcHook::replaceGlibcLibrariesInContainer() const {
         if (!wasLibraryReplaced) {
             logMessage(boost::format("Could not find ABI-compatible counterpart for host lib (%s) inside container "
                                      "=> adding host lib (%s) into container's /lib64 via bind mount ")
-                       % hostLib % hostLib, sarus::common::LogLevel::WARN);
-            sarus::common::validatedBindMount(hostLib, "/lib64"/hostLib.filename(), userIdentity, rootfsDir);
+                       % hostLib % hostLib, libsarus::LogLevel::WARN);
+            libsarus::validatedBindMount(hostLib, "/lib64"/hostLib.filename(), userIdentity, rootfsDir);
         }
     }
 }
 
-void GlibcHook::logMessage( const std::string& message, sarus::common::LogLevel logLevel,
+void GlibcHook::logMessage( const std::string& message, libsarus::LogLevel logLevel,
                             std::ostream& out, std::ostream& err) const {
     auto systemName = "glibc-hook";
-    sarus::common::Logger::getInstance().log(message, systemName, logLevel, out, err);
+    libsarus::Logger::getInstance().log(message, systemName, logLevel, out, err);
 }
 
-void GlibcHook::logMessage( const boost::format& message, sarus::common::LogLevel logLevel,
+void GlibcHook::logMessage( const boost::format& message, libsarus::LogLevel logLevel,
                             std::ostream& out, std::ostream& err) const {
     auto systemName = "glibc-hook";
-    sarus::common::Logger::getInstance().log(message.str(), systemName, logLevel, out, err);
+    libsarus::Logger::getInstance().log(message.str(), systemName, logLevel, out, err);
 }
 
 }}} // namespace

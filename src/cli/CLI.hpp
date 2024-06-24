@@ -17,11 +17,11 @@
 #include <boost/program_options.hpp>
 #include <boost/format.hpp>
 
-#include "common/Logger.hpp"
+#include "libsarus/Logger.hpp"
 #include "cli/Utility.hpp"
 #include "common/Config.hpp"
 #include "cli/Command.hpp"
-#include "common/CLIArguments.hpp"
+#include "libsarus/CLIArguments.hpp"
 
 
 namespace sarus {
@@ -30,14 +30,14 @@ namespace cli {
 class CLI {
 public:
     CLI();
-    std::unique_ptr<cli::Command> parseCommandLine(const common::CLIArguments&, std::shared_ptr<common::Config>) const;
+    std::unique_ptr<cli::Command> parseCommandLine(const libsarus::CLIArguments&, std::shared_ptr<common::Config>) const;
 
 // these methods are public for test purpose
 public:
     const boost::program_options::options_description& getOptionsDescription() const;
 
 private:
-    std::unique_ptr<cli::Command> parseCommandHelpOfCommand(const common::CLIArguments&) const;
+    std::unique_ptr<cli::Command> parseCommandHelpOfCommand(const libsarus::CLIArguments&) const;
 
 private:
     boost::program_options::options_description optionsDescription{"Options"};

@@ -124,8 +124,8 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getBundleAnnotations
         annotations["com.hooks.ssh.enabled"] = "true";
     }
 
-    using IntType = typename std::underlying_type<common::LogLevel>::type;
-    auto level = static_cast<IntType>(common::Logger::getInstance().getLevel());
+    using IntType = typename std::underlying_type<libsarus::LogLevel>::type;
+    auto level = static_cast<IntType>(libsarus::Logger::getInstance().getLevel());
     annotations["com.hooks.logging.level"] = std::to_string(level);
 
     // Resolve paths of the engine's stdout/stderr (if available) to be used by hooks
@@ -137,7 +137,7 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getBundleAnnotations
     }
     else {
         auto message = boost::format("Failed to find real path for /dev/stdout: %s") % strerror(errno);
-        utility::logMessage(message, common::LogLevel::DEBUG);
+        utility::logMessage(message, libsarus::LogLevel::DEBUG);
     }
     realPtr = realpath("/dev/stderr", NULL);
     if (realPtr != nullptr) {
@@ -146,7 +146,7 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getBundleAnnotations
     }
     else {
         auto message = boost::format("Failed to find real path for /dev/stderr: %s") % strerror(errno);
-        utility::logMessage(message, common::LogLevel::DEBUG);
+        utility::logMessage(message, libsarus::LogLevel::DEBUG);
     }
 
     // Merge custom annotations (from the CLI or other components like the FileDescriptorHandler),
@@ -163,10 +163,10 @@ std::unordered_map<std::string, std::string> ConfigsMerger::getBundleAnnotations
     const auto& imageLabels = metadata.labels;
     annotations.insert(imageLabels.cbegin(), imageLabels.cend());
 
-    utility::logMessage("Generated OCI annotations for the bundle:", common::LogLevel::DEBUG);
+    utility::logMessage("Generated OCI annotations for the bundle:", libsarus::LogLevel::DEBUG);
     for (const auto& annotation : annotations) {
         utility::logMessage(boost::format("    %s = %s") % std::get<0>(annotation) % std::get<1>(annotation),
-                            common::LogLevel::DEBUG);
+                            libsarus::LogLevel::DEBUG);
     }
 
     return annotations;
@@ -255,10 +255,10 @@ void ConfigsMerger::setPMIxMcaEnvironmentVariables(const std::unordered_map<std:
     }
 }
 
-common::CLIArguments ConfigsMerger::getCommandToExecuteInContainer() const {
-    utility::logMessage("Building command to execute in container", common::LogLevel::INFO);
+libsarus::CLIArguments ConfigsMerger::getCommandToExecuteInContainer() const {
+    utility::logMessage("Building command to execute in container", libsarus::LogLevel::INFO);
 
-    auto result = common::CLIArguments{};
+    auto result = libsarus::CLIArguments{};
 
     // first of all init program (if requested)
     if(config->commandRun.addInitProcess) {
@@ -287,7 +287,7 @@ common::CLIArguments ConfigsMerger::getCommandToExecuteInContainer() const {
 
     utility::logMessage(
         boost::format("Successfully built command to execute in container: %s") % result,
-        common::LogLevel::INFO);
+        libsarus::LogLevel::INFO);
 
     return result;
 }

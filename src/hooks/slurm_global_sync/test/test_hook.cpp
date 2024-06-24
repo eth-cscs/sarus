@@ -8,8 +8,8 @@
  *
  */
 
-#include "common/PathRAII.hpp"
-#include "common/PasswdDB.hpp"
+#include "libsarus/PathRAII.hpp"
+#include "libsarus/PasswdDB.hpp"
 #include "hooks/slurm_global_sync/Hook.hpp"
 #include "test_utility/Misc.hpp"
 #include "test_utility/config.hpp"
@@ -31,13 +31,13 @@ test_utility::config::ConfigRAII makeConfig() {
 TEST_GROUP(SlurmGlobalSyncTestGroup) {
     test_utility::config::ConfigRAII configRAII = makeConfig();
     std::tuple<uid_t, gid_t> idsOfUser{ configRAII.config->userIdentity.uid, configRAII.config->userIdentity.gid };
-    sarus::common::PathRAII prefixDir = sarus::common::PathRAII{configRAII.config->json["prefixDir"].GetString()};
-    sarus::common::PathRAII bundleDir = sarus::common::PathRAII{configRAII.config->json["OCIBundleDir"].GetString()};
+    libsarus::PathRAII prefixDir = libsarus::PathRAII{configRAII.config->json["prefixDir"].GetString()};
+    libsarus::PathRAII bundleDir = libsarus::PathRAII{configRAII.config->json["OCIBundleDir"].GetString()};
     boost::filesystem::path rootfsDir = bundleDir.getPath() / configRAII.config->json["rootfsFolder"].GetString();
     boost::filesystem::path passwdFile = prefixDir.getPath() / "etc/passwd";
     boost::filesystem::path syncBaseDir = prefixDir.getPath() / "sync-base-dir";
     boost::filesystem::path syncDir = syncBaseDir
-                                      / sarus::common::PasswdDB{passwdFile}.getUsername(std::get<0>(idsOfUser))
+                                      / libsarus::PasswdDB{passwdFile}.getUsername(std::get<0>(idsOfUser))
                                       / ".oci-hooks/slurm-global-sync/jobid-256-stepid-32";
 };
 
@@ -56,12 +56,12 @@ void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir,
         doc["process"]["env"].PushBack(rj::Value{"SLURM_NTASKS=2", allocator}, allocator);
     }
 
-    sarus::common::writeJSON(doc, bundleDir / "config.json");
+    libsarus::writeJSON(doc, bundleDir / "config.json");
 }
 
 TEST(SlurmGlobalSyncTestGroup, test_hook_disabled) {
-    sarus::common::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
-    sarus::common::setEnvironmentVariable("HOOK_BASE_DIR", syncBaseDir.string());
+    libsarus::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
+    libsarus::setEnvironmentVariable("HOOK_BASE_DIR", syncBaseDir.string());
 
     bool generateSlurmEnvironmentVariables = false;
     createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser,
@@ -72,14 +72,14 @@ TEST(SlurmGlobalSyncTestGroup, test_hook_disabled) {
 }
 
 TEST(SlurmGlobalSyncTestGroup, test_high_level_synchronization) {
-    sarus::common::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
-    sarus::common::setEnvironmentVariable("HOOK_BASE_DIR", syncBaseDir.string());
+    libsarus::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
+    libsarus::setEnvironmentVariable("HOOK_BASE_DIR", syncBaseDir.string());
     createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser);
     test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
 
     // simulate arrival + departure of other process
-    sarus::common::createFileIfNecessary(syncDir / "arrival/slurm-procid-1");
-    sarus::common::createFileIfNecessary(syncDir / "departure/slurm-procid-1");
+    libsarus::createFileIfNecessary(syncDir / "arrival/slurm-procid-1");
+    libsarus::createFileIfNecessary(syncDir / "departure/slurm-procid-1");
 
     // perform synchronization
     auto hook = Hook{};
@@ -89,8 +89,8 @@ TEST(SlurmGlobalSyncTestGroup, test_high_level_synchronization) {
 }
 
 TEST(SlurmGlobalSyncTestGroup, test_internals) {
-    sarus::common::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
-    sarus::common::setEnvironmentVariable("HOOK_BASE_DIR", syncBaseDir.string());
+    libsarus::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
+    libsarus::setEnvironmentVariable("HOOK_BASE_DIR", syncBaseDir.string());
     createOCIBundleConfigJSON(bundleDir.getPath(), rootfsDir, idsOfUser);
     test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
 
@@ -101,22 +101,22 @@ TEST(SlurmGlobalSyncTestGroup, test_internals) {
     CHECK(!boost::filesystem::exists(syncDir / "arrival/slurm-procid-0"));
     hook.signalArrival();
     CHECK(boost::filesystem::exists(syncDir / "arrival/slurm-procid-0"));
-    CHECK(sarus::common::getOwner(syncDir / "arrival/slurm-procid-0") == idsOfUser);
+    CHECK(libsarus::getOwner(syncDir / "arrival/slurm-procid-0") == idsOfUser);
 
     // arrival synchronization
     CHECK(hook.allInstancesArrived() == false);
-    sarus::common::createFileIfNecessary(syncDir / "arrival/slurm-procid-1");
+    libsarus::createFileIfNecessary(syncDir / "arrival/slurm-procid-1");
     CHECK(hook.allInstancesArrived() == true);
 
     // signal departure
     CHECK(!boost::filesystem::exists(syncDir / "departure/slurm-procid-0"));
     hook.signalDeparture();
     CHECK(boost::filesystem::exists(syncDir / "departure/slurm-procid-0"));
-    CHECK(sarus::common::getOwner(syncDir / "departure/slurm-procid-0") == idsOfUser);
+    CHECK(libsarus::getOwner(syncDir / "departure/slurm-procid-0") == idsOfUser);
 
     // departure synchronization
     CHECK(hook.allInstancesDeparted() == false);
-    sarus::common::createFileIfNecessary(syncDir / "departure/slurm-procid-1");
+    libsarus::createFileIfNecessary(syncDir / "departure/slurm-procid-1");
     CHECK(hook.allInstancesDeparted() == true);
 
     // cleanup of sync dir

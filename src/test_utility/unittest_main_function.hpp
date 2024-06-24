@@ -11,8 +11,8 @@
 #ifndef sarus_test_utilities_unittest_main_function_hpp
 #define sarus_test_utilities_unittest_main_function_hpp
 
-#include "common/Error.hpp"
-#include "common/Logger.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Logger.hpp"
 
 // WATCH OUT!
 // boost libraries must be included before CppUTest, so in order to be
@@ -25,8 +25,8 @@ int main(int argc, char **argv) { \
     try { \
         return CommandLineTestRunner::RunAllTests(argc, argv); \
     } \
-    catch(const sarus::common::Error& e) { \
-        sarus::common::Logger::getInstance().logErrorTrace(e, "test"); \
+    catch(const libsarus::Error& e) { \
+        libsarus::Logger::getInstance().logErrorTrace(e, "test"); \
         throw; \
     } \
 }

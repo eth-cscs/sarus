@@ -16,8 +16,8 @@
 #include <boost/filesystem.hpp>
 #include <rapidjson/document.h>
 
-#include "common/LogLevel.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/LogLevel.hpp"
+#include "libsarus/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -46,12 +46,12 @@ private:
     void synchronizeDeparture() const;
     void createSyncFile(const boost::filesystem::path& file) const;
     size_t countFilesInDirectory(const boost::filesystem::path& directory) const;
-    void log(const std::string& message, sarus::common::LogLevel level) const;
-    void log(const boost::format& message, sarus::common::LogLevel level) const;
+    void log(const std::string& message, libsarus::LogLevel level) const;
+    void log(const boost::format& message, libsarus::LogLevel level) const;
 
 private:
     bool isHookEnabled{ true };
-    common::hook::ContainerState containerState;
+    libsarus::hook::ContainerState containerState;
     boost::filesystem::path syncDir;
     boost::filesystem::path syncDirArrival;
     boost::filesystem::path syncDirDeparture;

@@ -5,8 +5,8 @@
 
 #include "AbiChecker.hpp"
 
-#include "common/Error.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -62,7 +62,7 @@ std::pair<bool, boost::optional<boost::format>> StrictAbiCompatibilityChecker::c
 std::pair<bool, boost::optional<boost::format>> DependenciesAbiCompatibilityChecker::check(const SharedLibrary &hostLib, const SharedLibrary &containerLib) const {
     try {
         return FullAbiCompatibilityChecker{}.check(hostLib, containerLib);
-    } catch (const sarus::common::Error&) {}
+    } catch (const libsarus::Error&) {}
     auto message = boost::format{"Could not find ABI-compatible counterpart for host lib (%s) inside container (best candidate found: %s) => adding host lib (%s) into container's /lib via bind mount "} % hostLib.getPath() % containerLib.getPath() % hostLib.getPath();
     //auto message = boost::format{"WARNING: container lib (%s) is major-only-abi-compatible => bind mount host lib (%s) into /lib"} % containerLib.getPath() % hostLib.getPath();
     return std::make_pair(false, message);

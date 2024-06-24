@@ -18,9 +18,9 @@
 #include <sys/prctl.h>
 
 #include "common/Config.hpp"
-#include "common/Error.hpp"
-#include "common/Logger.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Logger.hpp"
+#include "libsarus/Utility.hpp"
 #include "cli/CLI.hpp"
 #include "runtime/SecurityChecks.hpp"
 
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
     //       the same permissions as the source.
     umask(022);
 
-    auto& logger = common::Logger::getInstance();
+    auto& logger = libsarus::Logger::getInstance();
 
     try {
         auto program_start = std::chrono::high_resolution_clock::now();
@@ -51,11 +51,11 @@ int main(int argc, char* argv[]) {
         auto config = std::make_shared<sarus::common::Config>(sarusInstallationPrefixDir);
         config->program_start = program_start;
         runtime::SecurityChecks{config}.runSecurityChecks(sarusInstallationPrefixDir);
-        config->commandRun.hostEnvironment = common::parseEnvironmentVariables(environ);
+        config->commandRun.hostEnvironment = libsarus::parseEnvironmentVariables(environ);
 
 
         // Process command
-        auto args = common::CLIArguments(argc, argv);
+        auto args = libsarus::CLIArguments(argc, argv);
         auto command = cli::CLI{}.parseCommandLine(args, config);
         if(!command->requiresRootPrivileges()) {
             dropPrivileges(*config);
@@ -65,14 +65,14 @@ int main(int argc, char* argv[]) {
         }
         command->execute();
     }
-    catch(const common::Error& e) {
+    catch(const libsarus::Error& e) {
         logger.logErrorTrace(e, "main");
         return 1;
     }
     catch(const std::exception& e) {
         auto message = boost::format("Caught exception in main function. No error trace available."
                                      " Exception message: %s") % e.what();
-        logger.log(message.str(), "main", common::LogLevel::ERROR);
+        logger.log(message.str(), "main", libsarus::LogLevel::ERROR);
         return 1;
     }
 

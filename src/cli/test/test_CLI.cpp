@@ -15,10 +15,10 @@
 #include <rapidjson/document.h>
 #include <rapidjson/schema.h>
 
-#include "common/Utility.hpp"
+#include "libsarus/Utility.hpp"
 #include "common/Config.hpp"
-#include "common/CLIArguments.hpp"
-#include "common/Mount.hpp"
+#include "libsarus/CLIArguments.hpp"
+#include "libsarus/Mount.hpp"
 #include "cli/CommandObjectsFactory.hpp"
 #include "cli/CLI.hpp"
 #include "cli/CommandHelp.hpp"
@@ -41,7 +41,7 @@ using namespace sarus;
 TEST_GROUP(CLITestGroup) {
 };
 
-std::unique_ptr<cli::Command> generateCommandFromCLIArguments(const common::CLIArguments& args) {
+std::unique_ptr<cli::Command> generateCommandFromCLIArguments(const libsarus::CLIArguments& args) {
     auto cli = cli::CLI{};
     auto configRAII = test_utility::config::makeConfig();
     return cli.parseCommandLine(args, configRAII.config);
@@ -53,15 +53,15 @@ void checkCommandDynamicType(const cli::Command& command) {
 }
 
 TEST(CLITestGroup, LogLevel) {
-    auto& logger = common::Logger::getInstance();
+    auto& logger = libsarus::Logger::getInstance();
     generateCommandFromCLIArguments({"sarus"});
-    CHECK(logger.getLevel() == common::LogLevel::WARN);
+    CHECK(logger.getLevel() == libsarus::LogLevel::WARN);
 
     generateCommandFromCLIArguments({"sarus", "--verbose"});
-    CHECK(logger.getLevel() == common::LogLevel::INFO);
+    CHECK(logger.getLevel() == libsarus::LogLevel::INFO);
 
     generateCommandFromCLIArguments({"sarus", "--debug"});
-    CHECK(logger.getLevel() == common::LogLevel::DEBUG);
+    CHECK(logger.getLevel() == libsarus::LogLevel::DEBUG);
 }
 
 TEST(CLITestGroup, CommandTypes) {
@@ -106,11 +106,11 @@ TEST(CLITestGroup, CommandTypes) {
 }
 
 TEST(CLITestGroup, UnrecognizedGlobalOptions) {
-    CHECK_THROWS(common::Error, generateCommandFromCLIArguments({"sarus", "--mpi", "run"}));
-    CHECK_THROWS(common::Error, generateCommandFromCLIArguments({"sarus", "---run"}));
+    CHECK_THROWS(libsarus::Error, generateCommandFromCLIArguments({"sarus", "--mpi", "run"}));
+    CHECK_THROWS(libsarus::Error, generateCommandFromCLIArguments({"sarus", "---run"}));
 }
 
-std::shared_ptr<common::Config> generateConfig(const common::CLIArguments& args) {
+std::shared_ptr<common::Config> generateConfig(const libsarus::CLIArguments& args) {
     auto commandName = args.argv()[0];
     auto configRAII = test_utility::config::makeConfig();
     auto factory = cli::CommandObjectsFactory{};
@@ -134,8 +134,8 @@ TEST(CLITestGroup, generated_config_for_CommandLoad) {
     }
     // temp dir
     {
-        auto customTempDir = common::PathRAII("/tmp/sarus-utest-temp-dir");
-        common::createFoldersIfNecessary(customTempDir.getPath());
+        auto customTempDir = libsarus::PathRAII("/tmp/sarus-utest-temp-dir");
+        libsarus::createFoldersIfNecessary(customTempDir.getPath());
 
         auto conf = generateConfig(
             {"load", "--temp-dir="+customTempDir.getPath().string(), "archive.tar", "library/image:tag"});
@@ -179,8 +179,8 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
     }
     // temp-dir option and custom server
     {
-        auto customTempDir = common::PathRAII("/tmp/sarus-utest-temp-dir");
-        common::createFoldersIfNecessary(customTempDir.getPath());
+        auto customTempDir = libsarus::PathRAII("/tmp/sarus-utest-temp-dir");
+        libsarus::createFoldersIfNecessary(customTempDir.getPath());
 
         auto conf = generateConfig(
             {"pull",
@@ -433,7 +433,7 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
     }
 }
 
-std::shared_ptr<common::Config> generateConfigWithSiteDevice(const common::CLIArguments& args,
+std::shared_ptr<common::Config> generateConfigWithSiteDevice(const libsarus::CLIArguments& args,
                                                              const boost::filesystem::path& devicePath,
                                                              const boost::filesystem::path& mountDestination,
                                                              const std::string& deviceAccess) {
@@ -469,9 +469,9 @@ TEST (CLITestGroup, device_mounts_for_CommandRun)  {
 #else
 IGNORE_TEST(CLITestGroup, device_mounts_for_CommandRun) {
 #endif
-    auto testDir = sarus::common::PathRAII(
-        sarus::common::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "CLI-test-deviceMounts-CommandRun"));
-    common::createFoldersIfNecessary(testDir.getPath());
+    auto testDir = libsarus::PathRAII(
+        libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "CLI-test-deviceMounts-CommandRun"));
+    libsarus::createFoldersIfNecessary(testDir.getPath());
     auto siteDevice = testDir.getPath() / "siteDevice";
     auto siteDeviceMajorID = 511u;
     auto siteDeviceMinorID = 511u;

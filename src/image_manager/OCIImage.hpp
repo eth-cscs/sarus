@@ -15,7 +15,7 @@
 #include <boost/filesystem.hpp>
 
 #include "common/Config.hpp"
-#include "common/PathRAII.hpp"
+#include "libsarus/PathRAII.hpp"
 #include "common/ImageMetadata.hpp"
 
 
@@ -25,21 +25,21 @@ namespace image_manager {
 class OCIImage {
 public:
     OCIImage(std::shared_ptr<const common::Config> config, const boost::filesystem::path& imagePath);
-    common::PathRAII unpack() const;
+    libsarus::PathRAII unpack() const;
     std::string getImageID() const {return imageID;};
-    common::ImageMetadata getMetadata() const {return metadata;};
+    sarus::common::ImageMetadata getMetadata() const {return metadata;};
     void release();
 
 private:
     boost::filesystem::path makeTemporaryUnpackDirectory() const;
-    void log(const boost::format &message, common::LogLevel,
+    void log(const boost::format &message, libsarus::LogLevel,
              std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
-    void log(const std::string& message, common::LogLevel,
+    void log(const std::string& message, libsarus::LogLevel,
              std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
 
 private:
     std::shared_ptr<const common::Config> config;
-    common::PathRAII imageDir;
+    libsarus::PathRAII imageDir;
     common::ImageMetadata metadata;
     std::string imageID;
 };

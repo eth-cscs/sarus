@@ -10,26 +10,23 @@
 
 #include <iostream>
 
-#include "common/Logger.hpp"
-#include "common/Utility.hpp"
-
-using namespace sarus;
+#include "libsarus/Logger.hpp"
+#include "libsarus/Utility.hpp"
 
 int main(int argc, char* argv[]) {
     boost::filesystem::path bundleDir;
-    pid_t pidOfContainer;
-    auto containerState = common::hook::parseStateOfContainerFromStdin();
-    auto json = sarus::common::readJSON(containerState.bundle() / "config.json");
-    common::hook::applyLoggingConfigIfAvailable(json);
+    auto containerState = libsarus::hook::parseStateOfContainerFromStdin();
+    auto json = libsarus::readJSON(containerState.bundle() / "config.json");
+    libsarus::hook::applyLoggingConfigIfAvailable(json);
 
     std::cout << "hook's stdout" << std::endl;
     std::cerr << "hook's stderr" << std::endl;
 
-    auto& logger = sarus::common::Logger::getInstance();
-    logger.log("hook's DEBUG log message", "stdout_stderr_test_hook", sarus::common::LogLevel::DEBUG);
-    logger.log("hook's INFO log message", "stdout_stderr_test_hook", sarus::common::LogLevel::INFO);
-    logger.log("hook's WARN log message", "stdout_stderr_test_hook", sarus::common::LogLevel::WARN);
-    logger.log("hook's ERROR log message", "stdout_stderr_test_hook", sarus::common::LogLevel::ERROR);
+    auto& logger = libsarus::Logger::getInstance();
+    logger.log("hook's DEBUG log message", "stdout_stderr_test_hook", libsarus::LogLevel::DEBUG);
+    logger.log("hook's INFO log message", "stdout_stderr_test_hook", libsarus::LogLevel::INFO);
+    logger.log("hook's WARN log message", "stdout_stderr_test_hook", libsarus::LogLevel::WARN);
+    logger.log("hook's ERROR log message", "stdout_stderr_test_hook", libsarus::LogLevel::ERROR);
 
     return 0;
 }

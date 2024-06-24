@@ -105,7 +105,7 @@ TEST(ImageReferenceTestGroup, getUniqueKey) {
 
     // no tag and no digest
     ref = common::ImageReference{"server", "namespace", "image", "", ""};
-    CHECK_THROWS(common::Error, ref.getUniqueKey());
+    CHECK_THROWS(libsarus::Error, ref.getUniqueKey());
 
     // multiple namespaces
     ref = common::ImageReference{"server", "namespace0/namespace1", "image", "tag", ""};
@@ -113,6 +113,6 @@ TEST(ImageReferenceTestGroup, getUniqueKey) {
 
 }
 
-}}} // namespace
+}}}
 
 SARUS_UNITTEST_MAIN_FUNCTION();

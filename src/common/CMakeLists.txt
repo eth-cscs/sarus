@@ -1,9 +1,9 @@
 
 configure_file(ConfigBuildTime.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/ConfigBuildTime.cpp)
 
-file(GLOB common_srcs "*.cpp" "*.c" "utility/*.cpp")
+file(GLOB common_srcs "*.cpp")
 add_library(common_library STATIC ${common_srcs})
-target_link_libraries(common_library ${Boost_LIBRARIES})
+target_link_libraries(common_library ${Boost_LIBRARIES} libsarus)
 
 if(${BUILD_STATIC})
     target_link_libraries(common_library pthread dl)

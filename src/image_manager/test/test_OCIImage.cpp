@@ -43,7 +43,7 @@ TEST(OCIImageTestGroup, getMetadata) {
     auto ociImage = OCIImage{configRAII.config, imagePath};
 
     auto expectedMetadata = common::ImageMetadata{};
-    expectedMetadata.cmd = common::CLIArguments{"/bin/sh"};
+    expectedMetadata.cmd = libsarus::CLIArguments{"/bin/sh"};
     expectedMetadata.env["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
     expectedMetadata.labels["com.example.project.git.url"] = "https://example.com/project.git";
     expectedMetadata.labels["com.example.project.git.commit"] = "45a939b2999782a3f005621a8d0f29aa387e1d6b";

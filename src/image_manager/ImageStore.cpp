@@ -19,11 +19,11 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
-#include "common/PathRAII.hpp"
-#include "common/Error.hpp"
-#include "common/Logger.hpp"
-#include "common/Utility.hpp"
-#include "common/Flock.hpp"
+#include "libsarus/PathRAII.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Logger.hpp"
+#include "libsarus/Utility.hpp"
+#include "libsarus/Flock.hpp"
 #include "common/SarusImage.hpp"
 
 
@@ -62,11 +62,11 @@ namespace image_manager {
      */
     void ImageStore::addImage(const common::SarusImage& image) const {
         printLog(boost::format("Adding image %s to metadata file %s") % image.reference % metadataFile,
-                 common::LogLevel::INFO);
+                 libsarus::LogLevel::INFO);
 
         try {
-            common::Flock lock{metadataFile, common::Flock::Type::writeLock, lockTimeout, lockWarning};
-            auto metadata = common::readJSON(metadataFile);
+            libsarus::Flock lock{metadataFile, libsarus::Flock::Type::writeLock, lockTimeout, lockWarning};
+            auto metadata = libsarus::readJSON(metadataFile);
 
             // remove previous entries with the same image reference (if any)
             auto& images = metadata["images"];
@@ -91,7 +91,7 @@ namespace image_manager {
             SARUS_RETHROW_ERROR(e, message.str());
         }
 
-        printLog(boost::format("Successfully added image"), common::LogLevel::INFO);
+        printLog(boost::format("Successfully added image"), libsarus::LogLevel::INFO);
     }
 
     /**
@@ -99,17 +99,17 @@ namespace image_manager {
      */
     void ImageStore::removeImage(const common::ImageReference& imageReference) const {
         printLog(boost::format("Attempting to remove image %s from local repository") % imageReference,
-                 common::LogLevel::INFO);
+                 libsarus::LogLevel::INFO);
 
         try {
-            common::Flock lock{metadataFile, common::Flock::Type::writeLock, lockTimeout, lockWarning};
-            auto repositoryMetadata = common::readJSON(metadataFile);
+            libsarus::Flock lock{metadataFile, libsarus::Flock::Type::writeLock, lockTimeout, lockWarning};
+            auto repositoryMetadata = libsarus::readJSON(metadataFile);
             auto imageMetadata = findImageMetadata(imageReference, repositoryMetadata);
 
             if (!imageMetadata) {
                 auto message = boost::format("Cannot find image '%s'") % imageReference;
-                printLog(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+                printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
             }
 
             // Attempting to remove backing files first so that, if something goes wrong on metadata removal,
@@ -124,18 +124,18 @@ namespace image_manager {
             SARUS_RETHROW_ERROR(e, message.str());
         }
 
-        printLog(boost::format("Successfully removed image from local repository"), common::LogLevel::INFO);
+        printLog(boost::format("Successfully removed image from local repository"), libsarus::LogLevel::INFO);
     }
 
     /**
      * List the containers in repository
      */
-    std::vector<common::SarusImage> ImageStore::listImages() const {
+    std::vector<sarus::common::SarusImage> ImageStore::listImages() const {
         auto images = std::vector<common::SarusImage>{};
 
         try {
-            common::Flock lock{metadataFile, common::Flock::Type::writeLock, lockTimeout, lockWarning};
-            auto repositoryMetadata = common::readJSON(metadataFile);
+            libsarus::Flock lock{metadataFile, libsarus::Flock::Type::writeLock, lockTimeout, lockWarning};
+            auto repositoryMetadata = libsarus::readJSON(metadataFile);
             for (const auto& imageMetadata : repositoryMetadata["images"].GetArray()) {
                 // If backing files are present, all image data is available: add the image to list to be visualized.
                 // Else, ensure all image data is cleaned up
@@ -154,17 +154,17 @@ namespace image_manager {
             SARUS_RETHROW_ERROR(e, message.str());
         }
 
-        printLog(boost::format("Successfully created list of images."), common::LogLevel::DEBUG);
+        printLog(boost::format("Successfully created list of images."), libsarus::LogLevel::DEBUG);
         return images;
     }
 
-    boost::optional<common::SarusImage> ImageStore::findImage(const common::ImageReference& reference) const {
-        printLog(boost::format("Looking for reference '%s' in local repository") % reference, common::LogLevel::DEBUG);
+    boost::optional<sarus::common::SarusImage> ImageStore::findImage(const common::ImageReference& reference) const {
+        printLog(boost::format("Looking for reference '%s' in local repository") % reference, libsarus::LogLevel::DEBUG);
         boost::optional<common::SarusImage> image;
 
         try {
-            common::Flock lock{metadataFile, common::Flock::Type::readLock, lockTimeout, lockWarning};
-            auto repositoryMetadata = common::readJSON(metadataFile);
+            libsarus::Flock lock{metadataFile, libsarus::Flock::Type::readLock, lockTimeout, lockWarning};
+            auto repositoryMetadata = libsarus::readJSON(metadataFile);
             auto imageMetadata = findImageMetadata(reference, repositoryMetadata);
             if (imageMetadata) {
                 // If backing files are present, all image data is available: assign object to return
@@ -175,9 +175,9 @@ namespace image_manager {
                 else {
                     removeImageBackingFiles(imageMetadata);
                     // Obtain exclusive access to the file by acquiring a write lock
-                    lock.convertToType(common::Flock::Type::writeLock);
+                    lock.convertToType(libsarus::Flock::Type::writeLock);
                     // Check if another process has updated the metadata in the meantime
-                    repositoryMetadata = common::readJSON(metadataFile);
+                    repositoryMetadata = libsarus::readJSON(metadataFile);
                     imageMetadata = findImageMetadata(reference, repositoryMetadata);
                     if (imageMetadata) {
                         removeRepositoryMetadataEntry(imageMetadata, repositoryMetadata, &lock);
@@ -191,7 +191,7 @@ namespace image_manager {
         }
 
         printLog(boost::format("Image for reference '%s' %s") % reference % (image ? "found" : "not found"),
-                 common::LogLevel::DEBUG);
+                 libsarus::LogLevel::DEBUG);
         return image;
     }
 
@@ -201,14 +201,14 @@ namespace image_manager {
         metadata = rj::Document{rj::kObjectType};
         metadata.AddMember("images", rj::kArrayType, metadata.GetAllocator());
 
-        common::Flock lock{};
+        libsarus::Flock lock{};
         atomicallyUpdateRepositoryMetadataFile(metadata, &lock);
 
         return metadata;
     }
 
     const rapidjson::Value* ImageStore::findImageMetadata(const common::ImageReference& reference, const rapidjson::Document& metadata) const {
-        printLog(boost::format("Looking for reference '%s' in repository metadata") % reference, common::LogLevel::DEBUG);
+        printLog(boost::format("Looking for reference '%s' in repository metadata") % reference, libsarus::LogLevel::DEBUG);
         const rj::Value* imageMetadata = nullptr;
         auto uniqueKey = reference.getUniqueKey();
 
@@ -220,7 +220,7 @@ namespace image_manager {
         }
 
         printLog(boost::format("Metadata for reference '%s' %s") % reference % (imageMetadata ? "found" : "not found"),
-                 common::LogLevel::DEBUG);
+                 libsarus::LogLevel::DEBUG);
         return imageMetadata;
     }
 
@@ -238,12 +238,12 @@ namespace image_manager {
             auto message = boost::format("Repository inconsistency detected: image is listed in the repository "
                                          "metadata but the following backing files are missing: %s")
                                          % boost::algorithm::join(missing, ", ");
-            printLog(message.str(), common::LogLevel::INFO, std::cerr);
+            printLog(message.str(), libsarus::LogLevel::INFO, std::cerr);
         }
         return missing.empty();
     }
 
-    common::SarusImage ImageStore::convertImageMetadataToSarusImage(const rapidjson::Value& imageMetadata) const {
+    sarus::common::SarusImage ImageStore::convertImageMetadataToSarusImage(const rapidjson::Value& imageMetadata) const {
         auto imageReference = common::ImageReference{
             imageMetadata["server"].GetString(),
             imageMetadata["namespace"].GetString(),
@@ -337,10 +337,10 @@ namespace image_manager {
      * IMPORTANT: this function does not lock the metadata file on its own!
      *            Use this function from a caller performing the lock!
      */
-    void ImageStore::removeRepositoryMetadataEntry(const rapidjson::Value* imageEntry, rapidjson::Document& repositoryMetadata, common::Flock* const lock) const {
+    void ImageStore::removeRepositoryMetadataEntry(const rapidjson::Value* imageEntry, rapidjson::Document& repositoryMetadata, libsarus::Flock* const lock) const {
         repositoryMetadata["images"].GetArray().Erase(imageEntry);
         atomicallyUpdateRepositoryMetadataFile(repositoryMetadata, lock);
-        printLog("Removed image entry from repository metadata", common::LogLevel::DEBUG);
+        printLog("Removed image entry from repository metadata", libsarus::LogLevel::DEBUG);
     }
 
     /**
@@ -351,7 +351,7 @@ namespace image_manager {
         auto metadataPath = boost::filesystem::path{(*imageMetadata)["metadataPath"].GetString()};
         boost::filesystem::remove_all(imagePath);
         boost::filesystem::remove_all(metadataPath);
-        printLog("Removed image backing files", common::LogLevel::DEBUG);
+        printLog("Removed image backing files", libsarus::LogLevel::DEBUG);
     }
 
     /**
@@ -359,14 +359,14 @@ namespace image_manager {
      * and then atomically creates/replaces the actual metadata file by renaming the
      * temporary one.
      */
-    void ImageStore::atomicallyUpdateRepositoryMetadataFile(const rapidjson::Value& metadata, common::Flock* const lock) const {
-        auto metadataFileTemp = common::makeUniquePathWithRandomSuffix(metadataFile);
+    void ImageStore::atomicallyUpdateRepositoryMetadataFile(const rapidjson::Value& metadata, libsarus::Flock* const lock) const {
+        auto metadataFileTemp = libsarus::makeUniquePathWithRandomSuffix(metadataFile);
 
-        printLog( boost::format("Updating repository metadata file: %s") % metadataFile, common::LogLevel::DEBUG);
+        printLog( boost::format("Updating repository metadata file: %s") % metadataFile, libsarus::LogLevel::DEBUG);
 
         try {
-            common::writeJSON(metadata, metadataFileTemp);
-            common::Flock newLock{metadataFileTemp, common::Flock::Type::writeLock, milliseconds{1000}, common::Flock::noTimeout};
+            libsarus::writeJSON(metadata, metadataFileTemp);
+            libsarus::Flock newLock{metadataFileTemp, libsarus::Flock::Type::writeLock, milliseconds{1000}, libsarus::Flock::noTimeout};
 
             // Atomically replace old metadata file.
             // After this, the process should hold locks on both file descriptors for new and old metadata files.
@@ -380,7 +380,7 @@ namespace image_manager {
             SARUS_RETHROW_ERROR(e, message.str());
         }
 
-        printLog("Successfully updated repository metadata file", common::LogLevel::DEBUG);
+        printLog("Successfully updated repository metadata file", libsarus::LogLevel::DEBUG);
     }
 
     boost::filesystem::path ImageStore::getImageSquashfsFile(const common::ImageReference& reference) const {
@@ -393,14 +393,14 @@ namespace image_manager {
         return imagesDirectory / relativePath;
     }
 
-    void ImageStore::printLog(const boost::format& message, common::LogLevel LogLevel,
+    void ImageStore::printLog(const boost::format& message, libsarus::LogLevel LogLevel,
                               std::ostream& out, std::ostream& err) const {
         printLog(message.str(), LogLevel, out, err);
     }
 
-    void ImageStore::printLog(const std::string& message, common::LogLevel LogLevel,
+    void ImageStore::printLog(const std::string& message, libsarus::LogLevel LogLevel,
                               std::ostream& out, std::ostream& err) const {
-        common::Logger::getInstance().log(message, sysname, LogLevel, out, err);
+        libsarus::Logger::getInstance().log(message, sysname, LogLevel, out, err);
     }
 
 } // namespace

@@ -16,9 +16,9 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
-#include "common/Error.hpp"
-#include "common/PathRAII.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/PathRAII.hpp"
+#include "libsarus/Utility.hpp"
 #include "image_manager/Utility.hpp"
 
 
@@ -39,17 +39,17 @@ SkopeoDriver::SkopeoDriver(std::shared_ptr<const common::Config> config)
 
     authFileBasePath = config->directories.repository;
     try {
-        auto xdgRuntimePath = boost::filesystem::path{common::getEnvironmentVariable("XDG_RUNTIME_DIR")};
+        auto xdgRuntimePath = boost::filesystem::path{libsarus::getEnvironmentVariable("XDG_RUNTIME_DIR")};
         if (boost::filesystem::is_directory(xdgRuntimePath)) {
             authFileBasePath = xdgRuntimePath / "sarus";
         }
         else {
             printLog(boost::format("XDG_RUNTIME_DIR environment set to %s, but directory does not exist") % xdgRuntimePath,
-                     common::LogLevel::DEBUG);
+                     libsarus::LogLevel::DEBUG);
         }
     }
-    catch (common::Error& e) {}  // common::getEnvironmentVariable() throws if searched variable is not set
-    printLog( boost::format("Set authentication file base path to %s") % authFileBasePath, common::LogLevel::DEBUG);
+    catch (libsarus::Error& e) {}  // libsarus::getEnvironmentVariable() throws if searched variable is not set
+    printLog( boost::format("Set authentication file base path to %s") % authFileBasePath, libsarus::LogLevel::DEBUG);
 
     authFilePath.clear();
 
@@ -89,29 +89,29 @@ SkopeoDriver::~SkopeoDriver() {
 }
 
 boost::filesystem::path SkopeoDriver::copyToOCIImage(const std::string& sourceTransport, const std::string& sourceReference) const {
-    printLog( boost::format("Copying '%s' to OCI image") % sourceReference, common::LogLevel::INFO);
+    printLog( boost::format("Copying '%s' to OCI image") % sourceReference, libsarus::LogLevel::INFO);
 
-    auto ociImagePath = common::makeUniquePathWithRandomSuffix(cachePath / "ociImages/image");
-    auto ociImageRAII = common::PathRAII{ociImagePath};
-    printLog( boost::format("Creating temporary OCI image in: %s") % ociImagePath, common::LogLevel::DEBUG);
-    common::createFoldersIfNecessary(ociImagePath);
+    auto ociImagePath = libsarus::makeUniquePathWithRandomSuffix(cachePath / "ociImages/image");
+    auto ociImageRAII = libsarus::PathRAII{ociImagePath};
+    printLog( boost::format("Creating temporary OCI image in: %s") % ociImagePath, libsarus::LogLevel::DEBUG);
+    libsarus::createFoldersIfNecessary(ociImagePath);
 
     if (sourceTransport == "docker") {
         auto imageBlobsPath = ociImagePath / "blobs";
         boost::filesystem::create_symlink(cachePath/"blobs", imageBlobsPath);
-        printLog( boost::format("Symlinking blob cache %s to %s") % cachePath % imageBlobsPath, common::LogLevel::DEBUG);
+        printLog( boost::format("Symlinking blob cache %s to %s") % cachePath % imageBlobsPath, libsarus::LogLevel::DEBUG);
     }
 
     auto args = generateBaseArgs();
     args.push_back("copy");
     if (!authFilePath.empty()){
-        args += common::CLIArguments{"--src-authfile", authFilePath.string()};
+        args += libsarus::CLIArguments{"--src-authfile", authFilePath.string()};
     }
-    args += common::CLIArguments{getTransportString(sourceTransport) + sourceReference,
+    args += libsarus::CLIArguments{getTransportString(sourceTransport) + sourceReference,
                                  "oci:"+ociImagePath.string()+":sarus-oci-image"};
 
     auto start = std::chrono::system_clock::now();
-    auto status = common::forkExecWait(args);
+    auto status = libsarus::forkExecWait(args);
     if(status != 0) {
         auto message = boost::format("Failed to copy '%s' to OCI image") % sourceReference;
         SARUS_THROW_ERROR(message.str());
@@ -119,8 +119,8 @@ boost::filesystem::path SkopeoDriver::copyToOCIImage(const std::string& sourceTr
     auto end = std::chrono::system_clock::now();
 
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / double(1000);
-    printLog(boost::format("Elapsed time on copy operation: %s [sec]") % elapsed, common::LogLevel::INFO);
-    printLog(boost::format("Successfully created OCI image"), common::LogLevel::INFO);
+    printLog(boost::format("Elapsed time on copy operation: %s [sec]") % elapsed, libsarus::LogLevel::INFO);
+    printLog(boost::format("Successfully created OCI image"), libsarus::LogLevel::INFO);
 
     ociImageRAII.release();
     return ociImagePath;
@@ -128,17 +128,17 @@ boost::filesystem::path SkopeoDriver::copyToOCIImage(const std::string& sourceTr
 std::string SkopeoDriver::inspectRaw(const std::string& sourceTransport, const std::string& sourceReference) const {
     auto inspectOutput = std::string{};
 
-    auto args = generateBaseArgs() + common::CLIArguments{"inspect", "--raw"};
+    auto args = generateBaseArgs() + libsarus::CLIArguments{"inspect", "--raw"};
     if (!authFilePath.empty()){
-        args += common::CLIArguments{"--authfile", authFilePath.string()};
+        args += libsarus::CLIArguments{"--authfile", authFilePath.string()};
     }
     args.push_back(getTransportString(sourceTransport) + sourceReference);
 
     auto start = std::chrono::system_clock::now();
     try {
-        inspectOutput = common::executeCommand(args.string());
+        inspectOutput = libsarus::executeCommand(args.string());
     }
-    catch(common::Error& e) {
+    catch(libsarus::Error& e) {
         // Confirm skopeo failed because of image non existent or unauthorized access
         auto errorMessage = std::string(e.what());
         auto exitCodeString = std::string{"Process terminated with status 1"};
@@ -157,16 +157,16 @@ std::string SkopeoDriver::inspectRaw(const std::string& sourceTransport, const s
 
         if(errorMessage.find(exitCodeString) != std::string::npos) {
             auto messageHeader = boost::format{"Failed to pull image '%s'"} % sourceReference;
-            printLog(messageHeader, common::LogLevel::GENERAL, std::cerr);
+            printLog(messageHeader, libsarus::LogLevel::GENERAL, std::cerr);
 
             if(errorMessage.find(invalidCredentialsString) != std::string::npos) {
                 auto message = boost::format{"Unable to retrieve auth token: invalid username or password provided."};
-                printLog(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_THROW_ERROR(errorMessage, common::LogLevel::INFO);
+                printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(errorMessage, libsarus::LogLevel::INFO);
             }
 
             if(errorMessage.find(manifestErrorString) != std::string::npos) {
-                printLog("Error reading manifest from registry.", common::LogLevel::GENERAL, std::cerr);
+                printLog("Error reading manifest from registry.", libsarus::LogLevel::GENERAL, std::cerr);
             }
 
             if(errorMessage.find(unauthorizedAccessString) != std::string::npos
@@ -174,10 +174,10 @@ std::string SkopeoDriver::inspectRaw(const std::string& sourceTransport, const s
                 auto message = boost::format{"The image may be private or not present in the remote registry."
                                              "\nDid you perform a login with the proper credentials?"
                                              "\nSee 'sarus help pull' (--login option)"};
-                printLog(message, common::LogLevel::GENERAL, std::cerr);
+                printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
             }
 
-            SARUS_THROW_ERROR(errorMessage, common::LogLevel::INFO);
+            SARUS_THROW_ERROR(errorMessage, libsarus::LogLevel::INFO);
         }
         else {
             SARUS_RETHROW_ERROR(e, "Error accessing image in the remote registry.");
@@ -186,7 +186,7 @@ std::string SkopeoDriver::inspectRaw(const std::string& sourceTransport, const s
     auto end = std::chrono::system_clock::now();
 
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / double(1000);
-    printLog(boost::format("Elapsed time on raw inspect operation: %s [sec]") % elapsed, common::LogLevel::INFO);
+    printLog(boost::format("Elapsed time on raw inspect operation: %s [sec]") % elapsed, libsarus::LogLevel::INFO);
 
     // The Skopeo debug/warning messages are useful to be embedded in an exception message,
     // but prevent the output from being converted to JSON.
@@ -201,23 +201,23 @@ std::string SkopeoDriver::manifestDigest(const boost::filesystem::path& manifest
         SARUS_THROW_ERROR(message.str());
     }
 
-    printLog(boost::format("Manifest to digest: %s") % common::readFile(manifestPath), common::LogLevel::DEBUG);
+    printLog(boost::format("Manifest to digest: %s") % libsarus::readFile(manifestPath), libsarus::LogLevel::DEBUG);
 
-    auto args = generateBaseArgs() + common::CLIArguments{"manifest-digest", manifestPath.string()};
-    auto digestOutput = common::executeCommand(args.string());
+    auto args = generateBaseArgs() + libsarus::CLIArguments{"manifest-digest", manifestPath.string()};
+    auto digestOutput = libsarus::executeCommand(args.string());
     boost::algorithm::trim_right_if(digestOutput, boost::is_any_of("\n"));
 
     // The Skopeo debug messages are useful to be embedded in an exception message,
     // but we only want the digest string in the output.
     // Exclude the Skopeo debug lines and only return the last line of output
-    if (common::Logger::getInstance().getLevel() == common::LogLevel::DEBUG) {
+    if (libsarus::Logger::getInstance().getLevel() == libsarus::LogLevel::DEBUG) {
         digestOutput = digestOutput.substr(digestOutput.rfind('\n') + 1);
     }
     return digestOutput;
 }
 
 boost::filesystem::path SkopeoDriver::acquireAuthFile(const common::Config::Authentication& auth, const common::ImageReference& reference) {
-    printLog("Acquiring authentication file", common::LogLevel::INFO);
+    printLog("Acquiring authentication file", libsarus::LogLevel::INFO);
 
     auto jsonPtrFormattedImageName = boost::regex_replace(reference.getFullName(), boost::regex("/"), "~1");
     auto jsonPointer = boost::format("/auths/%s/auth") % jsonPtrFormattedImageName;
@@ -227,12 +227,12 @@ boost::filesystem::path SkopeoDriver::acquireAuthFile(const common::Config::Auth
     auto authJSON = rapidjson::Document{};
     rapidjson::Pointer(jsonPointer.str().c_str()).Set(authJSON, encodedCredentials.c_str());
 
-    common::createFoldersIfNecessary(authFileBasePath);
-    authFilePath = common::makeUniquePathWithRandomSuffix(authFileBasePath / "sarus-auth").replace_extension(".json");
-    common::writeJSON(authJSON, authFilePath);
+    libsarus::createFoldersIfNecessary(authFileBasePath);
+    authFilePath = libsarus::makeUniquePathWithRandomSuffix(authFileBasePath / "sarus-auth").replace_extension(".json");
+    libsarus::writeJSON(authJSON, authFilePath);
     boost::filesystem::permissions(authFilePath, boost::filesystem::perms::owner_read | boost::filesystem::perms::owner_write);
 
-    printLog(boost::format("Successfully acquired authentication file %s") % authFilePath, common::LogLevel::INFO);
+    printLog(boost::format("Successfully acquired authentication file %s") % authFilePath, libsarus::LogLevel::INFO);
     return authFilePath;
 }
 
@@ -250,12 +250,12 @@ std::string SkopeoDriver::filterInspectOutput(const std::string& inspectOutput) 
         SARUS_THROW_ERROR(message.str());
     }
 
-    printLog(boost::format("Raw inspect filtered output: %s") % filteredOutput, common::LogLevel::DEBUG);
+    printLog(boost::format("Raw inspect filtered output: %s") % filteredOutput, libsarus::LogLevel::DEBUG);
     return filteredOutput;
 }
 
-common::CLIArguments SkopeoDriver::generateBaseArgs() const {
-    auto args = common::CLIArguments{skopeoPath.string()};
+libsarus::CLIArguments SkopeoDriver::generateBaseArgs() const {
+    auto args = libsarus::CLIArguments{skopeoPath.string()};
 
     auto verbosity = getVerbosityOption();
     if (!verbosity.empty()) {
@@ -269,27 +269,27 @@ common::CLIArguments SkopeoDriver::generateBaseArgs() const {
 }
 
 std::string SkopeoDriver::getVerbosityOption() const {
-    auto logLevel = common::Logger::getInstance().getLevel();
-    if (logLevel == common::LogLevel::DEBUG) {
+    auto logLevel = libsarus::Logger::getInstance().getLevel();
+    if (logLevel == libsarus::LogLevel::DEBUG) {
         return std::string{"--debug"};
     }
     return std::string{};
 }
 
-common::CLIArguments SkopeoDriver::getPolicyOption() const {
-    auto homePath = boost::filesystem::path{common::getEnvironmentVariable("HOME")};
+libsarus::CLIArguments SkopeoDriver::getPolicyOption() const {
+    auto homePath = boost::filesystem::path{libsarus::getEnvironmentVariable("HOME")};
     auto userPolicyPath = homePath / ".config/containers/policy.json";
     auto systemPolicyPath = boost::filesystem::path("/etc/containers/policy.json");
 
     if (enforceCustomPolicy) {
-        return common::CLIArguments{"--policy", customPolicyPath.string()};
+        return libsarus::CLIArguments{"--policy", customPolicyPath.string()};
     }
     else if (boost::filesystem::exists(userPolicyPath)
              || boost::filesystem::exists(systemPolicyPath)) {
-        return common::CLIArguments{};
+        return libsarus::CLIArguments{};
     }
     else if (!customPolicyPath.empty()) {
-        return common::CLIArguments{"--policy", customPolicyPath.string()};
+        return libsarus::CLIArguments{"--policy", customPolicyPath.string()};
     }
     else {
         SARUS_THROW_ERROR("Failed to detect default containers policy files and "
@@ -300,11 +300,11 @@ common::CLIArguments SkopeoDriver::getPolicyOption() const {
     }
 }
 
-common::CLIArguments SkopeoDriver::getRegistriesDOption() const {
+libsarus::CLIArguments SkopeoDriver::getRegistriesDOption() const {
     if (!customRegistriesDPath.empty()) {
-        return common::CLIArguments{"--registries.d", customRegistriesDPath.string()};
+        return libsarus::CLIArguments{"--registries.d", customRegistriesDPath.string()};
     }
-    return common::CLIArguments{};
+    return libsarus::CLIArguments{};
 }
 
 std::string SkopeoDriver::getTransportString(const std::string& transport) const {
@@ -325,14 +325,14 @@ std::string SkopeoDriver::getTransportString(const std::string& transport) const
     SARUS_THROW_ERROR(message.str());
 }
 
-void SkopeoDriver::printLog(const boost::format &message, common::LogLevel level,
+void SkopeoDriver::printLog(const boost::format &message, libsarus::LogLevel level,
                             std::ostream& outStream, std::ostream& errStream) const {
     printLog(message.str(), level, outStream, errStream);
 }
 
-void SkopeoDriver::printLog(const std::string& message, common::LogLevel level,
+void SkopeoDriver::printLog(const std::string& message, libsarus::LogLevel level,
                             std::ostream& outStream, std::ostream& errStream) const {
-    common::Logger::getInstance().log(message, sysname, level, outStream, errStream);
+    libsarus::Logger::getInstance().log(message, sysname, level, outStream, errStream);
 }
 
 }} // namespace

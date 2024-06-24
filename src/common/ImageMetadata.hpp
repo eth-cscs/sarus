@@ -17,8 +17,8 @@
 #include <boost/filesystem.hpp>
 #include <rapidjson/document.h>
 
-#include "common/CLIArguments.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/CLIArguments.hpp"
+#include "libsarus/Utility.hpp"
 
 namespace sarus {
 namespace common {
@@ -26,10 +26,10 @@ namespace common {
 class ImageMetadata {
 public:
     ImageMetadata() = default;
-    ImageMetadata(const boost::filesystem::path& path, const common::UserIdentity& identity);
+    ImageMetadata(const boost::filesystem::path& path, const libsarus::UserIdentity& identity);
     ImageMetadata(const rapidjson::Value& metadata);
-    boost::optional<common::CLIArguments> cmd;
-    boost::optional<common::CLIArguments> entry;
+    boost::optional<libsarus::CLIArguments> cmd;
+    boost::optional<libsarus::CLIArguments> entry;
     boost::optional<boost::filesystem::path> workdir;
     std::unordered_map<std::string, std::string> env;
     /**

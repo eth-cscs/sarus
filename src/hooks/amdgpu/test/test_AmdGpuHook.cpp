@@ -8,8 +8,8 @@
  *
  */
 
-#include "common/PathRAII.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/PathRAII.hpp"
+#include "libsarus/Utility.hpp"
 #include "test_utility/Misc.hpp"
 #include "test_utility/OCIHooks.hpp"
 #include "test_utility/config.hpp"
@@ -36,13 +36,13 @@ void createDriSubdir(const fs::path& path, std::vector<int> ids) {
   if (fs::exists(path)) {
     fs::remove_all(path);
   }
-  sarus::common::createFoldersIfNecessary(path / "by-path");
+  libsarus::createFoldersIfNecessary(path / "by-path");
 
   int busId = 193;
   for (auto id : ids) {
-    sarus::common::createFileIfNecessary(path /
+    libsarus::createFileIfNecessary(path /
                                          (boost::format("card%1%") % id).str());
-    sarus::common::createFileIfNecessary(
+    libsarus::createFileIfNecessary(
         path / (boost::format("renderD%1%") % (128 + id)).str());
 
     fs::create_symlink(
@@ -70,7 +70,7 @@ void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir,
     doc["process"]["env"].PushBack(
         rj::Value{rocrVisibleDevices.c_str(), allocator}, allocator);
   }
-  sarus::common::writeJSON(doc, bundleDir / "config.json");
+  libsarus::writeJSON(doc, bundleDir / "config.json");
 }
 
 TEST_GROUP(AMDGPUHookTestGroup) {
@@ -122,8 +122,8 @@ std::vector<std::string> getExpectedDeviceFiles(
 
 TEST(AMDGPUHookTestGroup,
      find_all_render_devices_if_ROCR_VISIBLE_DEVICES_is_not_defined) {
-  auto mockDriPath = sarus::common::PathRAII(
-                         sarus::common::makeUniquePathWithRandomSuffix(
+  auto mockDriPath = libsarus::PathRAII(
+                         libsarus::makeUniquePathWithRandomSuffix(
                              boost::filesystem::current_path() / "mockDri"))
                          .getPath();
   createDriSubdir(mockDriPath, {0, 1, 2, 3});
@@ -136,8 +136,8 @@ TEST(AMDGPUHookTestGroup,
 }
 
 TEST(AMDGPUHookTestGroup, find_all_render_devices_in_ROCR_VISIBLE_DEVICES) {
-  auto mockDriPath = sarus::common::PathRAII(
-                         sarus::common::makeUniquePathWithRandomSuffix(
+  auto mockDriPath = libsarus::PathRAII(
+                         libsarus::makeUniquePathWithRandomSuffix(
                              boost::filesystem::current_path() / "mockDri"))
                          .getPath();
   createDriSubdir(mockDriPath, {0, 1, 2, 3});

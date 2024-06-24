@@ -14,9 +14,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
-#include "common/Error.hpp"
-#include "common/PathRAII.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/PathRAII.hpp"
+#include "libsarus/Utility.hpp"
 #include "image_manager/SquashfsImage.hpp"
 #include "image_manager/Utility.hpp"
 
@@ -37,12 +37,12 @@ namespace image_manager {
         issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled();
         issueWarningIfIsCentralizedRepositoryAndIsNotRootUser();
 
-        printLog(boost::format("Pulling image %s") % config->imageReference, common::LogLevel::INFO);
+        printLog(boost::format("Pulling image %s") % config->imageReference, libsarus::LogLevel::INFO);
 
-        printLog( boost::format("# image            : %s") % config->imageReference, common::LogLevel::GENERAL);
-        printLog( boost::format("# cache directory  : %s") % config->directories.cache, common::LogLevel::GENERAL);
-        printLog( boost::format("# temp directory   : %s") % config->directories.temp, common::LogLevel::GENERAL);
-        printLog( boost::format("# images directory : %s") % config->directories.images, common::LogLevel::GENERAL);
+        printLog( boost::format("# image            : %s") % config->imageReference, libsarus::LogLevel::GENERAL);
+        printLog( boost::format("# cache directory  : %s") % config->directories.cache, libsarus::LogLevel::GENERAL);
+        printLog( boost::format("# temp directory   : %s") % config->directories.temp, libsarus::LogLevel::GENERAL);
+        printLog( boost::format("# images directory : %s") % config->directories.images, libsarus::LogLevel::GENERAL);
 
         // Normalize the reference provided by the CLI for two reasons:
         // - consistency with Docker, Podman, and Buildah, which completely ignore the tag
@@ -62,17 +62,17 @@ namespace image_manager {
         if (pullReference.digest.empty()) {
             pullReference.digest = retrieveRegistryDigest(transport, pullReference);
         }
-        printLog( boost::format("# image digest     : %s") % pullReference.digest, common::LogLevel::GENERAL);
+        printLog( boost::format("# image digest     : %s") % pullReference.digest, libsarus::LogLevel::GENERAL);
 
         auto storedImage = imageStore.findImage(pullReference);
         if (storedImage && storedImage->reference.digest == pullReference.digest) {
             printLog(boost::format("Image for %s is already available and up to date") % config->imageReference,
-                     common::LogLevel::GENERAL);
+                     libsarus::LogLevel::GENERAL);
             return;
         }
 
         printLog("Image not found in local repository or image not up-to-date. Proceeding with pull...",
-                 common::LogLevel::INFO);
+                 libsarus::LogLevel::INFO);
 
         // Re-normalize pullReference to always pull by digest internally.
         // This avoids inconsistencies in case the reference resolution done by Skopeo mismatches
@@ -80,7 +80,7 @@ namespace image_manager {
         auto ociImagePath = skopeoDriver.copyToOCIImage(transport, pullReference.normalize().string());
         processImage(OCIImage{config, ociImagePath}, pullReference);
 
-        printLog("Successfully pulled image", common::LogLevel::INFO);
+        printLog("Successfully pulled image", libsarus::LogLevel::INFO);
     }
 
     /**
@@ -90,18 +90,18 @@ namespace image_manager {
         issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled();
         issueWarningIfIsCentralizedRepositoryAndIsNotRootUser();
 
-        printLog(boost::format("Loading image archive %s") % archive, common::LogLevel::INFO);
+        printLog(boost::format("Loading image archive %s") % archive, libsarus::LogLevel::INFO);
 
         auto ociImagePath = skopeoDriver.copyToOCIImage(format, archive.string());
         processImage(OCIImage{config, ociImagePath}, config->imageReference);
 
-        printLog("Successfully loaded image archive", common::LogLevel::INFO);
+        printLog("Successfully loaded image archive", libsarus::LogLevel::INFO);
     }
 
     /**
      * Show the list of available images in repository
      */
-    std::vector<common::SarusImage> ImageManager::listImages() const {
+    std::vector<sarus::common::SarusImage> ImageManager::listImages() const {
         return imageStore.listImages();
     }
 
@@ -112,28 +112,28 @@ namespace image_manager {
         issueErrorIfIsCentralizedRepositoryAndCentralizedRepositoryIsDisabled();
         issueWarningIfIsCentralizedRepositoryAndIsNotRootUser();
 
-        printLog(boost::format("removing image %s") % config->imageReference, common::LogLevel::INFO);
+        printLog(boost::format("removing image %s") % config->imageReference, libsarus::LogLevel::INFO);
 
         imageStore.removeImage(config->imageReference);
 
-        printLog(boost::format("removed image %s") % config->imageReference, common::LogLevel::GENERAL);
+        printLog(boost::format("removed image %s") % config->imageReference, libsarus::LogLevel::GENERAL);
     }
 
     void ImageManager::processImage(const OCIImage& image, const common::ImageReference& storageReference) {
         auto metadata = image.getMetadata();
         auto metadataFile = imageStore.getImageMetadataFile(storageReference);
         metadata.write(metadataFile);
-        auto metadataRAII = common::PathRAII{metadataFile};
+        auto metadataRAII = libsarus::PathRAII{metadataFile};
 
         auto unpackedImage = image.unpack();
 
         auto squashfsImagePath = imageStore.getImageSquashfsFile(storageReference);
         auto squashfs = SquashfsImage{*config, unpackedImage.getPath(), squashfsImagePath};
-        auto squashfsRAII = common::PathRAII{squashfs.getPathOfImage()};
+        auto squashfsRAII = libsarus::PathRAII{squashfs.getPathOfImage()};
 
-        auto imageSize = common::getFileSize(squashfsRAII.getPath());
-        auto imageSizeString = common::SarusImage::createSizeString(imageSize);
-        auto created = common::SarusImage::createTimeString(std::time(nullptr));
+        auto imageSize = libsarus::getFileSize(squashfsRAII.getPath());
+        auto imageSizeString = sarus::common::SarusImage::createSizeString(imageSize);
+        auto created = sarus::common::SarusImage::createTimeString(std::time(nullptr));
         auto sarusImage = common::SarusImage{
             storageReference,
             image.getImageID(),
@@ -151,7 +151,7 @@ namespace image_manager {
     std::string ImageManager::retrieveRegistryDigest(const std::string& transport, const common::ImageReference& targetReference) const {
         auto imageDigest = std::string{};
         auto inspectOutput = skopeoDriver.inspectRaw(transport, targetReference.string());
-        auto inspectOutputJson = common::parseJSON(inspectOutput);
+        auto inspectOutputJson = libsarus::parseJSON(inspectOutput);
 
         auto mediaType = std::string{};
         auto mediaTypeItr = inspectOutputJson.FindMember("mediaType");
@@ -161,7 +161,7 @@ namespace image_manager {
         else {
             printLog("Unable to find media type of manifest returned by remote registry."
                      "Assuming OCI Image Manifest V1 (application/vnd.oci.image.manifest.v1+json)",
-                     common::LogLevel::INFO);
+                     libsarus::LogLevel::INFO);
             mediaType = std::string{"application/vnd.oci.image.manifest.v1+json"};
         }
 
@@ -169,32 +169,32 @@ namespace image_manager {
         if (mediaType == "application/vnd.oci.image.manifest.v1+json"
             || mediaType == "application/vnd.docker.distribution.manifest.v2+json"
             || mediaType == "application/vnd.docker.distribution.manifest.v1+json") {
-            printLog("Computing image digest from raw manifest", common::LogLevel::INFO);
-            auto manifestFile = common::PathRAII(common::makeUniquePathWithRandomSuffix(config->directories.temp / "sarusPullManifest"));
-            common::writeTextFile(inspectOutput, manifestFile.getPath());
+            printLog("Computing image digest from raw manifest", libsarus::LogLevel::INFO);
+            auto manifestFile = libsarus::PathRAII(libsarus::makeUniquePathWithRandomSuffix(config->directories.temp / "sarusPullManifest"));
+            libsarus::writeTextFile(inspectOutput, manifestFile.getPath());
             imageDigest = skopeoDriver.manifestDigest(manifestFile.getPath());
         }
         // If we have an OCI index or Docker manifest list (aka "fat manifest"), retrieve the digest
         // of the manifest for the current platform (hardware arch + OS)
         else if (mediaType == "application/vnd.oci.image.index.v1+json"
                  || mediaType == "application/vnd.docker.distribution.manifest.list.v2+json") {
-            printLog("Retrieving image digest from OCI index or Docker manifest list", common::LogLevel::INFO);
+            printLog("Retrieving image digest from OCI index or Docker manifest list", libsarus::LogLevel::INFO);
             auto platform = utility::getCurrentOCIPlatform();
             imageDigest = utility::getPlatformDigestFromOCIIndex(inspectOutputJson, platform);
             if (imageDigest.empty()) {
                 printLog("Unable to retrieve registry digest for image being pulled. Attempting to continue with empty digest",
-                         common::LogLevel::WARN);
+                         libsarus::LogLevel::WARN);
             }
         }
         // The OCI Image spec states that mediaTypes unknown to the implementation must be ignored
         else {
             auto message = boost::format("Unknown mediaType of manifest returned by remote registry: %s. "
                                          "Attempting to continue with empty digest") % mediaType;
-            printLog(message, common::LogLevel::WARN);
+            printLog(message, libsarus::LogLevel::WARN);
         }
 
         auto message = boost::format("Got image digest: %s") % imageDigest;
-        printLog(message, common::LogLevel::INFO);
+        printLog(message, libsarus::LogLevel::INFO);
 
         return imageDigest;
     }
@@ -212,16 +212,16 @@ namespace image_manager {
         if(config->useCentralizedRepository && !isRoot) {
             auto message = std::string{"attempting to perform an operation on the"
                 " centralized repository without root privileges"};
-            printLog(message, common::LogLevel::WARN);
+            printLog(message, libsarus::LogLevel::WARN);
         }
     }
 
-    void ImageManager::printLog(const boost::format& message, common::LogLevel LogLevel, std::ostream& outStream, std::ostream& errStream) const {
+    void ImageManager::printLog(const boost::format& message, libsarus::LogLevel LogLevel, std::ostream& outStream, std::ostream& errStream) const {
         printLog(message.str(), LogLevel, outStream, errStream);
     }
 
-    void ImageManager::printLog(const std::string& message, common::LogLevel LogLevel, std::ostream& outStream, std::ostream& errStream) const {
-        common::Logger::getInstance().log(message, sysname, LogLevel, outStream, errStream);
+    void ImageManager::printLog(const std::string& message, libsarus::LogLevel LogLevel, std::ostream& outStream, std::ostream& errStream) const {
+        libsarus::Logger::getInstance().log(message, sysname, LogLevel, outStream, errStream);
     }
 
 } // namespace

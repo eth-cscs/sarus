@@ -12,9 +12,9 @@
 #include <memory>
 #include <boost/format.hpp>
 
-#include "common/Error.hpp"
-#include "common/Logger.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Logger.hpp"
+#include "libsarus/Utility.hpp"
 #include "SshHook.hpp"
 
 static void parseKeygenCLIOptions(int argc, char* argv[], bool * const overwrite);
@@ -45,11 +45,11 @@ int main(int argc, char* argv[]) {
         auto message = boost::format("Failed to execute SSH hook. CLI argument %s is not supported.")
             % argv[1];
         SARUS_THROW_ERROR(message.str());
-    } catch(const sarus::common::Error& e) {
-        sarus::common::Logger::getInstance().logErrorTrace(e, "ssh-hook");
+    } catch(const libsarus::Error& e) {
+        libsarus::Logger::getInstance().logErrorTrace(e, "ssh-hook");
         exit(EXIT_FAILURE);
     } catch(const std::exception& e) {
-        sarus::common::Logger::getInstance().log(e.what(), "ssh-hook", sarus::common::LogLevel::ERROR);
+        libsarus::Logger::getInstance().log(e.what(), "ssh-hook", libsarus::LogLevel::ERROR);
         exit(EXIT_FAILURE);
     }
 
@@ -64,12 +64,12 @@ static void parseKeygenCLIOptions(int argc, char* argv[], bool * const overwrite
                 *overwrite = true;
             }
             else if(argv[i] == std::string{"--verbose"}) {
-                if (sarus::common::Logger::getInstance().getLevel() > sarus::common::LogLevel::INFO) {
-                    sarus::common::Logger::getInstance().setLevel(sarus::common::LogLevel::INFO);
+                if (libsarus::Logger::getInstance().getLevel() > libsarus::LogLevel::INFO) {
+                    libsarus::Logger::getInstance().setLevel(libsarus::LogLevel::INFO);
                 }
             }
             else if(argv[i] == std::string{"--debug"}) {
-                sarus::common::Logger::getInstance().setLevel(sarus::common::LogLevel::DEBUG);
+                libsarus::Logger::getInstance().setLevel(libsarus::LogLevel::DEBUG);
             }
             else {
                 auto message = boost::format("Failed to execute SSH hook. Invalid"
@@ -84,12 +84,12 @@ static void parseCheckUserKeysCLIOptions(int argc, char* argv[]){
     if(argc > 2) {
         for (int i=2; i < argc; ++i) {
             if(argv[i] == std::string{"--verbose"}) {
-                if (sarus::common::Logger::getInstance().getLevel() > sarus::common::LogLevel::INFO) {
-                    sarus::common::Logger::getInstance().setLevel(sarus::common::LogLevel::INFO);
+                if (libsarus::Logger::getInstance().getLevel() > libsarus::LogLevel::INFO) {
+                    libsarus::Logger::getInstance().setLevel(libsarus::LogLevel::INFO);
                 }
             }
             else if(argv[i] == std::string{"--debug"}) {
-                sarus::common::Logger::getInstance().setLevel(sarus::common::LogLevel::DEBUG);
+                libsarus::Logger::getInstance().setLevel(libsarus::LogLevel::DEBUG);
             }
         }
     }

@@ -14,7 +14,7 @@
 #include <boost/filesystem.hpp>
 #include <string>
 
-#include "common/Utility.hpp"
+#include "libsarus/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -30,7 +30,7 @@ private:
     void timestamp();
 
 private:
-    common::hook::ContainerState containerState;
+    libsarus::hook::ContainerState containerState;
     bool isHookEnabled{ false };
     std::string message;
     boost::filesystem::path logFilePath;

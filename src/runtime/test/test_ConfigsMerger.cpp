@@ -8,8 +8,8 @@
  *
  */
 
-#include "common/Utility.hpp"
-#include "common/Logger.hpp"
+#include "libsarus/Utility.hpp"
+#include "libsarus/Logger.hpp"
 #include "common/ImageMetadata.hpp"
 #include "runtime/ConfigsMerger.hpp"
 #include "test_utility/config.hpp"
@@ -409,51 +409,51 @@ TEST(ConfigsMergerTestGroup, command_to_execute) {
         auto configRAII = test_utility::config::makeConfig();
         auto& config = configRAII.config;
         config->commandRun.addInitProcess = true;
-        config->commandRun.execArgs = common::CLIArguments{"cmd-cli"};
+        config->commandRun.execArgs = libsarus::CLIArguments{"cmd-cli"};
         auto metadata = common::ImageMetadata{};
-        CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == common::CLIArguments{"/dev/init", "--", "cmd-cli"}));
+        CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == libsarus::CLIArguments{"/dev/init", "--", "cmd-cli"}));
     }
     // only CLI cmd
     {
         auto configRAII = test_utility::config::makeConfig();
         auto& config = configRAII.config;
-        config->commandRun.execArgs = common::CLIArguments{"cmd-cli"};
+        config->commandRun.execArgs = libsarus::CLIArguments{"cmd-cli"};
         auto metadata = common::ImageMetadata{};
-        CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == common::CLIArguments{"cmd-cli"}));
+        CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == libsarus::CLIArguments{"cmd-cli"}));
     }
     // only metadata cmd
     {
         auto configRAII = test_utility::config::makeConfig();
         auto& config = configRAII.config;
-        config->commandRun.execArgs = common::CLIArguments{};
+        config->commandRun.execArgs = libsarus::CLIArguments{};
         auto metadata = common::ImageMetadata{};
-        metadata.cmd = common::CLIArguments{"cmd-metadata"};
-        CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == common::CLIArguments{"cmd-metadata"}));
+        metadata.cmd = libsarus::CLIArguments{"cmd-metadata"};
+        CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == libsarus::CLIArguments{"cmd-metadata"}));
     }
     // CLI cmd overrides metadata cmd
     {
         auto configRAII = test_utility::config::makeConfig();
         auto& config = configRAII.config;
-        config->commandRun.execArgs = common::CLIArguments{"cmd-cli"};
+        config->commandRun.execArgs = libsarus::CLIArguments{"cmd-cli"};
         auto metadata = common::ImageMetadata{};
-        metadata.cmd = common::CLIArguments{"cmd-metadata"};
-        CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == common::CLIArguments{"cmd-cli"}));
+        metadata.cmd = libsarus::CLIArguments{"cmd-metadata"};
+        CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == libsarus::CLIArguments{"cmd-cli"}));
     }
     // only CLI entrypoint
     {
         auto configRAII = test_utility::config::makeConfig();
         auto& config = configRAII.config;
-        config->commandRun.entrypoint = common::CLIArguments{"entry-cli"};
+        config->commandRun.entrypoint = libsarus::CLIArguments{"entry-cli"};
         auto metadata = common::ImageMetadata{};
-        CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == common::CLIArguments{"entry-cli"}));
+        CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == libsarus::CLIArguments{"entry-cli"}));
     }
     // only metadata entrypoint
     {
         auto configRAII = test_utility::config::makeConfig();
         auto& config = configRAII.config;
         auto metadata = common::ImageMetadata{};
-        metadata.entry = common::CLIArguments{"entry-metadata"};
-        CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == common::CLIArguments{"entry-metadata"}));
+        metadata.entry = libsarus::CLIArguments{"entry-metadata"};
+        CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == libsarus::CLIArguments{"entry-metadata"}));
     }
     // entrypoint + cmd
     {
@@ -462,37 +462,37 @@ TEST(ConfigsMergerTestGroup, command_to_execute) {
             auto configRAII = test_utility::config::makeConfig();
             auto& config = configRAII.config;
             auto metadata = common::ImageMetadata{};
-            metadata.cmd = common::CLIArguments{"cmd-metadata"};
-            metadata.entry = common::CLIArguments{"entry-metadata"};
-            CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == common::CLIArguments{"entry-metadata", "cmd-metadata"}));
+            metadata.cmd = libsarus::CLIArguments{"cmd-metadata"};
+            metadata.entry = libsarus::CLIArguments{"entry-metadata"};
+            CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == libsarus::CLIArguments{"entry-metadata", "cmd-metadata"}));
         }
         // CLI entrypoint + CLI cmd
         {
             auto configRAII = test_utility::config::makeConfig();
             auto& config = configRAII.config;
-            config->commandRun.execArgs = common::CLIArguments{"cmd-cli"};
-            config->commandRun.entrypoint = common::CLIArguments{"entry-cli"};
+            config->commandRun.execArgs = libsarus::CLIArguments{"cmd-cli"};
+            config->commandRun.entrypoint = libsarus::CLIArguments{"entry-cli"};
             auto metadata = common::ImageMetadata{};
-            CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == common::CLIArguments{"entry-cli", "cmd-cli"}));
+            CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == libsarus::CLIArguments{"entry-cli", "cmd-cli"}));
         }
         // metadata entrypoint + CLI cmd
         {
             auto configRAII = test_utility::config::makeConfig();
             auto& config = configRAII.config;
-            config->commandRun.execArgs = common::CLIArguments{"cmd-cli"};
+            config->commandRun.execArgs = libsarus::CLIArguments{"cmd-cli"};
             auto metadata = common::ImageMetadata{};
-            metadata.entry = common::CLIArguments{"entry-metadata"};
-            CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == common::CLIArguments{"entry-metadata", "cmd-cli"}));
+            metadata.entry = libsarus::CLIArguments{"entry-metadata"};
+            CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == libsarus::CLIArguments{"entry-metadata", "cmd-cli"}));
         }
         // CLI entrypoint overrides metadata entrypoint and metadata cmd
         {
             auto configRAII = test_utility::config::makeConfig();
             auto& config = configRAII.config;
-            config->commandRun.entrypoint = common::CLIArguments{"entry-cli"};
+            config->commandRun.entrypoint = libsarus::CLIArguments{"entry-cli"};
             auto metadata = common::ImageMetadata{};
-            metadata.cmd = common::CLIArguments{"cmd-metadata"};
-            metadata.entry = common::CLIArguments{"entry-metadata"};
-            CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == common::CLIArguments{"entry-cli"}));
+            metadata.cmd = libsarus::CLIArguments{"cmd-metadata"};
+            metadata.entry = libsarus::CLIArguments{"entry-metadata"};
+            CHECK((ConfigsMerger{config, metadata}.getCommandToExecuteInContainer() == libsarus::CLIArguments{"entry-cli"}));
         }
     }
 }

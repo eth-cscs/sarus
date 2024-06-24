@@ -14,7 +14,7 @@
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include "common/Error.hpp"
+#include "libsarus/Error.hpp"
 
 namespace sarus {
 namespace common {

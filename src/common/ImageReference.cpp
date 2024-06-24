@@ -16,7 +16,7 @@
 #include <boost/format.hpp>
 #include <boost/algorithm/string/classification.hpp>
 
-#include "common/Error.hpp"
+#include "libsarus/Error.hpp"
 
 
 namespace sarus {

@@ -16,14 +16,14 @@
 
 #include "AbiChecker.hpp"
 #include "SharedLibrary.hpp"
-#include "common/LogLevel.hpp"
-#include "common/PathHash.hpp"
-#include "common/UserIdentity.hpp"
+#include "libsarus/LogLevel.hpp"
+#include "libsarus/PathHash.hpp"
+#include "libsarus/UserIdentity.hpp"
 
 #include <boost/format.hpp>
 #include <boost/filesystem.hpp>
 #include "SharedLibrary.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -33,7 +33,7 @@ class MpiHook {
 public:
     using HostToContainerLibsMap = std::unordered_map<boost::filesystem::path,
                                                       std::vector<SharedLibrary>,
-                                                      sarus::common::PathHash>;
+                                                      libsarus::PathHash>;
 
 public:
     MpiHook();
@@ -57,13 +57,13 @@ private:
     void createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesystem::path& target,
                                                         const boost::filesystem::path& linkFilename,
                                                         const bool preserveRootLink) const;
-    void log(const std::string& message, sarus::common::LogLevel level) const;
-    void log(const boost::format& message, sarus::common::LogLevel level) const;
+    void log(const std::string& message, libsarus::LogLevel level) const;
+    void log(const boost::format& message, libsarus::LogLevel level) const;
 
 private:
-    common::hook::ContainerState containerState;
+    libsarus::hook::ContainerState containerState;
     boost::filesystem::path rootfsDir;
-    sarus::common::UserIdentity userIdentity;
+    libsarus::UserIdentity userIdentity;
     boost::filesystem::path ldconfig;
     std::vector<boost::filesystem::path> bindMounts;
     std::vector<SharedLibrary> containerLibs;

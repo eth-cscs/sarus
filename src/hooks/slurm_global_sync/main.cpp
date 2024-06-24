@@ -8,8 +8,8 @@
  *
  */
 
-#include "common/Error.hpp"
-#include "common/Logger.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Logger.hpp"
 #include "Hook.hpp"
 
 
@@ -19,8 +19,8 @@ int main(int argc, char* argv[]) {
         hook.dropPrivileges();
         hook.loadConfigs();
         hook.performSynchronization();
-    } catch(const sarus::common::Error& e) {
-        sarus::common::Logger::getInstance().logErrorTrace(e, "SLURM global sync hook");
+    } catch(const libsarus::Error& e) {
+        libsarus::Logger::getInstance().logErrorTrace(e, "SLURM global sync hook");
         exit(EXIT_FAILURE);
     }
     return 0;

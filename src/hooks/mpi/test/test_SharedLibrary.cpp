@@ -8,8 +8,8 @@
  *
  */
 
-#include "common/Logger.hpp"
-#include "common/Error.hpp"
+#include "libsarus/Logger.hpp"
+#include "libsarus/Error.hpp"
 #include "hooks/mpi/SharedLibrary.hpp"
 #include "test_utility/unittest_main_function.hpp"
 #include <vector>
@@ -166,7 +166,7 @@ TEST(SharedLibraryTestGroup, bestAbiMatch) {
 
     // corner cases
     auto candidates = std::vector<SharedLibrary>{};
-    CHECK_THROWS(common::Error, sl2.pickNewestAbiCompatibleLibrary(candidates));
+    CHECK_THROWS(libsarus::Error, sl2.pickNewestAbiCompatibleLibrary(candidates));
     {
     auto candidates = std::vector<SharedLibrary>{SharedLibrary{"/lib/libfoo.so.2"}};
     auto best = sl2.pickNewestAbiCompatibleLibrary(candidates);

@@ -19,7 +19,7 @@
 #include <boost/filesystem.hpp>
 #include <rapidjson/document.h>
 
-#include "common/Flock.hpp"
+#include "libsarus/Flock.hpp"
 #include "common/Config.hpp"
 #include "common/SarusImage.hpp"
 
@@ -35,8 +35,8 @@ public:
 
     void addImage(const common::SarusImage&) const;
     void removeImage(const common::ImageReference&) const;
-    std::vector<common::SarusImage> listImages() const;
-    boost::optional<common::SarusImage> findImage(const common::ImageReference& reference) const;
+    std::vector<sarus::common::SarusImage> listImages() const;
+    boost::optional<sarus::common::SarusImage> findImage(const common::ImageReference& reference) const;
     const boost::filesystem::path& getRepositoryMetadataFile() const { return metadataFile; }
     std::string getImageID(const rapidjson::Value& imageMetadata) const;
     std::string getRegistryDigest(const rapidjson::Value& imageMetadata) const;
@@ -46,15 +46,15 @@ public:
 private:
     rapidjson::Document initRepositoryMetadataFile() const;
     const rapidjson::Value* findImageMetadata(const common::ImageReference& reference, const rapidjson::Document& metadata) const;
-    void atomicallyUpdateRepositoryMetadataFile(const rapidjson::Value& metadata, common::Flock* const lock) const;
+    void atomicallyUpdateRepositoryMetadataFile(const rapidjson::Value& metadata, libsarus::Flock* const lock) const;
     rapidjson::Value createImageJSON(const common::SarusImage&, rapidjson::MemoryPoolAllocator<>& allocator) const;
-    common::SarusImage convertImageMetadataToSarusImage(const rapidjson::Value& imageMetadata) const;
+    sarus::common::SarusImage convertImageMetadataToSarusImage(const rapidjson::Value& imageMetadata) const;
     bool hasImageBackingFiles(const rapidjson::Value& imageMetadata) const;
     void removeImageBackingFiles(const rapidjson::Value* imageMetadata) const;
-    void removeRepositoryMetadataEntry(const rapidjson::Value* imageMetadata, rapidjson::Document& repositoryMetadata, common::Flock* const lock) const;
-    void printLog(const boost::format& message, common::LogLevel LogLevel,
+    void removeRepositoryMetadataEntry(const rapidjson::Value* imageMetadata, rapidjson::Document& repositoryMetadata, libsarus::Flock* const lock) const;
+    void printLog(const boost::format& message, libsarus::LogLevel LogLevel,
                   std::ostream& out = std::cout, std::ostream& err = std::cerr) const;
-    void printLog(const std::string& message, common::LogLevel LogLevel,
+    void printLog(const std::string& message, libsarus::LogLevel LogLevel,
                   std::ostream& out = std::cout, std::ostream& err = std::cerr) const;
 
 private:

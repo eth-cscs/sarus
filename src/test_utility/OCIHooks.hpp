@@ -18,7 +18,7 @@
 #include <boost/filesystem.hpp>
 #include <rapidjson/document.h>
 
-#include "common/Error.hpp"
+#include "libsarus/Error.hpp"
 
 namespace test_utility {
 namespace ocihooks {

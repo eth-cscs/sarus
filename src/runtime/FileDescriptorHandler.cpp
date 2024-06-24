@@ -16,8 +16,8 @@
 #include <boost/format.hpp>
 
 #include "runtime/Utility.hpp"
-#include "common/Error.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Utility.hpp"
 
 
 namespace sarus {
@@ -44,13 +44,13 @@ void FileDescriptorHandler::preservePMIFdIfAny() {
 
 void FileDescriptorHandler::applyChangesToFdsAndEnvVariablesAndBundleAnnotations() {
     utility::logMessage("Applying changes to file descriptors, container's environment variables and bundle's annotations",
-                        common::LogLevel::INFO);
+                        libsarus::LogLevel::INFO);
 
     // close unwanted file descriptors
     for(auto fd : getOpenFileDescriptors()) {
         bool toBePreserved = fileDescriptorsToPreserve.find(fd) != fileDescriptorsToPreserve.cend();
         if(!toBePreserved) {
-            utility::logMessage(boost::format("Closing file descriptor %d") % fd, common::LogLevel::DEBUG);
+            utility::logMessage(boost::format("Closing file descriptor %d") % fd, libsarus::LogLevel::DEBUG);
             close(fd);
         }
     }
@@ -68,21 +68,21 @@ void FileDescriptorHandler::applyChangesToFdsAndEnvVariablesAndBundleAnnotations
         }
 
         if(fdInfo.containerEnvVariable) {
-            utility::logMessage(boost::format("Setting container env variable %s=%d") % *fdInfo.containerEnvVariable % newFd, common::LogLevel::DEBUG);
+            utility::logMessage(boost::format("Setting container env variable %s=%d") % *fdInfo.containerEnvVariable % newFd, libsarus::LogLevel::DEBUG);
             config->commandRun.hostEnvironment[*fdInfo.containerEnvVariable] = std::to_string(newFd);
         }
 
         if(fdInfo.ociAnnotation) {
             // CLI should always have precedence when setting values: use emplace() to add the annotation
             // only if the key is not already present (i.e. previously added by CommandRun)
-            utility::logMessage(boost::format("Attempting to set OCI annotation %s=%d") % *fdInfo.ociAnnotation % newFd, common::LogLevel::DEBUG);
+            utility::logMessage(boost::format("Attempting to set OCI annotation %s=%d") % *fdInfo.ociAnnotation % newFd, libsarus::LogLevel::DEBUG);
             config->commandRun.ociAnnotations.emplace(*fdInfo.ociAnnotation, std::to_string(newFd));
         }
     }
 
-    utility::logMessage(boost::format("Total extra file descriptors: %d") % extraFileDescriptors, common::LogLevel::DEBUG);
+    utility::logMessage(boost::format("Total extra file descriptors: %d") % extraFileDescriptors, libsarus::LogLevel::DEBUG);
     utility::logMessage("Successfully applied changes to file descriptors, container's environment variables and bundle's annotations",
-                        common::LogLevel::INFO);
+                        libsarus::LogLevel::INFO);
 }
 
 std::vector<int> FileDescriptorHandler::getOpenFileDescriptors() const {
@@ -128,7 +128,7 @@ int FileDescriptorHandler::duplicateFdAndPreserveBoth(int fd, const FileDescript
     }
 
     auto message = boost::format("Duplicated %s file descriptor (%d => %d). Preserving both file descriptors.") % fdInfo.name % fd % newFd;
-    utility::logMessage(message.str(), common::LogLevel::DEBUG);
+    utility::logMessage(message.str(), libsarus::LogLevel::DEBUG);
 
     return newFd;
 }
@@ -139,7 +139,7 @@ int FileDescriptorHandler::moveFdToLowestAvailableValue(int fd, const FileDescri
     if(isAtLowestAvailableValue) {
         utility::logMessage(boost::format("No need to move %s file descriptor %d (already at lowest available value)")
                             % fdInfo.name % fd,
-                            common::LogLevel::DEBUG);
+                            libsarus::LogLevel::DEBUG);
         newFd = fd;
     }
     else {
@@ -153,7 +153,7 @@ int FileDescriptorHandler::moveFdToLowestAvailableValue(int fd, const FileDescri
 
         utility::logMessage(boost::format("Moved %1% file descriptor (%2% => %3%). Original fd %2% was closed.")
                             % fdInfo.name % fd % newFd,
-                            common::LogLevel::DEBUG);
+                            libsarus::LogLevel::DEBUG);
     }
     if(newFd > 2) {
         ++extraFileDescriptors;

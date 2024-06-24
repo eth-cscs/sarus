@@ -14,7 +14,7 @@
 #include <rapidjson/document.h>
 
 #include "test_utility/config.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Utility.hpp"
 #include "image_manager/ImageStore.hpp" 
 #include "test_utility/unittest_main_function.hpp"
 
@@ -42,8 +42,8 @@ TEST_GROUP(ImageStoreTestGroup) {
             imageVector.push_back(common::SarusImage{
                                       ref,
                                       dummyID,
-                                      common::SarusImage::createSizeString(size_t(1024)),
-                                      common::SarusImage::createTimeString(currentTime),
+                                      sarus::common::SarusImage::createSizeString(size_t(1024)),
+                                      sarus::common::SarusImage::createTimeString(currentTime),
                                       imageStore.getImageSquashfsFile(ref),
                                       imageStore.getImageMetadataFile(ref)
                                   });
@@ -53,13 +53,13 @@ TEST_GROUP(ImageStoreTestGroup) {
 
 static void addImageHarness(const image_manager::ImageStore& imageStore, const common::SarusImage& image) {
     imageStore.addImage(image);
-    common::createFileIfNecessary(image.imageFile);
-    common::createFileIfNecessary(image.metadataFile);
+    libsarus::createFileIfNecessary(image.imageFile);
+    libsarus::createFileIfNecessary(image.metadataFile);
 }
 
-static bool isFileOwnedBy(const boost::filesystem::path& metadataFile, const common::UserIdentity& userIdentity) {
+static bool isFileOwnedBy(const boost::filesystem::path& metadataFile, const libsarus::UserIdentity& userIdentity) {
     uid_t fileUid; gid_t fileGid;
-    std::tie(fileUid, fileGid) = common::getOwner(metadataFile);
+    std::tie(fileUid, fileGid) = libsarus::getOwner(metadataFile);
     return fileUid == userIdentity.uid && fileGid == userIdentity.gid;
 }
 

@@ -13,7 +13,7 @@
 #include <sys/types.h>
 
 #include "test_utility/config.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Utility.hpp"
 #include "runtime/FileDescriptorHandler.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
@@ -26,7 +26,7 @@ TEST_GROUP(RuntimeTestGroup) {
 std::vector<int> openFiles(const std::vector<boost::filesystem::path>& testFiles) {
     auto testFDs = std::vector<int>{};
     for (const auto& file : testFiles) {
-        common::createFileIfNecessary(file);
+        libsarus::createFileIfNecessary(file);
         // open files with Linux functions, in order to get file descriptors
         testFDs.push_back(open(file.c_str(), O_RDONLY));
     }

@@ -105,36 +105,36 @@ public:
 
 private:
     void setupTestEnvironment() const {
-        sarus::common::createFoldersIfNecessary(rootfsDir / "etc");
+        libsarus::createFoldersIfNecessary(rootfsDir / "etc");
         auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
-        sarus::common::writeJSON(doc, bundleDir / "config.json");
+        libsarus::writeJSON(doc, bundleDir / "config.json");
         createLibraries();
         setupDynamicLinkerInContainer();
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
-        sarus::common::setEnvironmentVariable("LDCONFIG_PATH", "ldconfig");
-        sarus::common::setEnvironmentVariable("MPI_LIBS", sarus::common::makeColonSeparatedListOfPaths(hostMpiLibs));
-        sarus::common::setEnvironmentVariable("MPI_DEPENDENCY_LIBS", sarus::common::makeColonSeparatedListOfPaths(hostDependencyLibs));
-        sarus::common::setEnvironmentVariable("BIND_MOUNTS", sarus::common::makeColonSeparatedListOfPaths(bindMounts));
+        libsarus::setEnvironmentVariable("LDCONFIG_PATH", "ldconfig");
+        libsarus::setEnvironmentVariable("MPI_LIBS", libsarus::makeColonSeparatedListOfPaths(hostMpiLibs));
+        libsarus::setEnvironmentVariable("MPI_DEPENDENCY_LIBS", libsarus::makeColonSeparatedListOfPaths(hostDependencyLibs));
+        libsarus::setEnvironmentVariable("BIND_MOUNTS", libsarus::makeColonSeparatedListOfPaths(bindMounts));
         for(auto& environmentVariable: environmentVariables) {
-            sarus::common::setEnvironmentVariable(environmentVariable.first, environmentVariable.second);
+            libsarus::setEnvironmentVariable(environmentVariable.first, environmentVariable.second);
         }
     }
 
     void createLibraries() const {
         for(const auto& lib : hostDependencyLibs) {
-            sarus::common::copyFile(dummyHostLib, lib);
+            libsarus::copyFile(dummyHostLib, lib);
         }
         for(const auto& lib : hostMpiLibs) {
-            sarus::common::copyFile(dummyHostLib, lib);
+            libsarus::copyFile(dummyHostLib, lib);
         }
         for(const auto& lib : preHookContainerLibs) {
-            sarus::common::copyFile(dummyContainerLib, rootfsDir / lib);
+            libsarus::copyFile(dummyContainerLib, rootfsDir / lib);
         }
     }
 
     void setupDynamicLinkerInContainer() const {
         // write lib directories in /etc/ld.so.conf
-        sarus::common::createFileIfNecessary(rootfsDir / "etc/ld.so.conf");
+        libsarus::createFileIfNecessary(rootfsDir / "etc/ld.so.conf");
         std::ofstream of{(rootfsDir / "etc/ld.so.conf").c_str()};
         auto writtenSoFar = std::unordered_set<std::string>{};
 
@@ -148,7 +148,7 @@ private:
         of.close(); // write to disk
 
         // create /etc/ld.so.cache
-        sarus::common::executeCommand("ldconfig -r " + rootfsDir.string());
+        libsarus::executeCommand("ldconfig -r " + rootfsDir.string());
     }
 
     void checkOnlyExpectedLibrariesAreInRootfs() const {
@@ -159,7 +159,7 @@ private:
         auto begin = boost::filesystem::recursive_directory_iterator{rootfsDir};
         auto end = boost::filesystem::recursive_directory_iterator{};
         auto actual_p = std::vector<boost::filesystem::path>{};
-        std::copy_if(begin, end, std::back_inserter(actual_p), sarus::common::isSharedLib);
+        std::copy_if(begin, end, std::back_inserter(actual_p), libsarus::isSharedLib);
         for(auto& entry: actual_p) {
             actual.push_back(entry.string());
         }
@@ -172,7 +172,7 @@ private:
 
     void checkInjectedAndPreservedLibrariesAsExpected() const {
         for(const auto& lib : *expectedPostHookContainerLibs) {
-            auto libReal = rootfsDir / sarus::common::realpathWithinRootfs(rootfsDir, lib);
+            auto libReal = rootfsDir / libsarus::realpathWithinRootfs(rootfsDir, lib);
 
             auto preservedLib = std::find(preservedPostHookContainerLibs.cbegin(), preservedPostHookContainerLibs.cend(), lib);
             if (preservedLib != preservedPostHookContainerLibs.cend()){
@@ -191,7 +191,7 @@ private:
         }
 
         auto actuals = std::unordered_set<std::string>{};
-        for(const auto& lib : sarus::common::getSharedLibsFromDynamicLinker("ldconfig", rootfsDir)) {
+        for(const auto& lib : libsarus::getSharedLibsFromDynamicLinker("ldconfig", rootfsDir)) {
             actuals.insert(lib.filename().string());
         }
 

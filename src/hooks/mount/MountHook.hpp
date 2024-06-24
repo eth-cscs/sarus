@@ -14,13 +14,13 @@
 #include <boost/format.hpp>
 #include <boost/filesystem.hpp>
 
-#include "common/CLIArguments.hpp"
-#include "common/LogLevel.hpp"
-#include "common/UserIdentity.hpp"
-#include "common/Mount.hpp"
-#include "common/DeviceMount.hpp"
+#include "libsarus/CLIArguments.hpp"
+#include "libsarus/LogLevel.hpp"
+#include "libsarus/UserIdentity.hpp"
+#include "libsarus/Mount.hpp"
+#include "libsarus/DeviceMount.hpp"
 
-#include "common/Utility.hpp"
+#include "libsarus/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -28,32 +28,32 @@ namespace mount {
 
 class MountHook {
 public:
-    MountHook(const sarus::common::CLIArguments& args);
+    MountHook(const libsarus::CLIArguments& args);
     void activate() const;
 
     // for testing purposes
-    const std::vector<std::shared_ptr<sarus::common::Mount>> getBindMounts() const {return bindMounts;};
+    const std::vector<std::shared_ptr<libsarus::Mount>> getBindMounts() const {return bindMounts;};
 
 private:
     void parseConfigJSONOfBundle();
     void parseEnvironmentVariables();
-    void parseCliArguments(const sarus::common::CLIArguments& args);
+    void parseCliArguments(const libsarus::CLIArguments& args);
     std::string replaceStringWildcards(const std::string& input);
     std::string replaceFiProviderPathWildcard(const std::string& input);
     boost::filesystem::path findLibfabricLibdir() const;
     void performBindMounts() const;
     void performDeviceMounts() const;
-    void log(const std::string& message, sarus::common::LogLevel level) const;
-    void log(const boost::format& message, sarus::common::LogLevel level) const;
+    void log(const std::string& message, libsarus::LogLevel level) const;
+    void log(const boost::format& message, libsarus::LogLevel level) const;
 
 private:
-    common::hook::ContainerState containerState;
+    libsarus::hook::ContainerState containerState;
     boost::filesystem::path rootfsDir;
-    sarus::common::UserIdentity userIdentity;
+    libsarus::UserIdentity userIdentity;
     boost::filesystem::path ldconfigPath;
     boost::filesystem::path fiProviderPath;
-    std::vector<std::shared_ptr<sarus::common::Mount>> bindMounts;
-    std::vector<std::shared_ptr<sarus::common::DeviceMount>> deviceMounts;
+    std::vector<std::shared_ptr<libsarus::Mount>> bindMounts;
+    std::vector<std::shared_ptr<libsarus::DeviceMount>> deviceMounts;
 };
 
 }}} // namespace

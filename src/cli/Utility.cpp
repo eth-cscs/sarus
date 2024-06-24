@@ -16,8 +16,8 @@
 #include <boost/program_options.hpp>
 
 #include "common/Config.hpp"
-#include "common/Utility.hpp"
-#include "common/MountParser.hpp"
+#include "libsarus/Utility.hpp"
+#include "libsarus/MountParser.hpp"
 #include "cli/regex.hpp"
 
 
@@ -91,7 +91,7 @@ bool isValidCLIInputImageReference(const std::string& imageReference) {
 /**
  * Parse the CLI arguments corresponding to an image reference
  */
-common::ImageReference parseImageReference(const common::CLIArguments& imageArgs) {
+common::ImageReference parseImageReference(const libsarus::CLIArguments& imageArgs) {
     if(imageArgs.argc() != 1) {
         auto message = boost::format(
             "Invalid image reference %s\n"
@@ -106,7 +106,7 @@ common::ImageReference parseImageReference(const common::CLIArguments& imageArgs
  * Parse the input reference of a container image
  */
 common::ImageReference parseImageReference(const std::string &input) {
-    printLog( boost::format("Parsing image reference from string: %s") % input, common::LogLevel::DEBUG);
+    printLog( boost::format("Parsing image reference from string: %s") % input, libsarus::LogLevel::DEBUG);
 
     auto server              = std::string{};
     auto repositoryNamespace = std::string{};
@@ -149,7 +149,7 @@ common::ImageReference parseImageReference(const std::string &input) {
     }
 
     auto imageReference = common::ImageReference{server, repositoryNamespace, image, tag, digest};
-    printLog(boost::format("Successfully parsed image reference %s") % imageReference, common::LogLevel::DEBUG);
+    printLog(boost::format("Successfully parsed image reference %s") % imageReference, libsarus::LogLevel::DEBUG);
 
     return imageReference;
 }
@@ -173,8 +173,8 @@ static bool optionTakesValue(const boost::program_options::option_description* o
     return result;
 }
 
-static common::CLIArguments::const_iterator processPossibleValueInNextToken(common::CLIArguments::const_iterator arg,
-        common::CLIArguments::const_iterator argsEnd, common::CLIArguments& argsGroup) {
+static libsarus::CLIArguments::const_iterator processPossibleValueInNextToken(libsarus::CLIArguments::const_iterator arg,
+        libsarus::CLIArguments::const_iterator argsEnd, libsarus::CLIArguments& argsGroup) {
     // always include the current token (the option)
     argsGroup.push_back(*arg);
 
@@ -190,8 +190,8 @@ static common::CLIArguments::const_iterator processPossibleValueInNextToken(comm
     return arg;
 }
 
-static common::CLIArguments::const_iterator processDashDashOption(common::CLIArguments::const_iterator arg,
-        common::CLIArguments::const_iterator argsEnd, common::CLIArguments& argsGroup,
+static libsarus::CLIArguments::const_iterator processDashDashOption(libsarus::CLIArguments::const_iterator arg,
+        libsarus::CLIArguments::const_iterator argsEnd, libsarus::CLIArguments& argsGroup,
         const boost::program_options::options_description& optionsDescription) {
     auto argString = std::string{*arg};
 
@@ -224,8 +224,8 @@ static common::CLIArguments::const_iterator processDashDashOption(common::CLIArg
     return arg;
 }
 
-static common::CLIArguments::const_iterator processDashOption(common::CLIArguments::const_iterator arg,
-        common::CLIArguments::const_iterator argsEnd, common::CLIArguments& argsGroup,
+static libsarus::CLIArguments::const_iterator processDashOption(libsarus::CLIArguments::const_iterator arg,
+        libsarus::CLIArguments::const_iterator argsEnd, libsarus::CLIArguments& argsGroup,
         const boost::program_options::options_description& optionsDescription) {
     auto argString = std::string{*arg};
 
@@ -291,14 +291,14 @@ static common::CLIArguments::const_iterator processDashOption(common::CLIArgumen
  * E.g. the CLI arguments "sarus --verbose run --mpi image command" are grouped into
  * two CLIArguments objects ("sarus --verbose", "run --mpi image command").
  */
-std::tuple<common::CLIArguments, common::CLIArguments> groupOptionsAndPositionalArguments(
-        const common::CLIArguments& args,
+std::tuple<libsarus::CLIArguments, libsarus::CLIArguments> groupOptionsAndPositionalArguments(
+        const libsarus::CLIArguments& args,
         const boost::program_options::options_description& optionsDescription) {
 
-    common::CLIArguments nameAndOptionArgs, positionalArgs;
+    libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
 
     if(args.argc() == 0) {
-        return std::tuple<common::CLIArguments, common::CLIArguments>{nameAndOptionArgs, positionalArgs};
+        return std::tuple<libsarus::CLIArguments, libsarus::CLIArguments>{nameAndOptionArgs, positionalArgs};
     }
 
     // Initialize the first arguments group with the first input argument (the name of the program or command)
@@ -308,7 +308,7 @@ std::tuple<common::CLIArguments, common::CLIArguments> groupOptionsAndPositional
     // Start analysis from second argument
     for(auto arg = args.begin()+1; arg != args.end(); ++arg) {
         if(!isOption(*arg)) {
-            positionalArgs = common::CLIArguments{arg, args.end()};
+            positionalArgs = libsarus::CLIArguments{arg, args.end()};
             break;
         }
 
@@ -320,27 +320,27 @@ std::tuple<common::CLIArguments, common::CLIArguments> groupOptionsAndPositional
         }
     }
 
-    return std::tuple<common::CLIArguments, common::CLIArguments>{nameAndOptionArgs, positionalArgs};
+    return std::tuple<libsarus::CLIArguments, libsarus::CLIArguments>{nameAndOptionArgs, positionalArgs};
 }
 
-void validateNumberOfPositionalArguments(const common::CLIArguments& positionalArgs, const int min, const int max,
+void validateNumberOfPositionalArguments(const libsarus::CLIArguments& positionalArgs, const int min, const int max,
         const std::string& command) {
     auto numberOfArguments = positionalArgs.argc();
     if(numberOfArguments < min || numberOfArguments > max) {
         auto quantity = numberOfArguments < min ? std::string("few") : std::string("many");
         auto message = boost::format("Too %s arguments for command '%s'\n"
                                      "See 'sarus help %s'") % quantity % command % command;
-        printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+        printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
     }
 }
 
-void printLog(const std::string& message, common::LogLevel LogLevel, std::ostream& outStream, std::ostream& errStream) {
+void printLog(const std::string& message, libsarus::LogLevel LogLevel, std::ostream& outStream, std::ostream& errStream) {
     auto systemName = "CLI";
-    common::Logger::getInstance().log(message, systemName, LogLevel, outStream, errStream);
+    libsarus::Logger::getInstance().log(message, systemName, LogLevel, outStream, errStream);
 }
 
-void printLog(const boost::format& message, common::LogLevel LogLevel, std::ostream& outStream, std::ostream& errStream) {
+void printLog(const boost::format& message, libsarus::LogLevel LogLevel, std::ostream& outStream, std::ostream& errStream) {
     printLog(message.str(), LogLevel, outStream, errStream);
 }
 

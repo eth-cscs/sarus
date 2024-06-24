@@ -15,7 +15,7 @@
 
 #include <unistd.h>
 
-#include "common/Utility.hpp"
+#include "libsarus/Utility.hpp"
 
 namespace rj = rapidjson;
 using namespace sarus;
@@ -45,11 +45,11 @@ ConfigRAII::~ConfigRAII() {
 static void populateJSON(rj::Document& document) {
     auto& allocator = document.GetAllocator();
 
-    auto prefixDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("sarus-test-prefix-dir"));
+    auto prefixDir = libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("sarus-test-prefix-dir"));
     auto hooksDir = prefixDir / "etc/hooks.d";
     auto bundleDir = prefixDir / "var/OCIBundle";
-    auto localRepositoryBaseDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("sarus-test-localRepositoryBaseDir"));
-    auto centralizedRepositoryDir = common::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("sarus-test-centralizedRepositoryDir"));
+    auto localRepositoryBaseDir = libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("sarus-test-localRepositoryBaseDir"));
+    auto centralizedRepositoryDir = libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("sarus-test-centralizedRepositoryDir"));
 
     document.AddMember( "securityChecks",
                         false,
@@ -153,7 +153,7 @@ static void populateJSON(rj::Document& document) {
 }
 
 void createOCIHook(const boost::filesystem::path& hooksDir) {
-    common::createFoldersIfNecessary(hooksDir);
+    libsarus::createFoldersIfNecessary(hooksDir);
 
     auto hook = hooksDir / "test-hook.json";
     auto os = std::ofstream{ hook.c_str() };
@@ -186,15 +186,15 @@ ConfigRAII makeConfig() {
     auto prefixDir = boost::filesystem::path{ raii.config->json["prefixDir"].GetString() };
 
     // passwd + group
-    common::createFoldersIfNecessary(prefixDir / "etc");
-    common::executeCommand("getent passwd >" + prefixDir.string() + "/etc/passwd");
-    common::executeCommand("getent group >" + prefixDir.string() + "/etc/group");
+    libsarus::createFoldersIfNecessary(prefixDir / "etc");
+    libsarus::executeCommand("getent passwd >" + prefixDir.string() + "/etc/passwd");
+    libsarus::executeCommand("getent group >" + prefixDir.string() + "/etc/group");
 
      // JSON schemas
     auto repoRootDir = boost::filesystem::path{__FILE__}.parent_path().parent_path().parent_path();
-    common::copyFile(repoRootDir / "etc/definitions.schema.json", prefixDir / "etc/definitions.schema.json");
-    common::copyFile(repoRootDir / "etc/sarus.schema.json", prefixDir / "etc/sarus.schema.json");
-    common::copyFile(repoRootDir / "etc/hook.schema.json", prefixDir / "etc/hook.schema.json");
+    libsarus::copyFile(repoRootDir / "etc/definitions.schema.json", prefixDir / "etc/definitions.schema.json");
+    libsarus::copyFile(repoRootDir / "etc/sarus.schema.json", prefixDir / "etc/sarus.schema.json");
+    libsarus::copyFile(repoRootDir / "etc/hook.schema.json", prefixDir / "etc/hook.schema.json");
 
     // hooks
     createOCIHook(raii.config->json["hooksDir"].GetString());
@@ -204,7 +204,7 @@ ConfigRAII makeConfig() {
 
     // image + metadata
     raii.config->imageReference = common::ImageReference{"test", "test", "test", "test_image"};
-    common::createFileIfNecessary(raii.config->getMetadataFileOfImage());
+    libsarus::createFileIfNecessary(raii.config->getMetadataFileOfImage());
     std::ofstream metadataStream(raii.config->getMetadataFileOfImage().c_str());
     metadataStream << R"(
     {

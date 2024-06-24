@@ -19,7 +19,7 @@
 #include "cli/Utility.hpp"
 #include "common/Config.hpp"
 #include "cli/Command.hpp"
-#include "common/CLIArguments.hpp"
+#include "libsarus/CLIArguments.hpp"
 #include "cli/HelpMessage.hpp"
 #include "image_manager/ImageManager.hpp"
 
@@ -33,7 +33,7 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandRmi(const common::CLIArguments& args, std::shared_ptr<common::Config> conf)
+    CommandRmi(const libsarus::CLIArguments& args, std::shared_ptr<common::Config> conf)
         : conf{std::move(conf)}
     {
         initializeOptionsDescription();
@@ -70,10 +70,10 @@ private:
             ("centralized-repository", "Use centralized repository instead of the local one");
     }
 
-    void parseCommandArguments(const common::CLIArguments& args) {
-        cli::utility::printLog(boost::format("parsing CLI arguments of rmi command"), common::LogLevel::DEBUG);
+    void parseCommandArguments(const libsarus::CLIArguments& args) {
+        cli::utility::printLog(boost::format("parsing CLI arguments of rmi command"), libsarus::LogLevel::DEBUG);
 
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
 
         // the rmi command expects exactly one positional argument
@@ -94,11 +94,11 @@ private:
         }
         catch (std::exception& e) {
             auto message = boost::format("%s\nSee 'sarus help rmi'") % e.what();
-            cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            cli::utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
         }
 
-        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
+        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), libsarus::LogLevel::DEBUG);
     }
 
 private:

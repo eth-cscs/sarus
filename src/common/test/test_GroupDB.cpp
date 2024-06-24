@@ -12,11 +12,10 @@
 #include <streambuf>
 #include <boost/filesystem.hpp>
 
-#include "common/PathRAII.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/PathRAII.hpp"
+#include "libsarus/Utility.hpp"
 #include "common/GroupDB.hpp"
 #include "test_utility/unittest_main_function.hpp"
-
 
 namespace sarus {
 namespace common {
@@ -27,7 +26,7 @@ TEST_GROUP(GroupDBTestGroup) {
 
 TEST(GroupDBTestGroup, testRead) {
     // create file
-    auto path = common::PathRAII{common::makeUniquePathWithRandomSuffix("./test-etc-group-file")};
+    auto path = libsarus::PathRAII{libsarus::makeUniquePathWithRandomSuffix("./test-etc-group-file")};
     const auto& file = path.getPath();
     std::ofstream of{file.c_str()};
     of  << "groupName0:x:0:" << std::endl
@@ -64,7 +63,7 @@ TEST(GroupDBTestGroup, testRead) {
 }
 
 TEST(GroupDBTestGroup, testWrite) {
-    auto path = common::PathRAII{common::makeUniquePathWithRandomSuffix("./test-etc-group-file")};
+    auto path = libsarus::PathRAII{libsarus::makeUniquePathWithRandomSuffix("./test-etc-group-file")};
     const auto& file = path.getPath();
 
     // create entry
@@ -101,6 +100,6 @@ TEST(GroupDBTestGroup, testWrite) {
     CHECK_EQUAL(data, expectedData);
 }
 
-}}} // namespace
+}}}
 
 SARUS_UNITTEST_MAIN_FUNCTION();

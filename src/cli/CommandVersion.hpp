@@ -16,7 +16,7 @@
 
 #include "common/Config.hpp"
 #include "cli/Command.hpp"
-#include "common/CLIArguments.hpp"
+#include "libsarus/CLIArguments.hpp"
 #include "cli/HelpMessage.hpp"
 
 
@@ -27,14 +27,14 @@ class CommandVersion : public Command {
 public:
     CommandVersion() = default;
 
-    CommandVersion(const common::CLIArguments& args, std::shared_ptr<const common::Config> conf)
+    CommandVersion(const libsarus::CLIArguments& args, std::shared_ptr<const common::Config> conf)
         : conf{std::move(conf)}
     {
         parseCommandArguments(args);
     }
 
     void execute() override {
-        common::Logger::getInstance().log(conf->buildTime.version, "CommandVersion", common::LogLevel::GENERAL);
+        libsarus::Logger::getInstance().log(conf->buildTime.version, "CommandVersion", libsarus::LogLevel::GENERAL);
     }
 
     bool requiresRootPrivileges() const override {
@@ -53,11 +53,11 @@ public:
     }
 
 private:
-    void parseCommandArguments(const common::CLIArguments& args) {
-        cli::utility::printLog(boost::format("parsing CLI arguments of version command"), common::LogLevel::DEBUG);
+    void parseCommandArguments(const libsarus::CLIArguments& args) {
+        cli::utility::printLog(boost::format("parsing CLI arguments of version command"), libsarus::LogLevel::DEBUG);
 
         auto optionsDescription = boost::program_options::options_description();
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
 
         // the version command doesn't support positional arguments
@@ -67,11 +67,11 @@ private:
         if(nameAndOptionArgs.argc() > 1) {
             auto message = boost::format("Command 'version' doesn't support options"
                                          "\nSee 'sarus help version'");
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
         }
 
-        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
+        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), libsarus::LogLevel::DEBUG);
     }
 
 private:

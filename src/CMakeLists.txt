@@ -16,6 +16,7 @@ add_subdirectory(cli)
 add_subdirectory(image_manager)
 add_subdirectory(runtime)
 add_subdirectory(hooks)
+add_subdirectory(libsarus)
 
 if(${ENABLE_UNIT_TESTS})
     add_subdirectory(test_utility)

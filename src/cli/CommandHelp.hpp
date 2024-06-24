@@ -28,11 +28,11 @@ class CommandHelp : public Command {
 public:
     CommandHelp() = default;
 
-    CommandHelp(const common::CLIArguments& args, std::shared_ptr<common::Config>) {
+    CommandHelp(const libsarus::CLIArguments& args, std::shared_ptr<common::Config>) {
         if(args.argc() > 1) {
             auto message = boost::format("Command 'help' doesn't support options");
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
         }
     }
 

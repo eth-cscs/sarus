@@ -10,7 +10,7 @@
 
 #include <string>
 
-#include "common/Utility.hpp"
+#include "libsarus/Utility.hpp"
 #include "common/Config.hpp"
 #include "cli/Utility.hpp"
 #include "test_utility/unittest_main_function.hpp"
@@ -145,8 +145,8 @@ TEST(CLIUtilityTestGroup, parseImageReference) {
     CHECK_EQUAL(imageReference.digest, std::string{"sha256:d4ff818577bc193b309b355b02ebc9220427090057b54a59e73b79bdfe139b83"});
 }
 
-std::tuple<common::CLIArguments, common::CLIArguments> generateGroupedArguments(
-        const common::CLIArguments& args,
+std::tuple<libsarus::CLIArguments, libsarus::CLIArguments> generateGroupedArguments(
+        const libsarus::CLIArguments& args,
         const boost::program_options::options_description& optionsDescription) {
     return cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
 }
@@ -155,7 +155,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
     // one argument
     {
         auto optionsDescription = boost::program_options::options_description();
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), true);
         CHECK_EQUAL(nameAndOptionArgs.argc(), 1);
@@ -164,7 +164,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
     // one argument with options
     {
         auto optionsDescription = boost::program_options::options_description();
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "--option0", "--option1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), true);
         CHECK_EQUAL(nameAndOptionArgs.argc(), 3);
@@ -175,7 +175,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
     // two arguments
     {
         auto optionsDescription = boost::program_options::options_description();
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "arg1", "--option1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), false);
 
@@ -189,7 +189,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
     // multiple arguments separated by options
     {
         auto optionsDescription = boost::program_options::options_description();
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "--option0", "arg1", "--option1", "arg2"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), false);
 
@@ -207,7 +207,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
         auto optionsDescription = boost::program_options::options_description();
         optionsDescription.add_options()
                 ("option0", "Option 0");
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "--option0", "arg1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), false);
 
@@ -223,7 +223,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
         auto optionsDescription = boost::program_options::options_description();
         optionsDescription.add_options()
                 ("option0", "Option 0");
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "--option0=value0", "arg1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), false);
 
@@ -240,7 +240,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
         auto optionsDescription = boost::program_options::options_description();
         optionsDescription.add_options()
                 ("option0", boost::program_options::value<std::string>(&value0), "Option 0");
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "--option0", "value0", "arg1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), false);
 
@@ -259,7 +259,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
         optionsDescription.add_options()
                 ("option0", boost::program_options::value<std::string>(&value0), "Option 0")
                 ("option1", "Option 1");
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "--option0", "value0", "--option1", "arg1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), false);
 
@@ -279,7 +279,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
         optionsDescription.add_options()
                 ("option0", "Option 0")
                 ("option1", boost::program_options::value<std::string>(&value1), "Option 1");
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "--option0", "--option1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), true);
 
@@ -293,7 +293,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
         auto optionsDescription = boost::program_options::options_description();
         optionsDescription.add_options()
                 ("option0,o", "Option 0");
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "-o", "arg1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), false);
 
@@ -309,7 +309,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
         auto optionsDescription = boost::program_options::options_description();
         optionsDescription.add_options()
                 ("option0,o", "Option 0");
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "-ovalue", "arg1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), false);
 
@@ -326,7 +326,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
         auto optionsDescription = boost::program_options::options_description();
         optionsDescription.add_options()
                 ("option0,o", boost::program_options::value<std::string>(&value0),"Option 0");
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "-ovalue0", "arg1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), false);
 
@@ -343,7 +343,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
         auto optionsDescription = boost::program_options::options_description();
         optionsDescription.add_options()
                 ("option0,o", boost::program_options::value<std::string>(&value0),"Option 0");
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "-o", "value0", "arg1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), false);
 
@@ -362,7 +362,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
         optionsDescription.add_options()
                 ("option0,o", boost::program_options::value<std::string>(&value0),"Option 0")
                 ("option1", "Option 1");
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "-o", "value0", "--option1", "arg1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), false);
 
@@ -382,7 +382,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
         optionsDescription.add_options()
                 ("option0,o", "Option 0")
                 ("option1,p", boost::program_options::value<std::string>(&value1), "Option 1");
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "-o", "-p"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), true);
 
@@ -397,7 +397,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
         optionsDescription.add_options()
                 ("option0,o", "Option 0")
                 ("option1,p", "Option 1");
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "-op", "arg1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), false);
 
@@ -415,7 +415,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
         optionsDescription.add_options()
                 ("option0", boost::program_options::value<std::string>(&value0),"Option 0")
                 ("option1,p", "Option 1");
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "-povalue0", "arg1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), false);
 
@@ -433,7 +433,7 @@ TEST(CLIUtilityTestGroup, groupOptionsAndPositionalArguments) {
         optionsDescription.add_options()
                 ("option0,o", boost::program_options::value<std::string>(&value0),"Option 0")
                 ("option1,p", "Option 1");
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = generateGroupedArguments({"arg0", "-po", "value0", "arg1"}, optionsDescription);
         CHECK_EQUAL(positionalArgs.empty(), false);
 
@@ -455,13 +455,13 @@ TEST(CLIUtilityTestGroup, validateNumberOfPositionalArguments) {
     // at least 1 positional expected
     cli::utility::validateNumberOfPositionalArguments({"arg0", "arg1", "arg2"}, 1, INT_MAX, "command");
     // too few arguments
-    CHECK_THROWS(sarus::common::Error, cli::utility::validateNumberOfPositionalArguments({}, 1, 1, "command"));
+    CHECK_THROWS(libsarus::Error, cli::utility::validateNumberOfPositionalArguments({}, 1, 1, "command"));
     // too few arguments with no max
-    CHECK_THROWS(sarus::common::Error, cli::utility::validateNumberOfPositionalArguments({"arg0"}, 2, INT_MAX, "command"));
+    CHECK_THROWS(libsarus::Error, cli::utility::validateNumberOfPositionalArguments({"arg0"}, 2, INT_MAX, "command"));
     // too many arguments with 0 max
-    CHECK_THROWS(sarus::common::Error, cli::utility::validateNumberOfPositionalArguments({"arg0", "arg1"}, 0, 0, "command"));
+    CHECK_THROWS(libsarus::Error, cli::utility::validateNumberOfPositionalArguments({"arg0", "arg1"}, 0, 0, "command"));
     // too many arguments with non-zero max
-    CHECK_THROWS(sarus::common::Error, cli::utility::validateNumberOfPositionalArguments({"arg0", "arg1"}, 1, 1, "command"));
+    CHECK_THROWS(libsarus::Error, cli::utility::validateNumberOfPositionalArguments({"arg0", "arg1"}, 1, 1, "command"));
 }
 
 SARUS_UNITTEST_MAIN_FUNCTION();

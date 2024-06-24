@@ -16,8 +16,8 @@
 #include <boost/filesystem.hpp>
 #include <sys/types.h>
 
-#include "common/Logger.hpp"
-#include "common/UserIdentity.hpp"
+#include "libsarus/Logger.hpp"
+#include "libsarus/UserIdentity.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -41,16 +41,16 @@ private:
         const boost::filesystem::path& hostLibc,
         const boost::filesystem::path& containerLibc) const;
     void replaceGlibcLibrariesInContainer() const;
-    void logMessage(const std::string& message, sarus::common::LogLevel logLevel,
+    void logMessage(const std::string& message, libsarus::LogLevel logLevel,
                     std::ostream& out=std::cout, std::ostream& err=std::cerr) const;
-    void logMessage(const boost::format& message, sarus::common::LogLevel,
+    void logMessage(const boost::format& message, libsarus::LogLevel,
                     std::ostream& out=std::cout, std::ostream& err=std::cerr) const;
 
 private:
     boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
     pid_t pidOfContainer;
-    sarus::common::UserIdentity userIdentity;
+    libsarus::UserIdentity userIdentity;
     boost::filesystem::path lddPath;
     boost::filesystem::path ldconfigPath;
     boost::filesystem::path readelfPath;

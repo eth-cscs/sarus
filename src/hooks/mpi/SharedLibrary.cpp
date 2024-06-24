@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  *
  */
-#include "common/Utility.hpp"
+#include "libsarus/Utility.hpp"
 #include "hooks/mpi/SharedLibrary.hpp"
 
 #include <boost/algorithm/string.hpp>
@@ -41,8 +41,8 @@ bool areStrictlyAbiCompatible(const SharedLibrary& host, const SharedLibrary& co
 }
 
 SharedLibrary::SharedLibrary(const boost::filesystem::path& path, const boost::filesystem::path& rootDir) : path(path) {
-    linkerName = sarus::common::getSharedLibLinkerName(path).string();
-    auto abi = sarus::common::resolveSharedLibAbi(path, rootDir);
+    linkerName = libsarus::getSharedLibLinkerName(path).string();
+    auto abi = libsarus::resolveSharedLibAbi(path, rootDir);
     if (abi.size() > 0)
         major = std::stoi(abi[0]);
     if (abi.size() > 1)

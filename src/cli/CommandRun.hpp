@@ -20,16 +20,16 @@
 #include <boost/program_options.hpp>
 
 #include "common/Config.hpp"
-#include "common/CLIArguments.hpp"
-#include "common/DeviceParser.hpp"
-#include "common/MountParser.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/CLIArguments.hpp"
+#include "libsarus/DeviceParser.hpp"
+#include "libsarus/MountParser.hpp"
+#include "libsarus/Utility.hpp"
 #include "cli/Utility.hpp"
 #include "cli/Command.hpp"
 #include "cli/HelpMessage.hpp"
 #include "image_manager/ImageStore.hpp"
 #include "runtime/Runtime.hpp"
-#include "common/DeviceMount.hpp"
+#include "libsarus/DeviceMount.hpp"
 
 
 namespace sarus {
@@ -41,7 +41,7 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandRun(const common::CLIArguments& args, std::shared_ptr<common::Config> conf)
+    CommandRun(const libsarus::CLIArguments& args, std::shared_ptr<common::Config> conf)
         : conf{std::move(conf)}
     {
         initializeOptionsDescription();
@@ -49,13 +49,13 @@ public:
     }
 
     void execute() override {
-        cli::utility::printLog("Executing run command", common::LogLevel::INFO);
+        cli::utility::printLog("Executing run command", libsarus::LogLevel::INFO);
 
         if(conf->commandRun.enableSSH && !checkUserHasSshKeys()) {
             auto message = boost::format("Failed to check the SSH keys. Hint: try to"
                                          " generate the SSH keys with 'sarus ssh-keygen'.");
-            common::Logger::getInstance().log(message, "CLI", common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            libsarus::Logger::getInstance().log(message, "CLI", libsarus::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
         }
 
         verifyThatImageIsAvailable();
@@ -63,7 +63,7 @@ public:
         auto setupBegin = std::chrono::high_resolution_clock::now();
         auto cliTime = std::chrono::duration<double>(setupBegin - conf->program_start);
         auto message = boost::format("Processed CLI arguments in %.6f seconds") % cliTime.count();
-        cli::utility::printLog(message, common::LogLevel::INFO);
+        cli::utility::printLog(message, libsarus::LogLevel::INFO);
 
         auto runtime = runtime::Runtime{conf};
         runtime.setupOCIBundle();
@@ -71,11 +71,11 @@ public:
         auto setupEnd = std::chrono::high_resolution_clock::now();
         auto setupTime = std::chrono::duration<double>(setupEnd - setupBegin);
         message = boost::format("Successfully set up container in %.6f seconds") % setupTime.count();
-        cli::utility::printLog(message, common::LogLevel::INFO);
+        cli::utility::printLog(message, libsarus::LogLevel::INFO);
 
         runtime.executeContainer();
 
-        cli::utility::printLog("Successfully executed run command", common::LogLevel::INFO);
+        cli::utility::printLog("Successfully executed run command", libsarus::LogLevel::INFO);
     }
 
     bool requiresRootPrivileges() const override {
@@ -136,10 +136,10 @@ private:
                 "Set working directory inside the container");
     }
 
-    void parseCommandArguments(const common::CLIArguments& args) {
-        cli::utility::printLog("parsing CLI arguments of run command", common::LogLevel::DEBUG);
+    void parseCommandArguments(const libsarus::CLIArguments& args) {
+        cli::utility::printLog("parsing CLI arguments of run command", libsarus::LogLevel::DEBUG);
 
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
 
         // the run command expects at least one positional argument (the image name)
@@ -161,16 +161,16 @@ private:
             conf->useCentralizedRepository = values.count("centralized-repository");
             conf->directories.initialize(conf->useCentralizedRepository, *conf);
             // the remaining arguments (after image) are all part of the command to be executed in the container
-            conf->commandRun.execArgs = common::CLIArguments(positionalArgs.begin()+1, positionalArgs.end());
+            conf->commandRun.execArgs = libsarus::CLIArguments(positionalArgs.begin()+1, positionalArgs.end());
 
             if(values.count("entrypoint")) {
                 if(entrypoint.empty()) {
-                    conf->commandRun.entrypoint = common::CLIArguments{};
+                    conf->commandRun.entrypoint = libsarus::CLIArguments{};
                 }
                 else {
                     std::vector<std::string> entrypointArgs;
                     boost::algorithm::split(entrypointArgs, entrypoint, boost::algorithm::is_space());
-                    conf->commandRun.entrypoint = common::CLIArguments{entrypointArgs.cbegin(), entrypointArgs.cend()};
+                    conf->commandRun.entrypoint = libsarus::CLIArguments{entrypointArgs.cbegin(), entrypointArgs.cend()};
                 }
             }
 
@@ -252,8 +252,8 @@ private:
         }
         catch (std::exception& e) {
             auto message = boost::format("%s\nSee 'sarus help run'") % e.what();
-            cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            cli::utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
         }
 
         makeAnnotations();
@@ -263,47 +263,47 @@ private:
         makeSiteDeviceMountObjects();
         makeUserDeviceMountObjects();
 
-        cli::utility::printLog("successfully parsed CLI arguments", common::LogLevel::DEBUG);
+        cli::utility::printLog("successfully parsed CLI arguments", libsarus::LogLevel::DEBUG);
     }
 
     void makeAnnotations() {
         for(const auto& annotation : annotations) {
             auto message = boost::format("Parsing annotation from CLI '%s'") % annotation;
-            cli::utility::printLog(message, common::LogLevel::DEBUG);
+            cli::utility::printLog(message, libsarus::LogLevel::DEBUG);
 
             if(annotation.empty()) {
                 auto message = boost::format("Invalid annotation requested from CLI: empty option value");
-                utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+                utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
             }
 
             std::string key, value;
             try {
-                std::tie(key, value) = common::parseKeyValuePair(annotation);
+                std::tie(key, value) = libsarus::parseKeyValuePair(annotation);
             }
             catch(std::exception& e) {
                 auto message = boost::format("Error parsing annotation from CLI '%s': %s")
                                % annotation % e.what();
-                cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+                cli::utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
             }
 
             conf->commandRun.ociAnnotations[key] = value;
             message = boost::format("Successfully parsed annotation from CLI: Key: '%s' - Value: '%s'")
                       % key % value;
-            cli::utility::printLog(message, common::LogLevel::DEBUG);
+            cli::utility::printLog(message, libsarus::LogLevel::DEBUG);
         }
     }
 
     void makeUserEnvironment() {
         for(const auto& variable : env) {
             auto message = boost::format("Parsing environment variable requested from CLI '%s'") % variable;
-            cli::utility::printLog(message, common::LogLevel::DEBUG);
+            cli::utility::printLog(message, libsarus::LogLevel::DEBUG);
 
             if(variable.empty()) {
                 auto message = boost::format("Invalid environment variable requested from CLI: empty option value");
-                utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+                utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+                SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
             }
 
             std::string name, value;
@@ -312,7 +312,7 @@ private:
                 auto message = boost::format("Environment variable requested from CLI '%s' does not feature '=' separator. "
                                              "Treating string as variable name and attempting to source value from host "
                                              "environment") % variable;
-                cli::utility::printLog(message, common::LogLevel::INFO);
+                cli::utility::printLog(message, libsarus::LogLevel::INFO);
 
                 auto& hostEnvironment = conf->commandRun.hostEnvironment;
                 auto hostVariable = hostEnvironment.find(variable);
@@ -323,42 +323,43 @@ private:
                 else {
                     auto message = boost::format("Environment variable requested from CLI '%s' does not correspond to a variable "
                                                  "present in the host environment. Skipping request.") % variable;
-                    cli::utility::printLog(message, common::LogLevel::INFO);
+                    cli::utility::printLog(message, libsarus::LogLevel::INFO);
                     continue;
                 }
             }
             else {
                 try {
-                    std::tie(name, value) = common::parseEnvironmentVariable(variable);
+                    std::tie(name, value) = libsarus::parseEnvironmentVariable(variable);
                 }
                 catch(std::exception& e) {
                     auto message = boost::format("Error parsing environment variable requested from CLI '%s': %s")
                                    % variable % e.what();
-                    cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                    SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+                    cli::utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+                    SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
                 }
             }
 
             conf->commandRun.userEnvironment[name] = value;
             message = boost::format("Successfully parsed environment variable from CLI: Name: '%s' - Value: '%s'")
                       % name % value;
-            cli::utility::printLog(message, common::LogLevel::DEBUG);
+            cli::utility::printLog(message, libsarus::LogLevel::DEBUG);
         }
     }
 
     void makeSiteMountObjects() {
-        bool isUserMount = false;
-        auto parser = sarus::common::MountParser{isUserMount, conf};
+        auto parser = libsarus::MountParser{conf->getRootfsDirectory(), conf->userIdentity};
         for(const auto& map : convertJSONSiteMountsToMaps()) {
             conf->commandRun.mounts.push_back(parser.parseMountRequest(map));
         }
     }
 
     void makeUserMountObjects() {
-        bool isUserMount = true;
-        auto parser = sarus::common::MountParser{isUserMount, conf};
+        auto parser = libsarus::MountParser{conf->getRootfsDirectory(), conf->userIdentity};
+        if (conf->json.HasMember("userMounts")) {  
+            parser = libsarus::MountParser{conf->getRootfsDirectory(), conf->userIdentity, conf->json["userMounts"]};
+        }
         for (const auto& mountString : conf->commandRun.userMounts) {
-            auto map = common::parseMap(mountString);
+            auto map = libsarus::parseMap(mountString);
             conf->commandRun.mounts.push_back(parser.parseMountRequest(map));
         }
     }
@@ -394,22 +395,22 @@ private:
     }
 
     void makeSiteDeviceMountObjects() {
-        auto parser = sarus::common::DeviceParser{conf};
+        auto parser = libsarus::DeviceParser{conf->getRootfsDirectory(), conf->userIdentity};
         for (const auto& requestString : convertJSONSiteDevicesToStrings()) {
             try {
                 conf->commandRun.deviceMounts.push_back(parser.parseDeviceRequest(requestString));
             }
-            catch (const common::Error& e) {
+            catch (const libsarus::Error& e) {
                 auto message = boost::format("Error while processing the 'siteDevices' parameter in the configuration file. "
                     "Please contact your system administrator");
-                cli::utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-                SARUS_RETHROW_ERROR(e, message.str(), common::LogLevel::INFO);
+                cli::utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+                SARUS_RETHROW_ERROR(e, message.str(), libsarus::LogLevel::INFO);
             }
         }
     }
 
     void makeUserDeviceMountObjects() {
-        auto parser = sarus::common::DeviceParser{conf};
+        auto parser = libsarus::DeviceParser{conf->getRootfsDirectory(), conf->userIdentity};
         auto siteDevices = conf->commandRun.deviceMounts;
         for (const auto& requestString : deviceMounts) {
             auto deviceMount = std::move(parser.parseDeviceRequest(requestString));
@@ -418,7 +419,7 @@ private:
                 auto message = boost::format("Device %s already added by the system administrator at container path %s with access %s. "
                                              "Skipping request from the command line")
                     % deviceMount->source % previousSiteDevice->destination % previousSiteDevice->getAccess().string();
-                utility::printLog(message, common::LogLevel::WARN, std::cerr);
+                utility::printLog(message, libsarus::LogLevel::WARN, std::cerr);
                 continue;
             }
             conf->commandRun.deviceMounts.push_back(std::move(deviceMount));
@@ -458,33 +459,33 @@ private:
         return vector;
     }
 
-    std::shared_ptr<common::DeviceMount> findMatchingSiteDevice(const std::unique_ptr<common::DeviceMount>& deviceMount,
-                                                                 const std::vector<std::shared_ptr<common::DeviceMount>> siteDevices) const {
+    std::shared_ptr<libsarus::DeviceMount> findMatchingSiteDevice(const std::unique_ptr<libsarus::DeviceMount>& deviceMount,
+                                                                 const std::vector<std::shared_ptr<libsarus::DeviceMount>> siteDevices) const {
         for (const auto& siteDevice : siteDevices) {
             if (deviceMount->source == siteDevice->source) {
                 return siteDevice;
             }
         }
-        return std::shared_ptr<common::DeviceMount>{};
+        return std::shared_ptr<libsarus::DeviceMount>{};
     }
 
     bool checkUserHasSshKeys() const {
         cli::utility::printLog( "Checking that the user has SSH keys",
-                                common::LogLevel::INFO);
+                                libsarus::LogLevel::INFO);
 
-        common::setEnvironmentVariable("HOOK_BASE_DIR", conf->json["localRepositoryBaseDir"].GetString());
+        libsarus::setEnvironmentVariable("HOOK_BASE_DIR", conf->json["localRepositoryBaseDir"].GetString());
 
         auto passwdFile = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "etc/passwd";
-        common::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
+        libsarus::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
 
-        auto args = common::CLIArguments{
+        auto args = libsarus::CLIArguments{
             std::string{ conf->json["prefixDir"].GetString() } + "/bin/ssh_hook",
             "check-user-has-sshkeys"
         };
-        if(sarus::common::Logger::getInstance().getLevel() == sarus::common::LogLevel::INFO) {
+        if(libsarus::Logger::getInstance().getLevel() == libsarus::LogLevel::INFO) {
             args.push_back("--verbose");
         }
-        else if(sarus::common::Logger::getInstance().getLevel() == sarus::common::LogLevel::DEBUG) {
+        else if(libsarus::Logger::getInstance().getLevel() == libsarus::LogLevel::DEBUG) {
             args.push_back("--debug");
         }
 
@@ -502,17 +503,17 @@ private:
             }
         };
 
-        return common::forkExecWait(args, std::function<void()>{setUserIdentity}) == 0;
+        return libsarus::forkExecWait(args, std::function<void()>{setUserIdentity}) == 0;
     }
 
     void verifyThatImageIsAvailable() const {
         cli::utility::printLog( boost::format("Verifying that image %s is available") % conf->imageReference,
-                                common::LogLevel::INFO);
+                                libsarus::LogLevel::INFO);
         // switch to user identity to make sure that:
         //   - we can access images on root_squashed filesystems
         //   - we do not create/update local repo files (e.g. repo metadata and lockfiles) with root ownership
-        auto rootIdentity = common::UserIdentity{};
-        common::switchIdentity(conf->userIdentity);
+        auto rootIdentity = libsarus::UserIdentity{};
+        libsarus::switchIdentity(conf->userIdentity);
 
         try {
             auto imageStore = image_manager::ImageStore(conf);
@@ -520,13 +521,13 @@ private:
             if(!image && conf->imageReference.server == common::ImageReference::DEFAULT_SERVER) {
                 auto message = boost::format("Image %s is not available. Attempting to look for equivalent image in %s server repositories")
                                              % conf->imageReference % common::ImageReference::LEGACY_DEFAULT_SERVER;
-                cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
+                cli::utility::printLog(message.str(), libsarus::LogLevel::GENERAL, std::cerr);
                 conf->imageReference.server = common::ImageReference::LEGACY_DEFAULT_SERVER;
                 image = imageStore.findImage(conf->imageReference);
             }
             if(!image) {
                 auto message = boost::format("Image %s is not available") % conf->imageReference;
-                cli::utility::printLog(message.str(), common::LogLevel::GENERAL, std::cerr);
+                cli::utility::printLog(message.str(), libsarus::LogLevel::GENERAL, std::cerr);
                 exit(EXIT_FAILURE);
             }
         }
@@ -534,10 +535,10 @@ private:
             SARUS_RETHROW_ERROR(e, "Failed to verify that image is available");
         }
 
-        common::switchIdentity(rootIdentity);
+        libsarus::switchIdentity(rootIdentity);
 
         cli::utility::printLog(boost::format("Successfully verified that image %s is available") % conf->imageReference,
-                               common::LogLevel::INFO);
+                               libsarus::LogLevel::INFO);
     }
 
 private:

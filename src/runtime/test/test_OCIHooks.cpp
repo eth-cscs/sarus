@@ -10,9 +10,9 @@
 #include <fstream>
 #include <sstream>
 
-#include "common/Utility.hpp"
+#include "libsarus/Utility.hpp"
 #include "common/Config.hpp"
-#include "common/PathRAII.hpp"
+#include "libsarus/PathRAII.hpp"
 #include "runtime/OCIHooksFactory.hpp"
 #include "test_utility/config.hpp"
 #include "test_utility/unittest_main_function.hpp"
@@ -24,7 +24,7 @@ namespace test {
 namespace rj = rapidjson;
 
 TEST_GROUP(OCIHooksTestGroup) {
-    common::PathRAII testDirRAII = common::PathRAII{ common::makeUniquePathWithRandomSuffix("test_oci_hook") };
+    libsarus::PathRAII testDirRAII = libsarus::PathRAII{ libsarus::makeUniquePathWithRandomSuffix("test_oci_hook") };
     boost::filesystem::path jsonFile = testDirRAII.getPath() / "hook.json";
     boost::filesystem::path schemaFile = boost::filesystem::path{__FILE__}
         .parent_path()
@@ -34,7 +34,7 @@ TEST_GROUP(OCIHooksTestGroup) {
 };
 
 TEST(OCIHooksTestGroup, create_hook_with_schema_incompatibility) {
-    common::createFoldersIfNecessary(jsonFile.parent_path());
+    libsarus::createFoldersIfNecessary(jsonFile.parent_path());
 
     // missing "stages" property
     {
@@ -50,7 +50,7 @@ TEST(OCIHooksTestGroup, create_hook_with_schema_incompatibility) {
            }
         })";
         os.close();
-        CHECK_THROWS(common::Error, OCIHooksFactory{}.createHook(jsonFile, schemaFile));
+        CHECK_THROWS(libsarus::Error, OCIHooksFactory{}.createHook(jsonFile, schemaFile));
     }
     // undesired "extra" property
     {
@@ -68,12 +68,12 @@ TEST(OCIHooksTestGroup, create_hook_with_schema_incompatibility) {
            "extra": true
         })";
         os.close();
-        CHECK_THROWS(common::Error, OCIHooksFactory{}.createHook(jsonFile, schemaFile));
+        CHECK_THROWS(libsarus::Error, OCIHooksFactory{}.createHook(jsonFile, schemaFile));
     }
 }
 
 TEST(OCIHooksTestGroup, create_hook_with_bad_version) {
-    common::createFoldersIfNecessary(jsonFile.parent_path());
+    libsarus::createFoldersIfNecessary(jsonFile.parent_path());
     auto os = std::ofstream(jsonFile.c_str());
     os << R"(
     {
@@ -88,14 +88,14 @@ TEST(OCIHooksTestGroup, create_hook_with_bad_version) {
     })";
     os.close();
 
-    CHECK_THROWS(common::Error, OCIHooksFactory{}.createHook(jsonFile, schemaFile));
+    CHECK_THROWS(libsarus::Error, OCIHooksFactory{}.createHook(jsonFile, schemaFile));
 }
 
 // RapidJson doesn't support regex with escaped dots ('\.' sequence).
 // Hopefully this will get fixed in some future release of RapidJson,
 // then this test will fail and we will know that the fix occurred :)
 TEST(OCIHooksTestGroup, create_hook_with_unsupported_regex) {
-    common::createFoldersIfNecessary(jsonFile.parent_path());
+    libsarus::createFoldersIfNecessary(jsonFile.parent_path());
     auto os = std::ofstream(jsonFile.c_str());
     os << R"(
     {
@@ -111,11 +111,11 @@ TEST(OCIHooksTestGroup, create_hook_with_unsupported_regex) {
        "stages": ["createRuntime"]
     })";
     os.close();
-    CHECK_THROWS(common::Error, OCIHooksFactory{}.createHook(jsonFile, schemaFile));
+    CHECK_THROWS(libsarus::Error, OCIHooksFactory{}.createHook(jsonFile, schemaFile));
 }
 
 TEST(OCIHooksTestGroup, create_hook_and_check_members) {
-    common::createFoldersIfNecessary(jsonFile.parent_path());
+    libsarus::createFoldersIfNecessary(jsonFile.parent_path());
     auto os = std::ofstream(jsonFile.c_str());
     os << R"(
     {
@@ -166,7 +166,7 @@ TEST(OCIHooksTestGroup, create_hook_and_check_members) {
 }
 
 TEST(OCIHooksTestGroup, create_hook_and_check_activation) {
-    common::createFoldersIfNecessary(jsonFile.parent_path());
+    libsarus::createFoldersIfNecessary(jsonFile.parent_path());
     auto os = std::ofstream(jsonFile.c_str());
     os << R"(
     {
@@ -194,7 +194,7 @@ TEST(OCIHooksTestGroup, create_hook_and_check_activation) {
         configRaii.config->commandRun.ociAnnotations["com.oci.hooks.test_hook.enabled"] = "true";
         configRaii.config->commandRun.execArgs = { "./app0" };
         configRaii.config->commandRun.mounts.push_back(
-            std::unique_ptr<common::Mount>{ new common::Mount{"/src", "/dst", 0, configRaii.config} }
+            std::unique_ptr<libsarus::Mount>{ new libsarus::Mount{"/src", "/dst", 0, configRaii.config->getRootfsDirectory(), configRaii.config->userIdentity} }
         );
         CHECK(hook.isActive(configRaii.config));
     }
@@ -205,7 +205,7 @@ TEST(OCIHooksTestGroup, create_hook_and_check_activation) {
         configRaii.config->commandRun.ociAnnotations["com.oci.hooks.test_hook.enabled"] = "false";
         configRaii.config->commandRun.execArgs = { "./app0" };
         configRaii.config->commandRun.mounts.push_back(
-            std::unique_ptr<common::Mount>{ new common::Mount{"/src", "/dst", 0, configRaii.config} }
+            std::unique_ptr<libsarus::Mount>{ new libsarus::Mount{"/src", "/dst", 0, configRaii.config->getRootfsDirectory(), configRaii.config->userIdentity} }
         );
         CHECK(!hook.isActive(configRaii.config));
     }
@@ -216,7 +216,7 @@ TEST(OCIHooksTestGroup, create_hook_and_check_activation) {
         configRaii.config->commandRun.ociAnnotations["com.oci.hooks.test_hook.enabled"] = "true";
         configRaii.config->commandRun.execArgs = { "./xyz0123" };
         configRaii.config->commandRun.mounts.push_back(
-            std::unique_ptr<common::Mount>{ new common::Mount{"/src", "/dst", 0, configRaii.config} }
+            std::unique_ptr<libsarus::Mount>{ new libsarus::Mount{"/src", "/dst", 0, configRaii.config->getRootfsDirectory(), configRaii.config->userIdentity} }
         );
         CHECK(!hook.isActive(configRaii.config));
     }
@@ -335,7 +335,7 @@ TEST(OCIHooksTestGroup, condition_hasBindMounts) {
     {
         auto configRaii = test_utility::config::makeConfig();
         configRaii.config->commandRun.mounts.push_back(
-            std::unique_ptr<common::Mount>{ new common::Mount{"/src", "/dst", 0, configRaii.config} }
+            std::unique_ptr<libsarus::Mount>{ new libsarus::Mount{"/src", "/dst", 0, configRaii.config->getRootfsDirectory(), configRaii.config->userIdentity} }
         );
 
         // hasBindMounts=false

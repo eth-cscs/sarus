@@ -16,8 +16,8 @@
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
 
-#include "common/Error.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Utility.hpp"
 
 
 namespace rj = rapidjson;
@@ -91,8 +91,8 @@ rapidjson::Document getCurrentOCIPlatform() {
     platform.AddMember("architecture", rj::Value{architecture.c_str(), allocator}, allocator);
     platform.AddMember("variant", rj::Value{variant.c_str(), allocator}, allocator);
 
-    auto message = boost::format("Detected current platform: %s") % common::serializeJSON(platform);
-    printLog(message, common::LogLevel::DEBUG);
+    auto message = boost::format("Detected current platform: %s") % libsarus::serializeJSON(platform);
+    printLog(message, libsarus::LogLevel::DEBUG);
 
     return platform;
 }
@@ -129,11 +129,11 @@ std::string getPlatformDigestFromOCIIndex(const rj::Document& index, const rj::D
     }
 
     if (output.empty()) {
-        printLog("Failed to find manifest matching current platform in image index", common::LogLevel::WARN);
+        printLog("Failed to find manifest matching current platform in image index", libsarus::LogLevel::WARN);
     }
     else {
         auto message = boost::format("Found manifest digest in OCI index: %s") % output;
-        printLog(message, common::LogLevel::DEBUG);
+        printLog(message, libsarus::LogLevel::DEBUG);
     }
     return output;
 }
@@ -156,14 +156,14 @@ std::string base64Encode(const std::string& input) {
     return ss.str();
 }
 
-void printLog(const boost::format& message, common::LogLevel level,
+void printLog(const boost::format& message, libsarus::LogLevel level,
               std::ostream& outStream, std::ostream& errStream) {
     printLog(message.str(), level, outStream, errStream);
 }
 
-void printLog(const std::string& message, common::LogLevel level,
+void printLog(const std::string& message, libsarus::LogLevel level,
               std::ostream& outStream, std::ostream& errStream) {
-    common::Logger::getInstance().log(message, "ImageManager_Utility", level, outStream, errStream);
+    libsarus::Logger::getInstance().log(message, "ImageManager_Utility", level, outStream, errStream);
 }
 
 } // namespace

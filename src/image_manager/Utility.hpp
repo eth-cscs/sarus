@@ -16,7 +16,7 @@
 #include <boost/format.hpp>
 #include <rapidjson/document.h>
 
-#include "common/Logger.hpp"
+#include "libsarus/Logger.hpp"
 
 namespace sarus {
 namespace image_manager {
@@ -26,9 +26,9 @@ rapidjson::Document getCurrentOCIPlatform();
 std::string getPlatformDigestFromOCIIndex(const rapidjson::Document& index, const rapidjson::Document& targetPlatform);
 std::string base64Encode(const std::string& input);
 
-void printLog(const boost::format& message, common::LogLevel LogLevel,
+void printLog(const boost::format& message, libsarus::LogLevel LogLevel,
               std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr);
-void printLog(const std::string& message, common::LogLevel LogLevel,
+void printLog(const std::string& message, libsarus::LogLevel LogLevel,
               std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr);
 
 }

@@ -55,8 +55,8 @@ std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(const std
     if(!isValidCommandName(commandName)) {
         auto message = boost::format("'%s' is not a Sarus command\nSee 'sarus help'")
             % commandName;
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+        utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
     }
     auto it = map.find(commandName);
     return it->second();
@@ -64,13 +64,13 @@ std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(const std
 
 std::unique_ptr<cli::Command> CommandObjectsFactory::makeCommandObject(
     const std::string& commandName,
-    const common::CLIArguments& commandArgs,
+    const libsarus::CLIArguments& commandArgs,
     std::shared_ptr<common::Config> config) const {
     if(!isValidCommandName(commandName)) {
         auto message = boost::format("'%s' is not a Sarus command\nSee 'sarus help'")
             % commandName;
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+        utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
     }
     auto it = mapWithArguments.find(commandName);
     return it->second(commandArgs, std::move(config));

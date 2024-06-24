@@ -8,8 +8,8 @@
  *
  */
 
-#include "common/Error.hpp"
-#include "common/Logger.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Logger.hpp"
 #include "hooks/mpi/AbiChecker.hpp"
 
 #include "test_utility/unittest_main_function.hpp"
@@ -30,15 +30,15 @@ TEST_GROUP(AbiCheckerFactoryTestGroup){};
 TEST(AbiCheckerTestGroup, all_mpi_checkers_throw_if_no_major_compatible) {
   {
     MajorAbiCompatibilityChecker checker;
-    CHECK_THROWS(sarus::common::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1"}, SharedLibrary{"/lib/libfoo.so.2"}));
+    CHECK_THROWS(libsarus::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1"}, SharedLibrary{"/lib/libfoo.so.2"}));
   }
   {
     FullAbiCompatibilityChecker checker;
-    CHECK_THROWS(sarus::common::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1"}, SharedLibrary{"/lib/libfoo.so.2"}));
+    CHECK_THROWS(libsarus::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1"}, SharedLibrary{"/lib/libfoo.so.2"}));
   }
   {
     StrictAbiCompatibilityChecker checker;
-    CHECK_THROWS(sarus::common::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1"}, SharedLibrary{"/lib/libfoo.so.2"}));
+    CHECK_THROWS(libsarus::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1"}, SharedLibrary{"/lib/libfoo.so.2"}));
   }
 }
 
@@ -184,21 +184,21 @@ TEST(AbiCheckerTestGroup, strictAbiCompatibility_ignores_patch_number) {
 TEST(AbiCheckerTestGroup, strictAbiCompatibility_throws_if_mojor_or_minor_are_different) {
   StrictAbiCompatibilityChecker checker;
 
-  CHECK_THROWS(sarus::common::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1"}, SharedLibrary{"/lib/libfoo.so.2"}));
-  CHECK_THROWS(sarus::common::Error, checker.check(SharedLibrary{"/lib/libfoo.so.3"}, SharedLibrary{"/lib/libfoo.so.2"}));
+  CHECK_THROWS(libsarus::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1"}, SharedLibrary{"/lib/libfoo.so.2"}));
+  CHECK_THROWS(libsarus::Error, checker.check(SharedLibrary{"/lib/libfoo.so.3"}, SharedLibrary{"/lib/libfoo.so.2"}));
 
-  CHECK_THROWS(sarus::common::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1.2"}, SharedLibrary{"/lib/libfoo.so.1.3"}));
-  CHECK_THROWS(sarus::common::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1.3"}, SharedLibrary{"/lib/libfoo.so.1.2"}));
+  CHECK_THROWS(libsarus::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1.2"}, SharedLibrary{"/lib/libfoo.so.1.3"}));
+  CHECK_THROWS(libsarus::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1.3"}, SharedLibrary{"/lib/libfoo.so.1.2"}));
 }
 
 TEST(AbiCheckerTestGroup, strictAbiCompatibility_throws_with_no_minor_number) {
   StrictAbiCompatibilityChecker checker;
   
-  CHECK_THROWS(sarus::common::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1"}, SharedLibrary{"/lib/libfoo.so.1.2"}));
-  CHECK_THROWS(sarus::common::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1"}, SharedLibrary{"/lib/libfoo.so.1.2.3"}));
+  CHECK_THROWS(libsarus::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1"}, SharedLibrary{"/lib/libfoo.so.1.2"}));
+  CHECK_THROWS(libsarus::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1"}, SharedLibrary{"/lib/libfoo.so.1.2.3"}));
 
-  CHECK_THROWS(sarus::common::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1.2"}, SharedLibrary{"/lib/libfoo.so.1"}));
-  CHECK_THROWS(sarus::common::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1.2.3"}, SharedLibrary{"/lib/libfoo.so.1"}));
+  CHECK_THROWS(libsarus::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1.2"}, SharedLibrary{"/lib/libfoo.so.1"}));
+  CHECK_THROWS(libsarus::Error, checker.check(SharedLibrary{"/lib/libfoo.so.1.2.3"}, SharedLibrary{"/lib/libfoo.so.1"}));
 
   areCompatible = checker.check(SharedLibrary{"/lib/libfoo.so.1.2"}, SharedLibrary{"/lib/libfoo.so.1.2.3"});
   CHECK_TRUE(areCompatible.first);

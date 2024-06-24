@@ -16,9 +16,9 @@
 #include <rapidjson/document.h>
 
 #include "test_utility/config.hpp"
-#include "common/PathRAII.hpp"
-#include "common/Utility.hpp"
-#include "common/Logger.hpp"
+#include "libsarus/PathRAII.hpp"
+#include "libsarus/Utility.hpp"
+#include "libsarus/Logger.hpp"
 #include "common/GroupDB.hpp"
 #include "runtime/OCIBundleConfig.hpp"
 #include "test_utility/Misc.hpp"
@@ -95,7 +95,7 @@ static void setSecurityTechInJSONConfig(rj::Document& config) {
 
 static void setupTestConfig(std::shared_ptr<common::Config>& config) {
     config->commandRun.cpuAffinity = {0, 1, 2, 3};
-    config->commandRun.execArgs = common::CLIArguments{"/bin/bash"};
+    config->commandRun.execArgs = libsarus::CLIArguments{"/bin/bash"};
     config->commandRun.addInitProcess = true;
     config->userIdentity.uid = getuid();
     config->userIdentity.gid = getgid();
@@ -105,9 +105,9 @@ static void setupTestConfig(std::shared_ptr<common::Config>& config) {
     setSecurityTechInJSONConfig(config->json);
 }
 
-static common::PathRAII createTestBundle(const std::shared_ptr<common::Config>& config) {
-    auto bundleDir = common::PathRAII{boost::filesystem::path{config->json["OCIBundleDir"].GetString()}};
-    common::createFoldersIfNecessary(bundleDir.getPath());
+static libsarus::PathRAII createTestBundle(const std::shared_ptr<common::Config>& config) {
+    auto bundleDir = libsarus::PathRAII{boost::filesystem::path{config->json["OCIBundleDir"].GetString()}};
+    libsarus::createFoldersIfNecessary(bundleDir.getPath());
     return bundleDir;
 }
 
@@ -134,7 +134,7 @@ static void sortJsonEnvironmentArray(rj::Document& json) {
 
 static rj::Document getExpectedJson() {
     auto expectedConfigFile = boost::filesystem::path{__FILE__}.parent_path() / "expected_config.json";
-    auto expectedJson = common::readJSON(expectedConfigFile);
+    auto expectedJson = libsarus::readJSON(expectedConfigFile);
     expectedJson["process"]["user"]["uid"] = int(getuid());
     expectedJson["process"]["user"]["gid"] = int(getgid());
     sortJsonEnvironmentArray(expectedJson);
@@ -153,7 +153,7 @@ static void compareJsonObjects(const rj::Document& actualJson, const rj::Documen
     }
 }
 
-static void enterTestDeviceFilesInConfig(const common::PathRAII& bundleDir, const std::shared_ptr<common::Config> config) {
+static void enterTestDeviceFilesInConfig(const libsarus::PathRAII& bundleDir, const std::shared_ptr<common::Config> config) {
     auto testDevice0 = bundleDir.getPath() / "testDevice0";
     auto testDevice0MajorID = 500u; auto testDevice0MinorID = 500u;
     test_utility::filesystem::createCharacterDeviceFile(testDevice0, testDevice0MajorID, testDevice0MinorID);
@@ -164,11 +164,11 @@ static void enterTestDeviceFilesInConfig(const common::PathRAII& bundleDir, cons
 
     // enter devices into config struct
     size_t mount_flags = 0;
-    auto mount0 = common::Mount{testDevice0, testDevice0, mount_flags, config};
-    auto mount1 = common::Mount{testDevice1, testDevice1, mount_flags, config};
-    auto deviceVector = std::vector<std::shared_ptr<common::DeviceMount>>{};
-    deviceVector.emplace_back(new common::DeviceMount{std::move(mount0), common::DeviceAccess("rwm")});
-    deviceVector.emplace_back(new common::DeviceMount{std::move(mount1), common::DeviceAccess("rw")});
+    auto mount0 = libsarus::Mount{testDevice0, testDevice0, mount_flags, config->getRootfsDirectory(), config->userIdentity};
+    auto mount1 = libsarus::Mount{testDevice1, testDevice1, mount_flags, config->getRootfsDirectory(), config->userIdentity};
+    auto deviceVector = std::vector<std::shared_ptr<libsarus::DeviceMount>>{};
+    deviceVector.emplace_back(new libsarus::DeviceMount{std::move(mount0), libsarus::DeviceAccess("rwm")});
+    deviceVector.emplace_back(new libsarus::DeviceMount{std::move(mount1), libsarus::DeviceAccess("rw")});
     config->commandRun.deviceMounts = deviceVector;
 }
 
@@ -224,7 +224,7 @@ TEST(OCIBundleConfigTestGroup, OCIBundleConfig) {
     // check existence and permissions of bundle's config.json
     auto actualConfigFile = bundleDir.getPath() / "config.json";
     checkExistenceAndPermissions(actualConfigFile);
-    auto actualJson = common::readJSON(actualConfigFile);
+    auto actualJson = libsarus::readJSON(actualConfigFile);
     sortJsonEnvironmentArray(actualJson);
 
     auto expectedJson = getExpectedJson();
@@ -252,7 +252,7 @@ IGNORE_TEST(OCIBundleConfigTestGroup, allowed_devices) {
     // check existence and permissions of bundle's config.json
     auto actualConfigFile = bundleDir.getPath() / "config.json";
     checkExistenceAndPermissions(actualConfigFile);
-    auto actualJson = common::readJSON(actualConfigFile);
+    auto actualJson = libsarus::readJSON(actualConfigFile);
     sortJsonEnvironmentArray(actualJson);
 
     auto expectedJson = getExpectedJson();

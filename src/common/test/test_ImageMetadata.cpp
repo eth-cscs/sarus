@@ -10,12 +10,13 @@
 
 #include <sstream>
 
-#include "common/Error.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Utility.hpp"
 #include "common/ImageMetadata.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
 namespace sarus {
+namespace common {
 namespace test {
 
 TEST_GROUP(ImageMetadataTestGroup) {
@@ -23,8 +24,8 @@ TEST_GROUP(ImageMetadataTestGroup) {
 
 TEST(ImageMetadataTestGroup, write_read_from_file) {
     auto writtenMetadata = common::ImageMetadata{};
-    writtenMetadata.cmd = common::CLIArguments{"cmd", "arg0", "arg1"};
-    writtenMetadata.entry = common::CLIArguments{"entry", "arg0", "arg1"};
+    writtenMetadata.cmd = libsarus::CLIArguments{"cmd", "arg0", "arg1"};
+    writtenMetadata.entry = libsarus::CLIArguments{"entry", "arg0", "arg1"};
     writtenMetadata.workdir = "/workdir";
     writtenMetadata.env = std::unordered_map<std::string, std::string>{
         {"key0", "value0"},
@@ -35,9 +36,9 @@ TEST(ImageMetadataTestGroup, write_read_from_file) {
         {"labelKey1", "labelValue1"}
     };
 
-    auto file = common::makeUniquePathWithRandomSuffix("/tmp/sarus-test-imagemetadata");
+    auto file = libsarus::makeUniquePathWithRandomSuffix("/tmp/sarus-test-imagemetadata");
     writtenMetadata.write(file);
-    auto readMetadata = common::ImageMetadata{file, common::UserIdentity{}};
+    auto readMetadata = common::ImageMetadata{file, libsarus::UserIdentity{}};
 
     CHECK(readMetadata == writtenMetadata);
 
@@ -70,8 +71,8 @@ TEST(ImageMetadataTestGroup, read_from_json) {
 
     auto metadata = common::ImageMetadata{json};
 
-    CHECK((*metadata.cmd == common::CLIArguments{"cmd", "arg"}));
-    CHECK((*metadata.entry == common::CLIArguments{"entry", "arg"}));
+    CHECK((*metadata.cmd == libsarus::CLIArguments{"cmd", "arg"}));
+    CHECK((*metadata.entry == libsarus::CLIArguments{"entry", "arg"}));
     CHECK(*metadata.workdir == "/WorkingDir");
     auto expectedEnv = std::unordered_map<std::string, std::string>{
         {"KEY0", "VALUE0"},
@@ -85,7 +86,6 @@ TEST(ImageMetadataTestGroup, read_from_json) {
     CHECK(metadata.labels == expectedLabels);
 }
 
-} // namespace
-} // namespace
+}}}
 
 SARUS_UNITTEST_MAIN_FUNCTION();

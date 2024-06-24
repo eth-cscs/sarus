@@ -23,13 +23,13 @@ OCIHook::ConditionAlways::ConditionAlways(bool value)
 {
     utility::logMessage(boost::format{"Created OCI Hook's \"always\" condition (%s)"}
                         % boost::io::group(std::boolalpha, value),
-                        common::LogLevel::DEBUG);
+                        libsarus::LogLevel::DEBUG);
 }
 
 bool OCIHook::ConditionAlways::evaluate(std::shared_ptr<const common::Config>) const {
     utility::logMessage(boost::format{"OCI Hook's \"always\" condition evaluates \"%s\""}
                         % boost::io::group(std::boolalpha, value),
-                        common::LogLevel::DEBUG);
+                        libsarus::LogLevel::DEBUG);
     return value;
 }
 
@@ -37,14 +37,14 @@ OCIHook::ConditionAnnotations::ConditionAnnotations(const std::vector<std::tuple
     : annotations{ annotations }
 {
     utility::logMessage(boost::format{"Created OCI Hook's \"annotations\" condition"},
-                        common::LogLevel::DEBUG);
+                        libsarus::LogLevel::DEBUG);
 }
 
 bool OCIHook::ConditionAnnotations::evaluate(std::shared_ptr<const common::Config> config) const {
     utility::logMessage(boost::format{"Evaluating OCI Hook's \"annotations\" condition"},
-                        common::LogLevel::DEBUG);
+                        libsarus::LogLevel::DEBUG);
 
-    auto configsMerger = ConfigsMerger{config, common::ImageMetadata{ config->getMetadataFileOfImage(), config->userIdentity }};
+    auto configsMerger = ConfigsMerger{config, sarus::common::ImageMetadata{ config->getMetadataFileOfImage(), config->userIdentity }};
     auto bundleAnnotations = configsMerger.getBundleAnnotations();
 
     for(const auto& annotation : annotations) {
@@ -58,7 +58,7 @@ bool OCIHook::ConditionAnnotations::evaluate(std::shared_ptr<const common::Confi
             utility::logMessage(boost::format{"Processing bundle's annotation {%s: %s}"}
                                 % std::get<0>(bundleAnnotation)
                                 % std::get<1>(bundleAnnotation),
-                                common::LogLevel::DEBUG);
+                                libsarus::LogLevel::DEBUG);
 
             if(boost::regex_match(std::get<0>(bundleAnnotation), matches, keyRegex) &&
                boost::regex_match(std::get<1>(bundleAnnotation), matches, valueRegex)) {
@@ -70,17 +70,17 @@ bool OCIHook::ConditionAnnotations::evaluate(std::shared_ptr<const common::Confi
         utility::logMessage(boost::format{"Annotation {\"%s\": \"%s\"} evaluates \"%s\""}
                             % std::get<0>(annotation) % std::get<1>(annotation)
                             % boost::io::group(std::boolalpha, matchFound),
-                            common::LogLevel::DEBUG);
+                            libsarus::LogLevel::DEBUG);
 
         if(!matchFound) {
             utility::logMessage(boost::format{"OCI Hook's \"annotations\" condition evaluates \"false\""},
-                        common::LogLevel::DEBUG);
+                        libsarus::LogLevel::DEBUG);
             return false;
         }
     }
 
     utility::logMessage(boost::format{"OCI Hook's \"annotations\" condition evaluates \"true\""},
-                        common::LogLevel::DEBUG);
+                        libsarus::LogLevel::DEBUG);
 
     return true;
 }
@@ -89,14 +89,14 @@ OCIHook::ConditionCommands::ConditionCommands(const std::vector<std::string>& co
     : commands{ commands }
 {
     utility::logMessage(boost::format{"Created OCI Hook's \"commands\" condition"},
-                        common::LogLevel::DEBUG);
+                        libsarus::LogLevel::DEBUG);
 }
 
 bool OCIHook::ConditionCommands::evaluate(std::shared_ptr<const common::Config> config) const {
     utility::logMessage(boost::format{"Evaluating OCI Hook's \"commands\" condition"},
-                        common::LogLevel::DEBUG);
+                        libsarus::LogLevel::DEBUG);
 
-    auto configsMerger = ConfigsMerger{config, common::ImageMetadata{ config->getMetadataFileOfImage(), config->userIdentity }};
+    auto configsMerger = ConfigsMerger{config, sarus::common::ImageMetadata{ config->getMetadataFileOfImage(), config->userIdentity }};
     auto arg0 = std::string(configsMerger.getCommandToExecuteInContainer().argv()[0]);
 
     for(const auto& command : commands) {
@@ -104,19 +104,19 @@ bool OCIHook::ConditionCommands::evaluate(std::shared_ptr<const common::Config> 
         auto matches = boost::smatch{};
         if(boost::regex_match(arg0, matches, regex)) {
             utility::logMessage(boost::format{"Command regex \"%s\" matches (arg0=\"%s\")"} % command % arg0,
-                                common::LogLevel::DEBUG);
+                                libsarus::LogLevel::DEBUG);
             utility::logMessage(boost::format{"OCI Hook's \"commands\" condition evaluates \"true\""},
-                                common::LogLevel::DEBUG);
+                                libsarus::LogLevel::DEBUG);
             return true;
         }
         else {
             utility::logMessage(boost::format{"Command regex \"%s\" doesn't match (arg0=\"%s\")"} % command % arg0,
-                                common::LogLevel::DEBUG);
+                                libsarus::LogLevel::DEBUG);
         }
     }
 
     utility::logMessage(boost::format{"OCI Hook's \"commands\" condition evaluates \"false\""},
-                        common::LogLevel::DEBUG);
+                        libsarus::LogLevel::DEBUG);
 
     return false;
 }
@@ -125,7 +125,7 @@ OCIHook::ConditionHasBindMounts::ConditionHasBindMounts(bool value)
     : value{ value }
 {
     utility::logMessage(boost::format{"Created OCI Hook's \"hasBindMounts\" condition"},
-                        common::LogLevel::DEBUG);
+                        libsarus::LogLevel::DEBUG);
 }
 
 bool OCIHook::ConditionHasBindMounts::evaluate(std::shared_ptr<const common::Config> config) const {
@@ -133,23 +133,23 @@ bool OCIHook::ConditionHasBindMounts::evaluate(std::shared_ptr<const common::Con
 
     utility::logMessage(boost::format{"OCI Hook's \"hasBindMounts\" condition evaluates \"%s\""}
                         % boost::io::group(std::boolalpha, result),
-                        common::LogLevel::DEBUG);
+                        libsarus::LogLevel::DEBUG);
 
     return result;
 }
 
 bool OCIHook::isActive(std::shared_ptr<const common::Config> config) const {
     utility::logMessage(boost::format{"Evaluating \"when\" conditions of OCI Hook %s"} % jsonFile,
-                        common::LogLevel::INFO);
+                        libsarus::LogLevel::INFO);
 
     for(const auto& condition : conditions) {
         if(!condition->evaluate(config)) {
-            utility::logMessage("OCI Hook is inactive", common::LogLevel::INFO);
+            utility::logMessage("OCI Hook is inactive", libsarus::LogLevel::INFO);
             return false;
         }
     }
 
-    utility::logMessage("OCI Hook is active", common::LogLevel::INFO);
+    utility::logMessage("OCI Hook is active", libsarus::LogLevel::INFO);
 
     return true;
 }

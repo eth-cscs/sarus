@@ -24,10 +24,10 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
-#include "common/Error.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Utility.hpp"
 #include "common/ImageReference.hpp"
-#include "common/CLIArguments.hpp"
+#include "libsarus/CLIArguments.hpp"
 #include "runtime/Utility.hpp"
 
 
@@ -41,14 +41,14 @@ Runtime::Runtime(std::shared_ptr<common::Config> config)
     , bundleConfig{config}
     , fdHandler{config}
 {
-    common::clearEnvironmentVariables();
+    libsarus::clearEnvironmentVariables();
 
-    auto status = common::readFile("/proc/self/status");
-    config->commandRun.cpuAffinity = common::getCpuAffinity();
+    auto status = libsarus::readFile("/proc/self/status");
+    config->commandRun.cpuAffinity = libsarus::getCpuAffinity();
 }
 
 void Runtime::setupOCIBundle() {
-    utility::logMessage("Setting up OCI Bundle", common::LogLevel::INFO);
+    utility::logMessage("Setting up OCI Bundle", libsarus::LogLevel::INFO);
 
     setupMountIsolation();
     setupRamFilesystem();
@@ -64,20 +64,20 @@ void Runtime::setupOCIBundle() {
     fdHandler.applyChangesToFdsAndEnvVariablesAndBundleAnnotations();
     bundleConfig.generateConfigFile();
 
-    utility::logMessage("Successfully set up OCI Bundle", common::LogLevel::INFO);
+    utility::logMessage("Successfully set up OCI Bundle", libsarus::LogLevel::INFO);
 }
 
 void Runtime::executeContainer() const {
-    auto containerID = "container-" + common::generateRandomString(16);
-    utility::logMessage("Executing " + containerID, common::LogLevel::INFO);
+    auto containerID = "container-" + libsarus::generateRandomString(16);
+    utility::logMessage("Executing " + containerID, libsarus::LogLevel::INFO);
 
     // chdir to bundle
-    common::changeDirectory(bundleDir);
+    libsarus::changeDirectory(bundleDir);
 
     // assemble runc args
     auto runcPath = config->json["runcPath"].GetString();
     auto extraFileDescriptors = std::to_string(fdHandler.getExtraFileDescriptors());
-    auto args = common::CLIArguments{runcPath, "run",
+    auto args = libsarus::CLIArguments{runcPath, "run",
                                      "--preserve-fds", extraFileDescriptors,
                                      containerID};
 
@@ -97,20 +97,20 @@ void Runtime::executeContainer() const {
     };
 
     // execute runc
-    auto status = common::forkExecWait(args,
+    auto status = libsarus::forkExecWait(args,
                                        std::function<void()>{std::bind(setParentDeathSignal, getpid())},
                                        std::function<void(pid_t)>{utility::setupSignalProxying});
     if(status != 0) {
         auto message = boost::format("%s exited with code %d") % args % status;
-        utility::logMessage(message, common::LogLevel::INFO);
+        utility::logMessage(message, libsarus::LogLevel::INFO);
         exit(status);
     }
 
-    utility::logMessage("Successfully executed " + containerID, common::LogLevel::INFO);
+    utility::logMessage("Successfully executed " + containerID, libsarus::LogLevel::INFO);
 }
 
 void Runtime::setupMountIsolation() const {
-    utility::logMessage("Setting up mount isolation", common::LogLevel::INFO);
+    utility::logMessage("Setting up mount isolation", libsarus::LogLevel::INFO);
     if(unshare(CLONE_NEWNS) != 0) {
         SARUS_THROW_ERROR("Failed to unshare the mount namespace");
     }
@@ -120,11 +120,11 @@ void Runtime::setupMountIsolation() const {
     if(mount(NULL, "/", NULL, MS_SLAVE|MS_REC, NULL) != 0) {
         SARUS_THROW_ERROR("Failed to remount \"/\" with MS_SLAVE");
     }
-    utility::logMessage("Successfully set up mount isolation", common::LogLevel::INFO);
+    utility::logMessage("Successfully set up mount isolation", libsarus::LogLevel::INFO);
 }
 
 void Runtime::setupRamFilesystem() const {
-    utility::logMessage("Setting up RAM filesystem", common::LogLevel::INFO);
+    utility::logMessage("Setting up RAM filesystem", libsarus::LogLevel::INFO);
     const char* ramFilesystemType = config->json["ramFilesystemType"].GetString();
 
     if(mount(NULL, bundleDir.c_str(), ramFilesystemType, MS_NOSUID|MS_NODEV, NULL) != 0) {
@@ -149,31 +149,31 @@ void Runtime::setupRamFilesystem() const {
                                 boost::filesystem::others_read | boost::filesystem::others_exe;
     boost::filesystem::permissions(bundleDir, bundleDirPermissions);
 
-    utility::logMessage("Successfully set up RAM filesystem", common::LogLevel::INFO);
+    utility::logMessage("Successfully set up RAM filesystem", libsarus::LogLevel::INFO);
 }
 
 void Runtime::mountImageIntoRootfs() const {
-    utility::logMessage("Mounting image into bundle's rootfs", common::LogLevel::INFO);
+    utility::logMessage("Mounting image into bundle's rootfs", libsarus::LogLevel::INFO);
 
     auto lowerDir = bundleDir / "overlay/rootfs-lower";
     auto upperDir = bundleDir / "overlay/rootfs-upper";
     auto workDir = bundleDir / "overlay/rootfs-work";
-    common::createFoldersIfNecessary(rootfsDir);
-    common::createFoldersIfNecessary(lowerDir);
-    common::createFoldersIfNecessary(upperDir, config->userIdentity.uid, config->userIdentity.gid);
-    common::createFoldersIfNecessary(workDir);
+    libsarus::createFoldersIfNecessary(rootfsDir);
+    libsarus::createFoldersIfNecessary(lowerDir);
+    libsarus::createFoldersIfNecessary(upperDir, config->userIdentity.uid, config->userIdentity.gid);
+    libsarus::createFoldersIfNecessary(workDir);
 
-    common::loopMountSquashfs(config->getImageFile(), lowerDir);
-    common::mountOverlayfs(lowerDir, upperDir, workDir, rootfsDir);
+    libsarus::loopMountSquashfs(config->getImageFile(), lowerDir);
+    libsarus::mountOverlayfs(lowerDir, upperDir, workDir, rootfsDir);
 
-    utility::logMessage("Successfully mounted image into bundle's rootfs", common::LogLevel::INFO);
+    utility::logMessage("Successfully mounted image into bundle's rootfs", libsarus::LogLevel::INFO);
 }
 
 void Runtime::setupDevFilesystem() const {
-    utility::logMessage("Setting up /dev filesystem", common::LogLevel::INFO);
+    utility::logMessage("Setting up /dev filesystem", libsarus::LogLevel::INFO);
 
     const char* ramFilesystemType = config->json["ramFilesystemType"].GetString();
-    common::createFoldersIfNecessary(rootfsDir / "dev");
+    libsarus::createFoldersIfNecessary(rootfsDir / "dev");
     auto flags = MS_NOSUID | MS_STRICTATIME;
     auto* options = "mode=755,size=65536k";
     if(mount(NULL, (rootfsDir / "dev").c_str(), ramFilesystemType, flags, options) != 0) {
@@ -184,44 +184,44 @@ void Runtime::setupDevFilesystem() const {
         SARUS_THROW_ERROR(message.str());
     }
 
-    utility::logMessage("Successfully set up /dev filesystem", common::LogLevel::INFO);
+    utility::logMessage("Successfully set up /dev filesystem", libsarus::LogLevel::INFO);
 }
 
 void Runtime::copyEtcFilesIntoRootfs() const {
-    utility::logMessage("Copying /etc files into rootfs", common::LogLevel::INFO);
+    utility::logMessage("Copying /etc files into rootfs", libsarus::LogLevel::INFO);
     auto prefixDir = boost::filesystem::path{config->json["prefixDir"].GetString()};
 
-    common::copyFile(   "/etc/hosts",
+    libsarus::copyFile(   "/etc/hosts",
                         rootfsDir / "etc/hosts",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    common::copyFile(   "/etc/resolv.conf",
+    libsarus::copyFile(   "/etc/resolv.conf",
                         rootfsDir / "etc/resolv.conf",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    common::copyFile(   prefixDir / "etc/container/nsswitch.conf",
+    libsarus::copyFile(   prefixDir / "etc/container/nsswitch.conf",
                         rootfsDir / "etc/nsswitch.conf",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    common::copyFile(   prefixDir / "etc/passwd",
+    libsarus::copyFile(   prefixDir / "etc/passwd",
                         rootfsDir / "etc/passwd",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    common::copyFile(   prefixDir / "etc/group",
+    libsarus::copyFile(   prefixDir / "etc/group",
                         rootfsDir / "etc/group",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    utility::logMessage("Successfully copied /etc files into rootfs", common::LogLevel::INFO);
+    utility::logMessage("Successfully copied /etc files into rootfs", libsarus::LogLevel::INFO);
 }
 
 void Runtime::mountInitProgramIntoRootfsIfNecessary() const {
     if(config->commandRun.addInitProcess) {
-        utility::logMessage("Mounting init program into rootfs", common::LogLevel::INFO);
+        utility::logMessage("Mounting init program into rootfs", libsarus::LogLevel::INFO);
         auto src = boost::filesystem::path{ config->json["initPath"].GetString() };
         auto dst = rootfsDir / "dev/init";
-        common::createFileIfNecessary(dst);
-        common::bindMount(src, dst);
-        utility::logMessage("Successfully mounted init program into rootfs", common::LogLevel::INFO);
+        libsarus::createFileIfNecessary(dst);
+        libsarus::bindMount(src, dst);
+        utility::logMessage("Successfully mounted init program into rootfs", libsarus::LogLevel::INFO);
     }
 }
 
@@ -231,11 +231,11 @@ void Runtime::mountInitProgramIntoRootfsIfNecessary() const {
  * container customization.
  */
 void Runtime::performCustomMounts() const {
-    utility::logMessage("Performing custom mounts", common::LogLevel::INFO);
+    utility::logMessage("Performing custom mounts", libsarus::LogLevel::INFO);
     for(const auto& mount : config->commandRun.mounts) {
         mount->performMount();
     }
-    utility::logMessage("Successfully performed custom mounts", common::LogLevel::INFO);
+    utility::logMessage("Successfully performed custom mounts", libsarus::LogLevel::INFO);
 }
 
 /**
@@ -243,7 +243,7 @@ void Runtime::performCustomMounts() const {
  * by users or system administrators), but are not part of basic container setup.
  */
 void Runtime::performExtraMounts() const {
-    utility::logMessage("Performing extra mounts", common::LogLevel::INFO);
+    utility::logMessage("Performing extra mounts", libsarus::LogLevel::INFO);
     if (const rapidjson::Value* pmixSupport = rapidjson::Pointer("/enablePMIxv3Support").Get(config->json)) {
         if (pmixSupport->GetBool()) {
             for(const auto& mount : utility::generatePMIxMounts(config)) {
@@ -251,7 +251,7 @@ void Runtime::performExtraMounts() const {
             }
         }
     }
-    utility::logMessage("Successfully performed custom mounts", common::LogLevel::INFO);
+    utility::logMessage("Successfully performed custom mounts", libsarus::LogLevel::INFO);
 }
 
 /**
@@ -264,20 +264,20 @@ void Runtime::performExtraMounts() const {
  * We bind mount device files here to have more direct control, in a similar fashion to what is done for /dev.
  */
 void Runtime::performDeviceMounts() const {
-    utility::logMessage("Performing device mounts", common::LogLevel::INFO);
+    utility::logMessage("Performing device mounts", libsarus::LogLevel::INFO);
     for(const auto& mount : config->commandRun.deviceMounts) {
         mount->performMount();
     }
-    utility::logMessage("Successfully performed device mounts", common::LogLevel::INFO);
+    utility::logMessage("Successfully performed device mounts", libsarus::LogLevel::INFO);
 }
 
 void Runtime::remountRootfsWithNoSuid() const {
-    utility::logMessage("Remounting rootfs with MS_NOSUID", common::LogLevel::INFO);
+    utility::logMessage("Remounting rootfs with MS_NOSUID", libsarus::LogLevel::INFO);
     if (mount(rootfsDir.c_str(), rootfsDir.c_str(), "overlay", MS_REMOUNT|MS_NOSUID, NULL) != 0) {
         auto message = boost::format("Failed to remount rootfs %s with MS_NOSUID: %s") % rootfsDir % strerror(errno);
         SARUS_THROW_ERROR(message.str());
     }
-    utility::logMessage("Successfully remounted rootfs with MS_NOSUID", common::LogLevel::INFO);
+    utility::logMessage("Successfully remounted rootfs with MS_NOSUID", libsarus::LogLevel::INFO);
 }
 
 } // namespace

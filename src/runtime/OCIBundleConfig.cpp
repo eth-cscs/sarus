@@ -17,8 +17,8 @@
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/writer.h>
 
-#include "common/Logger.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Logger.hpp"
+#include "libsarus/Utility.hpp"
 #include "common/GroupDB.hpp"
 #include "common/ImageMetadata.hpp"
 #include "runtime/Utility.hpp"
@@ -32,20 +32,20 @@ namespace runtime {
 
 OCIBundleConfig::OCIBundleConfig(std::shared_ptr<const common::Config> config)
     : config{config}
-    , configsMerger{config, common::ImageMetadata{config->getMetadataFileOfImage(), config->userIdentity}}
+    , configsMerger{config, sarus::common::ImageMetadata{config->getMetadataFileOfImage(), config->userIdentity}}
     , document{new rj::Document{}}
     , allocator{&document->GetAllocator()}
     , configFile{boost::filesystem::path{config->json["OCIBundleDir"].GetString()} / "config.json"}
 {}
 
 void OCIBundleConfig::generateConfigFile() const {
-    utility::logMessage("Generating bundle's config file", common::LogLevel::INFO);
+    utility::logMessage("Generating bundle's config file", libsarus::LogLevel::INFO);
     makeJsonDocument();
-    common::createFileIfNecessary(configFile);
+    libsarus::createFileIfNecessary(configFile);
     boost::filesystem::permissions(configFile, boost::filesystem::perms::owner_read |
                                                boost::filesystem::perms::owner_write);
-    common::writeJSON(*document, configFile);
-    utility::logMessage("Successfully generated bundle's config file", common::LogLevel::INFO);
+    libsarus::writeJSON(*document, configFile);
+    utility::logMessage("Successfully generated bundle's config file", libsarus::LogLevel::INFO);
 }
 
 const boost::filesystem::path& OCIBundleConfig::getConfigFile() const {
@@ -195,7 +195,7 @@ rj::Value OCIBundleConfig::makeMemberMounts() const {
         else {
             auto message = "Mounting /dev/pts without the gid=<gid of tty group> option, because no tty gid was found."
                            " Some programs, e.g. sshd, might run into errors because of this.";
-            common::Logger::getInstance().log(message, "Runtime", common::LogLevel::WARN);
+            libsarus::Logger::getInstance().log(message, "Runtime", libsarus::LogLevel::WARN);
         }
         element.AddMember("options", options, *allocator);
 
@@ -376,9 +376,9 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
 
             auto seccompProfile = rj::Document{};
             try {
-                seccompProfile.CopyFrom(common::readJSON(seccompProfilePath), *allocator);
+                seccompProfile.CopyFrom(libsarus::readJSON(seccompProfilePath), *allocator);
             }
-            catch(common::Error& e) {
+            catch(libsarus::Error& e) {
                 auto message = boost::format("Error reading seccomp profile: %s\n"
                                              "The seccomp profile must be a JSON file defining an OCI-compliant "
                                              "'seccomp' object. "
@@ -404,7 +404,7 @@ rj::Value OCIBundleConfig::makeMemberHooks() const {
 
     if(!config->json.HasMember("hooksDir")) {
         utility::logMessage("Skipping OCI hooks configuration (\"hooksDir\" is not set in Sarus' config)",
-                            common::LogLevel::INFO);
+                            libsarus::LogLevel::INFO);
         return jsonHooks;
     }
 

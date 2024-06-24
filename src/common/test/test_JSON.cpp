@@ -13,10 +13,13 @@
 #include <boost/format.hpp>
 #include <boost/regex.hpp>
 
-#include "common/Logger.hpp"
+#include "libsarus/Logger.hpp"
 #include "common/Config.hpp"
 #include "test_utility/unittest_main_function.hpp"
 
+namespace sarus {
+namespace common {
+namespace test {
 
 static auto testSourceDir = boost::filesystem::path {__FILE__}.parent_path();
 static auto projectRootDir = testSourceDir.parent_path().parent_path().parent_path();
@@ -93,25 +96,27 @@ TEST(JSONTestGroup, minimumRequirementsFile) {
 TEST(JSONTestGroup, missingRequired) {
     boost::filesystem::path jsonFile(testSourceDir / "json/missing_required.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "etc/sarus.schema.json");
-    CHECK_THROWS(sarus::common::Error, sarus::common::Config(jsonFile, jsonSchemaFile));
+    CHECK_THROWS(libsarus::Error, sarus::common::Config(jsonFile, jsonSchemaFile));
 }
 
 TEST(JSONTestGroup, relativePaths) {
     boost::filesystem::path jsonFile(testSourceDir / "json/relative_paths.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "etc/sarus.schema.json");
-    CHECK_THROWS(sarus::common::Error, sarus::common::Config(jsonFile, jsonSchemaFile));
+    CHECK_THROWS(libsarus::Error, sarus::common::Config(jsonFile, jsonSchemaFile));
 }
 
 TEST(JSONTestGroup, siteMountWithoutType) {
     boost::filesystem::path jsonFile(testSourceDir / "json/site_mount_without_type.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "etc/sarus.schema.json");
-    CHECK_THROWS(sarus::common::Error, sarus::common::Config(jsonFile, jsonSchemaFile));
+    CHECK_THROWS(libsarus::Error, sarus::common::Config(jsonFile, jsonSchemaFile));
 }
 
 TEST(JSONTestGroup, invalidLockTiming) {
     boost::filesystem::path jsonFile(testSourceDir / "json/invlid_lock_timing.json");
     boost::filesystem::path jsonSchemaFile(projectRootDir / "etc/sarus.schema.json");
-    CHECK_THROWS(sarus::common::Error, sarus::common::Config(jsonFile, jsonSchemaFile));
+    CHECK_THROWS(libsarus::Error, sarus::common::Config(jsonFile, jsonSchemaFile));
 }
+
+}}}
 
 SARUS_UNITTEST_MAIN_FUNCTION();

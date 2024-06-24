@@ -15,10 +15,10 @@
 
 #include <boost/format.hpp>
 
-#include "common/LogLevel.hpp"
-#include "common/PathHash.hpp"
-#include "common/UserIdentity.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/LogLevel.hpp"
+#include "libsarus/PathHash.hpp"
+#include "libsarus/UserIdentity.hpp"
+#include "libsarus/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -32,12 +32,12 @@ class AmdGpuHook {
  private:
   void parseConfigJSONOfBundle();
   void performBindMounts() const;
-  void log(const std::string& message, sarus::common::LogLevel level) const;
-  void log(const boost::format& message, sarus::common::LogLevel level) const;
+  void log(const std::string& message, libsarus::LogLevel level) const;
+  void log(const boost::format& message, libsarus::LogLevel level) const;
 
   boost::filesystem::path rootfsDir;
-  common::hook::ContainerState containerState;
-  sarus::common::UserIdentity userIdentity;
+  libsarus::hook::ContainerState containerState;
+  libsarus::UserIdentity userIdentity;
 };
 
 }  // namespace amdgpu

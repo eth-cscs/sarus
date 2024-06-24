@@ -13,8 +13,8 @@
 #include <string>
 #include <fstream>
 
-#include "common/Utility.hpp"
-#include "common/Logger.hpp"
+#include "libsarus/Utility.hpp"
+#include "libsarus/Logger.hpp"
 
 
 namespace sarus {
@@ -22,7 +22,7 @@ namespace hooks {
 namespace timestamp {
 
 void TimestampHook::activate() {
-    containerState = common::hook::parseStateOfContainerFromStdin();
+    containerState = libsarus::hook::parseStateOfContainerFromStdin();
     parseConfigJSONOfBundle();
     if(!isHookEnabled) {
         return;
@@ -32,16 +32,16 @@ void TimestampHook::activate() {
 }
 
 void TimestampHook::parseConfigJSONOfBundle() {
-    auto json = sarus::common::readJSON(containerState.bundle() / "config.json");
+    auto json = libsarus::readJSON(containerState.bundle() / "config.json");
 
-    common::hook::applyLoggingConfigIfAvailable(json);
+    libsarus::hook::applyLoggingConfigIfAvailable(json);
 
     // get uid + gid of user
     uidOfUser = json["process"]["user"]["uid"].GetInt();
     gidOfUser = json["process"]["user"]["gid"].GetInt();
 
     // get environment variables
-    auto env = common::hook::parseEnvironmentVariablesFromOCIBundle(containerState.bundle());
+    auto env = libsarus::hook::parseEnvironmentVariablesFromOCIBundle(containerState.bundle());
     if(env.find("TIMESTAMP_HOOK_LOGFILE") != env.cend()) {
         logFilePath = env["TIMESTAMP_HOOK_LOGFILE"];
         isHookEnabled = true;
@@ -49,14 +49,14 @@ void TimestampHook::parseConfigJSONOfBundle() {
 }
 
 void TimestampHook::timestamp() {
-    auto& logger = sarus::common::Logger::getInstance();
-    logger.setLevel(sarus::common::LogLevel::INFO);
+    auto& logger = libsarus::Logger::getInstance();
+    logger.setLevel(libsarus::LogLevel::INFO);
 
-    sarus::common::createFileIfNecessary(logFilePath, uidOfUser, gidOfUser);
+    libsarus::createFileIfNecessary(logFilePath, uidOfUser, gidOfUser);
     std::ofstream logFile(logFilePath.string(), std::ios::out | std::ios::app);
 
     auto fullMessage = boost::format("Timestamp hook: %s") % message;
-    logger.log(fullMessage.str(), "hook", sarus::common::LogLevel::INFO, logFile);
+    logger.log(fullMessage.str(), "hook", libsarus::LogLevel::INFO, logFile);
 }
 
 void TimestampHook::parseEnvironmentVariables() {

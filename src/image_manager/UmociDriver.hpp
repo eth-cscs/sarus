@@ -19,8 +19,8 @@
 #include <rapidjson/document.h>
 
 #include "common/Config.hpp"
-#include "common/LogLevel.hpp"
-#include "common/CLIArguments.hpp"
+#include "libsarus/LogLevel.hpp"
+#include "libsarus/CLIArguments.hpp"
 
 
 namespace sarus {
@@ -30,13 +30,13 @@ class UmociDriver {
 public:
     UmociDriver(std::shared_ptr<const common::Config> config);
     void unpack(const boost::filesystem::path& imagePath, const boost::filesystem::path& unpackPath) const;
-    common::CLIArguments generateBaseArgs() const;
+    libsarus::CLIArguments generateBaseArgs() const;
 
 private:
     std::string getVerbosityOption() const;
-    void printLog(const boost::format &message, common::LogLevel,
+    void printLog(const boost::format &message, libsarus::LogLevel,
                   std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
-    void printLog(const std::string& message, common::LogLevel,
+    void printLog(const std::string& message, libsarus::LogLevel,
                   std::ostream& outStream=std::cout, std::ostream& errStream=std::cerr) const;
 
 private:

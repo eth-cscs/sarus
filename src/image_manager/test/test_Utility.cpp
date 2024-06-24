@@ -11,7 +11,7 @@
 #include <boost/predef.h>
 #include <rapidjson/document.h>
 
-#include "common/Utility.hpp"
+#include "libsarus/Utility.hpp"
 #include "image_manager/Utility.hpp"
 #include "test_utility/config.hpp"
 #include "test_utility/unittest_main_function.hpp"
@@ -51,7 +51,7 @@ TEST(ImageManagerUtilityTestGroup, getPlatformDigestFromOCIIndex) {
     // Alpine manifest list
     {
         auto manifestListPath = boost::filesystem::path{__FILE__}.parent_path() / "docker_manifest_list_alpine.json";
-        auto manifestList = common::readJSON(manifestListPath);
+        auto manifestList = libsarus::readJSON(manifestListPath);
 
         platform["architecture"] = "amd64";
         auto returnedDigest = utility::getPlatformDigestFromOCIIndex(manifestList, platform);
@@ -82,7 +82,7 @@ TEST(ImageManagerUtilityTestGroup, getPlatformDigestFromOCIIndex) {
     // Debian manifest list
     {
         auto manifestListPath = boost::filesystem::path{__FILE__}.parent_path() / "docker_manifest_list_debian.json";
-        auto manifestList = common::readJSON(manifestListPath);
+        auto manifestList = libsarus::readJSON(manifestListPath);
 
         platform["architecture"] = "amd64";
         auto returnedDigest = utility::getPlatformDigestFromOCIIndex(manifestList, platform);

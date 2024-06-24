@@ -18,11 +18,11 @@
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 
-#include "common/Logger.hpp"
+#include "libsarus/Logger.hpp"
 #include "cli/Utility.hpp"
 #include "common/Config.hpp"
 #include "cli/Command.hpp"
-#include "common/CLIArguments.hpp"
+#include "libsarus/CLIArguments.hpp"
 #include "cli/HelpMessage.hpp"
 #include "image_manager/ImageManager.hpp"
 
@@ -36,7 +36,7 @@ public:
         initializeOptionsDescription();
     }
 
-    CommandLoad(const common::CLIArguments& args, std::shared_ptr<common::Config> conf)
+    CommandLoad(const libsarus::CLIArguments& args, std::shared_ptr<common::Config> conf)
     : conf{std::move(conf)}
     {
         initializeOptionsDescription();
@@ -76,10 +76,10 @@ private:
         allOptionsDescription.add(visibleOptionsDescription).add(hiddenOptionsDescription);
     }
 
-    void parseCommandArguments(const common::CLIArguments& args) {
-        cli::utility::printLog( boost::format("parsing CLI arguments of load command"), common::LogLevel::DEBUG);
+    void parseCommandArguments(const libsarus::CLIArguments& args) {
+        cli::utility::printLog( boost::format("parsing CLI arguments of load command"), libsarus::LogLevel::DEBUG);
 
-        common::CLIArguments nameAndOptionArgs, positionalArgs;
+        libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
         std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, allOptionsDescription);
 
         // the load command expects exactly two positional arguments
@@ -110,11 +110,11 @@ private:
         }
         catch (std::exception& e) {
             auto message = boost::format("%s\nSee 'sarus help load'") % e.what();
-            utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-            SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+            utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+            SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
         }
 
-        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), common::LogLevel::DEBUG);
+        cli::utility::printLog(boost::format("successfully parsed CLI arguments"), libsarus::LogLevel::DEBUG);
     }
 
     void parsePathOfArchiveToBeLoaded(const boost::filesystem::path& archiveArg) {

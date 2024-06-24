@@ -72,14 +72,14 @@ public:
 
 private:
     void setupTestEnvironment() const {
-        sarus::common::createFoldersIfNecessary(rootfsDir / "etc");
+        libsarus::createFoldersIfNecessary(rootfsDir / "etc");
         auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
-        sarus::common::writeJSON(doc, bundleDir / "config.json");
+        libsarus::writeJSON(doc, bundleDir / "config.json");
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
     }
 
-    sarus::common::CLIArguments generateCliArgs() const {
-        auto args = sarus::common::CLIArguments{"mount_hook"};
+    libsarus::CLIArguments generateCliArgs() const {
+        auto args = libsarus::CLIArguments{"mount_hook"};
         for (const auto & mount : bindMounts) {
             auto argFormat = boost::format("--mount=type=bind,src=%s,dst=%s") % mount.first % mount.second;
             args.push_back(argFormat.str());

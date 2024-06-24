@@ -20,8 +20,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
-#include "common/Error.hpp"
-#include "common/Utility.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Utility.hpp"
 #include "cli/Utility.hpp"
 #include "cli/CommandObjectsFactory.hpp"
 
@@ -37,12 +37,12 @@ CLI::CLI() {
         ("verbose", "Enable verbose mode (print all log messages with INFO level or higher)");
 }
 
-std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& args, std::shared_ptr<common::Config> conf) const {
-    common::CLIArguments nameAndOptionArgs, positionalArgs;
+std::unique_ptr<cli::Command> CLI::parseCommandLine(const libsarus::CLIArguments& args, std::shared_ptr<common::Config> conf) const {
+    libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
     std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
     boost::program_options::variables_map values;
     auto factory = cli::CommandObjectsFactory{};
-    auto& logger = common::Logger::getInstance();
+    auto& logger = libsarus::Logger::getInstance();
 
     try {
         boost::program_options::store(
@@ -54,31 +54,31 @@ std::unique_ptr<cli::Command> CLI::parseCommandLine(const common::CLIArguments& 
     }
     catch (const std::exception& e) {
         auto message = boost::format("%s\nSee 'sarus help'") % e.what();
-        logger.log(message, "CLI", common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+        logger.log(message, "CLI", libsarus::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
     }
 
     // configure logger
     if(values.count("debug")) {
-        logger.setLevel(common::LogLevel::DEBUG);
+        logger.setLevel(libsarus::LogLevel::DEBUG);
     }
     else if(values.count("verbose")) {
-        logger.setLevel(common::LogLevel::INFO);
+        logger.setLevel(libsarus::LogLevel::INFO);
     }
     else {
-        logger.setLevel(common::LogLevel::WARN);
+        logger.setLevel(libsarus::LogLevel::WARN);
     }
 
     // --help option
     if(values.count("help")) {
         // --help overrides other arguments and options
-        return factory.makeCommandObject("help", common::CLIArguments{}, std::move(conf));
+        return factory.makeCommandObject("help", libsarus::CLIArguments{}, std::move(conf));
     }
 
     // --version option
     if(values.count("version")) {
         // --version overrides other arguments and options
-        return factory.makeCommandObject("version", common::CLIArguments{}, std::move(conf));
+        return factory.makeCommandObject("version", libsarus::CLIArguments{}, std::move(conf));
     }
 
     // no command name => return help command
@@ -101,20 +101,20 @@ const boost::program_options::options_description& CLI::getOptionsDescription() 
     return optionsDescription;
 }
 
-std::unique_ptr<cli::Command> CLI::parseCommandHelpOfCommand(const common::CLIArguments& args) const {
+std::unique_ptr<cli::Command> CLI::parseCommandHelpOfCommand(const libsarus::CLIArguments& args) const {
     auto optionsDescription = boost::program_options::options_description();
-    common::CLIArguments nameAndOptionArgs, positionalArgs;
+    libsarus::CLIArguments nameAndOptionArgs, positionalArgs;
     std::tie(nameAndOptionArgs, positionalArgs) = cli::utility::groupOptionsAndPositionalArguments(args, optionsDescription);
     if(nameAndOptionArgs.argc() > 1) {
         auto message = boost::format("Command 'help' doesn't support options");
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+        utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
     }
     if(positionalArgs.argc() > 1) {
         auto message = boost::format("Too many arguments for command 'help'"
                                      "\nSee 'sarus help help'");
-        utility::printLog(message, common::LogLevel::GENERAL, std::cerr);
-        SARUS_THROW_ERROR(message.str(), common::LogLevel::INFO);
+        utility::printLog(message, libsarus::LogLevel::GENERAL, std::cerr);
+        SARUS_THROW_ERROR(message.str(), libsarus::LogLevel::INFO);
     }
     auto factory = cli::CommandObjectsFactory{};
     auto commandName = std::string{ positionalArgs.argv()[0] };

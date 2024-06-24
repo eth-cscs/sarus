@@ -10,7 +10,7 @@
 
 #include "SecurityChecks.hpp"
 
-#include "common/Utility.hpp"
+#include "libsarus/Utility.hpp"
 #include "runtime/Utility.hpp"
 #include "runtime/OCIHooksFactory.hpp"
 
@@ -23,12 +23,12 @@ SecurityChecks::SecurityChecks(std::shared_ptr<const common::Config> config)
 
 void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& path) const {
     auto message = boost::format("Checking that path %s is untamperable") % path;
-    utility::logMessage(message, common::LogLevel::INFO);
+    utility::logMessage(message, libsarus::LogLevel::INFO);
 
     // check that path exists
     if(!boost::filesystem::exists(path)) {
         message = boost::format("Path %s does not exist, skipping") % path;
-        utility::logMessage(message, common::LogLevel::INFO);
+        utility::logMessage(message, libsarus::LogLevel::INFO);
         return;
     }
 
@@ -52,7 +52,7 @@ void SecurityChecks::checkThatPathIsUntamperable(const boost::filesystem::path& 
     }
 
     message = boost::format("Successfully checked that path %s is untamperable") % path;
-    utility::logMessage(message, common::LogLevel::INFO);
+    utility::logMessage(message, libsarus::LogLevel::INFO);
 }
 
 void SecurityChecks::checkThatBinariesInSarusJsonAreUntamperable() const {
@@ -63,9 +63,9 @@ void SecurityChecks::checkThatBinariesInSarusJsonAreUntamperable() const {
 void SecurityChecks::checkThatPathIsRootOwned(const boost::filesystem::path& path) const {
     uid_t uid; gid_t gid;
     try {
-        std::tie(uid, gid) = common::getOwner(path);
+        std::tie(uid, gid) = libsarus::getOwner(path);
     }
-    catch(common::Error& e) {
+    catch(libsarus::Error& e) {
         auto message = boost::format("Failed to check that path %s is untamperable") % path;
         SARUS_RETHROW_ERROR(e, message.str());
     }
@@ -91,12 +91,12 @@ void SecurityChecks::checkThatPathIsNotGroupWritableOrWorldWritable(const boost:
 }
 
 void SecurityChecks::checkThatOCIHooksAreUntamperable() const {
-    utility::logMessage("Checking that OCI hooks are owned by root user", common::LogLevel::INFO);
+    utility::logMessage("Checking that OCI hooks are owned by root user", libsarus::LogLevel::INFO);
 
     if(!config->json.HasMember("hooksDir")) {
         utility::logMessage("Successfully checked that OCI hooks are owned by root user."
                             " The configuration doesn't contain OCI hooks to check.",
-                            common::LogLevel::INFO);
+                            libsarus::LogLevel::INFO);
         return; // no hooks to check
     }
 
@@ -109,7 +109,7 @@ void SecurityChecks::checkThatOCIHooksAreUntamperable() const {
         checkThatPathIsUntamperable(hookBinary);
     }
 
-    utility::logMessage("Successfully checked that OCI hooks are owned by root user", common::LogLevel::INFO);
+    utility::logMessage("Successfully checked that OCI hooks are owned by root user", libsarus::LogLevel::INFO);
 }
 
 void SecurityChecks::runSecurityChecks(const boost::filesystem::path& sarusInstallationPrefixDir) const {
@@ -137,7 +137,7 @@ void SecurityChecks::runSecurityChecks(const boost::filesystem::path& sarusInsta
     // The rest of the checks depend on user configuration
     if(!config->json["securityChecks"].GetBool()) {
         auto message =  "Skipping security checks (disabled in the sarus.json config file)";
-        utility::logMessage(message, common::LogLevel::INFO);
+        utility::logMessage(message, libsarus::LogLevel::INFO);
     }
     else {
         checkThatBinariesInSarusJsonAreUntamperable();
