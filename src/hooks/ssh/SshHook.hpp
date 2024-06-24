@@ -11,6 +11,7 @@
 #ifndef sarus_hooks_ssh_SshHook_hpp
 #define sarus_hooks_ssh_SshHook_hpp
 
+#include "common/Utility.hpp"
 #include <tuple>
 #include <memory>
 #include <unordered_set>
@@ -30,7 +31,8 @@ class SshHook {
 public:
     void generateSshKeys(bool overwriteSshKeysIfExist);
     void checkUserHasSshKeys();
-    void startSshDaemon();
+    void execute();
+    void startStopSshDaemon();
 
 private:
     void parseConfigJSONOfBundle();
@@ -49,12 +51,13 @@ private:
     void createEnvironmentFile() const;
     void createEtcProfileModule() const;
     void startSshDaemonInContainer() const;
+    void stopSshDaemon();
     void log(const boost::format& message, sarus::common::LogLevel level) const;
     void log(const std::string& message, sarus::common::LogLevel level) const;
 
 private:
+    common::hook::ContainerState containerState;
     bool isHookEnabled = false;
-    bool joinNamespaces = true;
     std::string username;
     boost::filesystem::path pidfileHost;
     boost::filesystem::path pidfileContainer = "/var/run/dropbear/dropbear.pid";
@@ -63,14 +66,11 @@ private:
     boost::filesystem::path dropbearDirInHost;
     boost::filesystem::path dropbearDirInContainer;
     boost::filesystem::path dropbearRelativeDirInContainer;
-    boost::filesystem::path bundleDir;
     boost::filesystem::path rootfsDir;
     boost::filesystem::path userPublicKeyFilename;
-    pid_t pidOfContainer;
     uid_t uidOfUser;
     gid_t gidOfUser;
     std::uint16_t serverPort = 0;
-    bool overlayMountHostDotSsh = true;
 };
 
 }}} // namespace

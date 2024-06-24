@@ -14,6 +14,7 @@
 #include <boost/filesystem.hpp>
 #include <string>
 
+#include "common/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -29,11 +30,10 @@ private:
     void timestamp();
 
 private:
+    common::hook::ContainerState containerState;
     bool isHookEnabled{ false };
     std::string message;
     boost::filesystem::path logFilePath;
-    boost::filesystem::path bundleDir;
-    pid_t pidOfContainer;
     uid_t uidOfUser;
     gid_t gidOfUser;
 };

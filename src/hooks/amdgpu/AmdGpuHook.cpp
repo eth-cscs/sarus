@@ -102,8 +102,7 @@ std::vector<std::string> getRenderDDevices(const std::string& path,
 AmdGpuHook::AmdGpuHook() {
   log("Initializing hook", sarus::common::LogLevel::INFO);
 
-  std::tie(bundleDir, pidOfContainer) =
-    common::hook::parseStateOfContainerFromStdin();
+  containerState =  common::hook::parseStateOfContainerFromStdin();
   parseConfigJSONOfBundle();
 
   log("Successfully initialized hook", sarus::common::LogLevel::INFO);
@@ -128,7 +127,7 @@ void AmdGpuHook::activate() {
 void AmdGpuHook::parseConfigJSONOfBundle() {
   log("Parsing bundle's config.json", sarus::common::LogLevel::INFO);
 
-  auto json = sarus::common::readJSON(bundleDir / "config.json");
+  auto json = sarus::common::readJSON(containerState.bundle() / "config.json");
 
   common::hook::applyLoggingConfigIfAvailable(json);
 
@@ -136,7 +135,7 @@ void AmdGpuHook::parseConfigJSONOfBundle() {
   if (root.is_absolute()) {
     rootfsDir = root;
   } else {
-    rootfsDir = bundleDir / root;
+    rootfsDir = containerState.bundle() / root;
   }
 
   auto uidOfUser{json["process"]["user"]["uid"].GetInt()};
@@ -152,7 +151,7 @@ void AmdGpuHook::performBindMounts() const {
   auto devicesCgroupPath = fs::path{};
 
   std::vector<std::string> mountPoints{
-      getRenderDDevices("/dev/dri", bundleDir)};
+      getRenderDDevices("/dev/dri", containerState.bundle())};
   mountPoints.emplace_back("/dev/kfd");
 
   for (const auto& mountPoint : mountPoints) {
@@ -165,7 +164,7 @@ void AmdGpuHook::performBindMounts() const {
     if (sarus::common::isDeviceFile(mountPoint)) {
       if (devicesCgroupPath.empty()) {
         devicesCgroupPath =
-            common::hook::findCgroupPath("devices", "/", pidOfContainer);
+            common::hook::findCgroupPath("devices", "/", containerState.pid());
       }
 
       common::hook::whitelistDeviceInCgroup(devicesCgroupPath, mountPoint);

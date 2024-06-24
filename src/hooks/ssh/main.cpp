@@ -31,19 +31,20 @@ int main(int argc, char* argv[]) {
             bool overwriteSshKeysIfExist = false;
             parseKeygenCLIOptions(argc, argv, &overwriteSshKeysIfExist);
             sarus::hooks::ssh::SshHook{}.generateSshKeys(overwriteSshKeysIfExist);
+            return 0;
         }
-        else if(argv[1] == std::string{"check-user-has-sshkeys"}) {
+        if(argv[1] == std::string{"check-user-has-sshkeys"}) {
             parseCheckUserKeysCLIOptions(argc, argv);
             sarus::hooks::ssh::SshHook{}.checkUserHasSshKeys();
+            return 0;
         }
-        else if(argv[1] == std::string("start-ssh-daemon")) {
-            sarus::hooks::ssh::SshHook{}.startSshDaemon();
+        if(argv[1] == std::string("start-ssh-daemon")) {
+            sarus::hooks::ssh::SshHook{}.startStopSshDaemon();
+            return 0;            
         }
-        else {
-            auto message = boost::format("Failed to execute SSH hook. CLI argument %s is not supported.")
-                % argv[1];
-            SARUS_THROW_ERROR(message.str());
-        }
+        auto message = boost::format("Failed to execute SSH hook. CLI argument %s is not supported.")
+            % argv[1];
+        SARUS_THROW_ERROR(message.str());
     } catch(const sarus::common::Error& e) {
         sarus::common::Logger::getInstance().logErrorTrace(e, "ssh-hook");
         exit(EXIT_FAILURE);

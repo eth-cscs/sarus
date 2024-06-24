@@ -20,6 +20,8 @@
 #include "common/Mount.hpp"
 #include "common/DeviceMount.hpp"
 
+#include "common/Utility.hpp"
+
 namespace sarus {
 namespace hooks {
 namespace mount {
@@ -45,9 +47,8 @@ private:
     void log(const boost::format& message, sarus::common::LogLevel level) const;
 
 private:
-    boost::filesystem::path bundleDir;
+    common::hook::ContainerState containerState;
     boost::filesystem::path rootfsDir;
-    pid_t pidOfContainer;
     sarus::common::UserIdentity userIdentity;
     boost::filesystem::path ldconfigPath;
     boost::filesystem::path fiProviderPath;

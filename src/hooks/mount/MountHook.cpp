@@ -29,7 +29,7 @@ namespace mount {
 MountHook::MountHook(const sarus::common::CLIArguments& args) {
     log("Initializing hook", sarus::common::LogLevel::INFO);
 
-    std::tie(bundleDir, pidOfContainer) = common::hook::parseStateOfContainerFromStdin();
+    containerState = common::hook::parseStateOfContainerFromStdin();
     parseConfigJSONOfBundle();
     parseEnvironmentVariables();
     parseCliArguments(args);
@@ -40,7 +40,7 @@ MountHook::MountHook(const sarus::common::CLIArguments& args) {
 void MountHook::parseConfigJSONOfBundle() {
     log("Parsing bundle's config.json", sarus::common::LogLevel::INFO);
 
-    auto json = sarus::common::readJSON(bundleDir / "config.json");
+    auto json = sarus::common::readJSON(containerState.bundle() / "config.json");
 
     common::hook::applyLoggingConfigIfAvailable(json);
 
@@ -49,14 +49,14 @@ void MountHook::parseConfigJSONOfBundle() {
         rootfsDir = root;
     }
     else {
-        rootfsDir = bundleDir / root;
+        rootfsDir = containerState.bundle() / root;
     }
 
     uid_t uidOfUser = json["process"]["user"]["uid"].GetInt();
     gid_t gidOfUser = json["process"]["user"]["gid"].GetInt();
     userIdentity = sarus::common::UserIdentity(uidOfUser, gidOfUser, {});
 
-    auto fiProviderPathEnv = common::hook::getEnvironmentVariableValueFromOCIBundle("FI_PROVIDER_PATH", bundleDir);
+    auto fiProviderPathEnv = common::hook::getEnvironmentVariableValueFromOCIBundle("FI_PROVIDER_PATH", containerState.bundle());
     if (fiProviderPathEnv && !(*fiProviderPathEnv).empty()) {
         fiProviderPath = *fiProviderPathEnv;
         auto message = boost::format("Found FI_PROVIDER_PATH in the container's environment: %s") % fiProviderPath;
@@ -187,7 +187,7 @@ void MountHook::performDeviceMounts() const {
     }
 
     log("Performing device mounts", sarus::common::LogLevel::INFO);
-    auto devicesCgroupPath = common::hook::findCgroupPath("devices", "/", pidOfContainer);
+    auto devicesCgroupPath = common::hook::findCgroupPath("devices", "/", containerState.pid());
     for(const auto& mount : deviceMounts) {
         mount->performMount();
         common::hook::whitelistDeviceInCgroup(devicesCgroupPath, rootfsDir / mount->destination);

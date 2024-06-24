@@ -30,7 +30,7 @@ namespace mpi {
 MpiHook::MpiHook() {
     log("Initializing hook", sarus::common::LogLevel::INFO);
 
-    std::tie(bundleDir, pidOfContainer) = common::hook::parseStateOfContainerFromStdin();
+    containerState = common::hook::parseStateOfContainerFromStdin();
     parseConfigJSONOfBundle();
     parseEnvironmentVariables();
     log("Getting list of shared libs from the container's dynamic linker cache", sarus::common::LogLevel::DEBUG);
@@ -76,7 +76,7 @@ void MpiHook::activateMpiSupport() {
 void MpiHook::parseConfigJSONOfBundle() {
     log("Parsing bundle's config.json", sarus::common::LogLevel::INFO);
 
-    auto json = sarus::common::readJSON(bundleDir / "config.json");
+    auto json = sarus::common::readJSON(containerState.bundle() / "config.json");
 
     common::hook::applyLoggingConfigIfAvailable(json);
 
@@ -85,7 +85,7 @@ void MpiHook::parseConfigJSONOfBundle() {
         rootfsDir = root;
     }
     else {
-        rootfsDir = bundleDir / root;
+        rootfsDir = containerState.bundle() / root;
     }
 
     uid_t uidOfUser = json["process"]["user"]["uid"].GetInt();
@@ -300,7 +300,7 @@ void MpiHook::performBindMounts() const {
 
         if (sarus::common::isDeviceFile(mount)) {
             if (devicesCgroupPath.empty()) {
-                devicesCgroupPath = common::hook::findCgroupPath("devices", "/", pidOfContainer);
+                devicesCgroupPath = common::hook::findCgroupPath("devices", "/", containerState.pid());
             }
 
             common::hook::whitelistDeviceInCgroup(devicesCgroupPath, mount);

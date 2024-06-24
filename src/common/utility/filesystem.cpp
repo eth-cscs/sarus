@@ -123,6 +123,12 @@ void copyFile(const boost::filesystem::path& src, const boost::filesystem::path&
     setOwner(dst, uid, gid);
 }
 
+void removeFile(const boost::filesystem::path& path) {
+    if(boost::filesystem::exists(path)) {
+        boost::filesystem::remove(path);
+    }
+}
+
 void copyFolder(const boost::filesystem::path& src, const boost::filesystem::path& dst, uid_t uid, gid_t gid) {
     if(!boost::filesystem::exists(src) || !boost::filesystem::is_directory(src)) {
         auto message = boost::format("Failed to copy %s to %s: source folder doesn't exist.") % src % dst;

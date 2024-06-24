@@ -452,7 +452,7 @@ TEST(SSHHookTestGroup, testSshHook) {
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshDaemon();
+    SshHook{}.startStopSshDaemon();
     helper.checkContainerHasClientKeys();
     helper.checkContainerHasServerKeys();
     CHECK(static_cast<bool>(helper.getSshDaemonPid()));
@@ -476,7 +476,7 @@ TEST(SSHHookTestGroup, testNonStandardHomeDir) {
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshDaemon();
+    SshHook{}.startStopSshDaemon();
     helper.checkContainerHasClientKeys();
     helper.checkContainerHasServerKeys();
     CHECK(static_cast<bool>(helper.getSshDaemonPid()));
@@ -503,7 +503,7 @@ TEST(SSHHookTestGroup, testSetEnvironmentOnLogin) {
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshDaemon();
+    SshHook{}.startStopSshDaemon();
     helper.checkContainerHasEnvironmentFile();
     helper.checkContainerHasEtcProfileModule();
 }
@@ -524,7 +524,7 @@ TEST(SSHHookTestGroup, testInjectKeyUsingAnnotations) {
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshDaemon();
+    SshHook{}.startStopSshDaemon();
     helper.checkContainerHasClientKeys();
     helper.checkContainerHasServerKeys();
     
@@ -546,7 +546,7 @@ TEST(SSHHookTestGroup, testDefaultDropbearPidFiles) {
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshDaemon();
+    SshHook{}.startStopSshDaemon();
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     CHECK(boost::filesystem::is_regular_file(helper.getDropbearPidFileInContainerAbsolute()));
@@ -569,7 +569,7 @@ TEST(SSHHookTestGroup, testDropbearPidFileInHost) {
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshDaemon();
+    SshHook{}.startStopSshDaemon();
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     auto pidInContainer = sarus::common::readFile(helper.getDropbearPidFileInContainerAbsolute());
@@ -594,7 +594,7 @@ TEST(SSHHookTestGroup, testDropbearPidFilesInCustomPaths) {
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshDaemon();
+    SshHook{}.startStopSshDaemon();
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     auto pidInContainer = sarus::common::readFile(helper.getDropbearPidFileInContainerAbsolute());
@@ -618,7 +618,7 @@ TEST(SSHHookTestGroup, testDefaultMountsDotSshAsOverlayFs) {
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshDaemon();
+    SshHook{}.startStopSshDaemon();
 
     CHECK_TRUE(helper.containerMountsDotSsh());    
 }
@@ -639,7 +639,7 @@ TEST(SSHHookTestGroup, testEnvVarDisableMountsDotSshAsOverlayFs) {
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshDaemon();
+    SshHook{}.startStopSshDaemon();
 
     CHECK_FALSE(helper.containerMountsDotSsh());    
     sarus::common::setEnvironmentVariable("OVERLAY_MOUNT_HOME_SSH", "");
@@ -659,7 +659,7 @@ TEST(SSHHookTestGroup, testDefaultServerPort) {
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshDaemon();
+    SshHook{}.startStopSshDaemon();
     helper.checkDefaultSshDaemonPort();
     helper.checkContainerHasSshBinary();
 }
@@ -680,7 +680,7 @@ TEST(SSHHookTestGroup, testDefaultServerPortOverridesDeprecatedVar) {
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshDaemon();
+    SshHook{}.startStopSshDaemon();
     helper.checkDefaultSshDaemonPort();
 }
 
@@ -701,7 +701,7 @@ TEST(SSHHookTestGroup, testDeprecatedServerPort) {
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshDaemon();
+    SshHook{}.startStopSshDaemon();
     CHECK(helper.getSshDaemonPort() == expectedPort);
 }
 
@@ -721,7 +721,7 @@ TEST(SSHHookTestGroup, testCustomServerPort) {
 
     // start sshd
     helper.writeContainerStateToStdin();
-    SshHook{}.startSshDaemon();
+    SshHook{}.startStopSshDaemon();
     CHECK(helper.getSshDaemonPort() == expectedPort);
     helper.checkContainerHasSshBinary();
 }

@@ -42,10 +42,10 @@ TEST(HooksUtilityTestGroup, parseStateOfContainerFromStdin) {
     pid_t returnedPid;
 
     test_utility::ocihooks::writeContainerStateToStdin(expectedBundleDir.getPath());
-    std::tie(returnedBundleDir, returnedPid) = parseStateOfContainerFromStdin();
+    auto containerState = parseStateOfContainerFromStdin();
 
-    CHECK(returnedBundleDir == expectedBundleDir.getPath());
-    CHECK_EQUAL(returnedPid, expectedPid);
+    CHECK(containerState.bundle() == expectedBundleDir.getPath());
+    CHECK_EQUAL(containerState.pid(), expectedPid);
 }
 
 TEST(HooksUtilityTestGroup, getEnvironmentVariableValueFromOCIBundle) {

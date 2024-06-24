@@ -18,6 +18,7 @@
 #include "common/LogLevel.hpp"
 #include "common/PathHash.hpp"
 #include "common/UserIdentity.hpp"
+#include "common/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -34,9 +35,8 @@ class AmdGpuHook {
   void log(const std::string& message, sarus::common::LogLevel level) const;
   void log(const boost::format& message, sarus::common::LogLevel level) const;
 
-  boost::filesystem::path bundleDir;
   boost::filesystem::path rootfsDir;
-  pid_t pidOfContainer;
+  common::hook::ContainerState containerState;
   sarus::common::UserIdentity userIdentity;
 };
 

@@ -70,7 +70,7 @@ class TestSshHook(unittest.TestCase):
                     "^com.hooks.ssh.enabled$": "^true$"
                 }
             },
-            "stages": ["createRuntime"]
+            "stages": ["createRuntime", "poststop"]
         }
         return hook_config
 

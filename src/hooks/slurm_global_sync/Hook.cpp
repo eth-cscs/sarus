@@ -29,7 +29,7 @@ namespace slurm_global_sync {
 Hook::Hook() {
     log("Initializing hook", sarus::common::LogLevel::INFO);
 
-    std::tie(bundleDir, pidOfContainer) = common::hook::parseStateOfContainerFromStdin();
+    containerState = common::hook::parseStateOfContainerFromStdin();
     parseConfigJSONOfBundle();
 
     log("Successfully initialized hook", sarus::common::LogLevel::INFO);
@@ -139,12 +139,12 @@ size_t Hook::countFilesInDirectory(const boost::filesystem::path& directory) con
 }
 
 void Hook::parseConfigJSONOfBundle() {
-    auto json = sarus::common::readJSON(bundleDir / "config.json");
+    auto json = sarus::common::readJSON(containerState.bundle() / "config.json");
 
     common::hook::applyLoggingConfigIfAvailable(json);
 
     // get environment variables
-    auto env = common::hook::parseEnvironmentVariablesFromOCIBundle(bundleDir);
+    auto env = common::hook::parseEnvironmentVariablesFromOCIBundle(containerState.bundle());
 
     if (env.find("SLURM_JOB_ID") == env.cend()
         || env.find("SLURM_STEPID") == env.cend()

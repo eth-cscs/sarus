@@ -22,6 +22,8 @@
 
 #include <boost/format.hpp>
 #include <boost/filesystem.hpp>
+#include "SharedLibrary.hpp"
+#include "common/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -59,9 +61,8 @@ private:
     void log(const boost::format& message, sarus::common::LogLevel level) const;
 
 private:
-    boost::filesystem::path bundleDir;
+    common::hook::ContainerState containerState;
     boost::filesystem::path rootfsDir;
-    pid_t pidOfContainer;
     sarus::common::UserIdentity userIdentity;
     boost::filesystem::path ldconfig;
     std::vector<boost::filesystem::path> bindMounts;

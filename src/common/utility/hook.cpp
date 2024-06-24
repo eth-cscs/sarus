@@ -13,6 +13,7 @@
 #include <iostream>
 #include <cstring>
 #include <grp.h>
+#include <istream>
 #include <sys/prctl.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
@@ -20,6 +21,7 @@
 #include <boost/format.hpp>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
+
 #include <rapidjson/istreamwrapper.h>
 
 #include "common/Error.hpp"
@@ -32,6 +34,27 @@ namespace rj = rapidjson;
 namespace sarus {
 namespace common {
 namespace hook {
+
+ContainerState::ContainerState(std::istream& is) {
+    rj::IStreamWrapper sw(is);
+    state.ParseStream(sw);
+};
+
+std::string ContainerState::id() const { return state["id"].GetString(); };
+
+std::string ContainerState::status() const { return state["status"].GetString(); };
+
+pid_t ContainerState::pid() const {
+    if(state.HasMember("pid")) {
+        return state["pid"].GetInt();
+    }
+    return -1;
+}
+
+boost::filesystem::path ContainerState::bundle() const {
+    return boost::filesystem::path{state["bundle"].GetString()};
+};
+
 
 static void replaceFd(int oldfd, int newfd) {
     if(dup2(newfd, oldfd) == -1) {
@@ -67,20 +90,13 @@ void applyLoggingConfigIfAvailable(const rapidjson::Document& json) {
     }
 }
 
-std::tuple<boost::filesystem::path, pid_t> parseStateOfContainerFromStdin() {
-    rj::Document state;
+ContainerState parseStateOfContainerFromStdin() {
     try {
-        rj::IStreamWrapper sw(std::cin);
-        state.ParseStream(sw);
+        return ContainerState{std::cin};
     }
     catch(const std::exception& e) {
         SARUS_RETHROW_ERROR(e, "Failed to parse container's state JSON from stdin.");
     }
-
-    boost::filesystem::path bundleDir = state["bundle"].GetString();
-    pid_t pidOfContainer = state["pid"].GetInt();
-
-    return std::tuple<boost::filesystem::path, pid_t>{bundleDir, pidOfContainer};
 }
 
 std::unordered_map<std::string, std::string> parseEnvironmentVariablesFromOCIBundle(const boost::filesystem::path& bundleDir) {

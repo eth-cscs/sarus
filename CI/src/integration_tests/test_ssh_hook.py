@@ -32,7 +32,7 @@ def generate_hook_config():
                 "^com.hooks.ssh.enabled$": "^true$"
             }
         },
-        "stages": ["createRuntime"]
+        "stages": ["createRuntime", "poststop"]
     }
     return hook_config
 
@@ -57,7 +57,7 @@ class TestSshHook(unittest.TestCase):
             mounts = util.run_command_in_container(is_centralized_repository=False,
                                           image=self.CONTAINER_IMAGE,
                                           options_of_run_command=["--ssh"],
-                                          command=["mount"])[1:]
+                                          command=["mount","-t","overlay"])[1:]
             assert any(("/.ssh" in mount for mount in mounts))
 
     def test_mount_host_dotssh_is_not_mounted_if_env_var_is_true(self):
@@ -68,7 +68,7 @@ class TestSshHook(unittest.TestCase):
             mounts = util.run_command_in_container(is_centralized_repository=False,
                                           image=self.CONTAINER_IMAGE,
                                           options_of_run_command=["--ssh"],
-                                          command=["mount"])[1:]
+                                          command=["mount","-t","overlay"])[1:]
             assert any(("/.ssh" in mount for mount in mounts))
 
     def test_mount_host_dotssh_is_not_mounted_if_env_var_is_false(self):
@@ -79,5 +79,5 @@ class TestSshHook(unittest.TestCase):
             mounts = util.run_command_in_container(is_centralized_repository=False,
                                           image=self.CONTAINER_IMAGE,
                                           options_of_run_command=["--ssh"],
-                                          command=["mount"])[1:]
+                                          command=["mount","-t","overlay"])[1:]
             assert not any(("/.ssh" in mount for mount in mounts))

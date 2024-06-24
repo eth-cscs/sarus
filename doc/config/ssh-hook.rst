@@ -25,9 +25,13 @@ files and directories.
 Hook configuration
 ==================
 
-The SSH hook must be configured to run as a **createRuntime** hook. It expects to
-receive its own name/location as the first argument, and the string
-``start-ssh-daemon`` as positional argument. In addition, the following
+The SSH hook must be configured to run as a **createRuntime** and as a **poststop** hook. 
+In the prestart stage the hook sets up the container to accept connections and starts the Dropbear SSH daemon. 
+In the poststop stage, cleanup of the SSH daemon process takes place. 
+One OCI hook JSON configuration files is sufficient, provided it defines ``"stages": ["prestart", "poststop"]``.
+
+The configuration of the ssh hook expects to receive its own name/location as the first argument, 
+and the string ``start-ssh-daemon`` as positional argument. In addition, the following
 environment variables must be defined:
 
 * ``HOOK_BASE_DIR``: Absolute base path to the directory where the hook will create and access the SSH keys.
@@ -89,6 +93,13 @@ enabling the SSH hook:
 .. literalinclude:: /config/hook_examples/07-ssh-hook.json
    :language: json
 
+The poststop functionality is especially valuable in cases where the hook does not actively join the PID namespace 
+of the container. In its absence, the termination of the container would not result in the termination of the 
+Dropbear daemon, leading to the persistence of the daemon even after the container has been stopped. 
+This persistence can cause issues like port conflicts, as the daemon may still be listening on a port that 
+is required by a new container attempting to start.
+
+
 Sarus support at runtime
 ========================
 
@@ -110,11 +121,7 @@ and client, overriding the value from the ``SERVER_PORT_DEFAULT`` environment va
 configuration file.
 
 .. important::
-   The SSH hook currently does not implement a poststop functionality and
-   requires the use of a private PID namespace to cleanup the Dropbear daemon.
-   Thus, the hook currently requires the use of a :ref:`private PID namespace <user-private-pid>`
-   for the container. Thus, the ``--ssh`` option of :program:`sarus run` implies
-   ``--pid=private``, and is incompatible with the use of ``--pid=host``.
-   If the hook is executed without a separate PID namespace (i.e. in the PID namespace of the host),
-   when the container is stopped the Dropbear daemon will be still alive and the user is responsible
-   for terminating it.
+   The hook currently requires the use of a :ref:`private PID namespace <user-private-pid>`
+   for the container. The ``--ssh`` option of :program:`sarus run` implies ``--pid=private``, 
+   and is incompatible with the use of ``--pid=host``.
+   

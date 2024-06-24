@@ -30,6 +30,7 @@ void setOwner(const boost::filesystem::path&, uid_t, gid_t);
 void createFoldersIfNecessary(const boost::filesystem::path&, uid_t uid=-1, gid_t gid=-1);
 void createFileIfNecessary(const boost::filesystem::path&, uid_t uid=-1, gid_t gid=-1);
 void copyFile(const boost::filesystem::path& src, const boost::filesystem::path& dst, uid_t uid=-1, gid_t gid=-1);
+void removeFile(const boost::filesystem::path& path);
 void copyFolder(const boost::filesystem::path& src, const boost::filesystem::path& dst, uid_t uid=-1, gid_t gid=-1);
 void changeDirectory(const boost::filesystem::path& path);
 size_t getFileSize(const boost::filesystem::path& filename);

@@ -17,6 +17,7 @@
 #include <rapidjson/document.h>
 
 #include "common/LogLevel.hpp"
+#include "common/Utility.hpp"
 
 namespace sarus {
 namespace hooks {
@@ -50,13 +51,12 @@ private:
 
 private:
     bool isHookEnabled{ true };
-    boost::filesystem::path bundleDir;
+    common::hook::ContainerState containerState;
     boost::filesystem::path syncDir;
     boost::filesystem::path syncDirArrival;
     boost::filesystem::path syncDirDeparture;
     boost::filesystem::path syncFileArrival;
     boost::filesystem::path syncFileDeparture;
-    pid_t pidOfContainer;
     uid_t uidOfUser;
     gid_t gidOfUser;
     std::string slurmJobID;

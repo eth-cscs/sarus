@@ -4,13 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-
 ## [Unreleased]
 
 ### Added
 
 - MPI hook: added support for the environment variable `MPI_COMPATIBILITY_TYPE` that defines the behaviour of the compatibility check of the libraries
   that the hook mounts. Valid values are `major`, `full` and `strict`. Default value is `major`.
+- SSH Hook: added a poststop functionality that kills the Dropbear process in case the hook does not join the container's PID namespace.
 
 ### Changed
 

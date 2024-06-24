@@ -33,7 +33,8 @@ namespace glibc {
 GlibcHook::GlibcHook() {
     logMessage("Initializing hook", sarus::common::LogLevel::INFO);
 
-    std::tie(bundleDir, pidOfContainer) = common::hook::parseStateOfContainerFromStdin();
+    auto containerState = common::hook::parseStateOfContainerFromStdin();
+    bundleDir = containerState.bundle();
     parseConfigJSONOfBundle();
     parseEnvironmentVariables();
 

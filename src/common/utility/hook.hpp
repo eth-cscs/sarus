@@ -26,8 +26,20 @@ namespace sarus {
 namespace common {
 namespace hook {
 
+struct ContainerState {
+  ContainerState() = default;
+  explicit ContainerState(std::istream&);
+  std::string id() const;
+  std::string status() const;
+  pid_t pid() const;
+  boost::filesystem::path bundle() const;
+
+  private:
+   rapidjson::Document state;
+};
+
 void applyLoggingConfigIfAvailable(const rapidjson::Document&);
-std::tuple<boost::filesystem::path, pid_t> parseStateOfContainerFromStdin();
+ContainerState parseStateOfContainerFromStdin();
 std::unordered_map<std::string, std::string> parseEnvironmentVariablesFromOCIBundle(const boost::filesystem::path&);
 boost::optional<std::string> getEnvironmentVariableValueFromOCIBundle(const std::string& key, const boost::filesystem::path&);
 void enterMountNamespaceOfProcess(pid_t);

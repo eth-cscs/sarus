@@ -18,5 +18,5 @@
             "^com.hooks.ssh.enabled$": "^true$"
         }
     },
-    "stages": ["createRuntime"]
+    "stages": ["createRuntime", "poststop"]
 }

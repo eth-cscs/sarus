@@ -13,6 +13,7 @@
 #include <chrono>
 #include <thread>
 #include <fstream>
+#include <signal.h>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
@@ -27,6 +28,31 @@
 namespace sarus {
 namespace hooks {
 namespace ssh {
+
+static bool eventuallyJoinNamespaces(const pid_t pidOfContainer) {
+    bool joinNamespaces{true};
+    try {
+        auto envJoinNamespaces = sarus::common::getEnvironmentVariable("JOIN_NAMESPACES");
+        joinNamespaces = (boost::algorithm::to_upper_copy(envJoinNamespaces) == std::string("TRUE"));
+    } catch (sarus::common::Error&) {}
+    return joinNamespaces;
+}
+
+static std::uint16_t getServerPortFromEnv() {
+    std::uint16_t serverPort;
+    try {
+        serverPort = std::stoi(sarus::common::getEnvironmentVariable("SERVER_PORT"));
+    } catch (sarus::common::Error&) {}
+    try {
+        serverPort = std::stoi(sarus::common::getEnvironmentVariable("SERVER_PORT_DEFAULT"));
+    } catch (sarus::common::Error& e) {
+        if (serverPort == 0) {
+            SARUS_RETHROW_ERROR(e, "At least one of the environment variables SERVER_PORT_DEFAULT (preferred)"
+                                   " or SERVER_PORT (deprecated) must be defined.")
+        }
+    }
+    return serverPort;
+}
 
 void SshHook::generateSshKeys(bool overwriteSshKeysIfExist) {
     log("Generating SSH keys", sarus::common::LogLevel::INFO);
@@ -74,32 +100,27 @@ void SshHook::checkUserHasSshKeys() {
     log("Successfully checked that user has SSH keys", sarus::common::LogLevel::INFO);
 }
 
-void SshHook::startSshDaemon() {
+void SshHook::startStopSshDaemon() {
     log("Activating SSH in container", sarus::common::LogLevel::INFO);
 
     dropbearRelativeDirInContainer = boost::filesystem::path("/opt/oci-hooks/ssh/dropbear");
     dropbearDirInHost = sarus::common::getEnvironmentVariable("DROPBEAR_DIR");
-    try {
-        serverPort = std::stoi(sarus::common::getEnvironmentVariable("SERVER_PORT"));
-    } catch (sarus::common::Error&) {}
-    try {
-        serverPort = std::stoi(sarus::common::getEnvironmentVariable("SERVER_PORT_DEFAULT"));
-    } catch (sarus::common::Error& e) {
-        if (serverPort == 0) {
-            SARUS_RETHROW_ERROR(e, "At least one of the environment variables SERVER_PORT_DEFAULT (preferred)"
-                                   " or SERVER_PORT (deprecated) must be defined.")
-        }
-    }
-    try {
-        auto envJoinNamespaces = sarus::common::getEnvironmentVariable("JOIN_NAMESPACES");
-        joinNamespaces = (boost::algorithm::to_upper_copy(envJoinNamespaces) == std::string("TRUE"));
-    } catch (sarus::common::Error&) {}
-    std::tie(bundleDir, pidOfContainer) = common::hook::parseStateOfContainerFromStdin();
-    if (joinNamespaces) {
-        common::hook::enterMountNamespaceOfProcess(pidOfContainer);
-        common::hook::enterPidNamespaceOfProcess(pidOfContainer);
-    }
+    serverPort = getServerPortFromEnv();
+    containerState = common::hook::parseStateOfContainerFromStdin();
+
     parseConfigJSONOfBundle();
+
+    auto joinNamespaces = eventuallyJoinNamespaces(containerState.pid());
+
+    if(containerState.status() == "stopped" and !joinNamespaces) {
+        return stopSshDaemon();
+    }
+    
+    if (joinNamespaces) {
+        common::hook::enterMountNamespaceOfProcess(containerState.pid());
+        common::hook::enterPidNamespaceOfProcess(containerState.pid());
+    }
+
     username = getUsername(uidOfUser);
     sshKeysDirInHost = getSshKeysDirInHost(username);
     sshKeysDirInContainer = getSshKeysDirInContainer();
@@ -118,7 +139,7 @@ void SshHook::startSshDaemon() {
 void SshHook::parseConfigJSONOfBundle() {
     log("Parsing bundle's config.json", sarus::common::LogLevel::INFO);
 
-    auto json = sarus::common::readJSON(bundleDir / "config.json");
+    auto json = sarus::common::readJSON(containerState.bundle() / "config.json");
 
     common::hook::applyLoggingConfigIfAvailable(json);
 
@@ -128,7 +149,7 @@ void SshHook::parseConfigJSONOfBundle() {
         rootfsDir = root;
     }
     else {
-        rootfsDir = bundleDir / root;
+        rootfsDir = containerState.bundle() / root;
     }
 
     dropbearDirInContainer = rootfsDir / dropbearRelativeDirInContainer;
@@ -152,14 +173,9 @@ void SshHook::parseConfigJSONOfBundle() {
         }
     }
 
-    try {
-        auto envOverlayMountHome = sarus::common::getEnvironmentVariable("OVERLAY_MOUNT_HOME_SSH");
-        overlayMountHostDotSsh = boost::algorithm::to_upper_copy(envOverlayMountHome) != "FALSE";
-    } 
-    catch(const sarus::common::Error& error) {
-        overlayMountHostDotSsh = true; // default behaviour: mount
-        auto message = boost::format("%s. ~/.ssh will be mounted in the container using OverlayFS.") % error.what();
-        log(message, sarus::common::LogLevel::INFO);
+    if (pidfileHost.empty()) {
+        pidfileHost = containerState.bundle() / 
+        boost::filesystem::path((boost::format("dropbear-%s-%s-%d.pid") % sarus::common::getHostname() % containerState.id() % serverPort).str());
     }
 
     log("Successfully parsed bundle's config.json", sarus::common::LogLevel::INFO);
@@ -285,13 +301,23 @@ void SshHook::setupSshKeysDirInContainer() const {
     sarus::common::createFoldersIfNecessary(sshKeysDirInContainer);
     sarus::common::switchIdentity(rootIdentity);
 
+    bool overlayMountHostDotSsh = true;
+    try {
+        auto envOverlayMountHome = sarus::common::getEnvironmentVariable("OVERLAY_MOUNT_HOME_SSH");
+        overlayMountHostDotSsh = boost::algorithm::to_upper_copy(envOverlayMountHome) != "FALSE";
+    } 
+    catch(const sarus::common::Error& error) {
+        auto message = boost::format("%s. ~/.ssh will be mounted in the container using OverlayFS.") % error.what();
+        log(message, sarus::common::LogLevel::INFO);
+    }
+
     if (overlayMountHostDotSsh) {
         // mount overlayfs on top of the container's ~/.ssh, otherwise we
         // could mess up with the host's ~/.ssh directory. E.g. when the user
         // bind mounts the host's /home into the container
-        auto lowerDir = bundleDir / "overlay/ssh-lower";
-        auto upperDir = bundleDir / "overlay/ssh-upper";
-        auto workDir = bundleDir / "overlay/ssh-work";
+        auto lowerDir = containerState.bundle() / "overlay/ssh-lower";
+        auto upperDir = containerState.bundle() / "overlay/ssh-upper";
+        auto workDir = containerState.bundle() / "overlay/ssh-work";
         sarus::common::createFoldersIfNecessary(lowerDir);
         sarus::common::createFoldersIfNecessary(upperDir, uidOfUser, gidOfUser);
         sarus::common::createFoldersIfNecessary(workDir);
@@ -373,7 +399,7 @@ void SshHook::createEnvironmentFile() const {
         sarus::common::LogLevel::INFO);
 
     // create file
-    auto containerEnvironment = common::hook::parseEnvironmentVariablesFromOCIBundle(bundleDir);
+    auto containerEnvironment = common::hook::parseEnvironmentVariablesFromOCIBundle(containerState.bundle());
     auto ofs = std::ofstream((dropbearDirInContainer / "environment").c_str());
     ofs << "#!/bin/sh" << std::endl;
     for (const auto& variable : containerEnvironment) {
@@ -443,11 +469,14 @@ void SshHook::startSshDaemonInContainer() const {
         SARUS_THROW_ERROR(message.str());
     }
 
+
     if (!pidfileHost.empty()) {
-        // Wait a little to ensure Dropbear has created its pidfile
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         if (boost::filesystem::is_regular_file(pidfileContainerFull)) {
             sarus::common::copyFile(pidfileContainerFull, pidfileHost, uidOfUser, gidOfUser);
+            auto message = boost::format("Copied Dropbear pidfile to host path (%s)")
+                    % pidfileHost;
+            log(message, sarus::common::LogLevel::INFO);
         }
         else {
             auto message = boost::format("Failed to copy Dropbear pidfile to host path (%s): container pidfile (%s) not found")
@@ -457,6 +486,25 @@ void SshHook::startSshDaemonInContainer() const {
     }
 
     log("Successfully started SSH daemon in container", sarus::common::LogLevel::INFO);
+}
+
+void SshHook::stopSshDaemon() {
+
+    auto pid = std::stoi(sarus::common::readFile(pidfileHost));
+
+    log(boost::format("Deactivating SSH daemon with pidfile %s and PID %s")% pidfileHost % pid, sarus::common::LogLevel::INFO);
+
+    sarus::common::removeFile(pidfileHost);
+
+    if(kill(getpgid(pid), SIGTERM) == 0 ) {
+        return;
+    }
+    if(kill(pid, SIGTERM) == 0) {
+        return;
+    }
+
+    auto message = boost::format("Unable to kill Dropbear process with PID %d") % pid;
+    SARUS_THROW_ERROR(message.str());
 }
 
 void SshHook::log(const boost::format& message, sarus::common::LogLevel level) const {

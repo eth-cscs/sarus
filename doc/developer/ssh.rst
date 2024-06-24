@@ -226,3 +226,28 @@ the ``DROPBEAR_TRACE2`` environment variable is defined:
 .. code-block:: bash
 
    $ export DROPBEAR_TRACE2=1
+
+Poststop Hook: cleaning up Dropbear
+------------------------------------
+
+The poststop stage of the lifecycle hook is responsible for cleaning up the Dropbear 
+process when the container is stopped. This is particularly important when the hook 
+is executed with the ``JOIN_NAMESPACES=False`` flag.
+
+Understanding JOIN_NAMESPACES
+
+- ``JOIN_NAMESPACES=True`` (default): When this flag is set, the Dropbear daemon is placed 
+  within the container's PID namespace. This ensures that Dropbear is killed when the 
+  container stops.
+
+- ``JOIN_NAMESPACES=False``: With this setting, Dropbear remains in the host's PID 
+  namespace. 
+
+When ``JOIN_NAMESPACES=False``, a stopped container might leave a lingering Dropbear 
+process running on the host. This can cause problems during subsequent container 
+restarts because the port used by Dropbear (``SERVER_PORT``) will be already be in use.
+
+The poststop stage specifically addresses this scenario. It checks for a running 
+Dropbear process in the host's PID namespace (assuming ``JOIN_NAMESPACES=False``) 
+and terminates it if found. This ensures that the port is released and available 
+for a new Dropbear instance when the container restarts.
