@@ -21,19 +21,37 @@ change_uid_gid_of_docker_user() {
     local container_uid=$(id -u docker)
     local container_gid=$(id -g docker)
 
-    if [ ${host_uid} -eq ${container_uid} ] && [ ${host_gid} -eq ${container_gid} ]; then
-        echo "Not changing UID/GID of Docker user (container's UID/GID already match with host)"
-        return
+    if [ ${host_uid} -ne ${container_uid} ]; then
+        echo "Changing UID of docker user"
+        # Some base images already have users/group matching the id we want to obtain,
+        # e.g. Ubuntu 24.04 having the "ubuntu" user as 1000/100.
+        # usermod will no-op if the target uid is already taken, so we check and clear it first.
+        id ${host_uid} > /dev/null 2>&1
+        local host_uid_not_in_container=$?
+        if [ ${host_uid} -ne 0 ] && [ ${host_uid_not_in_container} -eq 0 ]; then
+            userdel $(id ${host_uid} -un)
+        fi
+
+        sudo usermod -u $host_uid docker
+        sudo find / -path /proc -prune -o -user docker -exec chown -h $host_uid {} \;
+        sudo usermod -d /home/docker docker
+        echo "Successfully changed UID of docker user"
     fi
 
-    echo "Changing UID/GID of Docker user"
-    sudo usermod -u $host_uid docker
-    sudo groupmod -g $host_gid docker
-    sudo find / -path /proc -prune -o -user docker -exec chown -h $host_uid {} \;
-    sudo find / -path /proc -prune -o -group docker -exec chgrp -h $host_gid {} \;
-    sudo usermod -g $host_gid docker
-    sudo usermod -d /home/docker docker
-    echo "Successfully changed UID/GID of Docker user"
+    if [ ${host_gid} -ne ${container_gid} ]; then
+        echo "Changing GID of docker user"
+        getent group ${host_gid} > /dev/null 2>&1
+        local host_gid_not_in_container=$?
+        if [ ${host_gid} -ne 0 ] && [ ${host_gid_not_in_container} -eq 0 ]; then
+            groupdel $(getent group ${host_gid} | cut -d: -f1)
+        fi
+
+        sudo groupmod -g $host_gid docker
+        sudo find / -path /proc -prune -o -group docker -exec chgrp -h $host_gid {} \;
+        sudo usermod -g $host_gid docker
+
+        echo "Successfully changed GID of docker user"
+    fi
 }
 
 build_sarus() {
@@ -203,6 +221,7 @@ run_integration_tests() {
 
     echo "Running integration tests with user=docker"
     sudo -u docker --login bash -c "
+        source /sarus-venv/bin/activate && \
         PATH=${install_dir}/bin:\${PATH} PYTHONPATH=/sarus-source/CI/src:\${PYTHONPATH} \
         CMAKE_INSTALL_PREFIX=${install_dir} HOME=/home/docker \
         pytest -v -m 'not asroot' /sarus-source/CI/src/integration_tests/" # TIP: Add -s --last-failed to pytest to get more output from failed tests.
@@ -211,7 +230,8 @@ run_integration_tests() {
 
     echo "Running integration tests with user=root"
     sudo --login bash -c "
-        PATH=${install_dir}/bin:\$PATH PYTHONPATH=/sarus-source/CI/src:\$PYTHONPATH \
+        source /sarus-venv/bin/activate && \
+        PATH=${install_dir}/bin:\${PATH} PYTHONPATH=/sarus-source/CI/src:\${PYTHONPATH} \
         CMAKE_INSTALL_PREFIX=${install_dir} HOME=/home/docker \
         pytest -v -m asroot /sarus-source/CI/src/integration_tests/"
     fail_on_error "Python integration tests as root failed"
@@ -225,7 +245,7 @@ run_gcov() {
     cd ${build_dir}/gcov
     sudo -u docker gcov --preserve-paths $(find ${build_dir}/src -name "*.gcno" |grep -v test |tr '\n' ' ')
     fail_on_error "Failed to run gcov"
-    sudo -u docker gcovr -r /sarus-source/src -k -g --object-directory ${build_dir}/gcov
+    sudo -u docker bash -c "source /sarus-venv/bin/activate && gcovr -r /sarus-source/src -k -g --object-directory ${build_dir}/gcov"
     fail_on_error "Failed to run gcovr"
 }
 

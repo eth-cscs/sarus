@@ -12,7 +12,7 @@ sudo DEBIAN_FRONTEND=noninteractive \
    libboost-program-options-dev \
    libboost-filesystem-dev \
    libboost-regex-dev \
-   python3 python3-pip python3-setuptools
+   python3 python3-pip python3-setuptools python3-venv
 sudo apt-get clean
 sudo rm -rf /var/lib/apt/lists/*
 

@@ -9,6 +9,7 @@ import unittest
 import subprocess
 import os
 import shutil
+import pytest
 
 import common.util as util
 
@@ -153,12 +154,14 @@ class TestGlibcHook(unittest.TestCase):
                                                        image=util.ALPINE_IMAGE)
         assert prettyname.startswith("Alpine Linux")
 
+    @pytest.mark.xfail(reason="The most recent test environments have glibc versions newer or equal to Fedora distributions")
     def test_no_injection_in_container_with_recent_glibc(self):
         self._glibc_command_line_option = True
         self._container_image = "quay.io/ethcscs/fedora:38"
         hashes = self._get_hashes_of_host_libs_in_container()
         assert not hashes
 
+    @pytest.mark.xfail(reason="The most recent test environments have glibc versions newer or equal to Fedora distributions")
     def test_no_injection_in_container_with_recent_glibc_and_nonexisting_ldcache_entry(self):
         self._glibc_command_line_option = True
         self._container_image = "quay.io/ethcscs/sarus-integration-tests:nonexisting_ldcache_entry_f38"

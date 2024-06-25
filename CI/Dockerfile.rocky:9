@@ -18,7 +18,9 @@ RUN /tmp/install_sudo.sh rocky:9
 RUN /tmp/install_packages_rocky:9.sh
 RUN bash -i -c "/tmp/install_dep_umoci.bash"
 RUN bash -i -c "/tmp/install_dep_tini.bash"
-RUN pip3 install -r /tmp/requirements_tests.txt
+RUN python3 -m venv /sarus-venv \
+    && . /sarus-venv/bin/activate \
+    && pip3 install -r /tmp/requirements_tests.txt
 
 RUN useradd -m docker \
     && echo 'docker:docker' | chpasswd \

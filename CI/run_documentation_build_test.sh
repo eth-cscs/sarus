@@ -23,6 +23,7 @@ check_links() {
 
 check_docs() {
     local expected_version=$1
+    source /sarus-venv/bin/activate
     make html SPHINXOPTS="-W"
     fail_on_error "failed to make html"
     log "    Build successful, checking version string"

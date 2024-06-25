@@ -136,6 +136,20 @@ sarus-itest-standalone() {
     fail_on_error "${FUNCNAME}: failed"
 }
 
+sarus-itest-standalone-debug() {
+    echo "${FUNCNAME^^} with:"
+    _print_parameters
+
+    local sarus_archive=$(_build_dir_container)/sarus-${build_type}.tar.gz
+
+    _run_cmd_in_interactive_container ${image_run} root \
+        ". /sarus-source/CI/utility_functions.bash && \
+        install_sarus_from_archive /opt/sarus ${sarus_archive} && \
+        bash"
+
+    fail_on_error "${FUNCNAME}: failed"
+}
+
 sarus-itest-from-scratch() {
     echo "${FUNCNAME^^} with:"
     _print_parameters

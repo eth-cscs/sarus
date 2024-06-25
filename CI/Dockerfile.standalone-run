@@ -12,23 +12,26 @@
 # It expects the standalone already built (see Dockerfile.build)
 # See utility_docker_functions.bash.
 #
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 RUN apt-get update --fix-missing \
     && DEBIAN_FRONTEND=noninteractive \
        apt-get install -y --no-install-recommends \
-          sudo rsync vim squashfs-tools build-essential libsigsegv2 cmake git gcc-10 \
-          munge slurm-wlm skopeo umoci python3 python3-pip python3-setuptools \
+          sudo rsync vim squashfs-tools build-essential libsigsegv2 cmake git gcc-13 \
+          munge slurm-wlm skopeo umoci python3 python3-pip python3-venv python3-setuptools \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN ln -sfn /usr/bin/gcov-10 /usr/bin/gcov # use gcov-10 by default to be compatible with the CI build image
+RUN ln -sfn /usr/bin/gcov-13 /usr/bin/gcov # use gcov-13 by default to be compatible with the CI build image
 
 COPY installation/requirements_tests.txt /tmp/requirements_tests.txt
-RUN pip3 install -r /tmp/requirements_tests.txt
+RUN python3 -m venv /sarus-venv \
+    && . /sarus-venv/bin/activate \
+    && pip3 install -r /tmp/requirements_tests.txt
 
 COPY installation/requirements_doc.txt /tmp/requirements_doc.txt
-RUN pip3 install -r /tmp/requirements_doc.txt
+RUN . /sarus-venv/bin/activate \
+    && pip3 install -r /tmp/requirements_doc.txt
 
 RUN useradd -m docker && echo "docker:docker" | chpasswd
 RUN echo "docker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
