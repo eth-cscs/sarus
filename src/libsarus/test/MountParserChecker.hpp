@@ -83,15 +83,15 @@ public:
         auto mountObject = parser.parseMountRequest(map);
 
         if(expectedSource) {
-            CHECK(mountObject->source == *expectedSource);
+            CHECK(mountObject->getSource() == *expectedSource);
         }
 
         if(expectedDestination) {
-            CHECK(mountObject->destination == *expectedDestination);
+            CHECK(mountObject->getDestination() == *expectedDestination);
         }
 
         if(expectedFlags) {
-            CHECK_EQUAL(mountObject->mountFlags, *expectedFlags);
+            CHECK_EQUAL(mountObject->getFlags(), *expectedFlags);
         }
     }
 

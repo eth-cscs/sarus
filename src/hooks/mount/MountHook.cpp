@@ -190,7 +190,7 @@ void MountHook::performDeviceMounts() const {
     auto devicesCgroupPath = libsarus::hook::findCgroupPath("devices", "/", containerState.pid());
     for(const auto& mount : deviceMounts) {
         mount->performMount();
-        libsarus::hook::whitelistDeviceInCgroup(devicesCgroupPath, rootfsDir / mount->destination);
+        libsarus::hook::whitelistDeviceInCgroup(devicesCgroupPath, rootfsDir / mount->getDestination());
     }
     log("Successfully performed device mounts", libsarus::LogLevel::INFO);
 }

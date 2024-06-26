@@ -15,8 +15,6 @@
 #include "libsarus/Error.hpp"
 #include "libsarus/Utility.hpp"
 
-
-
 namespace libsarus {
 
 DeviceMount::DeviceMount(Mount&& baseMount, const DeviceAccess& access)
@@ -24,16 +22,15 @@ DeviceMount::DeviceMount(Mount&& baseMount, const DeviceAccess& access)
     , access{access}
 {
     logMessage(boost::format("Constructing device mount object: source = %s; destination = %s; mount flags = %d; access = %s")
-            % source.string() % destination.string() % mountFlags % access.string(), LogLevel::DEBUG);
+            % getSource().string() % getDestination().string() % getFlags() % access.string(), LogLevel::DEBUG);
 
-    if (!isDeviceFile(source)) {
-        auto message = boost::format("Source path %s is not a device file")
-            % source;
+    if (!isDeviceFile(getSource())) {
+        auto message = boost::format("Source path %s is not a device file") % getSource();
         SARUS_THROW_ERROR(message.str());
     }
 
-    id = getDeviceID(source);
-    type = getDeviceType(source);
+    id = getDeviceID(getSource());
+    type = getDeviceType(getSource());
 }
 
 unsigned int DeviceMount::getMajorID() const {

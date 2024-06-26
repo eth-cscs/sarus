@@ -19,9 +19,6 @@
 
 namespace libsarus {
 
-// forward declaration to avoid cyclic dependency of headers
-class Config;
-
 class Mount {
 public:
     Mount(const boost::filesystem::path& source,
@@ -32,12 +29,14 @@ public:
 
     void performMount() const;
 
-public: // public for test purpose
+    boost::filesystem::path getSource() const { return source; };
+    boost::filesystem::path getDestination() const { return destination; };
+    unsigned long getFlags() const { return mountFlags; };
+
+private:
     boost::filesystem::path source;
     boost::filesystem::path destination;
     unsigned long mountFlags;
-
-private:
     boost::filesystem::path rootfsDir;
     libsarus::UserIdentity userIdentity;
 };

@@ -110,9 +110,9 @@ TEST(MountParserTestGroup, constructors) {
     auto ctor2 = libsarus::MountParser{rootfsDir, userIdentity}
         .parseMountRequest(requestMap);
 
-    CHECK(ctor1->source      == ctor2->source);
-    CHECK(ctor1->destination == ctor2->destination);
-    CHECK(ctor1->mountFlags  == ctor2->mountFlags);
+    CHECK(ctor1->getSource()      == ctor2->getSource());
+    CHECK(ctor1->getDestination() == ctor2->getDestination());
+    CHECK(ctor1->getFlags()       == ctor2->getFlags());
 }
 
 }}

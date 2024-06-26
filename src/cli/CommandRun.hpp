@@ -418,7 +418,7 @@ private:
             if (previousSiteDevice) {
                 auto message = boost::format("Device %s already added by the system administrator at container path %s with access %s. "
                                              "Skipping request from the command line")
-                    % deviceMount->source % previousSiteDevice->destination % previousSiteDevice->getAccess().string();
+                    % deviceMount->getSource() % previousSiteDevice->getDestination() % previousSiteDevice->getAccess().string();
                 utility::printLog(message, libsarus::LogLevel::WARN, std::cerr);
                 continue;
             }
@@ -462,7 +462,7 @@ private:
     std::shared_ptr<libsarus::DeviceMount> findMatchingSiteDevice(const std::unique_ptr<libsarus::DeviceMount>& deviceMount,
                                                                  const std::vector<std::shared_ptr<libsarus::DeviceMount>> siteDevices) const {
         for (const auto& siteDevice : siteDevices) {
-            if (deviceMount->source == siteDevice->source) {
+            if (deviceMount->getSource() == siteDevice->getSource()) {
                 return siteDevice;
             }
         }

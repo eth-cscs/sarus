@@ -87,7 +87,7 @@ TEST(MountHookTestGroup, fi_provider_path_wildcard_replacement) {
 
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
         MountHook hook{args};
-        CHECK(hook.getBindMounts().front()->destination == boost::filesystem::path("/fi/provider/path/envVar/provider-fi.so"));
+        CHECK(hook.getBindMounts().front()->getDestination() == boost::filesystem::path("/fi/provider/path/envVar/provider-fi.so"));
     }
     // FI_PROVIDER_PATH in environment and libfabric in dynamic linker cache
     {
@@ -99,7 +99,7 @@ TEST(MountHookTestGroup, fi_provider_path_wildcard_replacement) {
 
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
         MountHook hook{args};
-        CHECK(hook.getBindMounts().front()->destination == boost::filesystem::path("/fi/provider/path/envVar/provider-fi.so"));
+        CHECK(hook.getBindMounts().front()->getDestination() == boost::filesystem::path("/fi/provider/path/envVar/provider-fi.so"));
     }
     // empty FI_PROVIDER_PATH in environment and libfabric in dynamic linker cache
     {
@@ -111,7 +111,7 @@ TEST(MountHookTestGroup, fi_provider_path_wildcard_replacement) {
 
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
         MountHook hook{args};
-        CHECK(hook.getBindMounts().front()->destination == (libfabricContainerPath.parent_path() / "libfabric/provider-fi.so"));
+        CHECK(hook.getBindMounts().front()->getDestination() == (libfabricContainerPath.parent_path() / "libfabric/provider-fi.so"));
     }
     // libfabric only in dynamic linker cache
     {
@@ -122,7 +122,7 @@ TEST(MountHookTestGroup, fi_provider_path_wildcard_replacement) {
 
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
         MountHook hook{args};
-        CHECK(hook.getBindMounts().front()->destination == (libfabricContainerPath.parent_path() / "libfabric/provider-fi.so"));
+        CHECK(hook.getBindMounts().front()->getDestination() == (libfabricContainerPath.parent_path() / "libfabric/provider-fi.so"));
     }
     // no environment set and no ldconfig
     {
@@ -133,7 +133,7 @@ TEST(MountHookTestGroup, fi_provider_path_wildcard_replacement) {
 
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
         MountHook hook{args};
-        CHECK(hook.getBindMounts().front()->destination == boost::filesystem::path("/usr/lib/provider-fi.so"));
+        CHECK(hook.getBindMounts().front()->getDestination() == boost::filesystem::path("/usr/lib/provider-fi.so"));
     }
 }
 

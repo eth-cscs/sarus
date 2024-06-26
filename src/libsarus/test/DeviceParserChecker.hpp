@@ -64,18 +64,18 @@ public:
         auto mountObject = parser.parseDeviceRequest(deviceRequest);
 
         if(expectedSource) {
-            CHECK(mountObject->source == *expectedSource);
+            CHECK(mountObject->getSource() == *expectedSource);
         }
 
         if(expectedDestination) {
-            CHECK(mountObject->destination == *expectedDestination);
+            CHECK(mountObject->getDestination() == *expectedDestination);
         }
 
         if(expectedAccess) {
             CHECK(mountObject->getAccess().string() == *expectedAccess);
         }
 
-        CHECK_EQUAL(mountObject->mountFlags, *expectedFlags);
+        CHECK_EQUAL(mountObject->getFlags(), *expectedFlags);
     }
 
 private:

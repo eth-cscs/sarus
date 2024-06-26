@@ -491,8 +491,8 @@ IGNORE_TEST(CLITestGroup, device_mounts_for_CommandRun) {
         auto siteAcess = std::string{""};
         auto conf = generateConfigWithSiteDevice({"run", "image"}, siteDevice, siteDestination, siteAcess);
         CHECK_EQUAL(conf->commandRun.deviceMounts.size(), 1); // 1 site device + 0 user device
-        CHECK(conf->commandRun.deviceMounts.front()->source == siteDevice);
-        CHECK(conf->commandRun.deviceMounts.front()->destination == siteDevice);
+        CHECK(conf->commandRun.deviceMounts.front()->getSource() == siteDevice);
+        CHECK(conf->commandRun.deviceMounts.front()->getDestination() == siteDevice);
         CHECK(conf->commandRun.deviceMounts.front()->getAccess().string() == std::string("rwm"));
     }
     // only siteDevices, explicit mount destination
@@ -501,8 +501,8 @@ IGNORE_TEST(CLITestGroup, device_mounts_for_CommandRun) {
         auto siteAcess = std::string{""};
         auto conf = generateConfigWithSiteDevice({"run", "image"}, siteDevice, siteDestination, siteAcess);
         CHECK_EQUAL(conf->commandRun.deviceMounts.size(), 1); // 1 site device + 0 user device
-        CHECK(conf->commandRun.deviceMounts.front()->source == siteDevice);
-        CHECK(conf->commandRun.deviceMounts.front()->destination == siteDestination);
+        CHECK(conf->commandRun.deviceMounts.front()->getSource() == siteDevice);
+        CHECK(conf->commandRun.deviceMounts.front()->getDestination() == siteDestination);
         CHECK(conf->commandRun.deviceMounts.front()->getAccess().string() == std::string("rwm"));
     }
     // only siteDevices, non-default access
@@ -511,8 +511,8 @@ IGNORE_TEST(CLITestGroup, device_mounts_for_CommandRun) {
         auto siteAcess = std::string{"rw"};
         auto conf = generateConfigWithSiteDevice({"run", "image"}, siteDevice, siteDestination, siteAcess);
         CHECK_EQUAL(conf->commandRun.deviceMounts.size(), 1); // 1 site device + 0 user device
-        CHECK(conf->commandRun.deviceMounts.front()->source == siteDevice);
-        CHECK(conf->commandRun.deviceMounts.front()->destination == siteDestination);
+        CHECK(conf->commandRun.deviceMounts.front()->getSource() == siteDevice);
+        CHECK(conf->commandRun.deviceMounts.front()->getDestination() == siteDestination);
         CHECK(conf->commandRun.deviceMounts.front()->getAccess().string() == std::string("rw"));
     }
     // only siteDevices, explicit mount destination and non-default access
@@ -521,8 +521,8 @@ IGNORE_TEST(CLITestGroup, device_mounts_for_CommandRun) {
         auto siteAcess = std::string{"r"};
         auto conf = generateConfigWithSiteDevice({"run", "image"}, siteDevice, siteDestination, siteAcess);
         CHECK_EQUAL(conf->commandRun.deviceMounts.size(), 1); // 1 site device + 0 user device
-        CHECK(conf->commandRun.deviceMounts.front()->source == siteDevice);
-        CHECK(conf->commandRun.deviceMounts.front()->destination == siteDestination);
+        CHECK(conf->commandRun.deviceMounts.front()->getSource() == siteDevice);
+        CHECK(conf->commandRun.deviceMounts.front()->getDestination() == siteDestination);
         CHECK(conf->commandRun.deviceMounts.front()->getAccess().string() == std::string("r"));
     }
     // only CLI option
@@ -531,11 +531,11 @@ IGNORE_TEST(CLITestGroup, device_mounts_for_CommandRun) {
         auto option1 = "--device=" + userDevice1.string() + ":r";
         auto conf = generateConfig({"run", "--device", option0Value, option1, "image"});
         CHECK_EQUAL(conf->commandRun.deviceMounts.size(), 2);
-        CHECK(conf->commandRun.deviceMounts[0]->source == userDevice0);
-        CHECK(conf->commandRun.deviceMounts[0]->destination == boost::filesystem::path("/dev/userDevice0"));
+        CHECK(conf->commandRun.deviceMounts[0]->getSource() == userDevice0);
+        CHECK(conf->commandRun.deviceMounts[0]->getDestination() == boost::filesystem::path("/dev/userDevice0"));
         CHECK(conf->commandRun.deviceMounts[0]->getAccess().string() == std::string("rw"));
-        CHECK(conf->commandRun.deviceMounts[1]->source == userDevice1);
-        CHECK(conf->commandRun.deviceMounts[1]->destination == boost::filesystem::path(userDevice1));
+        CHECK(conf->commandRun.deviceMounts[1]->getSource() == userDevice1);
+        CHECK(conf->commandRun.deviceMounts[1]->getDestination() == boost::filesystem::path(userDevice1));
         CHECK(conf->commandRun.deviceMounts[1]->getAccess().string() == std::string("r"));
     }
     // combine siteDevices and CLI option
@@ -544,18 +544,18 @@ IGNORE_TEST(CLITestGroup, device_mounts_for_CommandRun) {
         auto siteAcess = std::string{"rw"};
         auto conf = generateConfigWithSiteDevice({"run", "--device", userDevice0.string(), "image"}, siteDevice, siteDestination, siteAcess);
         CHECK_EQUAL(conf->commandRun.deviceMounts.size(), 2);
-        CHECK(conf->commandRun.deviceMounts[0]->source == siteDevice);
-        CHECK(conf->commandRun.deviceMounts[0]->destination == siteDevice);
+        CHECK(conf->commandRun.deviceMounts[0]->getSource() == siteDevice);
+        CHECK(conf->commandRun.deviceMounts[0]->getDestination() == siteDevice);
         CHECK(conf->commandRun.deviceMounts[0]->getAccess().string() == std::string("rw"));
-        CHECK(conf->commandRun.deviceMounts[1]->source == userDevice0);
-        CHECK(conf->commandRun.deviceMounts[1]->destination == userDevice0);
+        CHECK(conf->commandRun.deviceMounts[1]->getSource() == userDevice0);
+        CHECK(conf->commandRun.deviceMounts[1]->getDestination() == userDevice0);
         CHECK(conf->commandRun.deviceMounts[1]->getAccess().string() == std::string("rwm"));
         // prefer site destination and access for the same device
         siteDestination = boost::filesystem::path("/dev/siteDevice");
         conf = generateConfigWithSiteDevice({"run", "--device", siteDevice.string(), "image"}, siteDevice, siteDestination, siteAcess);
         CHECK_EQUAL(conf->commandRun.deviceMounts.size(), 1);
-        CHECK(conf->commandRun.deviceMounts[0]->source == siteDevice);
-        CHECK(conf->commandRun.deviceMounts[0]->destination == siteDestination);
+        CHECK(conf->commandRun.deviceMounts[0]->getSource() == siteDevice);
+        CHECK(conf->commandRun.deviceMounts[0]->getDestination() == siteDestination);
         CHECK(conf->commandRun.deviceMounts[0]->getAccess().string() == std::string("rw"));
     }
 }
