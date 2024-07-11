@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - MPI hook: added support for the environment variable `MPI_COMPATIBILITY_TYPE` that defines the behaviour of the compatibility check of the libraries
   that the hook mounts. Valid values are `major`, `full` and `strict`. Default value is `major`.
 - SSH Hook: added a poststop functionality that kills the Dropbear process in case the hook does not join the container's PID namespace.
+- Added the `sarus ps` command to list running containers
+- Added the `sarus kill` command to terminate (and subsequently remove) containers
+- Added the `-n, --name` option the `sarus run` command to specify the name of the container to run. If the option is not specified, Sarus assigns a default name in the form `sarus-container-*`.
 
 ### Changed
 
@@ -44,7 +47,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Glibc hook: fixed detection of the container's glibc version, which was causing a shell-init error on some systems
 - SSH hook: permissions on the container's authorized keys file are now set explicitly, fixing possible errors caused by applying unsuitable defaults from the process.
-
 
 ## [1.6.3]
 

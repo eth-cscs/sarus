@@ -79,8 +79,11 @@ Now Sarus is ready to be used. Below is a list of the available commands:
 .. code-block:: bash
 
     help: Print help message about a command
-    images: List images
+    hooks: List configured hooks
+    images: List locally available images
+    kill: Stop and destroy a container
     load: Load the contents of a tarball to create a filesystem image
+    ps: List running containers
     pull: Pull an image from a registry
     rmi: Remove an image
     run: Run a command in a new container
@@ -109,7 +112,7 @@ Below is an example of some basic usage of Sarus:
     REPOSITORY   TAG          IMAGE ID       CREATED               SIZE         SERVER
     alpine       latest       a366738a1861   2022-05-25T09:19:59   2.59MB       docker.io
 
-    $ sarus run alpine cat /etc/os-release
+    $ sarus run --name quickstart alpine cat /etc/os-release
     NAME="Alpine Linux"
     ID=alpine
     VERSION_ID=3.16.0

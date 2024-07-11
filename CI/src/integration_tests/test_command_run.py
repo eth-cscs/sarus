@@ -6,8 +6,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import common.util as util
+import concurrent.futures
 import pytest
+import psutil
+import subprocess
+import time
 import unittest
+
+from pathlib import Path
 
 
 class TestCommandRun(unittest.TestCase):
@@ -121,7 +127,17 @@ class TestCommandRun(unittest.TestCase):
         return processes
 
     def _is_repository_metadata_owned_by_user(self):
-        import os, pathlib
-        repository_metadata = pathlib.Path(util.get_local_repository_path(), "metadata.json")
+        import os
+        repository_metadata = Path(util.get_local_repository_path(), "metadata.json")
         metadata_stat = repository_metadata.stat()
         return metadata_stat.st_uid == os.getuid() and metadata_stat.st_gid == os.getgid()
+
+    def test_give_name_to_the_container(self):
+        util.pull_image_if_necessary(is_centralized_repository=True, image=self.DEFAULT_IMAGE)
+
+        sarus_process = psutil.Popen(["sarus", "run", "--name", "test_container", self.DEFAULT_IMAGE, "sleep", "5"])
+        time.sleep(2)
+        self.assertEqual(len(list(Path("/sys/fs/cgroup/cpuset").glob("test_container"))), 1,
+                         "Could not find cgroup subdir for the container")
+
+

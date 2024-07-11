@@ -67,8 +67,15 @@ void Runtime::setupOCIBundle() {
     utility::logMessage("Successfully set up OCI Bundle", libsarus::LogLevel::INFO);
 }
 
+static std::string getContainerName(const common::Config::CommandRun& commandRun) {
+    if(commandRun.containerName) {
+        return commandRun.containerName.get();
+    }
+    return "sarus-container-" + libsarus::generateRandomString(16);
+}
+
 void Runtime::executeContainer() const {
-    auto containerID = "container-" + libsarus::generateRandomString(16);
+    auto containerID = getContainerName(config->commandRun);
     utility::logMessage("Executing " + containerID, libsarus::LogLevel::INFO);
 
     // chdir to bundle
@@ -77,9 +84,11 @@ void Runtime::executeContainer() const {
     // assemble runc args
     auto runcPath = config->json["runcPath"].GetString();
     auto extraFileDescriptors = std::to_string(fdHandler.getExtraFileDescriptors());
-    auto args = libsarus::CLIArguments{runcPath, "run",
-                                     "--preserve-fds", extraFileDescriptors,
-                                     containerID};
+    auto args = libsarus::CLIArguments{runcPath, 
+                                       "--root", "/run/runc/" + std::to_string(config->userIdentity.uid),
+                                       "run",
+                                       "--preserve-fds", extraFileDescriptors,
+                                       containerID};
 
     // prepare a pre-exec function for the forked process (i.e. the OCI runtime)
     // to set a parent-death signal, in the attempt to gracefully terminate the container

@@ -15,11 +15,13 @@
 #include "cli/CommandHelpOfCommand.hpp"
 #include "cli/CommandHooks.hpp"
 #include "cli/CommandImages.hpp"
+#include "cli/CommandPs.hpp"
 #include "cli/CommandLoad.hpp"
 #include "cli/CommandPull.hpp"
 #include "cli/CommandRmi.hpp"
 #include "cli/CommandRun.hpp"
 #include "cli/CommandSshKeygen.hpp"
+#include "cli/CommandKill.hpp"
 #include "cli/CommandVersion.hpp"
 
 
@@ -31,10 +33,12 @@ CommandObjectsFactory::CommandObjectsFactory() {
     addCommand<cli::CommandHooks>("hooks");
     addCommand<cli::CommandImages>("images");
     addCommand<cli::CommandLoad>("load");
+    addCommand<cli::CommandPs>("ps");
     addCommand<cli::CommandPull>("pull");
     addCommand<cli::CommandRmi>("rmi");
     addCommand<cli::CommandRun>("run");
     addCommand<cli::CommandSshKeygen>("ssh-keygen");
+    addCommand<cli::CommandKill>("kill");
     addCommand<cli::CommandVersion>("version");
 }
 

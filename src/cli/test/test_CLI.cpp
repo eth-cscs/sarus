@@ -25,7 +25,9 @@
 #include "cli/CommandHelpOfCommand.hpp"
 #include "cli/CommandHooks.hpp"
 #include "cli/CommandImages.hpp"
+#include "cli/CommandKill.hpp"
 #include "cli/CommandLoad.hpp"
+#include "cli/CommandPs.hpp"
 #include "cli/CommandPull.hpp"
 #include "cli/CommandRmi.hpp"
 #include "cli/CommandRun.hpp"
@@ -83,8 +85,14 @@ TEST(CLITestGroup, CommandTypes) {
     command = generateCommandFromCLIArguments({"sarus", "images"});
     checkCommandDynamicType<cli::CommandImages>(*command);
 
+    command = generateCommandFromCLIArguments({"sarus", "kill", "name"});
+    checkCommandDynamicType<cli::CommandKill>(*command);
+
     command = generateCommandFromCLIArguments({"sarus", "load", "archive.tar", "image"});
     checkCommandDynamicType<cli::CommandLoad>(*command);
+
+    command = generateCommandFromCLIArguments({"sarus", "ps"});
+    checkCommandDynamicType<cli::CommandPs>(*command);
 
     command = generateCommandFromCLIArguments({"sarus", "pull", "image"});
     checkCommandDynamicType<cli::CommandPull>(*command);
@@ -404,6 +412,15 @@ TEST(CLITestGroup, generated_config_for_CommandRun) {
         CHECK_EQUAL(conf->commandRun.execArgs.argv()[0], std::string{"--option0"});
         CHECK_EQUAL(conf->commandRun.execArgs.argv()[1], std::string{"--option1"});
         CHECK_EQUAL(conf->commandRun.execArgs.argv()[2], std::string{"-q"});
+    }
+    // name
+    {
+        auto conf = generateConfig({"run", "image"});
+        CHECK_FALSE(conf->commandRun.containerName);
+        conf = generateConfig({"run", "--name", "test", "image"});
+        CHECK_EQUAL(conf->commandRun.containerName.get(),  std::string{"test"});
+        conf = generateConfig({"run", "-n", "test", "image"});
+        CHECK_EQUAL(conf->commandRun.containerName.get(),  std::string{"test"});
     }
     // combined test
     {

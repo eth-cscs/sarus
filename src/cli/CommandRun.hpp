@@ -125,6 +125,10 @@ private:
                 "Enable MPI support for a specific MPI implementation. If no value is supplied, "
                 "Sarus will use the default configured by the administrator. "
                 "Implies '--mpi' and '--glibc'")
+            ("name,n",
+                boost::program_options::value<std::string>(&containerName),
+                "Assign a name to the container"
+            )
             ("pid",
                 boost::program_options::value<std::string>(&pid),
                 "Set the PID namespace mode for the container. Supported values: 'host', 'private'. "
@@ -206,7 +210,10 @@ private:
             else {
                 conf->commandRun.useMPI = false;
             }
-
+            if(values.count("name")) {
+                conf->commandRun.containerName = containerName;
+                cli::utility::printLog("name of container: " + containerName, libsarus::LogLevel::DEBUG);
+            }
             if(values.count("pid")) {
                 if(pid == std::string{"private"}) {
                     conf->commandRun.createNewPIDNamespace = true;
@@ -549,6 +556,7 @@ private:
     std::vector<std::string> env;
     std::string entrypoint;
     std::string mpiType;
+    std::string containerName;
     std::string pid;
     std::string workdir;
 };

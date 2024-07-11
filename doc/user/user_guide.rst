@@ -629,6 +629,42 @@ To remove images pulled by digest, append the digest to the image name using
     $ sarus rmi ubuntu@sha256:dcc176d1ab45d154b767be03c703a35fe0df16cfb1cc7ea5dd3b6f9af99b6718
     removed image docker.io/library/ubuntu@sha256:dcc176d1ab45d154b767be03c703a35fe0df16cfb1cc7ea5dd3b6f9af99b6718
 
+Naming the container
+--------------------
+
+The :program:`sarus run` command line option ``--name`` can be used to assign a custom name to the container.
+If the option is not specified, Sarus assigns a name in the form ``sarus-container-<random string>``.
+
+.. code-block:: bash
+
+    $ sarus run --name=my-container <other options> <image>
+
+Kill a container
+----------------
+
+A running container can be killed, *i.e.* stopped and deleted, using the :program:`sarus kill` command,
+for example:
+
+.. code-block:: bash
+
+    $ sarus kill my-container
+
+Listing running containers
+--------------------------
+
+Users can list their currently running containers with the :program:`sarus ps` command.
+Containers started by other users are not shown.
+
+.. code-block:: bash
+    
+    $ sarus run --name my-container -t ubuntu:22.04 
+    ...
+
+    $ sarus ps
+    ID             PID         STATUS      BUNDLE                                CREATED                          OWNER
+    my-container   651945      running     /opt/sarus/default/var/OCIBundleDir   2024-02-19T12:57:26.053166138Z   root
+
+
 .. _user-environment:
 
 Environment
@@ -1068,6 +1104,7 @@ To print information about a command (e.g. command-specific options), use
       --entrypoint arg          Overwrite the default ENTRYPOINT of the image
       --mount arg               Mount custom directories into the container
       -m [ --mpi ]              Enable MPI support
+      -n [ --name ] arg         Assign a name to the container
       --ssh                     Enable SSH in the container
 
 

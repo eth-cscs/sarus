@@ -81,7 +81,7 @@ class TestCleanupAfterSignals(unittest.TestCase):
         # test the runtime process has been created
         self.assertEqual(len(sarus_process.children()), 1,
                          "Did not find single child process of Sarus")
-        self.assertEqual(len(list(self.cpuset_cgroup_path.glob("container-*"))), 1,
+        self.assertEqual(len(list(self.cpuset_cgroup_path.glob("sarus-container-*"))), 1,
                          "Could not find cgroup subdir for the container")
         self.sarus_children = sarus_process.children(recursive=True)
 
@@ -89,7 +89,7 @@ class TestCleanupAfterSignals(unittest.TestCase):
         time.sleep(1)
         self.assertFalse(any([p.is_running() for p in self.sarus_children]),
                          "Sarus child processes were not cleaned up")
-        self.assertFalse(list(self.cpuset_cgroup_path.glob("container-*")),
+        self.assertFalse(list(self.cpuset_cgroup_path.glob("sarus-container-*")),
                          "Cgroup subdir was not cleaned up")
 
     def _terminate_or_kill(self, process):

@@ -72,6 +72,7 @@ class Config {
             boost::optional<std::string> mpiType;
             boost::optional<boost::filesystem::path> workdir;
             boost::optional<libsarus::CLIArguments> entrypoint;
+            boost::optional<std::string> containerName;
             libsarus::CLIArguments execArgs;
             bool createNewPIDNamespace = false;
             bool allocatePseudoTTY = false;
