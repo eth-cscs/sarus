@@ -32,7 +32,7 @@ void TimestampHook::activate() {
 }
 
 void TimestampHook::parseConfigJSONOfBundle() {
-    auto json = libsarus::readJSON(containerState.bundle() / "config.json");
+    auto json = libsarus::json::read(containerState.bundle() / "config.json");
 
     libsarus::hook::applyLoggingConfigIfAvailable(json);
 
@@ -52,7 +52,7 @@ void TimestampHook::timestamp() {
     auto& logger = libsarus::Logger::getInstance();
     logger.setLevel(libsarus::LogLevel::INFO);
 
-    libsarus::createFileIfNecessary(logFilePath, uidOfUser, gidOfUser);
+    libsarus::filesystem::createFileIfNecessary(logFilePath, uidOfUser, gidOfUser);
     std::ofstream logFile(logFilePath.string(), std::ios::out | std::ios::app);
 
     auto fullMessage = boost::format("Timestamp hook: %s") % message;

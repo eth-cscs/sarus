@@ -41,8 +41,8 @@ bool areStrictlyAbiCompatible(const SharedLibrary& host, const SharedLibrary& co
 }
 
 SharedLibrary::SharedLibrary(const boost::filesystem::path& path, const boost::filesystem::path& rootDir) : path(path) {
-    linkerName = libsarus::getSharedLibLinkerName(path).string();
-    auto abi = libsarus::resolveSharedLibAbi(path, rootDir);
+    linkerName = libsarus::sharedlibs::getLinkerName(path).string();
+    auto abi = libsarus::sharedlibs::resolveAbi(path, rootDir);
     if (abi.size() > 0)
         major = std::stoi(abi[0]);
     if (abi.size() > 1)

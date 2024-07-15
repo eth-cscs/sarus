@@ -72,9 +72,9 @@ public:
 
 private:
     void setupTestEnvironment() const {
-        libsarus::createFoldersIfNecessary(rootfsDir / "etc");
+        libsarus::filesystem::createFoldersIfNecessary(rootfsDir / "etc");
         auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
-        libsarus::writeJSON(doc, bundleDir / "config.json");
+        libsarus::json::write(doc, bundleDir / "config.json");
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
     }
 

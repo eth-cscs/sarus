@@ -38,8 +38,8 @@ public:
     Checker& addHostLibcAndSymlink( const boost::filesystem::path& dummyLib,
                                     const boost::filesystem::path& hostLib,
                                     const boost::filesystem::path& hostSymlink) {
-        libsarus::createFoldersIfNecessary((bundleDir / hostLib).parent_path());
-        libsarus::createFoldersIfNecessary((bundleDir / hostSymlink).parent_path());
+        libsarus::filesystem::createFoldersIfNecessary((bundleDir / hostLib).parent_path());
+        libsarus::filesystem::createFoldersIfNecessary((bundleDir / hostSymlink).parent_path());
         boost::filesystem::copy_file(dummyLibsDir / dummyLib, bundleDir / hostLib);
         boost::filesystem::create_symlink(bundleDir / hostLib, bundleDir / hostSymlink);
         hostLibs.push_back(bundleDir / hostSymlink);
@@ -48,7 +48,7 @@ public:
 
     Checker& addHostLib(const boost::filesystem::path& dummyLib,
                         const boost::filesystem::path& hostLib) {
-        libsarus::createFoldersIfNecessary((bundleDir / hostLib).parent_path());
+        libsarus::filesystem::createFoldersIfNecessary((bundleDir / hostLib).parent_path());
         boost::filesystem::copy_file(dummyLibsDir / dummyLib, bundleDir / hostLib);
         hostLibs.push_back(bundleDir / hostLib);
         return *this;
@@ -58,8 +58,8 @@ public:
                                         const boost::filesystem::path& containerLib,
                                         const boost::filesystem::path& containerSymlink,
                                         const boost::filesystem::path& expectedContainerLibAfterInjection) {
-        libsarus::createFoldersIfNecessary((rootfsDir / containerLib).parent_path());
-        libsarus::createFoldersIfNecessary((rootfsDir / containerSymlink).parent_path());
+        libsarus::filesystem::createFoldersIfNecessary((rootfsDir / containerLib).parent_path());
+        libsarus::filesystem::createFoldersIfNecessary((rootfsDir / containerSymlink).parent_path());
         boost::filesystem::copy_file(dummyLibsDir / dummyLib, rootfsDir / containerLib);
         boost::filesystem::create_symlink(rootfsDir / containerLib, rootfsDir / containerSymlink);
         expectContainerLib(containerSymlink, expectedContainerLibAfterInjection);
@@ -69,7 +69,7 @@ public:
     Checker& addContainerLib(   const boost::filesystem::path& dummyLib,
                                 const boost::filesystem::path& containerLib,
                                 const boost::filesystem::path& expectedContainerLibAfterInjection) {
-        libsarus::createFoldersIfNecessary((rootfsDir / containerLib).parent_path());
+        libsarus::filesystem::createFoldersIfNecessary((rootfsDir / containerLib).parent_path());
         boost::filesystem::copy_file(dummyLibsDir / dummyLib, rootfsDir / containerLib);
         expectContainerLib(containerLib, expectedContainerLibAfterInjection);
         return *this;
@@ -83,25 +83,25 @@ public:
     }
 
     Checker& runLdconfigInContainer() {
-        libsarus::createFoldersIfNecessary(rootfsDir / "etc");
-        libsarus::executeCommand("echo '/lib' >> " + (rootfsDir / "etc/ld.so.conf").string());
-        libsarus::executeCommand("echo '/lib64' >> " + (rootfsDir / "etc/ld.so.conf").string());
-        libsarus::executeCommand("ldconfig -r " + rootfsDir.string()); // run ldconfig in rootfs
+        libsarus::filesystem::createFoldersIfNecessary(rootfsDir / "etc");
+        libsarus::process::executeCommand("echo '/lib' >> " + (rootfsDir / "etc/ld.so.conf").string());
+        libsarus::process::executeCommand("echo '/lib64' >> " + (rootfsDir / "etc/ld.so.conf").string());
+        libsarus::process::executeCommand("ldconfig -r " + rootfsDir.string()); // run ldconfig in rootfs
         return *this;
     }
 
     Checker& mockLddWithOlderVersion() {
-        libsarus::copyFile(boost::filesystem::current_path() / "mocks/lddMockOlder", rootfsDir / lddPath);
+        libsarus::filesystem::copyFile(boost::filesystem::current_path() / "mocks/lddMockOlder", rootfsDir / lddPath);
         return *this;
     }
 
     Checker& mockLddWithEqualVersion() {
-        libsarus::copyFile(boost::filesystem::current_path() / "mocks/lddMockEqual", rootfsDir / lddPath);
+        libsarus::filesystem::copyFile(boost::filesystem::current_path() / "mocks/lddMockEqual", rootfsDir / lddPath);
         return *this;
     }
 
     Checker& mockLddWithNewerVersion() {
-        libsarus::copyFile(boost::filesystem::current_path() / "mocks/lddMockNewer", rootfsDir / lddPath);
+        libsarus::filesystem::copyFile(boost::filesystem::current_path() / "mocks/lddMockNewer", rootfsDir / lddPath);
         return *this;
     }
 
@@ -126,15 +126,15 @@ public:
 private:
     void setupTestEnvironment() const {
         auto doc = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
-        libsarus::writeJSON(doc, bundleDir / "config.json");
+        libsarus::json::write(doc, bundleDir / "config.json");
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir);
 
-        libsarus::setEnvironmentVariable("LDD_PATH", (boost::filesystem::current_path() / "mocks/lddMockEqual").string());
-        libsarus::setEnvironmentVariable("LDCONFIG_PATH", "ldconfig");
-        libsarus::setEnvironmentVariable("READELF_PATH", "readelf");
-        libsarus::setEnvironmentVariable("GLIBC_LIBS", libsarus::makeColonSeparatedListOfPaths(hostLibs));
+        libsarus::environment::setVariable("LDD_PATH", (boost::filesystem::current_path() / "mocks/lddMockEqual").string());
+        libsarus::environment::setVariable("LDCONFIG_PATH", "ldconfig");
+        libsarus::environment::setVariable("READELF_PATH", "readelf");
+        libsarus::environment::setVariable("GLIBC_LIBS", libsarus::filesystem::makeColonSeparatedListOfPaths(hostLibs));
 
-        libsarus::createFoldersIfNecessary(rootfsDir / "tmp",
+        libsarus::filesystem::createFoldersIfNecessary(rootfsDir / "tmp",
                                                 doc["process"]["user"]["uid"].GetInt(),
                                                 doc["process"]["user"]["gid"].GetInt());
     }

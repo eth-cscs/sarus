@@ -20,13 +20,14 @@
  */
 
 namespace libsarus {
+namespace environment {
 
-std::unordered_map<std::string, std::string> parseEnvironmentVariables(char** env);
-std::pair<std::string, std::string> parseEnvironmentVariable(const std::string& variable);
-std::string getEnvironmentVariable(const std::string& key);
-void setEnvironmentVariable(const std::string& key, const std::string& value);
-void clearEnvironmentVariables();
+std::unordered_map<std::string, std::string> parseVariables(char** env);
+std::pair<std::string, std::string> parseVariable(const std::string& variable);
+std::string getVariable(const std::string& key);
+void setVariable(const std::string& key, const std::string& value);
+void clearVariables();
 
-}
+}}
 
 #endif

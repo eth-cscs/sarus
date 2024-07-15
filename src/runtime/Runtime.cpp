@@ -41,10 +41,10 @@ Runtime::Runtime(std::shared_ptr<common::Config> config)
     , bundleConfig{config}
     , fdHandler{config}
 {
-    libsarus::clearEnvironmentVariables();
+    libsarus::environment::clearVariables();
 
-    auto status = libsarus::readFile("/proc/self/status");
-    config->commandRun.cpuAffinity = libsarus::getCpuAffinity();
+    auto status = libsarus::filesystem::readFile("/proc/self/status");
+    config->commandRun.cpuAffinity = libsarus::process::getCpuAffinity();
 }
 
 void Runtime::setupOCIBundle() {
@@ -71,7 +71,7 @@ static std::string getContainerName(const common::Config::CommandRun& commandRun
     if(commandRun.containerName) {
         return commandRun.containerName.get();
     }
-    return "sarus-container-" + libsarus::generateRandomString(16);
+    return "sarus-container-" + libsarus::string::generateRandom(16);
 }
 
 void Runtime::executeContainer() const {
@@ -79,7 +79,7 @@ void Runtime::executeContainer() const {
     utility::logMessage("Executing " + containerID, libsarus::LogLevel::INFO);
 
     // chdir to bundle
-    libsarus::changeDirectory(bundleDir);
+    libsarus::filesystem::changeDirectory(bundleDir);
 
     // assemble runc args
     auto runcPath = config->json["runcPath"].GetString();
@@ -106,7 +106,7 @@ void Runtime::executeContainer() const {
     };
 
     // execute runc
-    auto status = libsarus::forkExecWait(args,
+    auto status = libsarus::process::forkExecWait(args,
                                        std::function<void()>{std::bind(setParentDeathSignal, getpid())},
                                        std::function<void(pid_t)>{utility::setupSignalProxying});
     if(status != 0) {
@@ -167,13 +167,13 @@ void Runtime::mountImageIntoRootfs() const {
     auto lowerDir = bundleDir / "overlay/rootfs-lower";
     auto upperDir = bundleDir / "overlay/rootfs-upper";
     auto workDir = bundleDir / "overlay/rootfs-work";
-    libsarus::createFoldersIfNecessary(rootfsDir);
-    libsarus::createFoldersIfNecessary(lowerDir);
-    libsarus::createFoldersIfNecessary(upperDir, config->userIdentity.uid, config->userIdentity.gid);
-    libsarus::createFoldersIfNecessary(workDir);
+    libsarus::filesystem::createFoldersIfNecessary(rootfsDir);
+    libsarus::filesystem::createFoldersIfNecessary(lowerDir);
+    libsarus::filesystem::createFoldersIfNecessary(upperDir, config->userIdentity.uid, config->userIdentity.gid);
+    libsarus::filesystem::createFoldersIfNecessary(workDir);
 
-    libsarus::loopMountSquashfs(config->getImageFile(), lowerDir);
-    libsarus::mountOverlayfs(lowerDir, upperDir, workDir, rootfsDir);
+    libsarus::mount::loopMountSquashfs(config->getImageFile(), lowerDir);
+    libsarus::mount::mountOverlayfs(lowerDir, upperDir, workDir, rootfsDir);
 
     utility::logMessage("Successfully mounted image into bundle's rootfs", libsarus::LogLevel::INFO);
 }
@@ -182,7 +182,7 @@ void Runtime::setupDevFilesystem() const {
     utility::logMessage("Setting up /dev filesystem", libsarus::LogLevel::INFO);
 
     const char* ramFilesystemType = config->json["ramFilesystemType"].GetString();
-    libsarus::createFoldersIfNecessary(rootfsDir / "dev");
+    libsarus::filesystem::createFoldersIfNecessary(rootfsDir / "dev");
     auto flags = MS_NOSUID | MS_STRICTATIME;
     auto* options = "mode=755,size=65536k";
     if(mount(NULL, (rootfsDir / "dev").c_str(), ramFilesystemType, flags, options) != 0) {
@@ -200,23 +200,23 @@ void Runtime::copyEtcFilesIntoRootfs() const {
     utility::logMessage("Copying /etc files into rootfs", libsarus::LogLevel::INFO);
     auto prefixDir = boost::filesystem::path{config->json["prefixDir"].GetString()};
 
-    libsarus::copyFile(   "/etc/hosts",
+    libsarus::filesystem::copyFile(   "/etc/hosts",
                         rootfsDir / "etc/hosts",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    libsarus::copyFile(   "/etc/resolv.conf",
+    libsarus::filesystem::copyFile(   "/etc/resolv.conf",
                         rootfsDir / "etc/resolv.conf",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    libsarus::copyFile(   prefixDir / "etc/container/nsswitch.conf",
+    libsarus::filesystem::copyFile(   prefixDir / "etc/container/nsswitch.conf",
                         rootfsDir / "etc/nsswitch.conf",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    libsarus::copyFile(   prefixDir / "etc/passwd",
+    libsarus::filesystem::copyFile(   prefixDir / "etc/passwd",
                         rootfsDir / "etc/passwd",
                         config->userIdentity.uid, config->userIdentity.gid);
 
-    libsarus::copyFile(   prefixDir / "etc/group",
+    libsarus::filesystem::copyFile(   prefixDir / "etc/group",
                         rootfsDir / "etc/group",
                         config->userIdentity.uid, config->userIdentity.gid);
 
@@ -228,8 +228,8 @@ void Runtime::mountInitProgramIntoRootfsIfNecessary() const {
         utility::logMessage("Mounting init program into rootfs", libsarus::LogLevel::INFO);
         auto src = boost::filesystem::path{ config->json["initPath"].GetString() };
         auto dst = rootfsDir / "dev/init";
-        libsarus::createFileIfNecessary(dst);
-        libsarus::bindMount(src, dst);
+        libsarus::filesystem::createFileIfNecessary(dst);
+        libsarus::mount::bindMount(src, dst);
         utility::logMessage("Successfully mounted init program into rootfs", libsarus::LogLevel::INFO);
     }
 }

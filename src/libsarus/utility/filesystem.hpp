@@ -23,6 +23,7 @@
  */
 
 namespace libsarus {
+namespace filesystem {
 
 std::tuple<uid_t, gid_t> getOwner(const boost::filesystem::path&);
 void setOwner(const boost::filesystem::path&, uid_t, gid_t);
@@ -55,6 +56,6 @@ bool isSymlink(const boost::filesystem::path& path);
 bool isLibc(const boost::filesystem::path&);
 bool isSharedLib(const boost::filesystem::path& file);
 
-}
+}}
 
 #endif

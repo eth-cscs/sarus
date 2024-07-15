@@ -286,7 +286,7 @@ private:
 
             std::string key, value;
             try {
-                std::tie(key, value) = libsarus::parseKeyValuePair(annotation);
+                std::tie(key, value) = libsarus::string::parseKeyValuePair(annotation);
             }
             catch(std::exception& e) {
                 auto message = boost::format("Error parsing annotation from CLI '%s': %s")
@@ -336,7 +336,7 @@ private:
             }
             else {
                 try {
-                    std::tie(name, value) = libsarus::parseEnvironmentVariable(variable);
+                    std::tie(name, value) = libsarus::environment::parseVariable(variable);
                 }
                 catch(std::exception& e) {
                     auto message = boost::format("Error parsing environment variable requested from CLI '%s': %s")
@@ -366,7 +366,7 @@ private:
             parser = libsarus::MountParser{conf->getRootfsDirectory(), conf->userIdentity, conf->json["userMounts"]};
         }
         for (const auto& mountString : conf->commandRun.userMounts) {
-            auto map = libsarus::parseMap(mountString);
+            auto map = libsarus::string::parseMap(mountString);
             conf->commandRun.mounts.push_back(parser.parseMountRequest(map));
         }
     }
@@ -480,10 +480,10 @@ private:
         cli::utility::printLog( "Checking that the user has SSH keys",
                                 libsarus::LogLevel::INFO);
 
-        libsarus::setEnvironmentVariable("HOOK_BASE_DIR", conf->json["localRepositoryBaseDir"].GetString());
+        libsarus::environment::setVariable("HOOK_BASE_DIR", conf->json["localRepositoryBaseDir"].GetString());
 
         auto passwdFile = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "etc/passwd";
-        libsarus::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
+        libsarus::environment::setVariable("PASSWD_FILE", passwdFile.string());
 
         auto args = libsarus::CLIArguments{
             std::string{ conf->json["prefixDir"].GetString() } + "/bin/ssh_hook",
@@ -510,7 +510,7 @@ private:
             }
         };
 
-        return libsarus::forkExecWait(args, std::function<void()>{setUserIdentity}) == 0;
+        return libsarus::process::forkExecWait(args, std::function<void()>{setUserIdentity}) == 0;
     }
 
     void verifyThatImageIsAvailable() const {
@@ -520,7 +520,7 @@ private:
         //   - we can access images on root_squashed filesystems
         //   - we do not create/update local repo files (e.g. repo metadata and lockfiles) with root ownership
         auto rootIdentity = libsarus::UserIdentity{};
-        libsarus::switchIdentity(conf->userIdentity);
+        libsarus::process::switchIdentity(conf->userIdentity);
 
         try {
             auto imageStore = image_manager::ImageStore(conf);
@@ -542,7 +542,7 @@ private:
             SARUS_RETHROW_ERROR(e, "Failed to verify that image is available");
         }
 
-        libsarus::switchIdentity(rootIdentity);
+        libsarus::process::switchIdentity(rootIdentity);
 
         cli::utility::printLog(boost::format("Successfully verified that image %s is available") % conf->imageReference,
                                libsarus::LogLevel::INFO);

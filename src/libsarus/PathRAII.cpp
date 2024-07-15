@@ -65,7 +65,7 @@ void PathRAII::setFilesAsRemovableByOwner() const {
     }
 
     for (const auto& entry : boost::filesystem::recursive_directory_iterator(*path)) {
-        if (!isSymlink(entry.path())) {
+        if (!libsarus::filesystem::isSymlink(entry.path())) {
             boost::filesystem::permissions(entry.path(), boost::filesystem::perms::add_perms | requiredPermissions);
         }
     }

@@ -137,7 +137,7 @@ std::vector<std::unique_ptr<libsarus::Mount>> generatePMIxMounts(std::shared_ptr
         boost::smatch matches;
         if (boost::regex_match(slurmMpiType->second, matches, boost::regex{"^pmix*"})) {
             try {
-                auto slurmConfig = libsarus::executeCommand("scontrol show config");
+                auto slurmConfig = libsarus::process::executeCommand("scontrol show config");
                 auto slurmJobId  = hostEnvironment.at("SLURM_JOB_ID");
                 auto slurmJobUid = hostEnvironment.at("SLURM_JOB_UID");
                 auto slurmStepId = hostEnvironment.at("SLURM_STEP_ID");

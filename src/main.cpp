@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
         auto config = std::make_shared<sarus::common::Config>(sarusInstallationPrefixDir);
         config->program_start = program_start;
         runtime::SecurityChecks{config}.runSecurityChecks(sarusInstallationPrefixDir);
-        config->commandRun.hostEnvironment = libsarus::parseEnvironmentVariables(environ);
+        config->commandRun.hostEnvironment = libsarus::environment::parseVariables(environ);
 
 
         // Process command

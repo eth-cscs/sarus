@@ -41,10 +41,10 @@ OCIBundleConfig::OCIBundleConfig(std::shared_ptr<const common::Config> config)
 void OCIBundleConfig::generateConfigFile() const {
     utility::logMessage("Generating bundle's config file", libsarus::LogLevel::INFO);
     makeJsonDocument();
-    libsarus::createFileIfNecessary(configFile);
+    libsarus::filesystem::createFileIfNecessary(configFile);
     boost::filesystem::permissions(configFile, boost::filesystem::perms::owner_read |
                                                boost::filesystem::perms::owner_write);
-    libsarus::writeJSON(*document, configFile);
+    libsarus::json::write(*document, configFile);
     utility::logMessage("Successfully generated bundle's config file", libsarus::LogLevel::INFO);
 }
 
@@ -376,7 +376,7 @@ rj::Value OCIBundleConfig::makeMemberLinux() const {
 
             auto seccompProfile = rj::Document{};
             try {
-                seccompProfile.CopyFrom(libsarus::readJSON(seccompProfilePath), *allocator);
+                seccompProfile.CopyFrom(libsarus::json::read(seccompProfilePath), *allocator);
             }
             catch(libsarus::Error& e) {
                 auto message = boost::format("Error reading seccomp profile: %s\n"

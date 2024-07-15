@@ -131,7 +131,7 @@ namespace image_manager {
         auto squashfs = SquashfsImage{*config, unpackedImage.getPath(), squashfsImagePath};
         auto squashfsRAII = libsarus::PathRAII{squashfs.getPathOfImage()};
 
-        auto imageSize = libsarus::getFileSize(squashfsRAII.getPath());
+        auto imageSize = libsarus::filesystem::getFileSize(squashfsRAII.getPath());
         auto imageSizeString = sarus::common::SarusImage::createSizeString(imageSize);
         auto created = sarus::common::SarusImage::createTimeString(std::time(nullptr));
         auto sarusImage = common::SarusImage{
@@ -151,7 +151,7 @@ namespace image_manager {
     std::string ImageManager::retrieveRegistryDigest(const std::string& transport, const common::ImageReference& targetReference) const {
         auto imageDigest = std::string{};
         auto inspectOutput = skopeoDriver.inspectRaw(transport, targetReference.string());
-        auto inspectOutputJson = libsarus::parseJSON(inspectOutput);
+        auto inspectOutputJson = libsarus::json::parse(inspectOutput);
 
         auto mediaType = std::string{};
         auto mediaTypeItr = inspectOutputJson.FindMember("mediaType");
@@ -170,8 +170,8 @@ namespace image_manager {
             || mediaType == "application/vnd.docker.distribution.manifest.v2+json"
             || mediaType == "application/vnd.docker.distribution.manifest.v1+json") {
             printLog("Computing image digest from raw manifest", libsarus::LogLevel::INFO);
-            auto manifestFile = libsarus::PathRAII(libsarus::makeUniquePathWithRandomSuffix(config->directories.temp / "sarusPullManifest"));
-            libsarus::writeTextFile(inspectOutput, manifestFile.getPath());
+            auto manifestFile = libsarus::PathRAII(libsarus::filesystem::makeUniquePathWithRandomSuffix(config->directories.temp / "sarusPullManifest"));
+            libsarus::filesystem::writeTextFile(inspectOutput, manifestFile.getPath());
             imageDigest = skopeoDriver.manifestDigest(manifestFile.getPath());
         }
         // If we have an OCI index or Docker manifest list (aka "fat manifest"), retrieve the digest

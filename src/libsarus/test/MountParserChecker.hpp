@@ -73,7 +73,7 @@ public:
           parser = libsarus::MountParser{configRAII.config->getRootfsDirectory(), configRAII.config->userIdentity, configRAII.config->json["userMounts"]};
         }
 
-        auto map = libsarus::parseMap(mountRequest);
+        auto map = libsarus::string::parseMap(mountRequest);
 
         if(isParseErrorExpected) {
             CHECK_THROWS(libsarus::Error, parser.parseMountRequest(map));

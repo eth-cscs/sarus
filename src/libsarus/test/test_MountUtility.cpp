@@ -35,15 +35,15 @@ TEST(MountUtilitiesTestGroup, get_validated_mount_source_test) {
     std::string source_dir_2 = source_dir_2RAII.getPath().string();
 
     // Test invalid input arguments
-    CHECK_THROWS(libsarus::Error, libsarus::getValidatedMountSource(""));
+    CHECK_THROWS(libsarus::Error, libsarus::mount::getValidatedMountSource(""));
 
     // Test non-existing directory
-    CHECK_THROWS(libsarus::Error, libsarus::getValidatedMountSource(source_dir_1));
+    CHECK_THROWS(libsarus::Error, libsarus::mount::getValidatedMountSource(source_dir_1));
 
     // Test existing directory
-    libsarus::createFoldersIfNecessary(source_dir_2);
+    libsarus::filesystem::createFoldersIfNecessary(source_dir_2);
     auto* expected = realpath(source_dir_2.c_str(), NULL);
-    CHECK(libsarus::getValidatedMountSource(source_dir_2) == boost::filesystem::path(expected));
+    CHECK(libsarus::mount::getValidatedMountSource(source_dir_2) == boost::filesystem::path(expected));
 
     // Cleanup
     free(expected);
@@ -56,96 +56,96 @@ TEST(MountUtilitiesTestGroup, get_validated_mount_destination_test) {
     auto bundleDirRAII = libsarus::PathRAII{boost::filesystem::path{config.json["OCIBundleDir"].GetString()}};
     const auto& bundleDir = bundleDirRAII.getPath();
     auto rootfsDir = bundleDir / boost::filesystem::path{config.json["rootfsFolder"].GetString()};
-    libsarus::createFoldersIfNecessary(bundleDir / "overlay/rootfs-lower");
+    libsarus::filesystem::createFoldersIfNecessary(bundleDir / "overlay/rootfs-lower");
 
     // Test invalid input arguments
-    CHECK_THROWS(libsarus::Error, libsarus::getValidatedMountDestination("", rootfsDir));
+    CHECK_THROWS(libsarus::Error, libsarus::mount::getValidatedMountDestination("", rootfsDir));
 
     // Test mount on other device
     auto otherDeviceDir = boost::filesystem::path{"/otherDevice"};
-    libsarus::createFoldersIfNecessary(rootfsDir / otherDeviceDir);
+    libsarus::filesystem::createFoldersIfNecessary(rootfsDir / otherDeviceDir);
     auto imageSquashfs = boost::filesystem::path{__FILE__}.parent_path() / "test_image.squashfs";
-    libsarus::loopMountSquashfs(imageSquashfs, rootfsDir / otherDeviceDir);
-    CHECK_THROWS(libsarus::Error, libsarus::getValidatedMountDestination(otherDeviceDir, rootfsDir));
+    libsarus::mount::loopMountSquashfs(imageSquashfs, rootfsDir / otherDeviceDir);
+    CHECK_THROWS(libsarus::Error, libsarus::mount::getValidatedMountDestination(otherDeviceDir, rootfsDir));
     CHECK(umount((rootfsDir / otherDeviceDir).c_str()) == 0);
 
     // Test non-existing mount point
     auto nonExistingDir = boost::filesystem::path{"/nonExistingMountPoint"};
     auto expected = rootfsDir / nonExistingDir;
-    CHECK(libsarus::getValidatedMountDestination(nonExistingDir, rootfsDir) == expected);
+    CHECK(libsarus::mount::getValidatedMountDestination(nonExistingDir, rootfsDir) == expected);
 
     // Test existing mount point
     auto existingDir = boost::filesystem::path{"/file_in_squashfs_image"};
     expected = rootfsDir / existingDir;
-    libsarus::createFoldersIfNecessary(expected);
-    CHECK(libsarus::getValidatedMountDestination(existingDir, rootfsDir) == expected);
+    libsarus::filesystem::createFoldersIfNecessary(expected);
+    CHECK(libsarus::mount::getValidatedMountDestination(existingDir, rootfsDir) == expected);
 }
 
 TEST(MountUtilitiesTestGroup, bindMount) {
-    auto tempDirRAII = libsarus::PathRAII{libsarus::makeUniquePathWithRandomSuffix("/tmp/sarus-test-common-bindmount")};
+    auto tempDirRAII = libsarus::PathRAII{libsarus::filesystem::makeUniquePathWithRandomSuffix("/tmp/sarus-test-common-bindmount")};
     const auto& tempDir = tempDirRAII.getPath();
     auto fromDir = tempDir / "from";
     auto toDir = tempDir / "to";
 
-    libsarus::createFoldersIfNecessary(fromDir);
-    libsarus::createFoldersIfNecessary(toDir);
-    libsarus::createFileIfNecessary(fromDir / "file");
+    libsarus::filesystem::createFoldersIfNecessary(fromDir);
+    libsarus::filesystem::createFoldersIfNecessary(toDir);
+    libsarus::filesystem::createFileIfNecessary(fromDir / "file");
 
-    libsarus::bindMount(fromDir, toDir);
+    libsarus::mount::bindMount(fromDir, toDir);
 
     // check that "file" is in the mounted directory
     CHECK(boost::filesystem::exists(toDir / "file"));
 
     // check that mounted directory is writable
-    libsarus::createFileIfNecessary(toDir / "file-successfull-write-attempt");
+    libsarus::filesystem::createFileIfNecessary(toDir / "file-successfull-write-attempt");
 
     // cleanup
     CHECK(umount(toDir.c_str()) == 0);
 }
 
 TEST(MountUtilitiesTestGroup, bindMountReadOnly) {
-    auto tempDirRAII = libsarus::PathRAII{libsarus::makeUniquePathWithRandomSuffix("/tmp/sarus-test-common-bindmount")};
+    auto tempDirRAII = libsarus::PathRAII{libsarus::filesystem::makeUniquePathWithRandomSuffix("/tmp/sarus-test-common-bindmount")};
     const auto& tempDir = tempDirRAII.getPath();
     auto fromDir = tempDir / "from";
     auto toDir = tempDir / "to";
 
-    libsarus::createFoldersIfNecessary(fromDir);
-    libsarus::createFoldersIfNecessary(toDir);
-    libsarus::createFileIfNecessary(fromDir / "file");
+    libsarus::filesystem::createFoldersIfNecessary(fromDir);
+    libsarus::filesystem::createFoldersIfNecessary(toDir);
+    libsarus::filesystem::createFileIfNecessary(fromDir / "file");
 
-    libsarus::bindMount(fromDir, toDir, MS_RDONLY);
+    libsarus::mount::bindMount(fromDir, toDir, MS_RDONLY);
 
     // check that "file" is in the mounted directory
     CHECK(boost::filesystem::exists(toDir / "file"));
 
     // check that mounted directory is read-only
-    CHECK_THROWS(libsarus::Error, libsarus::createFileIfNecessary(toDir / "file-failed-write-attempt"));
+    CHECK_THROWS(libsarus::Error, libsarus::filesystem::createFileIfNecessary(toDir / "file-failed-write-attempt"));
 
     // cleanup
     CHECK(umount(toDir.c_str()) == 0);
 }
 
 TEST(MountUtilitiesTestGroup, bindMountRecursive) {
-    auto tempDirRAII = libsarus::PathRAII{libsarus::makeUniquePathWithRandomSuffix("/tmp/sarus-test-common-bindmount")};
+    auto tempDirRAII = libsarus::PathRAII{libsarus::filesystem::makeUniquePathWithRandomSuffix("/tmp/sarus-test-common-bindmount")};
     const auto& tempDir = tempDirRAII.getPath();
 
     auto a = tempDir / "a";
     auto b = tempDir / "b";
     auto c = tempDir / "c";
-    libsarus::createFoldersIfNecessary(a);
-    libsarus::createFoldersIfNecessary(b);
-    libsarus::createFoldersIfNecessary(c);
+    libsarus::filesystem::createFoldersIfNecessary(a);
+    libsarus::filesystem::createFoldersIfNecessary(b);
+    libsarus::filesystem::createFoldersIfNecessary(c);
 
-    libsarus::createFileIfNecessary(c / "d.txt");
+    libsarus::filesystem::createFileIfNecessary(c / "d.txt");
 
     // check that "d.txt" is in the mounted directory
     CHECK(!boost::filesystem::exists(b / "d.txt"));
-    libsarus::bindMount(c, b);
+    libsarus::mount::bindMount(c, b);
     CHECK(boost::filesystem::exists(b / "d.txt"));
 
     // check that mounts are recursive by default
     CHECK(!boost::filesystem::exists(a / "d.txt"));
-    libsarus::bindMount(b, a);
+    libsarus::mount::bindMount(b, a);
     CHECK(boost::filesystem::exists(a / "d.txt"));
 
     // cleanup
@@ -154,12 +154,12 @@ TEST(MountUtilitiesTestGroup, bindMountRecursive) {
 }
 
 TEST(MountUtilitiesTestGroup, loopMountSquashfs) {
-    auto mountPointRAII = libsarus::PathRAII{libsarus::makeUniquePathWithRandomSuffix("/tmp/sarus-test-common-loopMountSquashfs")};
+    auto mountPointRAII = libsarus::PathRAII{libsarus::filesystem::makeUniquePathWithRandomSuffix("/tmp/sarus-test-common-loopMountSquashfs")};
     const auto& mountPoint = mountPointRAII.getPath();
-    libsarus::createFoldersIfNecessary(mountPoint);
+    libsarus::filesystem::createFoldersIfNecessary(mountPoint);
 
     auto imageSquashfs = boost::filesystem::path{__FILE__}.parent_path() / "test_image.squashfs";
-    libsarus::loopMountSquashfs(imageSquashfs, mountPoint);
+    libsarus::mount::loopMountSquashfs(imageSquashfs, mountPoint);
     CHECK(boost::filesystem::exists(mountPoint / "file_in_squashfs_image"));
 
     CHECK(umount(mountPoint.string().c_str()) == 0);

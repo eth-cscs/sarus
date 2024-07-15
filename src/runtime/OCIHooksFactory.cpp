@@ -57,7 +57,7 @@ OCIHook OCIHooksFactory::createHook(const boost::filesystem::path& jsonFile,
                                     const boost::filesystem::path& schemaFile) const {
     utility::logMessage(boost::format{"Creating OCI hook object from %s"} % jsonFile,
                         libsarus::LogLevel::INFO);
-    auto json = libsarus::readAndValidateJSON(jsonFile, schemaFile);
+    auto json = libsarus::json::readAndValidate(jsonFile, schemaFile);
     auto hook = OCIHook{};
 
     hook.jsonFile = jsonFile;

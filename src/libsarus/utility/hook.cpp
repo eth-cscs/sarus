@@ -104,10 +104,10 @@ ContainerState parseStateOfContainerFromStdin() {
 
 std::unordered_map<std::string, std::string> parseEnvironmentVariablesFromOCIBundle(const boost::filesystem::path& bundleDir) {
     auto env = std::unordered_map<std::string, std::string>{};
-    auto json = libsarus::readJSON(bundleDir / "config.json");
+    auto json = json::read(bundleDir / "config.json");
     for(const auto& variable : json["process"]["env"].GetArray()) {
         std::string k, v;
-        std::tie(k, v) = libsarus::parseEnvironmentVariable(variable.GetString());
+        std::tie(k, v) = environment::parseVariable(variable.GetString());
         env[k] = v;
     }
     return env;
@@ -115,10 +115,10 @@ std::unordered_map<std::string, std::string> parseEnvironmentVariablesFromOCIBun
 
 boost::optional<std::string> getEnvironmentVariableValueFromOCIBundle(const std::string& key, const boost::filesystem::path& bundleDir) {
     boost::optional<std::string> value;
-    auto json = libsarus::readJSON(bundleDir / "config.json");
+    auto json = json::read(bundleDir / "config.json");
     for(const auto& variable : json["process"]["env"].GetArray()) {
         std::string k, v;
-        std::tie(k, v) = libsarus::parseEnvironmentVariable(variable.GetString());
+        std::tie(k, v) = environment::parseVariable(variable.GetString());
         if (k == key) {
             value = v;
             break;
@@ -167,7 +167,7 @@ std::tuple<boost::filesystem::path, boost::filesystem::path> findSubsystemMountP
     hook::logMessage(boost::format("Parsing %s for \"%s\" cgroup subsystem mount paths") % mountinfoPath % subsystemName,
                         libsarus::LogLevel::DEBUG);
 
-    auto mountinfoText = libsarus::readFile(mountinfoPath);
+    auto mountinfoText = filesystem::readFile(mountinfoPath);
     auto mountinfoLines = std::vector<std::string>{};
     boost::split(mountinfoLines, mountinfoText, boost::is_any_of("\n"));
 
@@ -223,7 +223,7 @@ boost::filesystem::path findCgroupPathInHierarchy(const std::string& subsystemNa
                         libsarus::LogLevel::DEBUG);
 
     auto cgroupPath = boost::filesystem::path("/");
-    auto procFileText = libsarus::readFile(procFilePath);
+    auto procFileText = filesystem::readFile(procFilePath);
     auto procFileLines = std::vector<std::string>{};
     boost::split(procFileLines, procFileText, boost::is_any_of("\n"));
 
@@ -297,19 +297,19 @@ void whitelistDeviceInCgroup(const boost::filesystem::path& cgroupPath, const bo
 
     char deviceType;
     try {
-        deviceType = libsarus::getDeviceType(deviceFile);
+        deviceType = filesystem::getDeviceType(deviceFile);
     }
     catch(const libsarus::Error& e) {
         auto message = boost::format("Failed to whitelist %s: not a valid device file") % deviceFile;
         SARUS_RETHROW_ERROR(e, message.str());
     }
 
-    auto deviceID = libsarus::getDeviceID(deviceFile);
+    auto deviceID = filesystem::getDeviceID(deviceFile);
     auto entry = boost::format("%c %u:%u rw") % deviceType % major(deviceID) % minor(deviceID);
     hook::logMessage(boost::format("Whitelist entry: %s") % entry.str(), libsarus::LogLevel::DEBUG);
 
     auto allowFile = cgroupPath / "devices.allow";
-    libsarus::writeTextFile(entry.str(), allowFile, std::ios_base::app);
+    filesystem::writeTextFile(entry.str(), allowFile, std::ios_base::app);
 
     hook::logMessage(boost::format("Successfully whitelisted device %s for rw access") % deviceFile,
             libsarus::LogLevel::DEBUG);

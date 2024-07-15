@@ -37,8 +37,8 @@ SquashfsImage::SquashfsImage(const common::Config& config,
                              const boost::filesystem::path& pathOfImage)
     : pathOfImage{pathOfImage}
 {
-    auto pathTemp = libsarus::PathRAII{libsarus::makeUniquePathWithRandomSuffix(pathOfImage)};
-    libsarus::createFoldersIfNecessary(pathTemp.getPath().parent_path());
+    auto pathTemp = libsarus::PathRAII{libsarus::filesystem::makeUniquePathWithRandomSuffix(pathOfImage)};
+    libsarus::filesystem::createFoldersIfNecessary(pathTemp.getPath().parent_path());
 
     log(boost::format("> making squashfs image: %s") % pathOfImage, libsarus::LogLevel::GENERAL);
     log(boost::format("creating squashfs image %s from unpacked image %s") % pathOfImage % unpackedImage,
@@ -47,7 +47,7 @@ SquashfsImage::SquashfsImage(const common::Config& config,
     auto start = std::chrono::system_clock::now();
     
     auto args = generateMksquashfsArgs(config, unpackedImage, pathTemp.getPath());
-    auto mksquashfsOutput = libsarus::executeCommand(args.string());
+    auto mksquashfsOutput = libsarus::process::executeCommand(args.string());
     log(boost::format("mksquashfs output:\n%s") % mksquashfsOutput, libsarus::LogLevel::DEBUG);
 
     boost::filesystem::rename(pathTemp.getPath(), pathOfImage); // atomically create/replace squashfs file

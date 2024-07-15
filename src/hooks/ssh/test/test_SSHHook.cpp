@@ -71,7 +71,7 @@ public:
     void setupTestEnvironment() {
         // create tmpfs filesystem to allow overlay mounts for rootfs (performed below)
         // to succeed also when testing inside a Docker container
-        libsarus::createFoldersIfNecessary(bundleDir);
+        libsarus::filesystem::createFoldersIfNecessary(bundleDir);
         if(mount(NULL, bundleDir.c_str(), "tmpfs", MS_NOSUID|MS_NODEV, NULL) != 0) {
             auto message = boost::format("Failed to setup tmpfs filesystem on %s: %s")
                 % bundleDir
@@ -79,16 +79,16 @@ public:
             SARUS_THROW_ERROR(message.str());
         }
 
-        libsarus::createFoldersIfNecessary(homeDirInHost,
+        libsarus::filesystem::createFoldersIfNecessary(homeDirInHost,
                                                 std::get<0>(idsOfUser),
                                                 std::get<1>(idsOfUser));
 
-        libsarus::createFoldersIfNecessary(expectedHomeDirInContainer,
+        libsarus::filesystem::createFoldersIfNecessary(expectedHomeDirInContainer,
                                                 std::get<0>(idsOfUser),
                                                 std::get<1>(idsOfUser));
 
         // host's dropbear installation
-        libsarus::createFoldersIfNecessary(dropbearDirInHost.getPath() / "bin");
+        libsarus::filesystem::createFoldersIfNecessary(dropbearDirInHost.getPath() / "bin");
         boost::format setupDropbearCommand = boost::format{
             "cp %1% %2%/bin/dropbearmulti"
             " && ln -s %2%/bin/dropbearmulti %2%/bin/dbclient"
@@ -96,13 +96,13 @@ public:
             " && ln -s %2%/bin/dropbearmulti %2%/bin/dropbearkey"
         } % sarus::common::Config::BuildTime{}.dropbearmultiBuildArtifact.string()
           % dropbearDirInHost.getPath().string();
-        libsarus::executeCommand(setupDropbearCommand.str());
+        libsarus::process::executeCommand(setupDropbearCommand.str());
 
         // hook's environment variables
-        libsarus::setEnvironmentVariable("HOOK_BASE_DIR", sshKeysBaseDir.string());
-        libsarus::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
-        libsarus::setEnvironmentVariable("DROPBEAR_DIR", dropbearDirInHost.getPath().string());
-        libsarus::setEnvironmentVariable("SERVER_PORT_DEFAULT", std::to_string(serverPortDefault));
+        libsarus::environment::setVariable("HOOK_BASE_DIR", sshKeysBaseDir.string());
+        libsarus::environment::setVariable("PASSWD_FILE", passwdFile.string());
+        libsarus::environment::setVariable("DROPBEAR_DIR", dropbearDirInHost.getPath().string());
+        libsarus::environment::setVariable("SERVER_PORT_DEFAULT", std::to_string(serverPortDefault));
 
         if (!userSshKeyPath.empty()) {
             std::ofstream userSshKeyFile{userSshKeyPath.string()};
@@ -118,11 +118,11 @@ public:
             auto workDir = bundleDir / "work-dirs" / folder;
             auto mergedDir = rootfsDir / folder;
 
-            libsarus::createFoldersIfNecessary(upperDir);
-            libsarus::createFoldersIfNecessary(workDir);
-            libsarus::createFoldersIfNecessary(mergedDir);
+            libsarus::filesystem::createFoldersIfNecessary(upperDir);
+            libsarus::filesystem::createFoldersIfNecessary(workDir);
+            libsarus::filesystem::createFoldersIfNecessary(mergedDir);
 
-            libsarus::mountOverlayfs(lowerDir, upperDir, workDir, mergedDir);
+            libsarus::mount::mountOverlayfs(lowerDir, upperDir, workDir, mergedDir);
         }
 
         // set requested home dir in /etc/passwd
@@ -180,7 +180,7 @@ public:
           doc["annotations"] = extraAnnotations;
         }
 
-        libsarus::writeJSON(doc, bundleDir / "config.json");
+        libsarus::json::write(doc, bundleDir / "config.json");
     }
 
     void writeContainerStateToStdin() const {
@@ -225,7 +225,7 @@ public:
 
     void checkContainerHasServerKeys() const {
         CHECK(boost::filesystem::exists(expectedHomeDirInContainer / ".ssh/dropbear_ecdsa_host_key"));
-        CHECK(libsarus::getOwner(expectedHomeDirInContainer / ".ssh/dropbear_ecdsa_host_key") == idsOfUser);
+        CHECK(libsarus::filesystem::getOwner(expectedHomeDirInContainer / ".ssh/dropbear_ecdsa_host_key") == idsOfUser);
     }
 
     void checkContainerHasClientKeys() const {
@@ -233,9 +233,9 @@ public:
         auto authorizedKeysFile = expectedHomeDirInContainer / ".ssh/authorized_keys";
 
         CHECK(boost::filesystem::exists(userKeyFile));
-        CHECK(libsarus::getOwner(userKeyFile) == idsOfUser);
+        CHECK(libsarus::filesystem::getOwner(userKeyFile) == idsOfUser);
         CHECK(boost::filesystem::exists(authorizedKeysFile));
-        CHECK(libsarus::getOwner(authorizedKeysFile) == idsOfUser);
+        CHECK(libsarus::filesystem::getOwner(authorizedKeysFile) == idsOfUser);
 
         auto expectedAuthKeysPermissions =
             boost::filesystem::owner_read | boost::filesystem::owner_write |
@@ -246,7 +246,7 @@ public:
     }
 
     boost::optional<pid_t> getSshDaemonPid() const {
-        auto out = libsarus::executeCommand("ps ax -o pid,args");
+        auto out = libsarus::process::executeCommand("ps ax -o pid,args");
         std::stringstream ss{out};
         std::string line;
 
@@ -262,7 +262,7 @@ public:
     }
 
     boost::optional<std::uint16_t> getSshDaemonPort() const {
-        auto out = libsarus::executeCommand("ps ax -o args");
+        auto out = libsarus::process::executeCommand("ps ax -o args");
         std::stringstream ss{out};
         std::string line;
 
@@ -289,7 +289,7 @@ public:
             "#!/bin/sh\n"
             "/opt/oci-hooks/ssh/dropbear/bin/dbclient -y -p %s $*\n"
         } % (serverPort > 0 ? serverPort : serverPortDefault);
-        auto actualScript = libsarus::readFile(targetFile);
+        auto actualScript = libsarus::filesystem::readFile(targetFile);
         CHECK_EQUAL(actualScript, expectedScript.str());
 
         auto expectedPermissions =
@@ -307,7 +307,7 @@ public:
         auto expectedMap = std::unordered_map<std::string, std::string>{};
         for (const auto& variable : environmentVariablesInContainer) {
             std::string key, value;
-            std::tie(key, value) = libsarus::parseEnvironmentVariable(variable);
+            std::tie(key, value) = libsarus::environment::parseVariable(variable);
             expectedMap[key] = value;
         }
 
@@ -348,7 +348,7 @@ public:
                 "if [ \"$SSH_CONNECTION\" ]; then\n"
                 "    . /opt/oci-hooks/ssh/dropbear/environment\n"
                 "fi\n");
-        auto actualScript = libsarus::readFile(targetFile);
+        auto actualScript = libsarus::filesystem::readFile(targetFile);
         CHECK_EQUAL(actualScript, expectedScript);
 
         auto expectedPermissions =
@@ -374,7 +374,7 @@ public:
     }
 
     const boost::filesystem::path getDropbearPidFileInContainerAbsolute() const {
-        return rootfsDir / libsarus::realpathWithinRootfs(rootfsDir, dropbearPidFileInContainerRelative);
+        return rootfsDir / libsarus::filesystem::realpathWithinRootfs(rootfsDir, dropbearPidFileInContainerRelative);
     }
 
     const boost::filesystem::path getDropbearPidFileInHost() const {
@@ -422,7 +422,7 @@ private:
     boost::filesystem::path homeDirInContainerPasswd = expectedHomeDirInContainer;
     boost::filesystem::path sshKeysDirInHost = homeDirInHost / ".oci-hooks/ssh/keys";
     libsarus::PathRAII dropbearDirInHost = libsarus::PathRAII{boost::filesystem::absolute(
-                                               libsarus::makeUniquePathWithRandomSuffix("./hook-test-dropbeardir-in-host"))};
+                                               libsarus::filesystem::makeUniquePathWithRandomSuffix("./hook-test-dropbeardir-in-host"))};
     boost::filesystem::path dropbearDirInContainer = rootfsDir / "opt/oci-hooks/ssh/dropbear";
     boost::filesystem::path dropbearPidFileInContainerRelative = "/var/run/dropbear/dropbear.pid";
     libsarus::PathRAII dropbearPidFileInHost = libsarus::PathRAII("");
@@ -572,8 +572,8 @@ TEST(SSHHookTestGroup, testDropbearPidFileInHost) {
     SshHook{}.startStopSshDaemon();
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-    auto pidInContainer = libsarus::readFile(helper.getDropbearPidFileInContainerAbsolute());
-    auto pidInHost = libsarus::readFile(helper.getDropbearPidFileInHost());
+    auto pidInContainer = libsarus::filesystem::readFile(helper.getDropbearPidFileInContainerAbsolute());
+    auto pidInHost = libsarus::filesystem::readFile(helper.getDropbearPidFileInHost());
     CHECK(pidInContainer == pidInHost);
 }
 
@@ -597,13 +597,13 @@ TEST(SSHHookTestGroup, testDropbearPidFilesInCustomPaths) {
     SshHook{}.startStopSshDaemon();
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-    auto pidInContainer = libsarus::readFile(helper.getDropbearPidFileInContainerAbsolute());
-    auto pidInHost = libsarus::readFile(helper.getDropbearPidFileInHost());
+    auto pidInContainer = libsarus::filesystem::readFile(helper.getDropbearPidFileInContainerAbsolute());
+    auto pidInHost = libsarus::filesystem::readFile(helper.getDropbearPidFileInHost());
     CHECK(pidInContainer == pidInHost);
 }
 
 TEST(SSHHookTestGroup, testDefaultMountsDotSshAsOverlayFs) {
-    // libsarus::setEnvironmentVariable("OVERLAY_MOUNT_HOME_SSH", "False");
+    // libsarus::environment::setVariable("OVERLAY_MOUNT_HOME_SSH", "False");
 
     Helper helper{};
 
@@ -624,7 +624,7 @@ TEST(SSHHookTestGroup, testDefaultMountsDotSshAsOverlayFs) {
 }
 
 TEST(SSHHookTestGroup, testEnvVarDisableMountsDotSshAsOverlayFs) {
-    libsarus::setEnvironmentVariable("OVERLAY_MOUNT_HOME_SSH", "False");
+    libsarus::environment::setVariable("OVERLAY_MOUNT_HOME_SSH", "False");
 
     Helper helper{};
 
@@ -642,7 +642,7 @@ TEST(SSHHookTestGroup, testEnvVarDisableMountsDotSshAsOverlayFs) {
     SshHook{}.startStopSshDaemon();
 
     CHECK_FALSE(helper.containerMountsDotSsh());    
-    libsarus::setEnvironmentVariable("OVERLAY_MOUNT_HOME_SSH", "");
+    libsarus::environment::setVariable("OVERLAY_MOUNT_HOME_SSH", "");
 }
 
 TEST(SSHHookTestGroup, testDefaultServerPort) {
@@ -670,7 +670,7 @@ TEST(SSHHookTestGroup, testDefaultServerPortOverridesDeprecatedVar) {
 
     helper.setRootIds();
     helper.setupTestEnvironment(); // "SERVER_PORT_DEFAULT" is set here
-    libsarus::setEnvironmentVariable("SERVER_PORT", std::to_string(expectedPort));
+    libsarus::environment::setVariable("SERVER_PORT", std::to_string(expectedPort));
 
     // generate + check SSH keys in local repository
     helper.setUserIds(); // keygen is executed with user privileges
@@ -690,7 +690,7 @@ TEST(SSHHookTestGroup, testDeprecatedServerPort) {
 
     helper.setRootIds();
     helper.setupTestEnvironment(); // "SERVER_PORT_DEFAULT" is set here
-    libsarus::setEnvironmentVariable("SERVER_PORT", std::to_string(expectedPort));
+    libsarus::environment::setVariable("SERVER_PORT", std::to_string(expectedPort));
     unsetenv("SERVER_PORT_DEFAULT");
 
     // generate + check SSH keys in local repository

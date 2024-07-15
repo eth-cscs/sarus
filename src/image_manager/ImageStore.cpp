@@ -66,7 +66,7 @@ namespace image_manager {
 
         try {
             libsarus::Flock lock{metadataFile, libsarus::Flock::Type::writeLock, lockTimeout, lockWarning};
-            auto metadata = libsarus::readJSON(metadataFile);
+            auto metadata = libsarus::json::read(metadataFile);
 
             // remove previous entries with the same image reference (if any)
             auto& images = metadata["images"];
@@ -103,7 +103,7 @@ namespace image_manager {
 
         try {
             libsarus::Flock lock{metadataFile, libsarus::Flock::Type::writeLock, lockTimeout, lockWarning};
-            auto repositoryMetadata = libsarus::readJSON(metadataFile);
+            auto repositoryMetadata = libsarus::json::read(metadataFile);
             auto imageMetadata = findImageMetadata(imageReference, repositoryMetadata);
 
             if (!imageMetadata) {
@@ -135,7 +135,7 @@ namespace image_manager {
 
         try {
             libsarus::Flock lock{metadataFile, libsarus::Flock::Type::writeLock, lockTimeout, lockWarning};
-            auto repositoryMetadata = libsarus::readJSON(metadataFile);
+            auto repositoryMetadata = libsarus::json::read(metadataFile);
             for (const auto& imageMetadata : repositoryMetadata["images"].GetArray()) {
                 // If backing files are present, all image data is available: add the image to list to be visualized.
                 // Else, ensure all image data is cleaned up
@@ -164,7 +164,7 @@ namespace image_manager {
 
         try {
             libsarus::Flock lock{metadataFile, libsarus::Flock::Type::readLock, lockTimeout, lockWarning};
-            auto repositoryMetadata = libsarus::readJSON(metadataFile);
+            auto repositoryMetadata = libsarus::json::read(metadataFile);
             auto imageMetadata = findImageMetadata(reference, repositoryMetadata);
             if (imageMetadata) {
                 // If backing files are present, all image data is available: assign object to return
@@ -177,7 +177,7 @@ namespace image_manager {
                     // Obtain exclusive access to the file by acquiring a write lock
                     lock.convertToType(libsarus::Flock::Type::writeLock);
                     // Check if another process has updated the metadata in the meantime
-                    repositoryMetadata = libsarus::readJSON(metadataFile);
+                    repositoryMetadata = libsarus::json::read(metadataFile);
                     imageMetadata = findImageMetadata(reference, repositoryMetadata);
                     if (imageMetadata) {
                         removeRepositoryMetadataEntry(imageMetadata, repositoryMetadata, &lock);
@@ -360,12 +360,12 @@ namespace image_manager {
      * temporary one.
      */
     void ImageStore::atomicallyUpdateRepositoryMetadataFile(const rapidjson::Value& metadata, libsarus::Flock* const lock) const {
-        auto metadataFileTemp = libsarus::makeUniquePathWithRandomSuffix(metadataFile);
+        auto metadataFileTemp = libsarus::filesystem::makeUniquePathWithRandomSuffix(metadataFile);
 
         printLog( boost::format("Updating repository metadata file: %s") % metadataFile, libsarus::LogLevel::DEBUG);
 
         try {
-            libsarus::writeJSON(metadata, metadataFileTemp);
+            libsarus::json::write(metadata, metadataFileTemp);
             libsarus::Flock newLock{metadataFileTemp, libsarus::Flock::Type::writeLock, milliseconds{1000}, libsarus::Flock::noTimeout};
 
             // Atomically replace old metadata file.

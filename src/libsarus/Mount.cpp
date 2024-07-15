@@ -39,7 +39,7 @@ void Mount::performMount() const {
         % source.string() % destination.string() % mountFlags, LogLevel::DEBUG);
 
     try {
-        validatedBindMount(source, destination, userIdentity, rootfsDir, mountFlags);
+        mount::validatedBindMount(source, destination, userIdentity, rootfsDir, mountFlags);
     }
     catch (const Error& e) {
         logMessage(e.getErrorTrace().back().errorMessage.c_str(),

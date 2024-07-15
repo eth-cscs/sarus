@@ -32,16 +32,16 @@ ImageMetadata::ImageMetadata(const boost::filesystem::path& path, const libsarus
     auto rootIdentity = libsarus::UserIdentity{};
     try {
         // switch to user identity to make sure we can access files on root_squashed filesystems
-        libsarus::setFilesystemUid(identity);
+        libsarus::process::setFilesystemUid(identity);
 
-        auto json = libsarus::readJSON(path);
+        auto json = libsarus::json::read(path);
 
-        libsarus::setFilesystemUid(rootIdentity);
+        libsarus::process::setFilesystemUid(rootIdentity);
 
         parseJSON(json);
     }
     catch (const libsarus::Error& e) {
-        libsarus::setFilesystemUid(rootIdentity);
+        libsarus::process::setFilesystemUid(rootIdentity);
         auto message = boost::format("Error creating image metadata from file %s") % path;
         SARUS_RETHROW_ERROR(e, message.str());
     }
@@ -109,7 +109,7 @@ void ImageMetadata::write(const boost::filesystem::path& path) const {
         }
     }
 
-    libsarus::writeJSON(json, path);
+    libsarus::json::write(json, path);
 
     logMessage("Successfully written image metadata file", libsarus::LogLevel::INFO);
 }
@@ -146,7 +146,7 @@ void ImageMetadata::parseJSON(const rapidjson::Value& json) {
         for (const auto& v : json["Env"].GetArray()) {
             std::string variable = v.GetString();
             std::string key, value;
-            std::tie(key, value) = libsarus::parseEnvironmentVariable(variable);
+            std::tie(key, value) = libsarus::environment::parseVariable(variable);
             env[key] = value;
         }
     }

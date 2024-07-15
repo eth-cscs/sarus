@@ -33,7 +33,7 @@ TEST(SkopeoDriverTestGroup, copyToOCIImage) {
     {
         auto imageReference = std::string{"quay.io/ethcscs/alpine:3.14"};
         auto ociImagePath = driver.copyToOCIImage("docker", imageReference);
-        auto imageIndex = libsarus::readJSON(ociImagePath / "index.json");
+        auto imageIndex = libsarus::json::read(ociImagePath / "index.json");
         std::string imageRef;
         try {
             imageRef = imageIndex["manifests"][0]["annotations"]["org.opencontainers.image.ref.name"].GetString();
@@ -50,7 +50,7 @@ TEST(SkopeoDriverTestGroup, copyToOCIImage) {
     {
         auto archive = boost::filesystem::path{__FILE__}.parent_path() / "saved_image.tar";
         auto ociImagePath = driver.copyToOCIImage("docker-archive", archive.string());
-        auto imageIndex = libsarus::readJSON(ociImagePath / "index.json");
+        auto imageIndex = libsarus::json::read(ociImagePath / "index.json");
         std::string imageRef;
         try {
             imageRef = imageIndex["manifests"][0]["annotations"]["org.opencontainers.image.ref.name"].GetString();
@@ -68,12 +68,12 @@ static void filterInspectOutputTestHelper(const image_manager::SkopeoDriver& dri
                                           const std::string& expectedManifestFilename) {
     auto testSourceDir = boost::filesystem::path{__FILE__}.parent_path();
     auto expectedManifestPath = testSourceDir / expectedManifestFilename;
-    auto expectedManifest = libsarus::readFile(expectedManifestPath);
+    auto expectedManifest = libsarus::filesystem::readFile(expectedManifestPath);
     auto returnedManifest = driver.filterInspectOutput(expectedManifest);
     CHECK(returnedManifest == expectedManifest);
 
     // Check debug output does not alter result
-    auto skopeoDebugLines = libsarus::readFile(testSourceDir / "skopeo_debug_lines.txt");
+    auto skopeoDebugLines = libsarus::filesystem::readFile(testSourceDir / "skopeo_debug_lines.txt");
     returnedManifest = driver.filterInspectOutput(skopeoDebugLines + expectedManifest);
     CHECK(returnedManifest == expectedManifest);
     libsarus::Logger::getInstance().setLevel(libsarus::LogLevel::WARN);
@@ -111,9 +111,9 @@ TEST(SkopeoDriverTestGroup, manifestDigest) {
     CHECK(driver.manifestDigest(testFile) == std::string{"sha256:2c2372178e530e6207e05f0756bb4b3018a92f62616c4af5fd4c42eb361e6079"});
 
     // Test file writing by RapidJSON digests to the same value
-    auto jsonManifest = libsarus::readJSON(rawManifestPath);
-    auto writtenManifest = libsarus::makeUniquePathWithRandomSuffix(config->directories.repository / "testManifest");
-    libsarus::writeJSON(jsonManifest, writtenManifest);
+    auto jsonManifest = libsarus::json::read(rawManifestPath);
+    auto writtenManifest = libsarus::filesystem::makeUniquePathWithRandomSuffix(config->directories.repository / "testManifest");
+    libsarus::json::write(jsonManifest, writtenManifest);
     CHECK(driver.manifestDigest(writtenManifest) == std::string{"sha256:1775bebec23e1f3ce486989bfc9ff3c4e951690df84aa9f926497d82f2ffca9d"});
 
     // Check debug mode does not alter result
@@ -156,12 +156,12 @@ TEST(SkopeoDriverTestGroup, generateBaseArgs_policy) {
     auto& config = configRAII.config;
 
     auto customPolicyPath = config->json["prefixDir"].GetString() + std::string{"/etc/policy.json"};
-    libsarus::createFileIfNecessary(customPolicyPath);
+    libsarus::filesystem::createFileIfNecessary(customPolicyPath);
     rapidjson::Pointer("/containersPolicy/path").Set(config->json, customPolicyPath.c_str());
 
     auto homeMock = boost::filesystem::path{config->json["localRepositoryBaseDir"].GetString() + std::string{"/homeMock"}};
     auto userPolicyMock = homeMock / ".config/containers/policy.json";
-    libsarus::setEnvironmentVariable("HOME", homeMock.string());
+    libsarus::environment::setVariable("HOME", homeMock.string());
 
     /**
      * The unit tests for `copy` and `inspect` commands already implicitly test
@@ -177,7 +177,7 @@ TEST(SkopeoDriverTestGroup, generateBaseArgs_policy) {
 
     // User-specific default policy file
     {
-        libsarus::createFileIfNecessary(userPolicyMock);
+        libsarus::filesystem::createFileIfNecessary(userPolicyMock);
 
         image_manager::SkopeoDriver driver{config};
         auto skopeoArgs = driver.generateBaseArgs();
@@ -205,7 +205,7 @@ TEST(SkopeoDriverTestGroup, generateBaseArgs_registriesd) {
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
     auto customRegistriesDPath = config->json["prefixDir"].GetString() + std::string{"/etc/registries.d"};
-    libsarus::createFoldersIfNecessary(customRegistriesDPath);
+    libsarus::filesystem::createFoldersIfNecessary(customRegistriesDPath);
     rapidjson::Pointer("/containersRegistries.dPath").Set(config->json, customRegistriesDPath.c_str());
 
     // Expected behavior
@@ -242,8 +242,8 @@ TEST(SkopeoDriverTestGroup, acquireAuthFile) {
 
     // create file in XDG_RUNTIME_DIR if defined and existing
     {
-        libsarus::createFoldersIfNecessary(xdgRuntimeDir);
-        libsarus::setEnvironmentVariable("XDG_RUNTIME_DIR", xdgRuntimeDir.string());
+        libsarus::filesystem::createFoldersIfNecessary(xdgRuntimeDir);
+        libsarus::environment::setVariable("XDG_RUNTIME_DIR", xdgRuntimeDir.string());
 
         // Instantiate the SkopeoDriver object in another scope to check removal
         // of the authFile by the destructor
@@ -254,7 +254,7 @@ TEST(SkopeoDriverTestGroup, acquireAuthFile) {
             CHECK(boost::filesystem::exists(expectedAuthFilePath));
             CHECK(boost::filesystem::status(expectedAuthFilePath).permissions() == expectedPermissions);
             CHECK(expectedAuthFilePath.parent_path() == (xdgRuntimeDir / "sarus"));
-            CHECK(libsarus::readJSON(expectedAuthFilePath) == expectedAuthJSON);
+            CHECK(libsarus::json::read(expectedAuthFilePath) == expectedAuthJSON);
         }
         CHECK_FALSE(boost::filesystem::exists(expectedAuthFilePath));
     }
@@ -268,13 +268,13 @@ TEST(SkopeoDriverTestGroup, acquireAuthFile) {
             CHECK(boost::filesystem::exists(expectedAuthFilePath));
             CHECK(boost::filesystem::status(expectedAuthFilePath).permissions() == expectedPermissions);
             CHECK(expectedAuthFilePath.parent_path() == config->directories.repository);
-            CHECK(libsarus::readJSON(expectedAuthFilePath) == expectedAuthJSON);
+            CHECK(libsarus::json::read(expectedAuthFilePath) == expectedAuthJSON);
         }
         CHECK_FALSE(boost::filesystem::exists(expectedAuthFilePath));
     }
     // create file in Sarus local repo if XDG_RUNTIME_DIR not defined
     {
-        libsarus::createFoldersIfNecessary(xdgRuntimeDir);
+        libsarus::filesystem::createFoldersIfNecessary(xdgRuntimeDir);
         unsetenv("XDG_RUNTIME_DIR");
         {
             auto driver = image_manager::SkopeoDriver{config};
@@ -283,7 +283,7 @@ TEST(SkopeoDriverTestGroup, acquireAuthFile) {
             CHECK(boost::filesystem::exists(expectedAuthFilePath));
             CHECK(boost::filesystem::status(expectedAuthFilePath).permissions() == expectedPermissions);
             CHECK(expectedAuthFilePath.parent_path() == config->directories.repository);
-            CHECK(libsarus::readJSON(expectedAuthFilePath) == expectedAuthJSON);
+            CHECK(libsarus::json::read(expectedAuthFilePath) == expectedAuthJSON);
         }
         CHECK_FALSE(boost::filesystem::exists(expectedAuthFilePath));
     }

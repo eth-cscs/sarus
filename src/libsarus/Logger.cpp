@@ -100,7 +100,7 @@ namespace libsarus {
             return "";
         }
 
-        auto id = boost::format("[%s-%d] ") % libsarus::getHostname() % getpid();
+        auto id = boost::format("[%s-%d] ") % libsarus::process::getHostname() % getpid();
         return id.str();
     }
 

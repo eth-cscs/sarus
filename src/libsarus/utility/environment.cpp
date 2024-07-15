@@ -19,21 +19,22 @@
  */
 
 namespace libsarus {
+namespace environment {
 
-std::unordered_map<std::string, std::string> parseEnvironmentVariables(char** env) {
+std::unordered_map<std::string, std::string> parseVariables(char** env) {
     auto map = std::unordered_map<std::string, std::string>{};
     for(size_t i=0; env[i] != nullptr; ++i) {
         std::string key, value;
-        std::tie(key, value) = parseEnvironmentVariable(env[i]);
+        std::tie(key, value) = parseVariable(env[i]);
         map[key] = value;
     }
     return map;
 }
 
-std::pair<std::string, std::string> parseEnvironmentVariable(const std::string& variable) {
+std::pair<std::string, std::string> parseVariable(const std::string& variable) {
     std::pair<std::string, std::string> kvPair;
     try {
-        kvPair = libsarus::parseKeyValuePair(variable);
+        kvPair = string::parseKeyValuePair(variable);
     }
     catch(const libsarus::Error& e) {
         auto message = boost::format("Failed to parse environment variable: %s") % e.what();
@@ -42,7 +43,7 @@ std::pair<std::string, std::string> parseEnvironmentVariable(const std::string& 
     return kvPair;
 }
 
-std::string getEnvironmentVariable(const std::string& key) {
+std::string getVariable(const std::string& key) {
     char* p;
     if((p = getenv(key.c_str())) == nullptr) {
         auto message = boost::format("Environment doesn't contain variable with key %s") % key;
@@ -52,7 +53,7 @@ std::string getEnvironmentVariable(const std::string& key) {
     return p;
 }
 
-void setEnvironmentVariable(const std::string& key, const std::string& value) {
+void setVariable(const std::string& key, const std::string& value) {
     int overwrite = 1;
     if(setenv(key.c_str(), value.c_str(), overwrite) != 0) {
         auto message = boost::format("Failed to setenv(%s, %s, %d): %s")
@@ -62,7 +63,7 @@ void setEnvironmentVariable(const std::string& key, const std::string& value) {
     logMessage(boost::format("Set environment variable %s=%s") % key % value, libsarus::LogLevel::DEBUG);
 }
 
-void clearEnvironmentVariables() {
+void clearVariables() {
     if(clearenv() != 0) {
         SARUS_THROW_ERROR("Failed to clear host environment variables");
     }
@@ -76,4 +77,4 @@ void clearEnvironmentVariables() {
     }
 }
 
-}
+}}

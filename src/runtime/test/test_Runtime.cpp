@@ -68,14 +68,14 @@ IGNORE_TEST(RuntimeTestGroup, setupOCIBundle) {
     auto prefixDir = boost::filesystem::path{config->json["prefixDir"].GetString()};
 
     // create test folders / files
-    libsarus::createFoldersIfNecessary(bundleDir);
-    libsarus::createFileIfNecessary(prefixDir / "etc/container/nsswitch.conf");
-    libsarus::createFileIfNecessary(prefixDir / "etc/passwd");
-    libsarus::createFileIfNecessary(prefixDir / "etc/group");
+    libsarus::filesystem::createFoldersIfNecessary(bundleDir);
+    libsarus::filesystem::createFileIfNecessary(prefixDir / "etc/container/nsswitch.conf");
+    libsarus::filesystem::createFileIfNecessary(prefixDir / "etc/passwd");
+    libsarus::filesystem::createFileIfNecessary(prefixDir / "etc/group");
 
     // create dummy metadata file in image repo
     auto metadataFileRAII = libsarus::PathRAII{boost::filesystem::path(config->directories.images / (config->imageReference.getUniqueKey() + ".meta"))};
-    libsarus::createFileIfNecessary(metadataFileRAII.getPath());
+    libsarus::filesystem::createFileIfNecessary(metadataFileRAII.getPath());
     std::ofstream metadataStream(metadataFileRAII.getPath().c_str());
     metadataStream << "{}";
     metadataStream.close();
@@ -101,7 +101,7 @@ IGNORE_TEST(RuntimeTestGroup, setupOCIBundle) {
 
     // check that rootfs is writable
     auto fileToCreate = rootfsDir / "file_to_create";
-    libsarus::executeCommand("touch " + fileToCreate.string());
+    libsarus::process::executeCommand("touch " + fileToCreate.string());
 
     // check that bundle's config file exists
     CHECK(boost::filesystem::exists(bundleDir / "config.json"));

@@ -25,6 +25,7 @@
  */
 
 namespace libsarus {
+namespace process {
 
 void switchIdentity(const libsarus::UserIdentity&);
 void setFilesystemUid(const libsarus::UserIdentity&);
@@ -38,6 +39,6 @@ std::vector<int> getCpuAffinity();
 void setCpuAffinity(const std::vector<int>&);
 void setStdinEcho(bool);
 
-}
+}}
 
 #endif

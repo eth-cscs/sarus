@@ -24,7 +24,7 @@ namespace test_utility {
 namespace misc {
 
 std::tuple<uid_t, gid_t> getNonRootUserIds() {
-    auto out = libsarus::executeCommand("getent passwd");
+    auto out = libsarus::process::executeCommand("getent passwd");
     std::stringstream ss{out};
     auto passwd = libsarus::PasswdDB{ss};
 

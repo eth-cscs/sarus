@@ -174,9 +174,9 @@ private:
     std::string readPasswordFromStdin() {
         auto password = std::string{};
 
-        libsarus::setStdinEcho(false);  // disable echo
+        libsarus::process::setStdinEcho(false);  // disable echo
         std::getline(std::cin, password);
-        libsarus::setStdinEcho(true);   // enable echo
+        libsarus::process::setStdinEcho(true);   // enable echo
 
         if(password.empty()) {
             SARUS_THROW_ERROR("Failed to read password from stdin: empty value provided");

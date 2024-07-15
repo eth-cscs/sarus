@@ -35,8 +35,8 @@ TEST_GROUP(HooksUtilityTestGroup) {
 TEST(HooksUtilityTestGroup, parseStateOfContainerFromStdin) {
     auto expectedPid = getpid();
     auto expectedBundleDir = libsarus::PathRAII(
-        libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "hooks-test-bundle-dir"));
-    libsarus::createFoldersIfNecessary(expectedBundleDir.getPath());
+        libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "hooks-test-bundle-dir"));
+    libsarus::filesystem::createFoldersIfNecessary(expectedBundleDir.getPath());
 
     auto returnedBundleDir = boost::filesystem::path();
     pid_t returnedPid;
@@ -50,8 +50,8 @@ TEST(HooksUtilityTestGroup, parseStateOfContainerFromStdin) {
 
 TEST(HooksUtilityTestGroup, getEnvironmentVariableValueFromOCIBundle) {
     auto testBundleDir = libsarus::PathRAII(
-        libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "hooks-test-bundle-dir"));
-    libsarus::createFoldersIfNecessary(testBundleDir.getPath());
+        libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "hooks-test-bundle-dir"));
+    libsarus::filesystem::createFoldersIfNecessary(testBundleDir.getPath());
     auto bundleConfigFile = testBundleDir.getPath() / "config.json";
 
     auto config = test_utility::ocihooks::createBaseConfigJSON(testBundleDir.getPath() / "rootfs",
@@ -63,7 +63,7 @@ TEST(HooksUtilityTestGroup, getEnvironmentVariableValueFromOCIBundle) {
         config["process"]["env"].PushBack("TEST_VAR_SET_NOEMPTY0=value0", allocator);
         config["process"]["env"].PushBack("TEST_VAR_SET_NOEMPTY1=value1", allocator);
         config["process"]["env"].PushBack("TEST_VAR_SET_NOEMPTY2=value2", allocator);
-        libsarus::writeJSON(config, bundleConfigFile);
+        libsarus::json::write(config, bundleConfigFile);
         auto value = getEnvironmentVariableValueFromOCIBundle("TEST_VAR_SET_NOEMPTY1", testBundleDir.getPath());
         CHECK(bool(value));
         CHECK(*value == std::string("value1"));
@@ -74,7 +74,7 @@ TEST(HooksUtilityTestGroup, getEnvironmentVariableValueFromOCIBundle) {
         config["process"]["env"].PushBack("TEST_VAR_SET_NOEMPTY0=value0", allocator);
         config["process"]["env"].PushBack("TEST_VAR_SET_EMPTY=", allocator);
         config["process"]["env"].PushBack("TEST_VAR_SET_NOEMPTY2=value2", allocator);
-        libsarus::writeJSON(config, bundleConfigFile);
+        libsarus::json::write(config, bundleConfigFile);
         auto value = getEnvironmentVariableValueFromOCIBundle("TEST_VAR_SET_EMPTY", testBundleDir.getPath());
         CHECK(bool(value));
         CHECK(*value == std::string(""));
@@ -84,7 +84,7 @@ TEST(HooksUtilityTestGroup, getEnvironmentVariableValueFromOCIBundle) {
     {
         config["process"]["env"].PushBack("TEST_VAR_SET_NOEMPTY0=value0", allocator);
         config["process"]["env"].PushBack("TEST_VAR_SET_NOEMPTY2=value2", allocator);
-        libsarus::writeJSON(config, bundleConfigFile);
+        libsarus::json::write(config, bundleConfigFile);
         auto value = getEnvironmentVariableValueFromOCIBundle("TEST_VAR_NOT_SET", testBundleDir.getPath());
         CHECK_FALSE(value);
         config["process"]["env"].SetArray();
@@ -93,7 +93,7 @@ TEST(HooksUtilityTestGroup, getEnvironmentVariableValueFromOCIBundle) {
 
 TEST(HooksUtilityTestGroup, findSubsystemMountPaths) {
     auto testDir = libsarus::PathRAII(
-        libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "hooks-test-subsys-mount-point"));
+        libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "hooks-test-subsys-mount-point"));
     auto mountinfoPath = testDir.getPath() / "proc" / "1" / "mountinfo";
     auto openmode = std::ios::out | std::ios::trunc;
 
@@ -103,7 +103,7 @@ TEST(HooksUtilityTestGroup, findSubsystemMountPaths) {
         auto expectedMountPoint = boost::filesystem::path("/sys/fs/cgroup/devices");
         auto mountinfoContent = boost::format("34 25 0:29 %s %s rw,nosuid,nodev,noexec,relatime shared:15 - cgroup cgroup rw,devices")
                                               % expectedMountRoot.string() % expectedMountPoint.string();
-        libsarus::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
+        libsarus::filesystem::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
         boost::filesystem::path returnedMountRoot;
         boost::filesystem::path returnedMountPoint;
         std::tie(returnedMountRoot, returnedMountPoint) = findSubsystemMountPaths("devices", testDir.getPath(), 1);
@@ -119,7 +119,7 @@ TEST(HooksUtilityTestGroup, findSubsystemMountPaths) {
                 "34 25 0:29 %s %s rw,nosuid,nodev,noexec,relatime shared:15 - cgroup cgroup rw,devices\n"
             )
             % expectedMountRoot.string() % expectedMountPoint.string();
-        libsarus::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
+        libsarus::filesystem::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
         boost::filesystem::path returnedMountRoot;
         boost::filesystem::path returnedMountPoint;
         std::tie(returnedMountRoot, returnedMountPoint) = findSubsystemMountPaths("devices", testDir.getPath(), 1);
@@ -138,7 +138,7 @@ TEST(HooksUtilityTestGroup, findSubsystemMountPaths) {
                 "49 41 253:2 / /home rw,relatime shared:31 - xfs /dev/mapper/home rw,seclabel,attr2,inode64,noquota"
             )
             % expectedMountRoot.string() % expectedMountPoint.string();
-        libsarus::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
+        libsarus::filesystem::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
         boost::filesystem::path returnedMountRoot;
         boost::filesystem::path returnedMountPoint;
         std::tie(returnedMountRoot, returnedMountPoint) = findSubsystemMountPaths("devices", testDir.getPath(), 1);
@@ -157,7 +157,7 @@ TEST(HooksUtilityTestGroup, findSubsystemMountPaths) {
                 "49 41 253:2 / /home rw,relatime shared:31 - xfs /dev/mapper/home rw,seclabel,attr2,inode64,noquota"
             )
             % expectedMountRoot.string() % expectedMountPoint.string();
-        libsarus::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
+        libsarus::filesystem::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
         boost::filesystem::path returnedMountRoot;
         boost::filesystem::path returnedMountPoint;
         std::tie(returnedMountRoot, returnedMountPoint) = findSubsystemMountPaths("devices", testDir.getPath(), 1);
@@ -176,7 +176,7 @@ TEST(HooksUtilityTestGroup, findSubsystemMountPaths) {
                 "49 41 253:2 / /home rw,relatime shared:31 - xfs /dev/mapper/home rw,seclabel,attr2,inode64,noquota"
             )
             % expectedMountRoot.string() % expectedMountPoint.string();
-        libsarus::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
+        libsarus::filesystem::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
         boost::filesystem::path returnedMountRoot;
         boost::filesystem::path returnedMountPoint;
         std::tie(returnedMountRoot, returnedMountPoint) = findSubsystemMountPaths("devices", testDir.getPath(), 1);
@@ -195,7 +195,7 @@ TEST(HooksUtilityTestGroup, findSubsystemMountPaths) {
                 "49 41 253:2 / /home rw,relatime shared:31 - xfs /dev/mapper/home rw,seclabel,attr2,inode64,noquota"
             )
             % expectedMountRoot.string() % expectedMountPoint.string();
-        libsarus::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
+        libsarus::filesystem::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
         boost::filesystem::path returnedMountRoot;
         boost::filesystem::path returnedMountPoint;
         std::tie(returnedMountRoot, returnedMountPoint) = findSubsystemMountPaths("devices", testDir.getPath(), 1);
@@ -214,7 +214,7 @@ TEST(HooksUtilityTestGroup, findSubsystemMountPaths) {
                 "49 41 253:2 / /home rw,relatime shared:31 - xfs /dev/mapper/home rw,seclabel,attr2,inode64,noquota"
             )
             % expectedMountRoot.string() % expectedMountPoint.string();
-        libsarus::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
+        libsarus::filesystem::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
         CHECK_THROWS(libsarus::Error, findSubsystemMountPaths("devices", testDir.getPath(), 1));
     }
     // no line corresponding to searched entry
@@ -225,7 +225,7 @@ TEST(HooksUtilityTestGroup, findSubsystemMountPaths) {
                 "36 25 0:31 / /sys/fs/cgroup/cpu,cpuacct rw,nosuid,nodev,noexec,relatime shared:17 - cgroup cgroup rw,cpuacct,cpu\n"
                 "49 41 253:2 / /home rw,relatime shared:31 - xfs /dev/mapper/home rw,seclabel,attr2,inode64,noquota"
             );
-        libsarus::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
+        libsarus::filesystem::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
         CHECK_THROWS(libsarus::Error, findSubsystemMountPaths("devices", testDir.getPath(), 1));
     }
     // malformed line corresponding to searched entry (missing superOptions and filesystem type)
@@ -240,14 +240,14 @@ TEST(HooksUtilityTestGroup, findSubsystemMountPaths) {
                 "49 41 253:2 / /home rw,relatime shared:31 - xfs /dev/mapper/home rw,seclabel,attr2,inode64,noquota"
             )
             % expectedMountRoot.string() % expectedMountPoint.string();
-        libsarus::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
+        libsarus::filesystem::writeTextFile(mountinfoContent.str(), mountinfoPath, openmode);
         CHECK_THROWS(libsarus::Error, findSubsystemMountPaths("devices", testDir.getPath(), 1));
     }
 }
 
 TEST(HooksUtilityTestGroup, findCgroupPathInHierarchy) {
     auto testDir = libsarus::PathRAII(
-        libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "hooks-test-cgroup-relative-path"));
+        libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "hooks-test-cgroup-relative-path"));
     auto procFilePath = testDir.getPath() / "proc" / "1" / "cgroup";
     auto openmode = std::ios::out | std::ios::trunc;
 
@@ -256,7 +256,7 @@ TEST(HooksUtilityTestGroup, findCgroupPathInHierarchy) {
         auto subsystemMountRoot = boost::filesystem::path("/");
         auto expectedPath = boost::filesystem::path("/user.slice");
         auto procFileContent = boost::format("11:devices:%s") % expectedPath.string();
-        libsarus::writeTextFile(procFileContent.str(), procFilePath, openmode);
+        libsarus::filesystem::writeTextFile(procFileContent.str(), procFilePath, openmode);
         auto returnedPath = findCgroupPathInHierarchy("devices", testDir.getPath(), subsystemMountRoot, 1);
         CHECK_EQUAL(returnedPath.string(), expectedPath.string());
     }
@@ -271,7 +271,7 @@ TEST(HooksUtilityTestGroup, findCgroupPathInHierarchy) {
                 "5:cpuset:/"
             )
             % expectedPath.string();
-        libsarus::writeTextFile(procFileContent.str(), procFilePath, openmode);
+        libsarus::filesystem::writeTextFile(procFileContent.str(), procFilePath, openmode);
         auto returnedPath = findCgroupPathInHierarchy("devices", testDir.getPath(), subsystemMountRoot, 1);
         CHECK_EQUAL(returnedPath.string(), expectedPath.string());
     }
@@ -286,7 +286,7 @@ TEST(HooksUtilityTestGroup, findCgroupPathInHierarchy) {
                 "5:cpuset:/"
             )
             % expectedPath.string();
-        libsarus::writeTextFile(procFileContent.str(), procFilePath, openmode);
+        libsarus::filesystem::writeTextFile(procFileContent.str(), procFilePath, openmode);
         auto returnedPath = findCgroupPathInHierarchy("devices", testDir.getPath(), subsystemMountRoot, 1);
         CHECK_EQUAL(returnedPath.string(), expectedPath.string());
     }
@@ -302,7 +302,7 @@ TEST(HooksUtilityTestGroup, findCgroupPathInHierarchy) {
                 "5:cpuset:/"
             )
             % cgroupInProcFile.string();
-        libsarus::writeTextFile(procFileContent.str(), procFilePath, openmode);
+        libsarus::filesystem::writeTextFile(procFileContent.str(), procFilePath, openmode);
         auto returnedPath = findCgroupPathInHierarchy("devices", testDir.getPath(), subsystemMountRoot, 1);
         CHECK_EQUAL(returnedPath.string(), expectedPath.string());
     }
@@ -321,7 +321,7 @@ TEST(HooksUtilityTestGroup, findCgroupPathInHierarchy) {
                 "5:cpuset:/"
             )
             % expectedPath.string();
-        libsarus::writeTextFile(procFileContent.str(), procFilePath, openmode);
+        libsarus::filesystem::writeTextFile(procFileContent.str(), procFilePath, openmode);
         auto returnedPath = findCgroupPathInHierarchy("devices", testDir.getPath(), subsystemMountRoot, 1);
         CHECK_EQUAL(returnedPath.string(), expectedPath.string());
     }
@@ -336,7 +336,7 @@ TEST(HooksUtilityTestGroup, findCgroupPathInHierarchy) {
                 "5:cpuset:/"
             )
             % expectedPath.string();
-        libsarus::writeTextFile(procFileContent.str(), procFilePath, openmode);
+        libsarus::filesystem::writeTextFile(procFileContent.str(), procFilePath, openmode);
         CHECK_THROWS(libsarus::Error, findCgroupPathInHierarchy("devices", testDir.getPath(), subsystemMountRoot, 1));
     }
     // no line corresponding to searched entry
@@ -347,14 +347,14 @@ TEST(HooksUtilityTestGroup, findCgroupPathInHierarchy) {
                 "6:cpuacct,cpu:/\n"
                 "5:cpuset:/"
             );
-        libsarus::writeTextFile(procFileContent.str(), procFilePath, openmode);
+        libsarus::filesystem::writeTextFile(procFileContent.str(), procFilePath, openmode);
         CHECK_THROWS(libsarus::Error, findCgroupPathInHierarchy("devices", testDir.getPath(), subsystemMountRoot, 1));
     }
 }
 
 TEST(HooksUtilityTestGroup, findCgroupPath) {
     auto testDir = libsarus::PathRAII(
-        libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "hooks-test-cgroup-path"));
+        libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "hooks-test-cgroup-path"));
 
     // prepare mock /prod/[pid]/mountinfo file
     auto mountinfoPath = testDir.getPath() / "proc" / "1" / "mountinfo";
@@ -367,7 +367,7 @@ TEST(HooksUtilityTestGroup, findCgroupPath) {
             "49 41 253:2 / /home rw,relatime shared:31 - xfs /dev/mapper/home rw,seclabel,attr2,inode64,noquota"
         )
         % mountPointPath.string();
-    libsarus::writeTextFile(mountinfoContent.str(), mountinfoPath);
+    libsarus::filesystem::writeTextFile(mountinfoContent.str(), mountinfoPath);
 
     // prepare mock /prod/[pid]/cgroup file
     auto procFilePath = testDir.getPath() / "proc" / "1" / "cgroup";
@@ -379,7 +379,7 @@ TEST(HooksUtilityTestGroup, findCgroupPath) {
             "5:cpuset:/"
         )
         % cgroupRelativePath.string();
-    libsarus::writeTextFile(procFileContent.str(), procFilePath);
+    libsarus::filesystem::writeTextFile(procFileContent.str(), procFilePath);
 
     auto expectedPath = mountPointPath / cgroupRelativePath;
 
@@ -387,28 +387,28 @@ TEST(HooksUtilityTestGroup, findCgroupPath) {
     CHECK_THROWS(libsarus::Error, findCgroupPath("devices", testDir.getPath(), 1));
 
     // test with expected path existing
-    libsarus::createFoldersIfNecessary(expectedPath);
+    libsarus::filesystem::createFoldersIfNecessary(expectedPath);
     auto returnedPath = findCgroupPath("devices", testDir.getPath(), 1);
     CHECK(boost::filesystem::equivalent(returnedPath, expectedPath));
 }
 
 TEST(HooksUtilityTestGroup, whitelistDeviceInCgroup) {
     auto testDir = libsarus::PathRAII(
-        libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "hooks-test-whitelist-device"));
+        libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "hooks-test-whitelist-device"));
 
     auto allowFile = testDir.getPath() / "devices.allow";
-    libsarus::createFileIfNecessary(allowFile);
+    libsarus::filesystem::createFileIfNecessary(allowFile);
 
     // regular operation
     whitelistDeviceInCgroup(testDir.getPath(), "/dev/null");
-    auto expectedDeviceID = libsarus::getDeviceID("/dev/null");
+    auto expectedDeviceID = libsarus::filesystem::getDeviceID("/dev/null");
     auto expectedEntry = boost::format("c %u:%u rw") % major(expectedDeviceID) % minor(expectedDeviceID);
-    auto writtenEntry = libsarus::readFile(allowFile);
+    auto writtenEntry = libsarus::filesystem::readFile(allowFile);
     CHECK_EQUAL(writtenEntry, expectedEntry.str());
 
     // deviceFile argument is not a device
     auto dummyFile = testDir.getPath() / "dummy";
-    libsarus::createFileIfNecessary(dummyFile);
+    libsarus::filesystem::createFileIfNecessary(dummyFile);
     CHECK_THROWS(libsarus::Error, whitelistDeviceInCgroup(testDir.getPath(), dummyFile));
 }
 

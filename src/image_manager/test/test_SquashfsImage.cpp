@@ -29,8 +29,8 @@ TEST(SquashfsImageTestGroup, testSquashfsImage) {
     libsarus::PathRAII repository{config.directories.repository};
     boost::filesystem::remove_all(repository.getPath());
 
-    libsarus::PathRAII unpackedImage{libsarus::makeUniquePathWithRandomSuffix("/tmp/sarus-test-unpackedImage")};
-    libsarus::createFoldersIfNecessary(unpackedImage.getPath());
+    libsarus::PathRAII unpackedImage{libsarus::filesystem::makeUniquePathWithRandomSuffix("/tmp/sarus-test-unpackedImage")};
+    libsarus::filesystem::createFoldersIfNecessary(unpackedImage.getPath());
 
     SquashfsImage{config, unpackedImage.getPath(), config.getImageFile()};
 

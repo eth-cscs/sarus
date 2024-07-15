@@ -26,7 +26,7 @@ TEST_GROUP(GroupDBTestGroup) {
 
 TEST(GroupDBTestGroup, testRead) {
     // create file
-    auto path = libsarus::PathRAII{libsarus::makeUniquePathWithRandomSuffix("./test-etc-group-file")};
+    auto path = libsarus::PathRAII{libsarus::filesystem::makeUniquePathWithRandomSuffix("./test-etc-group-file")};
     const auto& file = path.getPath();
     std::ofstream of{file.c_str()};
     of  << "groupName0:x:0:" << std::endl
@@ -63,7 +63,7 @@ TEST(GroupDBTestGroup, testRead) {
 }
 
 TEST(GroupDBTestGroup, testWrite) {
-    auto path = libsarus::PathRAII{libsarus::makeUniquePathWithRandomSuffix("./test-etc-group-file")};
+    auto path = libsarus::PathRAII{libsarus::filesystem::makeUniquePathWithRandomSuffix("./test-etc-group-file")};
     const auto& file = path.getPath();
 
     // create entry

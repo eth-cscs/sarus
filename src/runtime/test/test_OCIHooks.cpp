@@ -24,7 +24,7 @@ namespace test {
 namespace rj = rapidjson;
 
 TEST_GROUP(OCIHooksTestGroup) {
-    libsarus::PathRAII testDirRAII = libsarus::PathRAII{ libsarus::makeUniquePathWithRandomSuffix("test_oci_hook") };
+    libsarus::PathRAII testDirRAII = libsarus::PathRAII{ libsarus::filesystem::makeUniquePathWithRandomSuffix("test_oci_hook") };
     boost::filesystem::path jsonFile = testDirRAII.getPath() / "hook.json";
     boost::filesystem::path schemaFile = boost::filesystem::path{__FILE__}
         .parent_path()
@@ -34,7 +34,7 @@ TEST_GROUP(OCIHooksTestGroup) {
 };
 
 TEST(OCIHooksTestGroup, create_hook_with_schema_incompatibility) {
-    libsarus::createFoldersIfNecessary(jsonFile.parent_path());
+    libsarus::filesystem::createFoldersIfNecessary(jsonFile.parent_path());
 
     // missing "stages" property
     {
@@ -73,7 +73,7 @@ TEST(OCIHooksTestGroup, create_hook_with_schema_incompatibility) {
 }
 
 TEST(OCIHooksTestGroup, create_hook_with_bad_version) {
-    libsarus::createFoldersIfNecessary(jsonFile.parent_path());
+    libsarus::filesystem::createFoldersIfNecessary(jsonFile.parent_path());
     auto os = std::ofstream(jsonFile.c_str());
     os << R"(
     {
@@ -95,7 +95,7 @@ TEST(OCIHooksTestGroup, create_hook_with_bad_version) {
 // Hopefully this will get fixed in some future release of RapidJson,
 // then this test will fail and we will know that the fix occurred :)
 TEST(OCIHooksTestGroup, create_hook_with_unsupported_regex) {
-    libsarus::createFoldersIfNecessary(jsonFile.parent_path());
+    libsarus::filesystem::createFoldersIfNecessary(jsonFile.parent_path());
     auto os = std::ofstream(jsonFile.c_str());
     os << R"(
     {
@@ -115,7 +115,7 @@ TEST(OCIHooksTestGroup, create_hook_with_unsupported_regex) {
 }
 
 TEST(OCIHooksTestGroup, create_hook_and_check_members) {
-    libsarus::createFoldersIfNecessary(jsonFile.parent_path());
+    libsarus::filesystem::createFoldersIfNecessary(jsonFile.parent_path());
     auto os = std::ofstream(jsonFile.c_str());
     os << R"(
     {
@@ -166,7 +166,7 @@ TEST(OCIHooksTestGroup, create_hook_and_check_members) {
 }
 
 TEST(OCIHooksTestGroup, create_hook_and_check_activation) {
-    libsarus::createFoldersIfNecessary(jsonFile.parent_path());
+    libsarus::filesystem::createFoldersIfNecessary(jsonFile.parent_path());
     auto os = std::ofstream(jsonFile.c_str());
     os << R"(
     {

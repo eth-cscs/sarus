@@ -163,29 +163,29 @@ void createBlockDeviceFile(const boost::filesystem::path& path, const int majorI
 }
 
 void create_test_directory_tree(const std::string& dir) {
-    libsarus::executeCommand("mkdir -p " + dir);
-    libsarus::executeCommand("touch " + dir + "/a.txt");
-    libsarus::executeCommand("touch " + dir + "/b.md");
-    libsarus::executeCommand("touch " + dir + "/c.h");
-    libsarus::executeCommand("chmod 755 " + dir + "/a.txt");
-    libsarus::executeCommand("chmod 644 " + dir + "/b.md");
-    libsarus::executeCommand("chmod 700 " + dir + "/c.h");
+    libsarus::process::executeCommand("mkdir -p " + dir);
+    libsarus::process::executeCommand("touch " + dir + "/a.txt");
+    libsarus::process::executeCommand("touch " + dir + "/b.md");
+    libsarus::process::executeCommand("touch " + dir + "/c.h");
+    libsarus::process::executeCommand("chmod 755 " + dir + "/a.txt");
+    libsarus::process::executeCommand("chmod 644 " + dir + "/b.md");
+    libsarus::process::executeCommand("chmod 700 " + dir + "/c.h");
 
-    libsarus::executeCommand("mkdir -p " + dir + "/sub1");
-    libsarus::executeCommand("touch " + dir + "/sub1/d.cpp");
-    libsarus::executeCommand("touch " + dir + "/sub1/e.so");
-    libsarus::executeCommand("chmod 600 " + dir + "/sub1/d.cpp");
-    libsarus::executeCommand("chmod 775 " + dir + "/sub1/e.so");
+    libsarus::process::executeCommand("mkdir -p " + dir + "/sub1");
+    libsarus::process::executeCommand("touch " + dir + "/sub1/d.cpp");
+    libsarus::process::executeCommand("touch " + dir + "/sub1/e.so");
+    libsarus::process::executeCommand("chmod 600 " + dir + "/sub1/d.cpp");
+    libsarus::process::executeCommand("chmod 775 " + dir + "/sub1/e.so");
 
-    libsarus::executeCommand("mkdir -p " + dir + "/sub1/ssub11");
-    libsarus::executeCommand("touch " + dir + "/sub1/ssub11/g.pdf");
-    libsarus::executeCommand("touch " + dir + "/sub1/ssub11/h.py");
-    libsarus::executeCommand("chmod 665 " + dir + "/sub1/ssub11/g.pdf");
-    libsarus::executeCommand("chmod 777 " + dir + "/sub1/ssub11/h.py");
+    libsarus::process::executeCommand("mkdir -p " + dir + "/sub1/ssub11");
+    libsarus::process::executeCommand("touch " + dir + "/sub1/ssub11/g.pdf");
+    libsarus::process::executeCommand("touch " + dir + "/sub1/ssub11/h.py");
+    libsarus::process::executeCommand("chmod 665 " + dir + "/sub1/ssub11/g.pdf");
+    libsarus::process::executeCommand("chmod 777 " + dir + "/sub1/ssub11/h.py");
 
-    libsarus::executeCommand("mkdir -p " + dir + "/sub2");
-    libsarus::executeCommand("touch " + dir + "/sub2/f.a");
-    libsarus::executeCommand("chmod 666 " + dir + "/sub2/f.a");
+    libsarus::process::executeCommand("mkdir -p " + dir + "/sub2");
+    libsarus::process::executeCommand("touch " + dir + "/sub2/f.a");
+    libsarus::process::executeCommand("chmod 666 " + dir + "/sub2/f.a");
 }
 
 } // filesystem

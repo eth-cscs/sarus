@@ -30,8 +30,9 @@
  */
 
 namespace libsarus {
+namespace json {
 
-rapidjson::Document parseJSONStream(std::istream& is) {
+rapidjson::Document parseStream(std::istream& is) {
     auto json = rapidjson::Document{};
 
     try {
@@ -45,9 +46,9 @@ rapidjson::Document parseJSONStream(std::istream& is) {
     return json;
 }
 
-rapidjson::Document parseJSON(const std::string& string) {
+rapidjson::Document parse(const std::string& string) {
     std::istringstream iss(string);
-    auto json = parseJSONStream(iss);
+    auto json = parseStream(iss);
     if (json.HasParseError()) {
         auto message = boost::format(
             "Error parsing JSON string:\n'%s'\nInput data is not valid JSON\n"
@@ -60,9 +61,9 @@ rapidjson::Document parseJSON(const std::string& string) {
     return json;
 }
 
-rapidjson::Document readJSON(const boost::filesystem::path& filename) {
+rapidjson::Document read(const boost::filesystem::path& filename) {
     std::ifstream ifs(filename.string());
-    auto json = parseJSONStream(ifs);
+    auto json = parseStream(ifs);
     if (json.HasParseError()) {
         auto message = boost::format(
             "Error parsing JSON file %s. Input data is not valid JSON\n"
@@ -75,7 +76,7 @@ rapidjson::Document readJSON(const boost::filesystem::path& filename) {
     return json;
 }
 
-rapidjson::SchemaDocument readJSONSchema(const boost::filesystem::path& schemaFile) {
+rapidjson::SchemaDocument readSchema(const boost::filesystem::path& schemaFile) {
     class RemoteSchemaDocumentProvider : public rapidjson::IRemoteSchemaDocumentProvider {
     public:
         RemoteSchemaDocumentProvider(const boost::filesystem::path& schemasDir)
@@ -83,20 +84,20 @@ rapidjson::SchemaDocument readJSONSchema(const boost::filesystem::path& schemaFi
         {}
         const rapidjson::SchemaDocument* GetRemoteDocument(const char* uri, rapidjson::SizeType length) override {
             auto filename = std::string(uri, length);
-            auto schema = libsarus::readJSON(schemasDir / filename);
+            auto schema = json::read(schemasDir / filename);
             return new rapidjson::SchemaDocument(schema);
         }
     private:
         boost::filesystem::path schemasDir;
     };
 
-    auto schemaJSON = libsarus::readJSON(schemaFile);
+    auto schemaJSON = json::read(schemaFile);
     auto provider = RemoteSchemaDocumentProvider{ schemaFile.parent_path() };
     return rapidjson::SchemaDocument{ schemaJSON, nullptr, rapidjson::SizeType(0), &provider };
 }
 
-rapidjson::Document readAndValidateJSON(const boost::filesystem::path& jsonFile, const boost::filesystem::path& schemaFile) {
-    auto schema = readJSONSchema(schemaFile);
+rapidjson::Document readAndValidate(const boost::filesystem::path& jsonFile, const boost::filesystem::path& schemaFile) {
+    auto schema = readSchema(schemaFile);
 
     rapidjson::Document json;
 
@@ -150,9 +151,9 @@ rapidjson::Document readAndValidateJSON(const boost::filesystem::path& jsonFile,
     return json;
 }
 
-void writeJSON(const rapidjson::Value& json, const boost::filesystem::path& filename) {
+void write(const rapidjson::Value& json, const boost::filesystem::path& filename) {
     try {
-        createFoldersIfNecessary(filename.parent_path());
+        filesystem::createFoldersIfNecessary(filename.parent_path());
         std::ofstream ofs(filename.string());
         if(!ofs) {
             auto message = boost::format("Failed to open std::ofstream for %s") % filename;
@@ -169,7 +170,7 @@ void writeJSON(const rapidjson::Value& json, const boost::filesystem::path& file
     }
 }
 
-std::string serializeJSON(const rapidjson::Value& json) {
+std::string serialize(const rapidjson::Value& json) {
     namespace rj = rapidjson;
     rj::StringBuffer buffer;
     rj::Writer<rj::StringBuffer> writer(buffer);
@@ -177,4 +178,4 @@ std::string serializeJSON(const rapidjson::Value& json) {
     return buffer.GetString();
 }
 
-}
+}}

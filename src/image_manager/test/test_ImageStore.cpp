@@ -53,13 +53,13 @@ TEST_GROUP(ImageStoreTestGroup) {
 
 static void addImageHarness(const image_manager::ImageStore& imageStore, const common::SarusImage& image) {
     imageStore.addImage(image);
-    libsarus::createFileIfNecessary(image.imageFile);
-    libsarus::createFileIfNecessary(image.metadataFile);
+    libsarus::filesystem::createFileIfNecessary(image.imageFile);
+    libsarus::filesystem::createFileIfNecessary(image.metadataFile);
 }
 
 static bool isFileOwnedBy(const boost::filesystem::path& metadataFile, const libsarus::UserIdentity& userIdentity) {
     uid_t fileUid; gid_t fileGid;
-    std::tie(fileUid, fileGid) = libsarus::getOwner(metadataFile);
+    std::tie(fileUid, fileGid) = libsarus::filesystem::getOwner(metadataFile);
     return fileUid == userIdentity.uid && fileGid == userIdentity.gid;
 }
 

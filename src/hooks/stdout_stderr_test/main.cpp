@@ -16,7 +16,7 @@
 int main(int argc, char* argv[]) {
     boost::filesystem::path bundleDir;
     auto containerState = libsarus::hook::parseStateOfContainerFromStdin();
-    auto json = libsarus::readJSON(containerState.bundle() / "config.json");
+    auto json = libsarus::json::read(containerState.bundle() / "config.json");
     libsarus::hook::applyLoggingConfigIfAvailable(json);
 
     std::cout << "hook's stdout" << std::endl;

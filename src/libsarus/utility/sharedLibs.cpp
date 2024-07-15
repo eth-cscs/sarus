@@ -25,8 +25,9 @@
  */
 
 namespace libsarus {
+namespace sharedlibs {
 
-boost::filesystem::path getSharedLibLinkerName(const boost::filesystem::path& path) {
+boost::filesystem::path getLinkerName(const boost::filesystem::path& path) {
     auto extension = std::string{".so"};
     auto filename = path.filename().string();
     auto dot = std::find_end(filename.begin(), filename.end(), extension.cbegin(), extension.cend());
@@ -40,13 +41,13 @@ boost::filesystem::path getSharedLibLinkerName(const boost::filesystem::path& pa
     return filename;
 }
 
-std::vector<boost::filesystem::path> getSharedLibsFromDynamicLinker(
+std::vector<boost::filesystem::path> getListFromDynamicLinker(
     const boost::filesystem::path& ldconfigPath,
     const boost::filesystem::path& rootDir) {
 
     auto libraries = std::vector<boost::filesystem::path>{};
     auto command = boost::format("%s -r %s -p") % ldconfigPath.string() % rootDir.string();
-    auto output = libsarus::executeCommand(command.str());
+    auto output = process::executeCommand(command.str());
     std::stringstream stream{output};
     std::string line;
     while(std::getline(stream, line)) {
@@ -62,8 +63,8 @@ std::vector<boost::filesystem::path> getSharedLibsFromDynamicLinker(
     return libraries;
 }
 
-std::vector<std::string> parseSharedLibAbi(const boost::filesystem::path& lib) {
-    if(!isSharedLib(lib)) {
+std::vector<std::string> parseAbi(const boost::filesystem::path& lib) {
+    if(!filesystem::isSharedLib(lib)) {
         auto message = boost::format{"Cannot parse ABI version of '%s': not a shared library"} % lib;
         SARUS_THROW_ERROR(message.str());
     }
@@ -90,9 +91,9 @@ std::vector<std::string> parseSharedLibAbi(const boost::filesystem::path& lib) {
     return tokens;
 }
 
-std::vector<std::string> resolveSharedLibAbi(const boost::filesystem::path& lib,
+std::vector<std::string> resolveAbi(const boost::filesystem::path& lib,
                                              const boost::filesystem::path& rootDir) {
-    if(!isSharedLib(lib)) {
+    if(!filesystem::isSharedLib(lib)) {
         auto message = boost::format{"Cannot resolve ABI version of '%s': not a shared library"} % lib;
         SARUS_THROW_ERROR(message.str());
     }
@@ -100,17 +101,17 @@ std::vector<std::string> resolveSharedLibAbi(const boost::filesystem::path& lib,
     auto longestAbiSoFar = std::vector<std::string>{};
 
     auto traversedSymlinks = std::vector<boost::filesystem::path>{};
-    auto libReal = appendPathsWithinRootfs(rootDir, "/", lib, &traversedSymlinks);
+    auto libReal = filesystem::appendPathsWithinRootfs(rootDir, "/", lib, &traversedSymlinks);
     auto pathsToProcess = std::move(traversedSymlinks);
     pathsToProcess.push_back(std::move(libReal));
 
     for(const auto& path : pathsToProcess) {
-        if(!isSharedLib(path)) {
+        if(!filesystem::isSharedLib(path)) {
             // some traversed symlinks may not be library filenames,
             // e.g. with /lib -> /lib64
             continue;
         }
-        if(getSharedLibLinkerName(path) != getSharedLibLinkerName(lib)) {
+        if(sharedlibs::getLinkerName(path) != sharedlibs::getLinkerName(lib)) {
             // E.g. on Cray we could have:
             // mpich-gnu-abi/7.1/lib/libmpi.so.12 -> ../../../mpich-gnu/7.1/lib/libmpich_gnu_71.so.3.0.1
             // Let's ignore the symlink's target in this case
@@ -121,7 +122,7 @@ std::vector<std::string> resolveSharedLibAbi(const boost::filesystem::path& lib,
             continue;
         }
 
-        auto abi = parseSharedLibAbi(path);
+        auto abi = sharedlibs::parseAbi(path);
 
         const auto& shorter = abi.size() < longestAbiSoFar.size() ? abi : longestAbiSoFar;
         const auto& longer = abi.size() > longestAbiSoFar.size() ? abi : longestAbiSoFar;
@@ -143,9 +144,9 @@ std::vector<std::string> resolveSharedLibAbi(const boost::filesystem::path& lib,
     return longestAbiSoFar;
 }
 
-std::string getSharedLibSoname(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath) {
+std::string getSoname(const boost::filesystem::path& path, const boost::filesystem::path& readelfPath) {
     auto command = boost::format("%s -d %d") % readelfPath % path;
-    auto output = libsarus::executeCommand(command.str());
+    auto output = process::executeCommand(command.str());
 
     std::stringstream stream{output};
     std::string line;
@@ -166,7 +167,7 @@ bool is64bitSharedLib(const boost::filesystem::path& path, const boost::filesyst
     boost::regex re("^ *Machine: +Advanced Micro Devices X86-64 *$");
 
     auto command = boost::format("%s -h %s") % readelfPath.string() % path.string();
-    auto output = libsarus::executeCommand(command.str());
+    auto output = process::executeCommand(command.str());
 
     std::stringstream stream{output};
     std::string line;
@@ -179,4 +180,4 @@ bool is64bitSharedLib(const boost::filesystem::path& path, const boost::filesyst
     return false;
 }
 
-}
+}}

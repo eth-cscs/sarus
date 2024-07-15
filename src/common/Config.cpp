@@ -27,7 +27,7 @@ Config::Config(const boost::filesystem::path& sarusInstallationPrefixDir)
 
 Config::Config(const boost::filesystem::path& configFilename,
                const boost::filesystem::path& configSchemaFilename)
-    : json{ libsarus::readAndValidateJSON(configFilename, configSchemaFilename) }
+    : json{ libsarus::json::readAndValidate(configFilename, configSchemaFilename) }
 {}
 
 void Config::Directories::initialize(bool useCentralizedRepository, const common::Config& config) {
@@ -36,20 +36,20 @@ void Config::Directories::initialize(bool useCentralizedRepository, const common
                             libsarus::LogLevel::DEBUG);
         repository = config.getCentralizedRepositoryDirectory();
         images = repository / "images";
-        libsarus::createFoldersIfNecessary(images,config.userIdentity.uid, config.userIdentity.gid);
+        libsarus::filesystem::createFoldersIfNecessary(images,config.userIdentity.uid, config.userIdentity.gid);
     }
     else {
         libsarus::logMessage( boost::format("initializing CLI config's directories for local repository"),
                             libsarus::LogLevel::DEBUG);
         repository = config.getLocalRepositoryDirectory();
         images = repository / "images";
-        libsarus::createFoldersIfNecessary(images, config.userIdentity.uid, config.userIdentity.gid);
+        libsarus::filesystem::createFoldersIfNecessary(images, config.userIdentity.uid, config.userIdentity.gid);
     }
 
     cache = repository / "cache";
-    libsarus::createFoldersIfNecessary(cache, config.userIdentity.uid, config.userIdentity.gid);
-    libsarus::createFoldersIfNecessary(cache / "ociImages", config.userIdentity.uid, config.userIdentity.gid);
-    libsarus::createFoldersIfNecessary(cache / "blobs", config.userIdentity.uid, config.userIdentity.gid);
+    libsarus::filesystem::createFoldersIfNecessary(cache, config.userIdentity.uid, config.userIdentity.gid);
+    libsarus::filesystem::createFoldersIfNecessary(cache / "ociImages", config.userIdentity.uid, config.userIdentity.gid);
+    libsarus::filesystem::createFoldersIfNecessary(cache / "blobs", config.userIdentity.uid, config.userIdentity.gid);
 
     bool tempDirWasSpecifiedThroughCLI = !tempFromCLI.empty();
     if(tempDirWasSpecifiedThroughCLI) {

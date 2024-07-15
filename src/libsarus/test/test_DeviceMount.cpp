@@ -34,8 +34,8 @@ TEST(DeviceMountTestGroup, constructor) {
 IGNORE_TEST(DeviceMountTestGroup, constructor) {
 #endif
     auto testDir = libsarus::PathRAII(
-        libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "deviceMount-test-constructor"));
-    libsarus::createFoldersIfNecessary(testDir.getPath());
+        libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "deviceMount-test-constructor"));
+    libsarus::filesystem::createFoldersIfNecessary(testDir.getPath());
 
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
@@ -56,7 +56,7 @@ IGNORE_TEST(DeviceMountTestGroup, constructor) {
     // source path is not a device file
     {
         auto noDeviceFile = testDir.getPath() / "notADevice";
-        libsarus::createFileIfNecessary(noDeviceFile);
+        libsarus::filesystem::createFileIfNecessary(noDeviceFile);
         auto mountObject = libsarus::Mount{noDeviceFile, noDeviceFile, mount_flags, config->getRootfsDirectory(), config->userIdentity};
 
         CHECK_THROWS(libsarus::Error, DeviceMount(std::move(mountObject), devAccess));
@@ -69,8 +69,8 @@ TEST(DeviceMountTestGroup, getters) {
 IGNORE_TEST(DeviceMountTestGroup, getters) {
 #endif
     auto testDir = libsarus::PathRAII(
-        libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "deviceMount-test-getters"));
-    libsarus::createFoldersIfNecessary(testDir.getPath());
+        libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "deviceMount-test-getters"));
+    libsarus::filesystem::createFoldersIfNecessary(testDir.getPath());
 
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
@@ -120,8 +120,8 @@ TEST(DeviceMountTestGroup, performMount) {
 IGNORE_TEST(DeviceMountTestGroup, performMount) {
 #endif
     auto testDir = libsarus::PathRAII(
-        libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "deviceMount-test-performMount"));
-    libsarus::createFoldersIfNecessary(testDir.getPath());
+        libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "deviceMount-test-performMount"));
+    libsarus::filesystem::createFoldersIfNecessary(testDir.getPath());
 
     auto configRAII = test_utility::config::makeConfig();
     auto& config = configRAII.config;
@@ -129,7 +129,7 @@ IGNORE_TEST(DeviceMountTestGroup, performMount) {
     auto bundleDirRAII = libsarus::PathRAII{boost::filesystem::path{config->json["OCIBundleDir"].GetString()}};
     const auto& bundleDir = bundleDirRAII.getPath();
     auto rootfsDir = bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()};
-    libsarus::createFoldersIfNecessary(rootfsDir);
+    libsarus::filesystem::createFoldersIfNecessary(rootfsDir);
 
     auto sourceFile = testDir.getPath() / "sarusTestDevice0";
     auto destinationFile = boost::filesystem::path{"/dev/sarusTestDevice0"};
@@ -145,8 +145,8 @@ IGNORE_TEST(DeviceMountTestGroup, performMount) {
     // perform the mount
     libsarus::DeviceMount{std::move(mountObject), devAccess}.performMount();
     CHECK(test_utility::filesystem::isSameBindMountedFile(sourceFile, rootfsDir / destinationFile));
-    CHECK(libsarus::getDeviceID(rootfsDir / destinationFile) == makedev(majorID, minorID));
-    CHECK(libsarus::getDeviceType(rootfsDir / destinationFile) == 'c');
+    CHECK(libsarus::filesystem::getDeviceID(rootfsDir / destinationFile) == makedev(majorID, minorID));
+    CHECK(libsarus::filesystem::getDeviceType(rootfsDir / destinationFile) == 'c');
 
     // cleanup
     CHECK(umount((rootfsDir / destinationFile).c_str()) == 0);

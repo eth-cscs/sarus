@@ -51,7 +51,7 @@ TEST(ImageManagerUtilityTestGroup, getPlatformDigestFromOCIIndex) {
     // Alpine manifest list
     {
         auto manifestListPath = boost::filesystem::path{__FILE__}.parent_path() / "docker_manifest_list_alpine.json";
-        auto manifestList = libsarus::readJSON(manifestListPath);
+        auto manifestList = libsarus::json::read(manifestListPath);
 
         platform["architecture"] = "amd64";
         auto returnedDigest = utility::getPlatformDigestFromOCIIndex(manifestList, platform);
@@ -82,7 +82,7 @@ TEST(ImageManagerUtilityTestGroup, getPlatformDigestFromOCIIndex) {
     // Debian manifest list
     {
         auto manifestListPath = boost::filesystem::path{__FILE__}.parent_path() / "docker_manifest_list_debian.json";
-        auto manifestList = libsarus::readJSON(manifestListPath);
+        auto manifestList = libsarus::json::read(manifestListPath);
 
         platform["architecture"] = "amd64";
         auto returnedDigest = utility::getPlatformDigestFromOCIIndex(manifestList, platform);

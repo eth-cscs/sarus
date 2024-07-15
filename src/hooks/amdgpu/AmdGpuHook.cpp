@@ -32,16 +32,16 @@ std::unordered_map<std::string, std::string> mapDevicesIdToRenderD(
 
   fs::path byPath(path + "/by-path");
   for (fs::directory_iterator itr(byPath); itr != end_itr; ++itr) {
-    if (!libsarus::isSymlink(itr->path()) ||
+    if (!libsarus::filesystem::isSymlink(itr->path()) ||
         itr->path().string().find("card") == std::string::npos)
       continue;
 
     cardId = fs::path(fs::read_symlink(itr->path())).filename().string();
 
-    libsarus::replaceString(cardId, "card", "");
+    libsarus::string::replace(cardId, "card", "");
 
     auto renderNName{itr->path().string()};
-    libsarus::replaceString(renderNName, "card", "render");
+    libsarus::string::replace(renderNName, "card", "render");
     auto renderNPath{fs::path(renderNName)};
 
     try {
@@ -112,7 +112,7 @@ void AmdGpuHook::activate() {
   log("Activating AMD GPU support", libsarus::LogLevel::INFO);
 
   try {
-    if (!libsarus::isDeviceFile(fs::path{"/dev/kfd"})) {
+    if (!libsarus::filesystem::isDeviceFile(fs::path{"/dev/kfd"})) {
       return;
     }
   } catch (const libsarus::Error& e) {
@@ -127,7 +127,7 @@ void AmdGpuHook::activate() {
 void AmdGpuHook::parseConfigJSONOfBundle() {
   log("Parsing bundle's config.json", libsarus::LogLevel::INFO);
 
-  auto json = libsarus::readJSON(containerState.bundle() / "config.json");
+  auto json = libsarus::json::read(containerState.bundle() / "config.json");
 
   libsarus::hook::applyLoggingConfigIfAvailable(json);
 
@@ -158,10 +158,10 @@ void AmdGpuHook::performBindMounts() const {
     if (mountPoint.empty())
       continue;
 
-    libsarus::validatedBindMount(mountPoint, mountPoint, userIdentity,
+    libsarus::mount::validatedBindMount(mountPoint, mountPoint, userIdentity,
                                        rootfsDir);
 
-    if (libsarus::isDeviceFile(mountPoint)) {
+    if (libsarus::filesystem::isDeviceFile(mountPoint)) {
       if (devicesCgroupPath.empty()) {
         devicesCgroupPath =
             libsarus::hook::findCgroupPath("devices", "/", containerState.pid());

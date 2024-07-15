@@ -36,7 +36,7 @@ TEST(ImageMetadataTestGroup, write_read_from_file) {
         {"labelKey1", "labelValue1"}
     };
 
-    auto file = libsarus::makeUniquePathWithRandomSuffix("/tmp/sarus-test-imagemetadata");
+    auto file = libsarus::filesystem::makeUniquePathWithRandomSuffix("/tmp/sarus-test-imagemetadata");
     writtenMetadata.write(file);
     auto readMetadata = common::ImageMetadata{file, libsarus::UserIdentity{}};
 

@@ -91,7 +91,7 @@ rapidjson::Document getCurrentOCIPlatform() {
     platform.AddMember("architecture", rj::Value{architecture.c_str(), allocator}, allocator);
     platform.AddMember("variant", rj::Value{variant.c_str(), allocator}, allocator);
 
-    auto message = boost::format("Detected current platform: %s") % libsarus::serializeJSON(platform);
+    auto message = boost::format("Detected current platform: %s") % libsarus::json::serialize(platform);
     printLog(message, libsarus::LogLevel::DEBUG);
 
     return platform;

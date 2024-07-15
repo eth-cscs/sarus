@@ -143,7 +143,7 @@ TEST(CLITestGroup, generated_config_for_CommandLoad) {
     // temp dir
     {
         auto customTempDir = libsarus::PathRAII("/tmp/sarus-utest-temp-dir");
-        libsarus::createFoldersIfNecessary(customTempDir.getPath());
+        libsarus::filesystem::createFoldersIfNecessary(customTempDir.getPath());
 
         auto conf = generateConfig(
             {"load", "--temp-dir="+customTempDir.getPath().string(), "archive.tar", "library/image:tag"});
@@ -188,7 +188,7 @@ TEST(CLITestGroup, generated_config_for_CommandPull) {
     // temp-dir option and custom server
     {
         auto customTempDir = libsarus::PathRAII("/tmp/sarus-utest-temp-dir");
-        libsarus::createFoldersIfNecessary(customTempDir.getPath());
+        libsarus::filesystem::createFoldersIfNecessary(customTempDir.getPath());
 
         auto conf = generateConfig(
             {"pull",
@@ -487,8 +487,8 @@ TEST (CLITestGroup, device_mounts_for_CommandRun)  {
 IGNORE_TEST(CLITestGroup, device_mounts_for_CommandRun) {
 #endif
     auto testDir = libsarus::PathRAII(
-        libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "CLI-test-deviceMounts-CommandRun"));
-    libsarus::createFoldersIfNecessary(testDir.getPath());
+        libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "CLI-test-deviceMounts-CommandRun"));
+    libsarus::filesystem::createFoldersIfNecessary(testDir.getPath());
     auto siteDevice = testDir.getPath() / "siteDevice";
     auto siteDeviceMajorID = 511u;
     auto siteDeviceMinorID = 511u;

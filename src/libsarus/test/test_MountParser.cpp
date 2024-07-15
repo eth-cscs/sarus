@@ -100,7 +100,7 @@ TEST(MountParserTestGroup, constructors) {
                      / configRAII.config->json["rootfsFolder"].GetString();
 
     auto requestString = std::string("type=bind,src=/src,dst=/dest,readonly");
-    auto requestMap = libsarus::parseMap(requestString);
+    auto requestMap = libsarus::string::parseMap(requestString);
 
     auto mp1 = libsarus::MountParser{configRAII.config->getRootfsDirectory(), configRAII.config->userIdentity};
     if (configRAII.config->json.HasMember("userMounts")) {  

@@ -36,13 +36,13 @@ void createDriSubdir(const fs::path& path, std::vector<int> ids) {
   if (fs::exists(path)) {
     fs::remove_all(path);
   }
-  libsarus::createFoldersIfNecessary(path / "by-path");
+  libsarus::filesystem::createFoldersIfNecessary(path / "by-path");
 
   int busId = 193;
   for (auto id : ids) {
-    libsarus::createFileIfNecessary(path /
+    libsarus::filesystem::createFileIfNecessary(path /
                                          (boost::format("card%1%") % id).str());
-    libsarus::createFileIfNecessary(
+    libsarus::filesystem::createFileIfNecessary(
         path / (boost::format("renderD%1%") % (128 + id)).str());
 
     fs::create_symlink(
@@ -70,7 +70,7 @@ void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir,
     doc["process"]["env"].PushBack(
         rj::Value{rocrVisibleDevices.c_str(), allocator}, allocator);
   }
-  libsarus::writeJSON(doc, bundleDir / "config.json");
+  libsarus::json::write(doc, bundleDir / "config.json");
 }
 
 TEST_GROUP(AMDGPUHookTestGroup) {
@@ -123,7 +123,7 @@ std::vector<std::string> getExpectedDeviceFiles(
 TEST(AMDGPUHookTestGroup,
      find_all_render_devices_if_ROCR_VISIBLE_DEVICES_is_not_defined) {
   auto mockDriPath = libsarus::PathRAII(
-                         libsarus::makeUniquePathWithRandomSuffix(
+                         libsarus::filesystem::makeUniquePathWithRandomSuffix(
                              boost::filesystem::current_path() / "mockDri"))
                          .getPath();
   createDriSubdir(mockDriPath, {0, 1, 2, 3});
@@ -137,7 +137,7 @@ TEST(AMDGPUHookTestGroup,
 
 TEST(AMDGPUHookTestGroup, find_all_render_devices_in_ROCR_VISIBLE_DEVICES) {
   auto mockDriPath = libsarus::PathRAII(
-                         libsarus::makeUniquePathWithRandomSuffix(
+                         libsarus::filesystem::makeUniquePathWithRandomSuffix(
                              boost::filesystem::current_path() / "mockDri"))
                          .getPath();
   createDriSubdir(mockDriPath, {0, 1, 2, 3});

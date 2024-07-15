@@ -24,7 +24,7 @@ OCIImage::OCIImage(std::shared_ptr<const common::Config> config, const boost::fi
       imageDir{imagePath}
 {
     log(boost::format("Creating OCIImage object from image at %s") % imageDir.getPath(), libsarus::LogLevel::DEBUG);
-    auto imageIndex = libsarus::readJSON(imageDir.getPath() / "index.json");
+    auto imageIndex = libsarus::json::read(imageDir.getPath() / "index.json");
     auto schemaItr = imageIndex.FindMember("schemaVersion");
     if (schemaItr == imageIndex.MemberEnd() || schemaItr->value.GetUint() != 2) {
         SARUS_THROW_ERROR("Unsupported OCI image index format. The 'schemaVersion' property could not be found or its value is different from '2'");
@@ -33,12 +33,12 @@ OCIImage::OCIImage(std::shared_ptr<const common::Config> config, const boost::fi
     std::string manifestDigest = imageIndex["manifests"][0]["digest"].GetString();
     log(boost::format("Found manifest digest: %s") % manifestDigest, libsarus::LogLevel::DEBUG);
     auto manifestHash = manifestDigest.substr(manifestDigest.find(":")+1);
-    auto imageManifest = libsarus::readJSON(imageDir.getPath() / "blobs/sha256" / manifestHash);
+    auto imageManifest = libsarus::json::read(imageDir.getPath() / "blobs/sha256" / manifestHash);
 
     std::string configDigest = imageManifest["config"]["digest"].GetString();
     log(boost::format("Found config digest: %s") % configDigest, libsarus::LogLevel::DEBUG);
     auto configHash = configDigest.substr(configDigest.find(":")+1);
-    auto imageConfig = libsarus::readJSON(imageDir.getPath() / "blobs/sha256" / configHash);
+    auto imageConfig = libsarus::json::read(imageDir.getPath() / "blobs/sha256" / configHash);
 
     metadata = sarus::common::ImageMetadata(imageConfig["config"]);
     imageID = configHash;
@@ -57,9 +57,9 @@ libsarus::PathRAII OCIImage::unpack() const {
 }
 
 boost::filesystem::path OCIImage::makeTemporaryUnpackDirectory() const {
-    auto tempUnpackDir = libsarus::makeUniquePathWithRandomSuffix(config->directories.temp / "unpack-directory");
+    auto tempUnpackDir = libsarus::filesystem::makeUniquePathWithRandomSuffix(config->directories.temp / "unpack-directory");
     try {
-        libsarus::createFoldersIfNecessary(tempUnpackDir);
+        libsarus::filesystem::createFoldersIfNecessary(tempUnpackDir);
     }
     catch(libsarus::Error& e) {
         auto message = boost::format("Error creating temporary unpacking directory %s") % tempUnpackDir;

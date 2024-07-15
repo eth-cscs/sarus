@@ -39,7 +39,7 @@ public:
                                        "list"};
 
     // execute runc
-    auto status = libsarus::forkExecWait(args);
+    auto status = libsarus::process::forkExecWait(args);
 
     if (status != 0) {
       auto message = boost::format("%s exited with code %d") % args % status;

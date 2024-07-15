@@ -26,6 +26,7 @@
  */
 
 namespace libsarus {
+namespace string {
 
 std::string removeWhitespaces(const std::string& s) {
     auto result = s;
@@ -34,7 +35,7 @@ std::string removeWhitespaces(const std::string& s) {
     return result;
 }
 
-std::string replaceString(std::string &buf, const std::string& from, const std::string& to) {
+std::string replace(std::string &buf, const std::string& from, const std::string& to) {
     std::string::size_type pos = buf.find(from);
     while(pos != std::string::npos){
         buf.replace(pos, from.size(), to);
@@ -65,7 +66,7 @@ std::pair<std::string, std::string> parseKeyValuePair(const std::string& pairStr
     return std::pair<std::string, std::string>{key, value};
 }
 
-std::string generateRandomString(size_t size) {
+std::string generateRandom(size_t size) {
     auto dist = std::uniform_int_distribution<std::mt19937::result_type>(0, 'z'-'a');
     std::mt19937 generator;
     generator.seed(std::random_device()());
@@ -104,7 +105,7 @@ std::unordered_map<std::string, std::string> parseMap(const std::string& input,
     for(const auto& pair : pairs) {
         std::string key, value;
         try {
-            std::tie(key, value) = libsarus::parseKeyValuePair(pair, keyValueSeparators);
+            std::tie(key, value) = string::parseKeyValuePair(pair, keyValueSeparators);
         }
         catch(std::exception& e) {
             auto message = boost::format("Error parsing '%s'. %s") % input % e.what();
@@ -135,4 +136,4 @@ std::unordered_map<std::string, std::string> parseMap(const std::string& input,
     return map;
 }
 
-}
+}}

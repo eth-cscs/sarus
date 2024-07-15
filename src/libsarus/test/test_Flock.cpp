@@ -34,11 +34,11 @@ static bool lockAcquisitionDoesntThrow(const boost::filesystem::path &fileToLock
 }
 
 TEST_GROUP(FlockTestGroup) {
-    boost::filesystem::path fileToLock = libsarus::makeUniquePathWithRandomSuffix("/tmp/file-to-lock");
+    boost::filesystem::path fileToLock = libsarus::filesystem::makeUniquePathWithRandomSuffix("/tmp/file-to-lock");
     boost::filesystem::path lockfile = fileToLock.string() + ".lock";
 
     void setup() {
-        libsarus::createFileIfNecessary(fileToLock);
+        libsarus::filesystem::createFileIfNecessary(fileToLock);
     }
 
     void teardown() {

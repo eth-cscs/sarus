@@ -51,30 +51,30 @@ void setupMockInDynamicLinkerCache(const boost::filesystem::path& rootfsDir, con
             .parent_path()
             .parent_path() / "CI/dummy_libs/lib_dummy_0.so";
     auto mockRealPath = rootfsDir / mockPathInRootfs;
-    libsarus::copyFile(dummyLib, mockRealPath);
+    libsarus::filesystem::copyFile(dummyLib, mockRealPath);
 
     // populate ld.so.conf with mock directory
-    libsarus::createFileIfNecessary(rootfsDir / "etc/ld.so.conf");
+    libsarus::filesystem::createFileIfNecessary(rootfsDir / "etc/ld.so.conf");
     std::ofstream of{(rootfsDir / "etc/ld.so.conf").c_str()};
     of << mockPathInRootfs.parent_path().string() << "\n";
     of.close(); // write to disk
 
     // create /etc/ld.so.cache
-    libsarus::executeCommand("ldconfig -r " + rootfsDir.string());
+    libsarus::process::executeCommand("ldconfig -r " + rootfsDir.string());
 }
 
 TEST(MountHookTestGroup, fi_provider_path_wildcard_replacement) {
     auto bundleDir = libsarus::PathRAII(
-            libsarus::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "mount-hook-test-bundle-dir"));
+            libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::current_path() / "mount-hook-test-bundle-dir"));
     auto rootfsDir = bundleDir.getPath() / "rootfs";
     auto bundleConfig = bundleDir.getPath() / "config.json";
-    libsarus::createFoldersIfNecessary(bundleDir.getPath());
-    libsarus::createFoldersIfNecessary(rootfsDir);
+    libsarus::filesystem::createFoldersIfNecessary(bundleDir.getPath());
+    libsarus::filesystem::createFoldersIfNecessary(rootfsDir);
 
     auto config = test_utility::ocihooks::createBaseConfigJSON(rootfsDir, test_utility::misc::getNonRootUserIds());
     auto& allocator = config.GetAllocator();
 
-    libsarus::setEnvironmentVariable("LDCONFIG_PATH", "ldconfig");
+    libsarus::environment::setVariable("LDCONFIG_PATH", "ldconfig");
     boost::filesystem::path libfabricContainerPath("/libfabricInstall/lib/libfabric.so.1");
     auto args = libsarus::CLIArguments{
                     "mount_hook",
@@ -83,7 +83,7 @@ TEST(MountHookTestGroup, fi_provider_path_wildcard_replacement) {
     // FI_PROVIDER_PATH in environment
     {
         config["process"]["env"].PushBack("FI_PROVIDER_PATH=/fi/provider/path/envVar", allocator);
-        libsarus::writeJSON(config, bundleConfig);
+        libsarus::json::write(config, bundleConfig);
 
         test_utility::ocihooks::writeContainerStateToStdin(bundleDir.getPath());
         MountHook hook{args};
@@ -93,7 +93,7 @@ TEST(MountHookTestGroup, fi_provider_path_wildcard_replacement) {
     {
         config["process"]["env"].SetArray();
         config["process"]["env"].PushBack("FI_PROVIDER_PATH=/fi/provider/path/envVar", allocator);
-        libsarus::writeJSON(config, bundleConfig);
+        libsarus::json::write(config, bundleConfig);
 
         setupMockInDynamicLinkerCache(rootfsDir, libfabricContainerPath);
 
@@ -105,7 +105,7 @@ TEST(MountHookTestGroup, fi_provider_path_wildcard_replacement) {
     {
         config["process"]["env"].SetArray();
         config["process"]["env"].PushBack("FI_PROVIDER_PATH=", allocator);
-        libsarus::writeJSON(config, bundleConfig);
+        libsarus::json::write(config, bundleConfig);
 
         setupMockInDynamicLinkerCache(rootfsDir, libfabricContainerPath);
 
@@ -116,7 +116,7 @@ TEST(MountHookTestGroup, fi_provider_path_wildcard_replacement) {
     // libfabric only in dynamic linker cache
     {
         config["process"]["env"].SetArray();
-        libsarus::writeJSON(config, bundleConfig);
+        libsarus::json::write(config, bundleConfig);
 
         setupMockInDynamicLinkerCache(rootfsDir, libfabricContainerPath);
 
@@ -127,7 +127,7 @@ TEST(MountHookTestGroup, fi_provider_path_wildcard_replacement) {
     // no environment set and no ldconfig
     {
         config["process"]["env"].SetArray();
-        libsarus::writeJSON(config, bundleConfig);
+        libsarus::json::write(config, bundleConfig);
 
         CHECK(unsetenv("LDCONFIG_PATH") == 0);
 

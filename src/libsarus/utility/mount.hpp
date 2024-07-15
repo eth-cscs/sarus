@@ -26,6 +26,7 @@
  */
 
 namespace libsarus {
+namespace mount {
 
 boost::filesystem::path getValidatedMountSource(const boost::filesystem::path&);
 boost::filesystem::path getValidatedMountDestination(const boost::filesystem::path& destination,
@@ -44,6 +45,6 @@ void mountOverlayfs(const boost::filesystem::path& lowerDir,
                     const boost::filesystem::path& workDir,
                     const boost::filesystem::path& mountPoint);
 
-}
+}}
 
 #endif

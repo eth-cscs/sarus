@@ -40,7 +40,7 @@ MountHook::MountHook(const libsarus::CLIArguments& args) {
 void MountHook::parseConfigJSONOfBundle() {
     log("Parsing bundle's config.json", libsarus::LogLevel::INFO);
 
-    auto json = libsarus::readJSON(containerState.bundle() / "config.json");
+    auto json = libsarus::json::read(containerState.bundle() / "config.json");
 
     libsarus::hook::applyLoggingConfigIfAvailable(json);
 
@@ -69,7 +69,7 @@ void MountHook::parseConfigJSONOfBundle() {
 void MountHook::parseEnvironmentVariables() {
     log("Parsing environment variables", libsarus::LogLevel::INFO);
     try{
-        ldconfigPath = libsarus::getEnvironmentVariable("LDCONFIG_PATH");
+        ldconfigPath = libsarus::environment::getVariable("LDCONFIG_PATH");
     }
     catch (libsarus::Error& e) {}
     log("Successfully parsed environment variables", libsarus::LogLevel::INFO);
@@ -100,7 +100,7 @@ void MountHook::parseCliArguments(const libsarus::CLIArguments& args) {
     auto mountParser = libsarus::MountParser{rootfsDir, userIdentity};
     for (const auto& mountString : inputMounts) {
         auto parseCandidate = replaceStringWildcards(mountString);
-        auto map = libsarus::parseMap(parseCandidate);
+        auto map = libsarus::string::parseMap(parseCandidate);
         bindMounts.push_back(mountParser.parseMountRequest(map));
     }
 
@@ -152,11 +152,11 @@ boost::filesystem::path MountHook::findLibfabricLibdir() const {
         log(message, libsarus::LogLevel::INFO);
         SARUS_THROW_ERROR(message, libsarus::LogLevel::INFO);
     }
-    auto containerLibPaths = libsarus::getSharedLibsFromDynamicLinker(ldconfigPath, rootfsDir);
+    auto containerLibPaths = libsarus::sharedlibs::getListFromDynamicLinker(ldconfigPath, rootfsDir);
     boost::smatch match;
     for (const auto& p : containerLibPaths){
         if (boost::regex_search(p.string(), match, boost::regex("libfabric\\.so(?:\\.\\d+)+$"))
-                && boost::filesystem::exists(rootfsDir / libsarus::realpathWithinRootfs(rootfsDir, p))) {
+                && boost::filesystem::exists(rootfsDir / libsarus::filesystem::realpathWithinRootfs(rootfsDir, p))) {
             auto message = boost::format("Found existing libfabric from the container's dynamic linker cache: %s") % p;
             log(message, libsarus::LogLevel::DEBUG);
             return p.parent_path();
@@ -200,7 +200,7 @@ void MountHook::activate() const {
     performDeviceMounts();
     if (!ldconfigPath.empty()) {
         log("Updating container's dynamic linker cache", libsarus::LogLevel::INFO);
-        libsarus::executeCommand(ldconfigPath.string() + " -r " + rootfsDir.string());
+        libsarus::process::executeCommand(ldconfigPath.string() + " -r " + rootfsDir.string());
     }
 }
 

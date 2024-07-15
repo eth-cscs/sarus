@@ -30,6 +30,7 @@
  */
 
 namespace libsarus {
+namespace process {
 
 static void logProcessUserAndGroupIdentifiers() {
     uid_t ruid, euid, suid;
@@ -305,4 +306,4 @@ void setStdinEcho(bool flag)
     (void) tcsetattr(STDIN_FILENO, TCSANOW, &tty);
 }
 
-}
+}}

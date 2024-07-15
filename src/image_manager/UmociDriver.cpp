@@ -39,7 +39,7 @@ void UmociDriver::unpack(const boost::filesystem::path& imagePath, const boost::
                                  unpackPath.string()};
 
     auto start = std::chrono::system_clock::now();
-    auto status = libsarus::forkExecWait(args);
+    auto status = libsarus::process::forkExecWait(args);
     if(status != 0) {
         auto message = boost::format("Failed to unpack OCI image %s") % imagePath;
         SARUS_THROW_ERROR(message.str());

@@ -32,7 +32,7 @@ namespace ssh {
 static bool eventuallyJoinNamespaces(const pid_t pidOfContainer) {
     bool joinNamespaces{true};
     try {
-        auto envJoinNamespaces = libsarus::getEnvironmentVariable("JOIN_NAMESPACES");
+        auto envJoinNamespaces = libsarus::environment::getVariable("JOIN_NAMESPACES");
         joinNamespaces = (boost::algorithm::to_upper_copy(envJoinNamespaces) == std::string("TRUE"));
     } catch (libsarus::Error&) {}
     return joinNamespaces;
@@ -41,10 +41,10 @@ static bool eventuallyJoinNamespaces(const pid_t pidOfContainer) {
 static std::uint16_t getServerPortFromEnv() {
     std::uint16_t serverPort;
     try {
-        serverPort = std::stoi(libsarus::getEnvironmentVariable("SERVER_PORT"));
+        serverPort = std::stoi(libsarus::environment::getVariable("SERVER_PORT"));
     } catch (libsarus::Error&) {}
     try {
-        serverPort = std::stoi(libsarus::getEnvironmentVariable("SERVER_PORT_DEFAULT"));
+        serverPort = std::stoi(libsarus::environment::getVariable("SERVER_PORT_DEFAULT"));
     } catch (libsarus::Error& e) {
         if (serverPort == 0) {
             SARUS_RETHROW_ERROR(e, "At least one of the environment variables SERVER_PORT_DEFAULT (preferred)"
@@ -61,9 +61,9 @@ void SshHook::generateSshKeys(bool overwriteSshKeysIfExist) {
     gidOfUser = getgid();
     username = getUsername(uidOfUser);
     sshKeysDirInHost = getSshKeysDirInHost(username);
-    dropbearDirInHost = libsarus::getEnvironmentVariable("DROPBEAR_DIR");
+    dropbearDirInHost = libsarus::environment::getVariable("DROPBEAR_DIR");
 
-    libsarus::createFoldersIfNecessary(sshKeysDirInHost);
+    libsarus::filesystem::createFoldersIfNecessary(sshKeysDirInHost);
     libsarus::Lockfile lock{ sshKeysDirInHost }; // protect keys from concurrent writes
 
     if(userHasSshKeys() && !overwriteSshKeysIfExist) {
@@ -75,7 +75,7 @@ void SshHook::generateSshKeys(bool overwriteSshKeysIfExist) {
     }
 
     boost::filesystem::remove_all(sshKeysDirInHost);
-    libsarus::createFoldersIfNecessary(sshKeysDirInHost);
+    libsarus::filesystem::createFoldersIfNecessary(sshKeysDirInHost);
     sshKeygen(sshKeysDirInHost / "dropbear_ecdsa_host_key");
     sshKeygen(sshKeysDirInHost / "id_dropbear");
     generateAuthorizedKeys(sshKeysDirInHost / "id_dropbear", sshKeysDirInHost / "authorized_keys");
@@ -104,7 +104,7 @@ void SshHook::startStopSshDaemon() {
     log("Activating SSH in container", libsarus::LogLevel::INFO);
 
     dropbearRelativeDirInContainer = boost::filesystem::path("/opt/oci-hooks/ssh/dropbear");
-    dropbearDirInHost = libsarus::getEnvironmentVariable("DROPBEAR_DIR");
+    dropbearDirInHost = libsarus::environment::getVariable("DROPBEAR_DIR");
     serverPort = getServerPortFromEnv();
     containerState = libsarus::hook::parseStateOfContainerFromStdin();
     parseConfigJSONOfBundle();
@@ -138,7 +138,7 @@ void SshHook::startStopSshDaemon() {
 void SshHook::parseConfigJSONOfBundle() {
     log("Parsing bundle's config.json", libsarus::LogLevel::INFO);
 
-    auto json = libsarus::readJSON(containerState.bundle() / "config.json");
+    auto json = libsarus::json::read(containerState.bundle() / "config.json");
 
     libsarus::hook::applyLoggingConfigIfAvailable(json);
 
@@ -174,7 +174,7 @@ void SshHook::parseConfigJSONOfBundle() {
 
     if (pidfileHost.empty()) {
         pidfileHost = containerState.bundle() / 
-        boost::filesystem::path((boost::format("dropbear-%s-%s-%d.pid") % libsarus::getHostname() % containerState.id() % serverPort).str());
+        boost::filesystem::path((boost::format("dropbear-%s-%s-%d.pid") % libsarus::process::getHostname() % containerState.id() % serverPort).str());
     }
 
     log("Successfully parsed bundle's config.json", libsarus::LogLevel::INFO);
@@ -195,12 +195,12 @@ bool SshHook::userHasSshKeys() const {
 }
 
 std::string SshHook::getUsername(uid_t uid) const {
-    auto passwdFile = boost::filesystem::path{ libsarus::getEnvironmentVariable("PASSWD_FILE") };
+    auto passwdFile = boost::filesystem::path{ libsarus::environment::getVariable("PASSWD_FILE") };
     return libsarus::PasswdDB{passwdFile}.getUsername(uidOfUser);
 }
 
 boost::filesystem::path SshHook::getSshKeysDirInHost(const std::string& username) const {
-    auto baseDir = boost::filesystem::path{ libsarus::getEnvironmentVariable("HOOK_BASE_DIR") };
+    auto baseDir = boost::filesystem::path{ libsarus::environment::getVariable("HOOK_BASE_DIR") };
     return baseDir / username / ".oci-hooks/ssh/keys";
 }
 
@@ -227,7 +227,7 @@ void SshHook::sshKeygen(const boost::filesystem::path& outputFile) const {
     auto command = boost::format{"%s/bin/dropbearkey -t ecdsa -f %s"}
         % dropbearDirInHost.string()
         % outputFile.string();
-    libsarus::executeCommand(command.str());
+    libsarus::process::executeCommand(command.str());
 }
 
 static void authorizePublicKey(const boost::filesystem::path& publicKeyFileName,
@@ -246,7 +246,7 @@ void SshHook::generateAuthorizedKeys(const boost::filesystem::path& userKeyFile,
     auto command = boost::format{"%s/bin/dropbearkey -y -f %s"}
         % dropbearDirInHost.string()
         % userKeyFile.string();
-    auto output = libsarus::executeCommand(command.str());
+    auto output = libsarus::process::executeCommand(command.str());
 
     // extract public key
     auto ss = std::stringstream{ output };
@@ -254,7 +254,7 @@ void SshHook::generateAuthorizedKeys(const boost::filesystem::path& userKeyFile,
     auto matches = boost::smatch{};
     auto re = boost::regex{"^(ecdsa-.*)$"};
 
-    libsarus::createFileIfNecessary(authorizedKeysFile, uidOfUser, gidOfUser);
+    libsarus::filesystem::createFileIfNecessary(authorizedKeysFile, uidOfUser, gidOfUser);
 
     // write public key to "authorized_keys" file
     while(std::getline(ss, line)) {
@@ -281,8 +281,8 @@ void SshHook::copyDropbearIntoContainer() const {
     log(boost::format("Copying Dropbear binaries into container under %s") % dropbearDirInContainer,
         libsarus::LogLevel::INFO);
 
-    libsarus::copyFile(dropbearDirInHost / "bin/dbclient", dropbearDirInContainer / "bin/dbclient");
-    libsarus::copyFile(dropbearDirInHost / "bin/dropbear", dropbearDirInContainer / "bin/dropbear");
+    libsarus::filesystem::copyFile(dropbearDirInHost / "bin/dbclient", dropbearDirInContainer / "bin/dbclient");
+    libsarus::filesystem::copyFile(dropbearDirInHost / "bin/dropbear", dropbearDirInContainer / "bin/dropbear");
 
     log("Successfully copied Dropbear binaries into container", libsarus::LogLevel::INFO);
 }
@@ -296,13 +296,13 @@ void SshHook::setupSshKeysDirInContainer() const {
 
     // switch to unprivileged user to make sure that the user has the
     // permission to create a new folder ~/.ssh in the container
-    libsarus::switchIdentity(userIdentity);
-    libsarus::createFoldersIfNecessary(sshKeysDirInContainer);
-    libsarus::switchIdentity(rootIdentity);
+    libsarus::process::switchIdentity(userIdentity);
+    libsarus::filesystem::createFoldersIfNecessary(sshKeysDirInContainer);
+    libsarus::process::switchIdentity(rootIdentity);
 
     bool overlayMountHostDotSsh = true;
     try {
-        auto envOverlayMountHome = libsarus::getEnvironmentVariable("OVERLAY_MOUNT_HOME_SSH");
+        auto envOverlayMountHome = libsarus::environment::getVariable("OVERLAY_MOUNT_HOME_SSH");
         overlayMountHostDotSsh = boost::algorithm::to_upper_copy(envOverlayMountHome) != "FALSE";
     } 
     catch(const libsarus::Error& error) {
@@ -317,10 +317,10 @@ void SshHook::setupSshKeysDirInContainer() const {
         auto lowerDir = containerState.bundle() / "overlay/ssh-lower";
         auto upperDir = containerState.bundle() / "overlay/ssh-upper";
         auto workDir = containerState.bundle() / "overlay/ssh-work";
-        libsarus::createFoldersIfNecessary(lowerDir);
-        libsarus::createFoldersIfNecessary(upperDir, uidOfUser, gidOfUser);
-        libsarus::createFoldersIfNecessary(workDir);
-        libsarus::mountOverlayfs(lowerDir, upperDir, workDir, sshKeysDirInContainer);
+        libsarus::filesystem::createFoldersIfNecessary(lowerDir);
+        libsarus::filesystem::createFoldersIfNecessary(upperDir, uidOfUser, gidOfUser);
+        libsarus::filesystem::createFoldersIfNecessary(workDir);
+        libsarus::mount::mountOverlayfs(lowerDir, upperDir, workDir, sshKeysDirInContainer);
     }
     
     log("Successfully set up directory for SSH keys into container", libsarus::LogLevel::INFO);
@@ -330,27 +330,27 @@ void SshHook::copySshKeysIntoContainer() const {
     log("Copying SSH keys into container", libsarus::LogLevel::INFO);
 
     // server keys
-    libsarus::copyFile(sshKeysDirInHost / "dropbear_ecdsa_host_key",
+    libsarus::filesystem::copyFile(sshKeysDirInHost / "dropbear_ecdsa_host_key",
                             sshKeysDirInContainer / "dropbear_ecdsa_host_key",
                             uidOfUser, gidOfUser);
 
     // client keys
-    libsarus::copyFile(sshKeysDirInHost / "id_dropbear",
+    libsarus::filesystem::copyFile(sshKeysDirInHost / "id_dropbear",
                             sshKeysDirInContainer / "id_dropbear",
                             uidOfUser, gidOfUser);
 
     // update if necessary
     auto containerAuthorizedKeys = sshKeysDirInContainer / "authorized_keys";
-    libsarus::copyFile(sshKeysDirInHost / "authorized_keys",
+    libsarus::filesystem::copyFile(sshKeysDirInHost / "authorized_keys",
                             containerAuthorizedKeys,
                             uidOfUser, gidOfUser);
     if(!userPublicKeyFilename.empty()) {
         log(boost::format("Adding key %s to %s") % userPublicKeyFilename.string() % containerAuthorizedKeys.string(), libsarus::LogLevel::INFO);
         auto rootIdentity = libsarus::UserIdentity{};
         auto userIdentity = libsarus::UserIdentity(uidOfUser, gidOfUser, {});
-        libsarus::switchIdentity(userIdentity);
+        libsarus::process::switchIdentity(userIdentity);
         authorizePublicKey(boost::filesystem::path{userPublicKeyFilename}, containerAuthorizedKeys);
-        libsarus::switchIdentity(rootIdentity);
+        libsarus::process::switchIdentity(rootIdentity);
     }
 
     log("Successfully copied SSH keys into container", libsarus::LogLevel::INFO);
@@ -450,9 +450,9 @@ void SshHook::startSshDaemonInContainer() const {
 
     auto sshKeysPathWithinContainer = "/" / boost::filesystem::relative(sshKeysDirInContainer, rootfsDir);
 
-    auto pidfileContainerReal = libsarus::realpathWithinRootfs(rootfsDir, pidfileContainer);
+    auto pidfileContainerReal = libsarus::filesystem::realpathWithinRootfs(rootfsDir, pidfileContainer);
     auto pidfileContainerFull = rootfsDir / pidfileContainerReal;
-    libsarus::createFoldersIfNecessary(pidfileContainerFull.parent_path(), uidOfUser, gidOfUser);
+    libsarus::filesystem::createFoldersIfNecessary(pidfileContainerFull.parent_path(), uidOfUser, gidOfUser);
 
     auto dropbearCommand = libsarus::CLIArguments{
         dropbearRelativeDirInContainer.string() + "/bin/dropbear",
@@ -461,7 +461,7 @@ void SshHook::startSshDaemonInContainer() const {
         "-p", std::to_string(serverPort),
         "-P", pidfileContainerReal.string()
     };
-    auto status = libsarus::forkExecWait(dropbearCommand, preExecActions);
+    auto status = libsarus::process::forkExecWait(dropbearCommand, preExecActions);
     if(status != 0) {
         auto message = boost::format("%s/bin/dropbear exited with status %d")
             % dropbearRelativeDirInContainer % status;
@@ -472,7 +472,7 @@ void SshHook::startSshDaemonInContainer() const {
     if (!pidfileHost.empty()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         if (boost::filesystem::is_regular_file(pidfileContainerFull)) {
-            libsarus::copyFile(pidfileContainerFull, pidfileHost, uidOfUser, gidOfUser);
+            libsarus::filesystem::copyFile(pidfileContainerFull, pidfileHost, uidOfUser, gidOfUser);
             auto message = boost::format("Copied Dropbear pidfile to host path (%s)")
                     % pidfileHost;
             log(message, libsarus::LogLevel::INFO);
@@ -489,11 +489,11 @@ void SshHook::startSshDaemonInContainer() const {
 
 void SshHook::stopSshDaemon() {
 
-    auto pid = std::stoi(libsarus::readFile(pidfileHost));
+    auto pid = std::stoi(libsarus::filesystem::readFile(pidfileHost));
 
     log(boost::format("Deactivating SSH daemon with pidfile %s and PID %s")% pidfileHost % pid, libsarus::LogLevel::INFO);
 
-    libsarus::removeFile(pidfileHost);
+    libsarus::filesystem::removeFile(pidfileHost);
 
     if(kill(getpgid(pid), SIGTERM) == 0 ) {
         return;

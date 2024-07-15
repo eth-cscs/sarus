@@ -72,7 +72,7 @@ void GlibcHook::injectGlibcLibrariesIfNecessary() {
 void GlibcHook::parseConfigJSONOfBundle() {
     logMessage("Parsing bundle's config.json", libsarus::LogLevel::INFO);
 
-    auto json = libsarus::readJSON(bundleDir / "config.json");
+    auto json = libsarus::json::read(bundleDir / "config.json");
 
     libsarus::hook::applyLoggingConfigIfAvailable(json);
 
@@ -95,13 +95,13 @@ void GlibcHook::parseConfigJSONOfBundle() {
 void GlibcHook::parseEnvironmentVariables() {
     logMessage("Parsing environment variables", libsarus::LogLevel::INFO);
 
-    lddPath = libsarus::getEnvironmentVariable("LDD_PATH");
+    lddPath = libsarus::environment::getVariable("LDD_PATH");
 
-    ldconfigPath = libsarus::getEnvironmentVariable("LDCONFIG_PATH");
+    ldconfigPath = libsarus::environment::getVariable("LDCONFIG_PATH");
 
-    readelfPath = libsarus::getEnvironmentVariable("READELF_PATH");
+    readelfPath = libsarus::environment::getVariable("READELF_PATH");
 
-    auto hostLibrariesColonSeparated = libsarus::getEnvironmentVariable("GLIBC_LIBS");
+    auto hostLibrariesColonSeparated = libsarus::environment::getVariable("GLIBC_LIBS");
     boost::split(hostLibraries, hostLibrariesColonSeparated, boost::is_any_of(":"));
 
     logMessage("Successfully parsed environment variables", libsarus::LogLevel::INFO);
@@ -116,12 +116,12 @@ bool GlibcHook::containerHasGlibc() const {
 
 std::vector<boost::filesystem::path> GlibcHook::get64bitContainerLibraries() const {
     auto isNot64bit = [this](const boost::filesystem::path& lib) {
-        return !libsarus::is64bitSharedLib(rootfsDir / libsarus::realpathWithinRootfs(rootfsDir, lib), readelfPath);
+        return !libsarus::sharedlibs::is64bitSharedLib(rootfsDir / libsarus::filesystem::realpathWithinRootfs(rootfsDir, lib), readelfPath);
     };
     auto doesNotExist = [this](const boost::filesystem::path& lib) {
-        return !boost::filesystem::exists(rootfsDir / libsarus::realpathWithinRootfs(rootfsDir, lib));
+        return !boost::filesystem::exists(rootfsDir / libsarus::filesystem::realpathWithinRootfs(rootfsDir, lib));
     };
-    auto libs = libsarus::getSharedLibsFromDynamicLinker(ldconfigPath, rootfsDir);
+    auto libs = libsarus::sharedlibs::getListFromDynamicLinker(ldconfigPath, rootfsDir);
     auto newEnd = std::remove_if(libs.begin(), libs.end(), doesNotExist);
     newEnd = std::remove_if(libs.begin(), newEnd, isNot64bit);
     libs.erase(newEnd, libs.cend());
@@ -129,7 +129,7 @@ std::vector<boost::filesystem::path> GlibcHook::get64bitContainerLibraries() con
 }
 
 boost::optional<boost::filesystem::path> GlibcHook::findLibc(const std::vector<boost::filesystem::path>& libs) const {
-    auto it = std::find_if(libs.cbegin(), libs.cend(), libsarus::isLibc);
+    auto it = std::find_if(libs.cbegin(), libs.cend(), libsarus::filesystem::isLibc);
     if(it == libs.cend()) {
         return {};
     }
@@ -170,7 +170,7 @@ static std::tuple<unsigned int, unsigned int> detectLibcVersion(
     const std::string& context) {
     auto lddOutput = std::stringstream();
     auto lddCommand = libsarus::CLIArguments{lddPath.string(), "--version"};
-    auto status = libsarus::forkExecWait(lddCommand, preExecActions, {}, &lddOutput);
+    auto status = libsarus::process::forkExecWait(lddCommand, preExecActions, {}, &lddOutput);
     if(status != 0) {
         auto message = boost::format("Failed to detect %s glibc version. Command %s exited with status %d")
             % context % lddCommand % status;
@@ -197,7 +197,7 @@ std::tuple<unsigned int, unsigned int> GlibcHook::detectContainerLibcVersion() c
             SARUS_THROW_ERROR(message.str());
         }
         libsarus::hook::switchToUnprivilegedProcess(userIdentity.uid, userIdentity.gid);
-        libsarus::changeDirectory("/");
+        libsarus::filesystem::changeDirectory("/");
     };
     return detectLibcVersion("/usr/bin/ldd", preExecActions, "container");
 }
@@ -205,8 +205,8 @@ std::tuple<unsigned int, unsigned int> GlibcHook::detectContainerLibcVersion() c
 void GlibcHook::verifyThatHostAndContainerGlibcAreABICompatible(
     const boost::filesystem::path& hostLibc,
     const boost::filesystem::path& containerLibc) const {
-    auto hostSoname = libsarus::getSharedLibSoname(hostLibc, readelfPath);
-    auto containerSoname = libsarus::getSharedLibSoname(rootfsDir / containerLibc, readelfPath);
+    auto hostSoname = libsarus::sharedlibs::getSoname(hostLibc, readelfPath);
+    auto containerSoname = libsarus::sharedlibs::getSoname(rootfsDir / containerLibc, readelfPath);
     if(hostSoname != containerSoname) {
         auto message = boost::format(
             "Failed to inject glibc libraries. Host's glibc is not ABI compatible with container's glibc."
@@ -218,13 +218,13 @@ void GlibcHook::verifyThatHostAndContainerGlibcAreABICompatible(
 void GlibcHook::replaceGlibcLibrariesInContainer() const {
     for (const auto& hostLib : hostLibraries) {
         auto wasLibraryReplaced = false;
-        auto soname = libsarus::getSharedLibSoname(hostLib, readelfPath);
+        auto soname = libsarus::sharedlibs::getSoname(hostLib, readelfPath);
         logMessage(boost::format("Injecting host lib %s with soname %s in the container")
                    % hostLib % soname, libsarus::LogLevel::DEBUG);
 
         for (const auto& containerLib : containerLibraries) {
             if (containerLib.filename().string() == soname) {
-                libsarus::validatedBindMount(hostLib, containerLib, userIdentity, rootfsDir);
+                libsarus::mount::validatedBindMount(hostLib, containerLib, userIdentity, rootfsDir);
                 wasLibraryReplaced = true;
             }
         }
@@ -233,7 +233,7 @@ void GlibcHook::replaceGlibcLibrariesInContainer() const {
             logMessage(boost::format("Could not find ABI-compatible counterpart for host lib (%s) inside container "
                                      "=> adding host lib (%s) into container's /lib64 via bind mount ")
                        % hostLib % hostLib, libsarus::LogLevel::WARN);
-            libsarus::validatedBindMount(hostLib, "/lib64"/hostLib.filename(), userIdentity, rootfsDir);
+            libsarus::mount::validatedBindMount(hostLib, "/lib64"/hostLib.filename(), userIdentity, rootfsDir);
         }
     }
 }

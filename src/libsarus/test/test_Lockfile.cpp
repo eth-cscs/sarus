@@ -21,7 +21,7 @@ namespace libsarus {
 namespace test {
 
 TEST_GROUP(LockfileTestGroup) {
-    boost::filesystem::path fileToLock = libsarus::makeUniquePathWithRandomSuffix("/tmp/file-to-lock");
+    boost::filesystem::path fileToLock = libsarus::filesystem::makeUniquePathWithRandomSuffix("/tmp/file-to-lock");
     boost::filesystem::path lockfile = fileToLock.string() + ".lock";
 };
 

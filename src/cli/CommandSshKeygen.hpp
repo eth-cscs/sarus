@@ -39,11 +39,11 @@ public:
     }
 
     void execute() override {
-        libsarus::setEnvironmentVariable("HOOK_BASE_DIR", conf->json["localRepositoryBaseDir"].GetString());
+        libsarus::environment::setVariable("HOOK_BASE_DIR", conf->json["localRepositoryBaseDir"].GetString());
         auto passwdFile = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "etc/passwd";
-        libsarus::setEnvironmentVariable("PASSWD_FILE", passwdFile.string());
+        libsarus::environment::setVariable("PASSWD_FILE", passwdFile.string());
         auto dropbearDir = boost::filesystem::path{ conf->json["prefixDir"].GetString() } / "dropbear";
-        libsarus::setEnvironmentVariable("DROPBEAR_DIR", dropbearDir.string());
+        libsarus::environment::setVariable("DROPBEAR_DIR", dropbearDir.string());
 
         auto sshHook = boost::filesystem::path{conf->json["prefixDir"].GetString()} / "bin/ssh_hook";
         auto args = libsarus::CLIArguments{sshHook.string(), "keygen"};
@@ -56,7 +56,7 @@ public:
         else if(libsarus::Logger::getInstance().getLevel() == libsarus::LogLevel::DEBUG) {
             args.push_back("--debug");
         }
-        libsarus::forkExecWait(args);
+        libsarus::process::forkExecWait(args);
     }
 
     bool requiresRootPrivileges() const override {

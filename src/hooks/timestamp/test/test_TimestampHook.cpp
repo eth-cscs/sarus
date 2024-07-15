@@ -42,7 +42,7 @@ void createOCIBundleConfigJSON(const boost::filesystem::path& bundleDir, const s
         doc["process"]["env"].PushBack(rj::Value{logVar.c_str(), allocator}, allocator);
     }
 
-    libsarus::writeJSON(doc, bundleDir / "config.json");
+    libsarus::json::write(doc, bundleDir / "config.json");
 }
 
 TEST(TimestampTestGroup, test_disabled_hook) {
@@ -68,7 +68,7 @@ TEST(TimestampTestGroup, test_existing_file) {
 
     // Set the expected message
     auto expectedMessage = std::string{"unit test"};
-    libsarus::setEnvironmentVariable("TIMESTAMP_HOOK_MESSAGE", expectedMessage);
+    libsarus::environment::setVariable("TIMESTAMP_HOOK_MESSAGE", expectedMessage);
 
     // Create and call hook
     auto hook = TimestampHook{};
@@ -76,7 +76,7 @@ TEST(TimestampTestGroup, test_existing_file) {
 
     // Read logfile and check contents
     {
-        auto logFileContent = libsarus::readFile(logFile);
+        auto logFileContent = libsarus::filesystem::readFile(logFile);
 
         auto initialPattern = "Line 1\nLine 2\n";
         auto timestampPattern = "\\[.*\\..*\\] \\[.*\\] \\[hook\\] \\[INFO\\] Timestamp hook: " + expectedMessage + "\n";
@@ -95,7 +95,7 @@ TEST(TimestampTestGroup, test_non_existing_file) {
 
     // Set the expected message
     auto expectedMessage = std::string{"unit test"};
-    libsarus::setEnvironmentVariable("TIMESTAMP_HOOK_MESSAGE", expectedMessage);
+    libsarus::environment::setVariable("TIMESTAMP_HOOK_MESSAGE", expectedMessage);
 
     // Create and call hook
     auto hook = TimestampHook{};
@@ -103,11 +103,11 @@ TEST(TimestampTestGroup, test_non_existing_file) {
 
     // Basic file checks
     CHECK(boost::filesystem::exists(logFile));
-    CHECK(libsarus::getOwner(logFile) == idsOfUser);
+    CHECK(libsarus::filesystem::getOwner(logFile) == idsOfUser);
 
     // Read logfile and check contents
     {
-        auto logFileContent = libsarus::readFile(logFile);
+        auto logFileContent = libsarus::filesystem::readFile(logFile);
 
         auto timestampPattern = "\\[.*\\..*\\] \\[.*\\] \\[hook\\] \\[INFO\\] Timestamp hook: " + expectedMessage + "\n";
         auto regex = boost::regex(timestampPattern);

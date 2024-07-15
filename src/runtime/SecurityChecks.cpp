@@ -63,7 +63,7 @@ void SecurityChecks::checkThatBinariesInSarusJsonAreUntamperable() const {
 void SecurityChecks::checkThatPathIsRootOwned(const boost::filesystem::path& path) const {
     uid_t uid; gid_t gid;
     try {
-        std::tie(uid, gid) = libsarus::getOwner(path);
+        std::tie(uid, gid) = libsarus::filesystem::getOwner(path);
     }
     catch(libsarus::Error& e) {
         auto message = boost::format("Failed to check that path %s is untamperable") % path;

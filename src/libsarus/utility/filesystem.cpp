@@ -26,6 +26,7 @@
  */
 
 namespace libsarus {
+namespace filesystem {
 
 size_t getFileSize(const boost::filesystem::path& filename) {
     struct stat st;
@@ -139,7 +140,7 @@ void copyFolder(const boost::filesystem::path& src, const boost::filesystem::pat
         SARUS_THROW_ERROR(message.str());
     }
 
-    libsarus::createFoldersIfNecessary(dst, uid, gid);
+    filesystem::createFoldersIfNecessary(dst, uid, gid);
 
     // for each file/folder in the directory
     for(boost::filesystem::directory_iterator entry{src};
@@ -216,7 +217,7 @@ boost::filesystem::path makeUniquePathWithRandomSuffix(const boost::filesystem::
 
     do {
         const size_t sizeOfRandomSuffix = 16;
-        uniquePath = path.string() + "-" + generateRandomString(sizeOfRandomSuffix);
+        uniquePath = path.string() + "-" + string::generateRandom(sizeOfRandomSuffix);
     } while(boost::filesystem::exists(uniquePath));
 
     return uniquePath;
@@ -328,10 +329,10 @@ dev_t getDeviceID(const boost::filesystem::path& path) {
 
 char getDeviceType(const boost::filesystem::path& path) {
     char deviceType;
-    if (libsarus::isCharacterDevice(path)) {
+    if (filesystem::isCharacterDevice(path)) {
         deviceType = 'c';
     }
-    else if (libsarus::isBlockDevice(path)) {
+    else if (filesystem::isBlockDevice(path)) {
         deviceType = 'b';
     }
     else {
@@ -419,4 +420,4 @@ bool isSharedLib(const boost::filesystem::path& file) {
     return pos+3 == filename.cend() || *(pos+3) == '.';
 }
 
-}
+}}

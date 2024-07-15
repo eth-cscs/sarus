@@ -39,7 +39,7 @@ SkopeoDriver::SkopeoDriver(std::shared_ptr<const common::Config> config)
 
     authFileBasePath = config->directories.repository;
     try {
-        auto xdgRuntimePath = boost::filesystem::path{libsarus::getEnvironmentVariable("XDG_RUNTIME_DIR")};
+        auto xdgRuntimePath = boost::filesystem::path{libsarus::environment::getVariable("XDG_RUNTIME_DIR")};
         if (boost::filesystem::is_directory(xdgRuntimePath)) {
             authFileBasePath = xdgRuntimePath / "sarus";
         }
@@ -48,7 +48,7 @@ SkopeoDriver::SkopeoDriver(std::shared_ptr<const common::Config> config)
                      libsarus::LogLevel::DEBUG);
         }
     }
-    catch (libsarus::Error& e) {}  // libsarus::getEnvironmentVariable() throws if searched variable is not set
+    catch (libsarus::Error& e) {}  // libsarus::environment::getVariable() throws if searched variable is not set
     printLog( boost::format("Set authentication file base path to %s") % authFileBasePath, libsarus::LogLevel::DEBUG);
 
     authFilePath.clear();
@@ -91,10 +91,10 @@ SkopeoDriver::~SkopeoDriver() {
 boost::filesystem::path SkopeoDriver::copyToOCIImage(const std::string& sourceTransport, const std::string& sourceReference) const {
     printLog( boost::format("Copying '%s' to OCI image") % sourceReference, libsarus::LogLevel::INFO);
 
-    auto ociImagePath = libsarus::makeUniquePathWithRandomSuffix(cachePath / "ociImages/image");
+    auto ociImagePath = libsarus::filesystem::makeUniquePathWithRandomSuffix(cachePath / "ociImages/image");
     auto ociImageRAII = libsarus::PathRAII{ociImagePath};
     printLog( boost::format("Creating temporary OCI image in: %s") % ociImagePath, libsarus::LogLevel::DEBUG);
-    libsarus::createFoldersIfNecessary(ociImagePath);
+    libsarus::filesystem::createFoldersIfNecessary(ociImagePath);
 
     if (sourceTransport == "docker") {
         auto imageBlobsPath = ociImagePath / "blobs";
@@ -111,7 +111,7 @@ boost::filesystem::path SkopeoDriver::copyToOCIImage(const std::string& sourceTr
                                  "oci:"+ociImagePath.string()+":sarus-oci-image"};
 
     auto start = std::chrono::system_clock::now();
-    auto status = libsarus::forkExecWait(args);
+    auto status = libsarus::process::forkExecWait(args);
     if(status != 0) {
         auto message = boost::format("Failed to copy '%s' to OCI image") % sourceReference;
         SARUS_THROW_ERROR(message.str());
@@ -136,7 +136,7 @@ std::string SkopeoDriver::inspectRaw(const std::string& sourceTransport, const s
 
     auto start = std::chrono::system_clock::now();
     try {
-        inspectOutput = libsarus::executeCommand(args.string());
+        inspectOutput = libsarus::process::executeCommand(args.string());
     }
     catch(libsarus::Error& e) {
         // Confirm skopeo failed because of image non existent or unauthorized access
@@ -201,10 +201,10 @@ std::string SkopeoDriver::manifestDigest(const boost::filesystem::path& manifest
         SARUS_THROW_ERROR(message.str());
     }
 
-    printLog(boost::format("Manifest to digest: %s") % libsarus::readFile(manifestPath), libsarus::LogLevel::DEBUG);
+    printLog(boost::format("Manifest to digest: %s") % libsarus::filesystem::readFile(manifestPath), libsarus::LogLevel::DEBUG);
 
     auto args = generateBaseArgs() + libsarus::CLIArguments{"manifest-digest", manifestPath.string()};
-    auto digestOutput = libsarus::executeCommand(args.string());
+    auto digestOutput = libsarus::process::executeCommand(args.string());
     boost::algorithm::trim_right_if(digestOutput, boost::is_any_of("\n"));
 
     // The Skopeo debug messages are useful to be embedded in an exception message,
@@ -227,9 +227,9 @@ boost::filesystem::path SkopeoDriver::acquireAuthFile(const common::Config::Auth
     auto authJSON = rapidjson::Document{};
     rapidjson::Pointer(jsonPointer.str().c_str()).Set(authJSON, encodedCredentials.c_str());
 
-    libsarus::createFoldersIfNecessary(authFileBasePath);
-    authFilePath = libsarus::makeUniquePathWithRandomSuffix(authFileBasePath / "sarus-auth").replace_extension(".json");
-    libsarus::writeJSON(authJSON, authFilePath);
+    libsarus::filesystem::createFoldersIfNecessary(authFileBasePath);
+    authFilePath = libsarus::filesystem::makeUniquePathWithRandomSuffix(authFileBasePath / "sarus-auth").replace_extension(".json");
+    libsarus::json::write(authJSON, authFilePath);
     boost::filesystem::permissions(authFilePath, boost::filesystem::perms::owner_read | boost::filesystem::perms::owner_write);
 
     printLog(boost::format("Successfully acquired authentication file %s") % authFilePath, libsarus::LogLevel::INFO);
@@ -277,7 +277,7 @@ std::string SkopeoDriver::getVerbosityOption() const {
 }
 
 libsarus::CLIArguments SkopeoDriver::getPolicyOption() const {
-    auto homePath = boost::filesystem::path{libsarus::getEnvironmentVariable("HOME")};
+    auto homePath = boost::filesystem::path{libsarus::environment::getVariable("HOME")};
     auto userPolicyPath = homePath / ".config/containers/policy.json";
     auto systemPolicyPath = boost::filesystem::path("/etc/containers/policy.json");
 

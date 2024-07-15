@@ -26,7 +26,7 @@ TEST_GROUP(RuntimeTestGroup) {
 std::vector<int> openFiles(const std::vector<boost::filesystem::path>& testFiles) {
     auto testFDs = std::vector<int>{};
     for (const auto& file : testFiles) {
-        libsarus::createFileIfNecessary(file);
+        libsarus::filesystem::createFileIfNecessary(file);
         // open files with Linux functions, in order to get file descriptors
         testFDs.push_back(open(file.c_str(), O_RDONLY));
     }

@@ -34,9 +34,9 @@ MpiHook::MpiHook() {
     parseConfigJSONOfBundle();
     parseEnvironmentVariables();
     log("Getting list of shared libs from the container's dynamic linker cache", libsarus::LogLevel::DEBUG);
-    auto containerLibPaths = libsarus::getSharedLibsFromDynamicLinker(ldconfig, rootfsDir);
+    auto containerLibPaths = libsarus::sharedlibs::getListFromDynamicLinker(ldconfig, rootfsDir);
     for (const auto& p : containerLibPaths){
-        if ( !boost::filesystem::exists(rootfsDir / libsarus::realpathWithinRootfs(rootfsDir, p)) ) {
+        if ( !boost::filesystem::exists(rootfsDir / libsarus::filesystem::realpathWithinRootfs(rootfsDir, p)) ) {
             auto message = boost::format("Container library %s has an entry in the dynamic linker cache"
                                          " but does not exist or is a broken symlink in the container's"
                                          " filesystem. Skipping...") % p;
@@ -68,7 +68,7 @@ void MpiHook::activateMpiSupport() {
     injectHostLibraries(hostMpiLibs, hostToContainerMpiLibs, abiCompatibilityCheckerType);
     injectHostLibraries(hostDepLibs, hostToContainerDependencyLibs, "dependencies");
     performBindMounts();
-    libsarus::executeCommand(ldconfig.string() + " -r " + rootfsDir.string()); // update container's dynamic linker
+    libsarus::process::executeCommand(ldconfig.string() + " -r " + rootfsDir.string()); // update container's dynamic linker
 
     log("Successfully activated MPI support", libsarus::LogLevel::INFO);
 }
@@ -76,7 +76,7 @@ void MpiHook::activateMpiSupport() {
 void MpiHook::parseConfigJSONOfBundle() {
     log("Parsing bundle's config.json", libsarus::LogLevel::INFO);
 
-    auto json = libsarus::readJSON(containerState.bundle() / "config.json");
+    auto json = libsarus::json::read(containerState.bundle() / "config.json");
 
     libsarus::hook::applyLoggingConfigIfAvailable(json);
 
@@ -98,9 +98,9 @@ void MpiHook::parseConfigJSONOfBundle() {
 void MpiHook::parseEnvironmentVariables() {
     log("Parsing environment variables", libsarus::LogLevel::INFO);
 
-    ldconfig = libsarus::getEnvironmentVariable("LDCONFIG_PATH");
+    ldconfig = libsarus::environment::getVariable("LDCONFIG_PATH");
 
-    auto hostMpiLibsColonSeparated = libsarus::getEnvironmentVariable("MPI_LIBS");
+    auto hostMpiLibsColonSeparated = libsarus::environment::getVariable("MPI_LIBS");
     if(hostMpiLibsColonSeparated.empty()) {
         SARUS_THROW_ERROR("The environment variable MPI_LIBS is expected to be a non-empty colon-separated list of paths");
     }
@@ -252,7 +252,7 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
     if (it == hostToContainerLibs.cend()) {
         log(boost::format{"no corresponding libs in container => bind mount (%s) into /lib"} % hostLib.getPath(), libsarus::LogLevel::DEBUG);
         auto containerLib = "/lib" / hostLib.getPath().filename();
-        libsarus::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
+        libsarus::mount::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), false);
         return;
     }
@@ -265,14 +265,14 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
     auto areCompatible{abiCompatibilityChecker->check(hostLib, bestCandidateLib)};
     if(areCompatible.second == boost::none) {
         log(boost::format{"abi-compatible => bind mount host lib (%s) on top of container lib (%s) (i.e. override)"} % hostLib.getPath() % bestCandidateLib.getPath(), libsarus::LogLevel::DEBUG);
-        libsarus::validatedBindMount(hostLib.getPath(), bestCandidateLib.getPath(), userIdentity, rootfsDir);
+        libsarus::mount::validatedBindMount(hostLib.getPath(), bestCandidateLib.getPath(), userIdentity, rootfsDir);
         createSymlinksInDynamicLinkerDefaultSearchDirs(bestCandidateLib.getPath(), hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
         log("Successfully injected host's shared lib", libsarus::LogLevel::DEBUG);
         return;
     }
     log(areCompatible.second.get(), libsarus::LogLevel::INFO);
     auto containerLib = "/lib" / hostLib.getPath().filename();
-    libsarus::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
+    libsarus::mount::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
     if (areCompatible.first) {
         createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
     } else {
@@ -296,9 +296,9 @@ void MpiHook::performBindMounts() const {
     auto devicesCgroupPath = boost::filesystem::path{};
 
     for(const auto& mount : bindMounts) {
-        libsarus::validatedBindMount(mount, mount, userIdentity, rootfsDir);
+        libsarus::mount::validatedBindMount(mount, mount, userIdentity, rootfsDir);
 
-        if (libsarus::isDeviceFile(mount)) {
+        if (libsarus::filesystem::isDeviceFile(mount)) {
             if (devicesCgroupPath.empty()) {
                 devicesCgroupPath = libsarus::hook::findCgroupPath("devices", "/", containerState.pid());
             }
@@ -341,9 +341,9 @@ void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesy
     //      you inject libfoo.so.4, you don't want to end up with libfoo.so -> libfoo.so.4 because it may break the container apps.
     //      You should note that the library being injected (configured in Sarus configuration) should've been compiled using sonames,
     //      not the linker names, to avoid breaking the injected library for the same reason stated above.
-    auto libName = libsarus::getSharedLibLinkerName(linkFilename);
+    auto libName = libsarus::sharedlibs::getLinkerName(linkFilename);
     auto linkNames = std::vector<std::string> { libName.string() };
-    for(const auto& versionNumber : libsarus::parseSharedLibAbi(linkFilename)) {
+    for(const auto& versionNumber : libsarus::sharedlibs::parseAbi(linkFilename)) {
         linkNames.push_back(linkNames.back() + "." + versionNumber);
     }
 
@@ -365,17 +365,17 @@ void MpiHook::createSymlinksInDynamicLinkerDefaultSearchDirs(const boost::filesy
     auto linkerDefaultSearchDirs = std::vector<boost::filesystem::path> {"/lib", "/lib64"};
     for (const auto& dir: linkerDefaultSearchDirs) {
         auto searchDir = rootfsDir / dir;
-        libsarus::createFoldersIfNecessary(searchDir);
+        libsarus::filesystem::createFoldersIfNecessary(searchDir);
 
         // prevent writing as root where we are not allowed to
-        if (!libsarus::isPathOnAllowedDevice(searchDir, rootfsDir)) {
+        if (!libsarus::mount::isPathOnAllowedDevice(searchDir, rootfsDir)) {
             log(boost::format("The hook is not allowed to write to %s. Ignoring symlinks creation in this path.") % searchDir, libsarus::LogLevel::WARN);
             continue;
         }
 
         for (const auto& linkName : linkNames) {
-            auto realLink = libsarus::realpathWithinRootfs(rootfsDir, dir / linkName);
-            auto realTarget = libsarus::realpathWithinRootfs(rootfsDir, target);
+            auto realLink = libsarus::filesystem::realpathWithinRootfs(rootfsDir, dir / linkName);
+            auto realTarget = libsarus::filesystem::realpathWithinRootfs(rootfsDir, target);
             bool linkIsTarget = (realLink == realTarget);
             bool preserveLink = (linkName == libName && preserveRootLink && rootLinkExists);
             if (linkIsTarget || preserveLink) {

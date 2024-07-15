@@ -44,8 +44,8 @@ void Hook::loadConfigs() {
     log("Loading configuration (based on environment variables)",
         libsarus::LogLevel::INFO);
 
-    auto baseDir = boost::filesystem::path{ libsarus::getEnvironmentVariable("HOOK_BASE_DIR") };
-    auto passwdFile = libsarus::getEnvironmentVariable("PASSWD_FILE");
+    auto baseDir = boost::filesystem::path{ libsarus::environment::getVariable("HOOK_BASE_DIR") };
+    auto passwdFile = libsarus::environment::getVariable("PASSWD_FILE");
     auto username = libsarus::PasswdDB{passwdFile}.getUsername(uidOfUser);
     syncDir = baseDir / username / ".oci-hooks/slurm-global-sync" / ("jobid-" + slurmJobID + "-stepid-" + slurmStepID);
     syncDirArrival = syncDir / "arrival";
@@ -129,7 +129,7 @@ void Hook::createSyncFile(const boost::filesystem::path& file) const {
             " sync file %s, but it already exists") % file;
         SARUS_THROW_ERROR(message.str());
     }
-    libsarus::createFileIfNecessary(file, uidOfUser, gidOfUser);
+    libsarus::filesystem::createFileIfNecessary(file, uidOfUser, gidOfUser);
 }
 
 size_t Hook::countFilesInDirectory(const boost::filesystem::path& directory) const {
@@ -139,7 +139,7 @@ size_t Hook::countFilesInDirectory(const boost::filesystem::path& directory) con
 }
 
 void Hook::parseConfigJSONOfBundle() {
-    auto json = libsarus::readJSON(containerState.bundle() / "config.json");
+    auto json = libsarus::json::read(containerState.bundle() / "config.json");
 
     libsarus::hook::applyLoggingConfigIfAvailable(json);
 

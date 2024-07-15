@@ -42,7 +42,7 @@ IGNORE_TEST(MountTestGroup, mount_test) {
     const auto& bundleDir = bundleDirRAII.getPath();
     auto rootfsDir = bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()};
     auto overlayfsLowerDir = bundleDir / "overlay/rootfs-lower"; // hardcoded so in production code being tested
-    libsarus::createFoldersIfNecessary(overlayfsLowerDir);
+    libsarus::filesystem::createFoldersIfNecessary(overlayfsLowerDir);
 
     auto sourceDirRAII = libsarus::PathRAII{boost::filesystem::path{"./user_mounts_source"}};
     const auto& sourceDir = sourceDirRAII.getPath();
@@ -54,9 +54,9 @@ IGNORE_TEST(MountTestGroup, mount_test) {
     size_t mount_flags = 0;
 
     // Create files and directories
-    libsarus::createFoldersIfNecessary(rootfsDir);
+    libsarus::filesystem::createFoldersIfNecessary(rootfsDir);
     test_utility::filesystem::create_test_directory_tree(sourceDir.string());
-    libsarus::createFileIfNecessary(sourceFile.getPath());
+    libsarus::filesystem::createFileIfNecessary(sourceFile.getPath());
     auto command = "echo \"test data\" >" + sourceFile.getPath().string();
     auto ret = std::system(command.c_str());
     CHECK(WIFEXITED(ret) != 0 && WEXITSTATUS(ret) == 0);
@@ -72,7 +72,7 @@ IGNORE_TEST(MountTestGroup, mount_test) {
     }
     // test mount of existing destination directory
     {
-        libsarus::createFoldersIfNecessary(rootfsDir / destinationDir);
+        libsarus::filesystem::createFoldersIfNecessary(rootfsDir / destinationDir);
         libsarus::Mount{sourceDir, destinationDir.c_str(), mount_flags, config->getRootfsDirectory(), config->userIdentity}.performMount();
         CHECK(test_utility::filesystem::are_directories_equal(sourceDir.string(), (rootfsDir / destinationDir).string(), 1));
 
