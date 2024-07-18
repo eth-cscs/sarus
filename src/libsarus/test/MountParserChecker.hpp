@@ -70,7 +70,7 @@ public:
         libsarus::MountParser parser = libsarus::MountParser{configRAII.config->getRootfsDirectory(), configRAII.config->userIdentity};
 
         if (!isSiteMount && configRAII.config->json.HasMember("userMounts")) {
-          parser = libsarus::MountParser{configRAII.config->getRootfsDirectory(), configRAII.config->userIdentity, configRAII.config->json["userMounts"]};
+          parser.setMountDestinationRestrictions(configRAII.config->json["userMounts"]);
         }
 
         auto map = libsarus::string::parseMap(mountRequest);

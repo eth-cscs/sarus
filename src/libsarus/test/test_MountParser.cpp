@@ -93,28 +93,6 @@ TEST(MountParserTestGroup, site_flags_of_bind_mount) {
         .parseAsSiteMount().expectFlags(MS_REC | MS_RDONLY | MS_PRIVATE);
 }
 
-TEST(MountParserTestGroup, constructors) {
-    auto configRAII = test_utility::config::makeConfig();
-    auto userIdentity = configRAII.config->userIdentity;
-    auto rootfsDir = boost::filesystem::path{ configRAII.config->json["OCIBundleDir"].GetString() }
-                     / configRAII.config->json["rootfsFolder"].GetString();
-
-    auto requestString = std::string("type=bind,src=/src,dst=/dest,readonly");
-    auto requestMap = libsarus::string::parseMap(requestString);
-
-    auto mp1 = libsarus::MountParser{configRAII.config->getRootfsDirectory(), configRAII.config->userIdentity};
-    if (configRAII.config->json.HasMember("userMounts")) {  
-        mp1 = libsarus::MountParser{configRAII.config->getRootfsDirectory(), configRAII.config->userIdentity, configRAII.config->json["userMounts"]};
-    }
-    auto ctor1 = mp1.parseMountRequest(requestMap);
-    auto ctor2 = libsarus::MountParser{rootfsDir, userIdentity}
-        .parseMountRequest(requestMap);
-
-    CHECK(ctor1->getSource()      == ctor2->getSource());
-    CHECK(ctor1->getDestination() == ctor2->getDestination());
-    CHECK(ctor1->getFlags()       == ctor2->getFlags());
-}
-
 }}
 
 SARUS_UNITTEST_MAIN_FUNCTION();

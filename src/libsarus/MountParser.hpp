@@ -26,8 +26,8 @@ namespace libsarus {
 
 class MountParser {
 public:
-    MountParser(const boost::filesystem::path& rootfsDir, const libsarus::UserIdentity& userIdentity, const rapidjson::Value& userMounts);
     MountParser(const boost::filesystem::path& rootfsDir, const libsarus::UserIdentity& userIdentity);
+    void setMountDestinationRestrictions(const rapidjson::Value& destinationRestrictions);
     std::unique_ptr<libsarus::Mount> parseMountRequest(const std::unordered_map<std::string, std::string>& mountRequest);
 
 private:

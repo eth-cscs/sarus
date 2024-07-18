@@ -363,7 +363,7 @@ private:
     void makeUserMountObjects() {
         auto parser = libsarus::MountParser{conf->getRootfsDirectory(), conf->userIdentity};
         if (conf->json.HasMember("userMounts")) {  
-            parser = libsarus::MountParser{conf->getRootfsDirectory(), conf->userIdentity, conf->json["userMounts"]};
+            parser.setMountDestinationRestrictions(conf->json["userMounts"]);
         }
         for (const auto& mountString : conf->commandRun.userMounts) {
             auto map = libsarus::string::parseMap(mountString);

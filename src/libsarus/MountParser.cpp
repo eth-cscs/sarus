@@ -21,9 +21,15 @@
 
 namespace libsarus {
 
-MountParser::MountParser(const boost::filesystem::path& rootfsDir, const libsarus::UserIdentity& userIdentity, const rapidjson::Value& destinationRestrictions) 
+MountParser::MountParser(const boost::filesystem::path& rootfsDir, const libsarus::UserIdentity& userIdentity)
     : rootfsDir{rootfsDir}
     , userIdentity{userIdentity}
+{
+    validationSettings.destinationDisallowedWithPrefix = {};
+    validationSettings.destinationDisallowedExact = {};
+}
+
+void MountParser::setMountDestinationRestrictions(const rapidjson::Value& destinationRestrictions) 
 {
     // Retrieve settings from Config struct
     for (const auto& value : destinationRestrictions["notAllowedPrefixesOfPath"].GetArray()) {
@@ -32,14 +38,6 @@ MountParser::MountParser(const boost::filesystem::path& rootfsDir, const libsaru
     for (const auto& value : destinationRestrictions["notAllowedPaths"].GetArray()) {
         validationSettings.destinationDisallowedExact.push_back(value.GetString());
     }
-}
-
-MountParser::MountParser(const boost::filesystem::path& rootfsDir, const libsarus::UserIdentity& userIdentity)
-    : rootfsDir{rootfsDir}
-    , userIdentity{userIdentity}
-{
-    validationSettings.destinationDisallowedWithPrefix = {};
-    validationSettings.destinationDisallowedExact = {};
 }
 
 /**
