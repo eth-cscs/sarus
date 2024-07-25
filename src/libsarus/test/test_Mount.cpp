@@ -13,16 +13,15 @@
  */
 
 #include <string>
-
-#include <sys/stat.h>
 #include <sys/mount.h>
+#include <sys/stat.h>
 
-#include "test_utility/config.hpp"
-#include "test_utility/filesystem.hpp"
+#include "aux/filesystem.hpp"
+#include "aux/unitTestMain.hpp"
 #include "libsarus/Mount.hpp"
 #include "libsarus/PathRAII.hpp"
 #include "libsarus/Utility.hpp"
-#include "test_utility/unittest_main_function.hpp"
+
 
 namespace libsarus {
 namespace test {
@@ -35,14 +34,11 @@ TEST(MountTestGroup, mount_test) {
 #else
 IGNORE_TEST(MountTestGroup, mount_test) {
 #endif
-    auto configRAII = test_utility::config::makeConfig();
-    auto& config = configRAII.config;
+    libsarus::UserIdentity userIdentity;
 
-    auto bundleDirRAII = libsarus::PathRAII{boost::filesystem::path{config->json["OCIBundleDir"].GetString()}};
+    auto bundleDirRAII = libsarus::PathRAII{libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("test-bundle-dir"))};
     const auto& bundleDir = bundleDirRAII.getPath();
-    auto rootfsDir = bundleDir / boost::filesystem::path{config->json["rootfsFolder"].GetString()};
-    auto overlayfsLowerDir = bundleDir / "overlay/rootfs-lower"; // hardcoded so in production code being tested
-    libsarus::filesystem::createFoldersIfNecessary(overlayfsLowerDir);
+    auto rootfsDir = bundleDir / "rootfs";
 
     auto sourceDirRAII = libsarus::PathRAII{boost::filesystem::path{"./user_mounts_source"}};
     const auto& sourceDir = sourceDirRAII.getPath();
@@ -55,7 +51,7 @@ IGNORE_TEST(MountTestGroup, mount_test) {
 
     // Create files and directories
     libsarus::filesystem::createFoldersIfNecessary(rootfsDir);
-    test_utility::filesystem::create_test_directory_tree(sourceDir.string());
+    aux::filesystem::createTestDirectoryTree(sourceDir.string());
     libsarus::filesystem::createFileIfNecessary(sourceFile.getPath());
     auto command = "echo \"test data\" >" + sourceFile.getPath().string();
     auto ret = std::system(command.c_str());
@@ -63,8 +59,8 @@ IGNORE_TEST(MountTestGroup, mount_test) {
 
     // test mount of non-existing destination directory
     {
-        libsarus::Mount{sourceDir, destinationDir, mount_flags, config->getRootfsDirectory(), config->userIdentity}.performMount();
-        CHECK(test_utility::filesystem::are_directories_equal(sourceDir.string(), (rootfsDir / destinationDir).string(), 1));
+        libsarus::Mount{sourceDir, destinationDir, mount_flags, rootfsDir, userIdentity}.performMount();
+        CHECK(aux::filesystem::areDirectoriesEqual(sourceDir.string(), (rootfsDir / destinationDir).string(), 1));
 
         // cleanup
         CHECK(umount((rootfsDir / destinationDir).c_str()) == 0);
@@ -73,8 +69,8 @@ IGNORE_TEST(MountTestGroup, mount_test) {
     // test mount of existing destination directory
     {
         libsarus::filesystem::createFoldersIfNecessary(rootfsDir / destinationDir);
-        libsarus::Mount{sourceDir, destinationDir.c_str(), mount_flags, config->getRootfsDirectory(), config->userIdentity}.performMount();
-        CHECK(test_utility::filesystem::are_directories_equal(sourceDir.string(), (rootfsDir / destinationDir).string(), 1));
+        libsarus::Mount{sourceDir, destinationDir.c_str(), mount_flags, rootfsDir, userIdentity}.performMount();
+        CHECK(aux::filesystem::areDirectoriesEqual(sourceDir.string(), (rootfsDir / destinationDir).string(), 1));
 
         // cleanup
         CHECK(umount((rootfsDir / destinationDir).c_str()) == 0);
@@ -82,25 +78,25 @@ IGNORE_TEST(MountTestGroup, mount_test) {
     }
     // test mount of individual file
     {
-        libsarus::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, config->getRootfsDirectory(), config->userIdentity}.performMount();
-        CHECK(test_utility::filesystem::isSameBindMountedFile(sourceFile.getPath(), rootfsDir / destinationFile.getPath()));
+        libsarus::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, rootfsDir, userIdentity}.performMount();
+        CHECK(aux::filesystem::isSameBindMountedFile(sourceFile.getPath(), rootfsDir / destinationFile.getPath()));
 
         // cleanup
         CHECK(umount((rootfsDir / destinationFile.getPath()).c_str()) == 0);
     }
     // test ctor with 5 arguments
     {
-        libsarus::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, rootfsDir, config->userIdentity}.performMount();
-        CHECK(test_utility::filesystem::isSameBindMountedFile(sourceFile.getPath(), rootfsDir / destinationFile.getPath()));
+        libsarus::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, rootfsDir, userIdentity}.performMount();
+        CHECK(aux::filesystem::isSameBindMountedFile(sourceFile.getPath(), rootfsDir / destinationFile.getPath()));
 
         // cleanup
         CHECK(umount((rootfsDir / destinationFile.getPath()).c_str()) == 0);
     }
     // test default move ctor
     {
-        auto mountObject = libsarus::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, config->getRootfsDirectory(), config->userIdentity};
+        auto mountObject = libsarus::Mount{sourceFile.getPath(), destinationFile.getPath(), mount_flags, rootfsDir, userIdentity};
         libsarus::Mount{std::move(mountObject)}.performMount();
-        CHECK(test_utility::filesystem::isSameBindMountedFile(sourceFile.getPath(), rootfsDir / destinationFile.getPath()));
+        CHECK(aux::filesystem::isSameBindMountedFile(sourceFile.getPath(), rootfsDir / destinationFile.getPath()));
 
         // cleanup
         CHECK(umount((rootfsDir / destinationFile.getPath()).c_str()) == 0);

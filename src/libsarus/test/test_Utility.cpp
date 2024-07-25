@@ -9,19 +9,20 @@
  */
 
 #include <array>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/fsuid.h>
 #include <unistd.h>
+#include <sys/fsuid.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/regex.hpp>
 
+#include "aux/misc.hpp"
+#include "aux/unitTestMain.hpp"
 #include "libsarus/PathRAII.hpp"
 #include "libsarus/Utility.hpp"
-#include "test_utility/Misc.hpp"
-#include "test_utility/unittest_main_function.hpp"
+
 
 namespace libsarus {
 namespace test {
@@ -125,7 +126,7 @@ TEST(UtilityTestGroup, switchIdentity) {
 
     uid_t unprivilegedUid;
     gid_t unprivilegedGid;
-    std::tie(unprivilegedUid, unprivilegedGid) = test_utility::misc::getNonRootUserIds();
+    std::tie(unprivilegedUid, unprivilegedGid) = aux::misc::getNonRootUserIds();
     auto unprivilegedIdentity = libsarus::UserIdentity{unprivilegedUid, unprivilegedGid, {}};
 
     libsarus::process::switchIdentity(unprivilegedIdentity);
@@ -150,7 +151,7 @@ TEST(UtilityTestGroup, setFilesystemUid) {
     // switch to unprivileged user
     uid_t unprivilegedUid;
     gid_t unprivilegedGid;
-    std::tie(unprivilegedUid, unprivilegedGid) = test_utility::misc::getNonRootUserIds();
+    std::tie(unprivilegedUid, unprivilegedGid) = aux::misc::getNonRootUserIds();
     auto unprivilegedIdentity = libsarus::UserIdentity{unprivilegedUid, unprivilegedGid, {}};
     auto rootIdentity = libsarus::UserIdentity{};
 

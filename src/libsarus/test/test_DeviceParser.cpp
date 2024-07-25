@@ -8,15 +8,81 @@
  *
  */
 
+#include "aux/filesystem.hpp"
+#include "aux/unitTestMain.hpp"
+#include "libsarus/DeviceParser.hpp"
 #include "libsarus/Logger.hpp"
 #include "libsarus/PathRAII.hpp"
-#include "libsarus/DeviceParser.hpp"
-#include "DeviceParserChecker.hpp"
-#include "test_utility/filesystem.hpp"
-#include "test_utility/unittest_main_function.hpp"
+#include "libsarus/Utility.hpp"
+
 
 namespace libsarus {
 namespace test {
+
+class DeviceParserChecker {
+public:
+    DeviceParserChecker(const std::string& deviceRequest)
+        : deviceRequest(deviceRequest)
+    {}
+
+    DeviceParserChecker& expectSource(const std::string& expectedSource) {
+        this->expectedSource = expectedSource;
+        return *this;
+    }
+
+    DeviceParserChecker& expectDestination(const std::string& expectedDestination) {
+        this->expectedDestination = expectedDestination;
+        return *this;
+    }
+
+    DeviceParserChecker& expectAccess(const std::string& expectedAccess) {
+        this->expectedAccess = expectedAccess;
+        return *this;
+    }
+
+    DeviceParserChecker& expectParseError() {
+        isParseErrorExpected = true;
+        return *this;
+    }
+
+    ~DeviceParserChecker() {
+        libsarus::UserIdentity userIdentity;
+        auto bundleDirRAII = libsarus::PathRAII{libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("test-bundle-dir"))};
+        auto rootfsDir = bundleDirRAII.getPath() / "rootfs";
+
+        auto parser = libsarus::DeviceParser{rootfsDir, userIdentity};
+
+        if(isParseErrorExpected) {
+            CHECK_THROWS(libsarus::Error, parser.parseDeviceRequest(deviceRequest));
+            return;
+        }
+
+        auto mountObject = parser.parseDeviceRequest(deviceRequest);
+
+        if(expectedSource) {
+            CHECK(mountObject->getSource() == *expectedSource);
+        }
+
+        if(expectedDestination) {
+            CHECK(mountObject->getDestination() == *expectedDestination);
+        }
+
+        if(expectedAccess) {
+            CHECK(mountObject->getAccess().string() == *expectedAccess);
+        }
+
+        CHECK_EQUAL(mountObject->getFlags(), *expectedFlags);
+    }
+
+private:
+    std::string deviceRequest;
+    boost::optional<std::string> expectedSource{};
+    boost::optional<std::string> expectedDestination{};
+    boost::optional<std::string> expectedAccess{"rwm"};
+    boost::optional<size_t> expectedFlags{MS_REC | MS_PRIVATE};
+
+    bool isParseErrorExpected = false;
+};
 
 TEST_GROUP(DeviceParserTestGroup) {
     void setup() {
@@ -26,7 +92,7 @@ TEST_GROUP(DeviceParserTestGroup) {
         if (boost::filesystem::exists(testDevice)) {
             boost::filesystem::remove(testDevice);
         }
-        test_utility::filesystem::createCharacterDeviceFile(testDevice, testDeviceMajorID, testDeviceMinorID);
+        aux::filesystem::createCharacterDeviceFile(testDevice, testDeviceMajorID, testDeviceMinorID);
     }
 
     void teardown() {
@@ -104,27 +170,6 @@ IGNORE_TEST(DeviceParserTestGroup, access) {
     DeviceParserChecker{":/dev/sarusTestDevice0:rw"}.expectParseError();
     DeviceParserChecker{"/dev/sarusTestDevice0::rw"}.expectParseError();
     DeviceParserChecker{"/dev/sarusTestDevice0:/dev/containerDevice:"}.expectParseError();
-}
-
-#ifdef ASROOT
-TEST(DeviceParserTestGroup, constructors) {
-#else
-IGNORE_TEST(DeviceParserTestGroup, constructors) {
-#endif
-    auto configRAII = test_utility::config::makeConfig();
-    auto userIdentity = configRAII.config->userIdentity;
-    auto rootfsDir = boost::filesystem::path{ configRAII.config->json["OCIBundleDir"].GetString() }
-                     / configRAII.config->json["rootfsFolder"].GetString();
-
-     auto requestString = std::string("/dev/sarusTestDevice0:/dev/containerDevice:r");
-
-     auto ctor1 = DeviceParser{configRAII.config->getRootfsDirectory(), configRAII.config->userIdentity}.parseDeviceRequest(requestString);
-     auto ctor2 = DeviceParser{rootfsDir, userIdentity}.parseDeviceRequest(requestString);
-
-     CHECK(ctor1->getSource()          == ctor2->getSource());
-     CHECK(ctor1->getDestination()     == ctor2->getDestination());
-     CHECK(ctor1->getFlags()           == ctor2->getFlags());
-     CHECK(ctor1->getAccess().string() == ctor2->getAccess().string());
 }
 
 }}

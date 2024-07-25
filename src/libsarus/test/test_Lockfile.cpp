@@ -10,12 +10,13 @@
 
 #include <type_traits>
 
-#include "libsarus/Error.hpp"
-#include "libsarus/Utility.hpp"
-#include "libsarus/Lockfile.hpp"
-
 #include <boost/filesystem.hpp>
-#include "test_utility/unittest_main_function.hpp"
+
+#include "aux/unitTestMain.hpp"
+#include "libsarus/Error.hpp"
+#include "libsarus/Lockfile.hpp"
+#include "libsarus/Utility.hpp"
+
 
 namespace libsarus {
 namespace test {

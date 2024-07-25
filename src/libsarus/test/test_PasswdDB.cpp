@@ -10,11 +10,13 @@
 
 #include <fstream>
 #include <streambuf>
+
 #include <boost/filesystem.hpp>
 
+#include "aux/unitTestMain.hpp"
 #include "libsarus/PasswdDB.hpp"
 #include "libsarus/PathRAII.hpp"
-#include "test_utility/unittest_main_function.hpp"
+
 
 namespace libsarus {
 namespace test {

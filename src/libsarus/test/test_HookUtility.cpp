@@ -18,11 +18,12 @@
 #include <boost/optional.hpp>
 #include <rapidjson/document.h>
 
-#include "libsarus/Utility.hpp"
+#include "aux/hook.hpp"
+#include "aux/misc.hpp"
+#include "aux/unitTestMain.hpp"
 #include "libsarus/PathRAII.hpp"
-#include "test_utility/Misc.hpp"
-#include "test_utility/OCIHooks.hpp"
-#include "test_utility/unittest_main_function.hpp"
+#include "libsarus/Utility.hpp"
+
 
 namespace libsarus {
 namespace test {
@@ -41,7 +42,7 @@ TEST(HooksUtilityTestGroup, parseStateOfContainerFromStdin) {
     auto returnedBundleDir = boost::filesystem::path();
     pid_t returnedPid;
 
-    test_utility::ocihooks::writeContainerStateToStdin(expectedBundleDir.getPath());
+    aux::hook::writeOCIContainerStateToStdin(expectedBundleDir.getPath());
     auto containerState = parseStateOfContainerFromStdin();
 
     CHECK(containerState.bundle() == expectedBundleDir.getPath());
@@ -54,8 +55,8 @@ TEST(HooksUtilityTestGroup, getEnvironmentVariableValueFromOCIBundle) {
     libsarus::filesystem::createFoldersIfNecessary(testBundleDir.getPath());
     auto bundleConfigFile = testBundleDir.getPath() / "config.json";
 
-    auto config = test_utility::ocihooks::createBaseConfigJSON(testBundleDir.getPath() / "rootfs",
-                                                               test_utility::misc::getNonRootUserIds());
+    auto config = aux::hook::createOCIBaseConfigJSON(testBundleDir.getPath() / "rootfs",
+                                                               aux::misc::getNonRootUserIds());
     auto& allocator = config.GetAllocator();
 
     // Variable set and non-empty

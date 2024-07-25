@@ -8,8 +8,9 @@
  *
  */
 
+#include "aux/unitTestMain.hpp"
 #include "libsarus/DeviceAccess.hpp"
-#include "test_utility/unittest_main_function.hpp"
+
 
 namespace libsarus {
 namespace test {

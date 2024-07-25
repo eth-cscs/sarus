@@ -13,14 +13,13 @@
  */
 
 #include <string>
-
 #include <sys/mount.h>
 
-#include "test_utility/config.hpp"
-#include "test_utility/filesystem.hpp"
+#include "aux/filesystem.hpp"
+#include "aux/unitTestMain.hpp"
 #include "libsarus/PathRAII.hpp"
 #include "libsarus/Utility.hpp"
-#include "test_utility/unittest_main_function.hpp"
+
 
 namespace libsarus {
 namespace test {
@@ -51,11 +50,9 @@ TEST(MountUtilitiesTestGroup, get_validated_mount_source_test) {
 }
 
 TEST(MountUtilitiesTestGroup, get_validated_mount_destination_test) {
-    auto configRAII = test_utility::config::makeConfig();
-    auto& config = *configRAII.config;
-    auto bundleDirRAII = libsarus::PathRAII{boost::filesystem::path{config.json["OCIBundleDir"].GetString()}};
+    auto bundleDirRAII = libsarus::PathRAII{libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("test-bundle-dir"))}; 
     const auto& bundleDir = bundleDirRAII.getPath();
-    auto rootfsDir = bundleDir / boost::filesystem::path{config.json["rootfsFolder"].GetString()};
+    auto rootfsDir = bundleDir / "rootfs";
     libsarus::filesystem::createFoldersIfNecessary(bundleDir / "overlay/rootfs-lower");
 
     // Test invalid input arguments

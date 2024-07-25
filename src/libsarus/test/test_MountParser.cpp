@@ -8,13 +8,107 @@
  *
  */
 
+#include <rapidjson/allocators.h>
+#include <rapidjson/document.h>
+
+#include "aux/unitTestMain.hpp"
 #include "libsarus/Logger.hpp"
 #include "libsarus/MountParser.hpp"
-#include "MountParserChecker.hpp"
-#include "test_utility/unittest_main_function.hpp"
+#include "libsarus/PathRAII.hpp"
+#include "libsarus/Utility.hpp"
+
 
 namespace libsarus {
 namespace test {
+
+class MountParserChecker {
+public:
+    MountParserChecker(const std::string& mountRequest)
+        : mountRequest(mountRequest)
+    {}
+
+    MountParserChecker& parseAsSiteMount() {
+        this->isSiteMount = true;
+        return *this;
+    }
+
+    MountParserChecker& expectSource(const std::string& expectedSource) {
+        this->expectedSource = expectedSource;
+        return *this;
+    }
+
+    MountParserChecker& expectDestination(const std::string& expectedDestination) {
+        this->expectedDestination = expectedDestination;
+        return *this;
+    }
+
+    MountParserChecker& expectFlags(const size_t flags) {
+        this->expectedFlags = flags;
+        return *this;
+    }
+
+    MountParserChecker& expectParseError() {
+        isParseErrorExpected = true;
+        return *this;
+    }
+
+    ~MountParserChecker() {
+        libsarus::UserIdentity userIdentity;
+        auto bundleDirRAII = libsarus::PathRAII{libsarus::filesystem::makeUniquePathWithRandomSuffix(boost::filesystem::absolute("test-bundle-dir"))};
+        auto rootfsDir = bundleDirRAII.getPath() / "rootfs";
+
+        libsarus::MountParser parser = libsarus::MountParser{rootfsDir, userIdentity};
+
+        if (!isSiteMount) {
+          // Populate "userMount", originally done by "ConfigRAII" in Sarus 1.6.4.
+          rapidjson::MemoryPoolAllocator<> allocator;
+          rapidjson::Value userMountsValue(rapidjson::kObjectType);
+
+          rapidjson::Value disallowWithPrefixValue(rapidjson::kArrayType);
+          disallowWithPrefixValue.PushBack("/etc", allocator);
+          disallowWithPrefixValue.PushBack("/var", allocator);
+          disallowWithPrefixValue.PushBack("/opt/sarus", allocator);
+          userMountsValue.AddMember("notAllowedPrefixesOfPath", disallowWithPrefixValue, allocator);
+
+          rapidjson::Value disallowExactValue(rapidjson::kArrayType);
+          disallowExactValue.PushBack("/opt", allocator);
+          userMountsValue.AddMember("notAllowedPaths", disallowExactValue, allocator);
+
+          // Inject "userMount".
+          parser.setMountDestinationRestrictions(userMountsValue);
+        }
+
+        auto map = libsarus::string::parseMap(mountRequest);
+
+        if(isParseErrorExpected) {
+            CHECK_THROWS(libsarus::Error, parser.parseMountRequest(map));
+            return;
+        }
+
+        auto mountObject = parser.parseMountRequest(map);
+
+        if(expectedSource) {
+            CHECK(mountObject->getSource() == *expectedSource);
+        }
+
+        if(expectedDestination) {
+            CHECK(mountObject->getDestination() == *expectedDestination);
+        }
+
+        if(expectedFlags) {
+            CHECK_EQUAL(mountObject->getFlags(), *expectedFlags);
+        }
+    }
+
+private:
+    std::string mountRequest;
+    bool isSiteMount = false;
+    boost::optional<std::string> expectedSource = {};
+    boost::optional<std::string> expectedDestination = {};
+    boost::optional<size_t> expectedFlags = {};
+
+    bool isParseErrorExpected = false;
+};
 
 TEST_GROUP(MountParserTestGroup) {
 };

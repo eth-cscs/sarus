@@ -8,15 +8,18 @@
  *
  */
 
+// NOTE: Boost library must be included before CppUTest
+
 #include <sstream>
-// boost library must be included before CppUTest
+
 #include <boost/filesystem.hpp>
 
+#include "aux/unitTestMain.hpp"
 #include "libsarus/Error.hpp"
+#include "libsarus/Lockfile.hpp"
 #include "libsarus/Logger.hpp"
 #include "libsarus/Utility.hpp"
-#include "libsarus/Lockfile.hpp"
-#include "test_utility/unittest_main_function.hpp"
+
 
 namespace libsarus {
 namespace test {

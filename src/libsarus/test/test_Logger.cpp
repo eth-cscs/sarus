@@ -8,16 +8,17 @@
  *
  */
 
+#include <algorithm>
 #include <iostream>
 #include <sstream>
-#include <algorithm>
 #include <string>
 #include <vector>
 
 #include <boost/regex.hpp>
 
+#include "aux/unitTestMain.hpp"
 #include "libsarus/Logger.hpp"
-#include "test_utility/unittest_main_function.hpp"
+
 
 namespace libsarus {
 namespace test {
