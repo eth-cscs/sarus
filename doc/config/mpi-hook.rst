@@ -34,18 +34,20 @@ Hook configuration
 The program is meant to be run as a **createContainer** hook and does not accept
 arguments, but its actions are controlled through a few environment variables:
 
-* ``LDCONFIG_PATH``: Absolute path to a trusted ``ldconfig``
+* ``LDCONFIG_PATH`` (REQUIRED): Absolute path to a trusted ``ldconfig``
   program **on the host**.
 
-* ``MPI_LIBS``: Colon separated list of full paths to the host's
+* ``MPI_LIBS`` (REQUIRED): Colon separated list of full paths to the host's
   libraries that will substitute the container's libraries. The ABI
-  compatibility check is performed by comparing the version numbers specified in
+  compatibility is checked by comparing the version numbers specified in
   the libraries' file names according to the specifications selected with the 
-  variable ``MPI_COMPATIBILITY_TYPE``
+  variable ``MPI_COMPATIBILITY_TYPE``.
 
-* ``MPI_COMPATIBILITY_TYPE``: Option for the ABI compatibility check, must be one of
-  ``major``, ``full``, ``strict``. The checks performed for the compatibility in each
-  case are the following:
+* ``MPI_COMPATIBILITY_TYPE`` (OPTIONAL): String determining the logic adopted
+  to check the ABI compatibility of MPI libraries.
+  Must be one of ``major``, ``full``, or ``strict``.
+  If not defined, defaults to ``major``.
+  The checks performed for compatibility in the different cases are as follows:
 
   * ``major``
 
@@ -57,11 +59,12 @@ arguments, but its actions are controlled through a few environment variables:
 
     - The major numbers (first from the left) must be present and equal.
 
-    - The host's minor number (second from the left) must be present and greater or equal
-      to the container's minor number. In case the minor number from the
-      container is greater than the host's minor number, the hook will print
-      a warning but will proceed in the attempt to let the container
-      application run.
+    - The host's minor number (second from the left) must be present and greater than
+      or equal to the container's minor number. In case the minor number from the
+      container is greater than the host's minor number (i.e. the container
+      library is probably being replaced with an older revision), the hook
+      will print a verbose log message but will proceed in the attempt to let
+      the container application run.
     
   * ``strict``
   
@@ -73,11 +76,11 @@ arguments, but its actions are controlled through a few environment variables:
   This compatibility check is in agreement with the MPICH ABI version number
   schema.
 
-* ``MPI_DEPENDENCY_LIBS``: Colon separated list of absolute paths to
+* ``MPI_DEPENDENCY_LIBS`` (OPTIONAL): Colon separated list of absolute paths to
   libraries that are dependencies of the ``MPI_LIBS``. These libraries
   are always bind mounted in the container under ``/usr/lib``.
 
-* ``BIND_MOUNTS``: Colon separated list of absolute paths to generic
+* ``BIND_MOUNTS`` (OPTIONAL): Colon separated list of absolute paths to generic
   files or directories that are required for the correct functionality of the
   host MPI implementation (e.g. specific device files). These resources will
   be bind mounted inside the container with the same path they have on the host.

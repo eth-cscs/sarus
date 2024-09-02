@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   controller:
     image: @container_image@

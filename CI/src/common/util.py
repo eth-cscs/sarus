@@ -269,6 +269,14 @@ def assert_sarus_raises_error_containing_text(command, text):
                                   'Expected: {}'.format(sarus_output, text))
 
 
+def assert_sarus_raises_error_containing_regex(command, expr):
+    import re
+    sarus_output = get_sarus_error_output(command)
+    assert re.search(expr, sarus_output), ('Sarus generated an error, but it did not contain the expected regex.\n'
+                                           'Generated message: {}\n'
+                                           'Expected: "{}"'.format(sarus_output, expr))
+
+
 def modify_sarus_json(new_parameters):
     if os.geteuid() == 0:
         backup_sarus_json()
