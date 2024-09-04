@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Configuration templates and documentation for OCI hooks now use createRuntime, createContainer or startContainer execution stages, instead of the prestart stage which has been deprecated since version 1.0.2 of the OCI Runtime specification. The only exception is the NVIDIA container toolkit hook.
 - Updated the build environment of the Sarus static standalone package to Alpine Linux 3.20 with a GCC 13.2.1 toolchain
-- Updated recommended runc version to 1.1.13
+- Updated recommended runc version to 1.1.14
 - Updated recommended Boost version to 1.85.0
 - Updated recommended RapidJSON version to commit ab1842a2da
 
