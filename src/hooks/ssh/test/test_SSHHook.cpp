@@ -10,13 +10,13 @@
 
 #include <chrono>
 #include <memory>
+#include <signal.h>
 #include <thread>
+#include <sys/mount.h>
+#include <sys/types.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <sys/types.h>
-#include <sys/mount.h>
-#include <sys/signal.h>
 #include <boost/regex.hpp>
 
 #include "common/Config.hpp"

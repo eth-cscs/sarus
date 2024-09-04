@@ -420,7 +420,7 @@ private:
         auto parser = libsarus::DeviceParser{conf->getRootfsDirectory(), conf->userIdentity};
         auto siteDevices = conf->commandRun.deviceMounts;
         for (const auto& requestString : deviceMounts) {
-            auto deviceMount = std::move(parser.parseDeviceRequest(requestString));
+            auto deviceMount = parser.parseDeviceRequest(requestString);
             auto previousSiteDevice = findMatchingSiteDevice(deviceMount, siteDevices);
             if (previousSiteDevice) {
                 auto message = boost::format("Device %s already added by the system administrator at container path %s with access %s. "

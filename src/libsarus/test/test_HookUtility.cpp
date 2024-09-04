@@ -40,7 +40,6 @@ TEST(HooksUtilityTestGroup, parseStateOfContainerFromStdin) {
     libsarus::filesystem::createFoldersIfNecessary(expectedBundleDir.getPath());
 
     auto returnedBundleDir = boost::filesystem::path();
-    pid_t returnedPid;
 
     aux::hook::writeOCIContainerStateToStdin(expectedBundleDir.getPath());
     auto containerState = parseStateOfContainerFromStdin();

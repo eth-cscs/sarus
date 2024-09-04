@@ -117,51 +117,51 @@ TEST(SharedLibraryTestGroup, bestAbiMatch) {
     {
     auto candidates = std::vector<SharedLibrary>{SharedLibrary{"/lib/libfoo.so.1"}, SharedLibrary{"/lib/libfoo.so"}, SharedLibrary{"/lib/libfoo.so.2"}, SharedLibrary{"/lib/libfoo.so.3"}};
     auto best = sl2.pickNewestAbiCompatibleLibrary(candidates);
-    CHECK_EQUAL(best.getRealName(), "libfoo.so.2");
+    CHECK_EQUAL(best.getRealName(), std::string("libfoo.so.2"));
     }
     {
     auto candidates = std::vector<SharedLibrary>{SharedLibrary{"/lib/libfoo.so.2"}, SharedLibrary{"/lib/libfoo.so.2.4"}, SharedLibrary{"/lib/libfoo.so.2.3.4"}, SharedLibrary{"/lib/libfoo.so.2.3"}};
     auto best = sl234.pickNewestAbiCompatibleLibrary(candidates);
-    CHECK_EQUAL(best.getRealName(), "libfoo.so.2.3.4");
+    CHECK_EQUAL(best.getRealName(), std::string("libfoo.so.2.3.4"));
     }
 
     // newest older
     {
     auto candidates = std::vector<SharedLibrary>{SharedLibrary{"/lib/libfoo.so.2"}, SharedLibrary{"/lib/libfoo.so.2.3.3"}, SharedLibrary{"/lib/libfoo.so.2.3.2"}};
     auto best = sl234.pickNewestAbiCompatibleLibrary(candidates);
-    CHECK_EQUAL(best.getRealName(), "libfoo.so.2.3.3");
+    CHECK_EQUAL(best.getRealName(), std::string("libfoo.so.2.3.3"));
     }
     {
     auto candidates = std::vector<SharedLibrary>{SharedLibrary{"/lib/libfoo.so.2.1"}, SharedLibrary{"/lib/libfoo.so.2.2"}, SharedLibrary{"/lib/libfoo.so.2.4"}};
     auto best = sl23.pickNewestAbiCompatibleLibrary(candidates);
-    CHECK_EQUAL(best.getRealName(), "libfoo.so.2.2");
+    CHECK_EQUAL(best.getRealName(), std::string("libfoo.so.2.2"));
     }
     {
     auto candidates = std::vector<SharedLibrary>{SharedLibrary{"/lib/libfoo.so.2.1.7"}, SharedLibrary{"/lib/libfoo.so.2.2.3"}};
     auto best = sl234.pickNewestAbiCompatibleLibrary(candidates);
-    CHECK_EQUAL(best.getRealName(), "libfoo.so.2.2.3"); // minor is more important than patch
+    CHECK_EQUAL(best.getRealName(), std::string("libfoo.so.2.2.3")); // minor is more important than patch
     }
     {
     auto candidates = std::vector<SharedLibrary>{SharedLibrary{"/lib/libfoo.so.2.3.3"}, SharedLibrary{"/lib/libfoo.so.2.3.6"}, SharedLibrary{"/lib/libfoo.so.2.3.5"}};
     auto best = sl234.pickNewestAbiCompatibleLibrary(candidates);
-    CHECK_EQUAL(best.getRealName(), "libfoo.so.2.3.6"); // don't downgrade patch
+    CHECK_EQUAL(best.getRealName(), std::string("libfoo.so.2.3.6")); // don't downgrade patch
     }
     {
     auto candidates = std::vector<SharedLibrary>{SharedLibrary{"/lib/libfoo.so.2"}, SharedLibrary{"/lib/libfoo.so.2.3.7"}, SharedLibrary{"/lib/libfoo.so.3"}};
     auto best = sl234.pickNewestAbiCompatibleLibrary(candidates);
-    CHECK_EQUAL(best.getRealName(), "libfoo.so.2.3.7"); // newer patch is ok
+    CHECK_EQUAL(best.getRealName(), std::string("libfoo.so.2.3.7")); // newer patch is ok
     }
 
     // oldest newer
     {
     auto candidates = std::vector<SharedLibrary>{SharedLibrary{"/lib/libfoo.so.3"}, SharedLibrary{"/lib/libfoo.so.2.4"}, SharedLibrary{"/lib/libfoo.so.2.4.6"}};
     auto best = sl234.pickNewestAbiCompatibleLibrary(candidates);
-    CHECK_EQUAL(best.getRealName(), "libfoo.so.2.4.6");
+    CHECK_EQUAL(best.getRealName(), std::string("libfoo.so.2.4.6"));
     }
     {
     auto candidates = std::vector<SharedLibrary>{SharedLibrary{"/lib/libfoo.so.5"}, SharedLibrary{"/lib/libfoo.so.4"}, SharedLibrary{"/lib/libfoo.so.3.7"}};
     auto best = sl234.pickNewestAbiCompatibleLibrary(candidates);
-    CHECK_EQUAL(best.getRealName(), "libfoo.so.3.7");
+    CHECK_EQUAL(best.getRealName(), std::string("libfoo.so.3.7"));
     }
 
     // corner cases
@@ -170,22 +170,22 @@ TEST(SharedLibraryTestGroup, bestAbiMatch) {
     {
     auto candidates = std::vector<SharedLibrary>{SharedLibrary{"/lib/libfoo.so.2"}};
     auto best = sl2.pickNewestAbiCompatibleLibrary(candidates);
-    CHECK_EQUAL(best.getRealName(), "libfoo.so.2");  // exact match with just major
+    CHECK_EQUAL(best.getRealName(), std::string("libfoo.so.2"));  // exact match with just major
     }
     {
     auto candidates = std::vector<SharedLibrary>{SharedLibrary{"/lib/libfoo.so.4"}};
     auto best = sl2.pickNewestAbiCompatibleLibrary(candidates);
-    CHECK_EQUAL(best.getRealName(), "libfoo.so.4");  // only candidate non compatible still "best"
+    CHECK_EQUAL(best.getRealName(), std::string("libfoo.so.4"));  // only candidate non compatible still "best"
     }
     {
     auto candidates = std::vector<SharedLibrary>{SharedLibrary{"/lib/libfoo.so.1"}, SharedLibrary{"/lib/libfoo.so.3"}};
     auto best = sl2.pickNewestAbiCompatibleLibrary(candidates);
-    CHECK_EQUAL(best.getRealName(), "libfoo.so.1");  // though incompatible, still newest older
+    CHECK_EQUAL(best.getRealName(), std::string("libfoo.so.1"));  // though incompatible, still newest older
     }
     {
     auto candidates = std::vector<SharedLibrary>{SharedLibrary{"/lib/libfoo.so.2.10"}, SharedLibrary{"/lib/libfoo.so.2.2"}};
     auto best = SharedLibrary{"/lib/libfoo.so.2.20"}.pickNewestAbiCompatibleLibrary(candidates);
-    CHECK_EQUAL(best.getRealName(), "libfoo.so.2.10"); // check for typical string-comparison pitfalls
+    CHECK_EQUAL(best.getRealName(), std::string("libfoo.so.2.10")); // check for typical string-comparison pitfalls
     }
 }
 

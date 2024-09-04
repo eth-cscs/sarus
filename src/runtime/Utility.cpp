@@ -142,7 +142,7 @@ std::vector<std::unique_ptr<libsarus::Mount>> generatePMIxMounts(std::shared_ptr
                 auto slurmJobUid = hostEnvironment.at("SLURM_JOB_UID");
                 auto slurmStepId = hostEnvironment.at("SLURM_STEP_ID");
 
-                if (boost::regex_match(slurmConfig, matches, boost::regex{"SlurmdSpoolDir\s*=\s(.*)"})) {
+                if (boost::regex_match(slurmConfig, matches, boost::regex{"SlurmdSpoolDir\\s*=\\s(.*)"})) {
                     utility::logMessage(boost::format("Found SlurmdSpoolDir=%s") % matches[1], libsarus::LogLevel::DEBUG);
                     auto slurmSpoolPath = boost::filesystem::path(matches[1]);
                     auto slurmPmixPath = slurmSpoolPath / (boost::format("pmix.%s.%s") % slurmJobId % slurmStepId).str();
@@ -158,7 +158,7 @@ std::vector<std::unique_ptr<libsarus::Mount>> generatePMIxMounts(std::shared_ptr
                     }
                 }
 
-                if (boost::regex_match(slurmConfig, matches, boost::regex{"TmpFS\s*=\s(.*)"})) {
+                if (boost::regex_match(slurmConfig, matches, boost::regex{"TmpFS\\s*=\\s(.*)"})) {
                     utility::logMessage(boost::format("Found Slurm TmpFS=%s") % matches[1], libsarus::LogLevel::DEBUG);
                     auto slurmTmpFS = boost::filesystem::path(matches[1]);
                     auto mountPath = slurmTmpFS / (boost::format("spmix_appdir_%s_%s.%s") % slurmJobUid % slurmJobId % slurmStepId).str();

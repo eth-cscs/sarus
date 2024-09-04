@@ -241,7 +241,7 @@ void MpiHook::injectHostLibraries(const std::vector<SharedLibrary>& hostLibs,
 
     AbiCheckerFactory checkerFactory;
     for(const auto& lib : hostLibs) {
-        injectHostLibrary(lib, hostToContainerLibs, std::move(checkerFactory.create(checkerType)));
+        injectHostLibrary(lib, hostToContainerLibs, checkerFactory.create(checkerType));
     }
 
     log("Successfully injected host's shared libs", libsarus::LogLevel::INFO);

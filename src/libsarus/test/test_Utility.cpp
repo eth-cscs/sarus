@@ -162,7 +162,7 @@ TEST(UtilityTestGroup, setFilesystemUid) {
     CHECK_EQUAL(getgid(), rootIdentity.gid);
     CHECK_EQUAL(geteuid(), rootIdentity.uid);
     CHECK_EQUAL(getegid(), rootIdentity.gid);
-    CHECK_EQUAL(setfsuid(-1), unprivilegedIdentity.uid);
+    CHECK_EQUAL((uid_t)setfsuid(-1), unprivilegedIdentity.uid);
 
     // switch back to privileged fsuid
     libsarus::process::setFilesystemUid(rootIdentity);
@@ -172,7 +172,7 @@ TEST(UtilityTestGroup, setFilesystemUid) {
     CHECK_EQUAL(getgid(), rootIdentity.gid);
     CHECK_EQUAL(geteuid(), rootIdentity.uid);
     CHECK_EQUAL(getegid(), rootIdentity.gid);
-    CHECK_EQUAL(setfsuid(-1), rootIdentity.uid);
+    CHECK_EQUAL((uid_t)setfsuid(-1), rootIdentity.uid);
 }
 
 TEST(UtilityTestGroup, executeCommand) {
