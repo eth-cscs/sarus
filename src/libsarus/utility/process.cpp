@@ -58,6 +58,12 @@ void switchIdentity(const libsarus::UserIdentity& identity) {
     uid_t euid = geteuid();
     uid_t egid = getegid();
 
+    if (euid == identity.uid && egid == identity.gid) {
+        logMessage(boost::format{"Switching to the same identity. Ignoring"},
+                   LogLevel::DEBUG);
+        return;
+    }
+
     if (euid == 0){
         // unprivileged processes cannot call setgroups
         if (setgroups(identity.supplementaryGids.size(), identity.supplementaryGids.data()) != 0) {

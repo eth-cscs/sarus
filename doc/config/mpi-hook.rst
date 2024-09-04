@@ -32,21 +32,23 @@ Hook configuration
 ==================
 
 The program is meant to be run as a **createContainer** hook and does not accept
-arguments, but its actions are controlled through a few environment variables:
+arguments. The following environment variables must be defined:
 
-* ``LDCONFIG_PATH`` (REQUIRED): Absolute path to a trusted ``ldconfig``
+* ``LDCONFIG_PATH``: Absolute path to a trusted ``ldconfig``
   program **on the host**.
 
-* ``MPI_LIBS`` (REQUIRED): Colon separated list of full paths to the host's
+* ``MPI_LIBS``: Colon separated list of full paths to the host's
   libraries that will substitute the container's libraries. The ABI
   compatibility is checked by comparing the version numbers specified in
   the libraries' file names according to the specifications selected with the 
   variable ``MPI_COMPATIBILITY_TYPE``.
 
-* ``MPI_COMPATIBILITY_TYPE`` (OPTIONAL): String determining the logic adopted
+The following optional environment variables are also supported:
+
+* ``MPI_COMPATIBILITY_TYPE``: String determining the logic adopted
   to check the ABI compatibility of MPI libraries.
-  Must be one of ``major``, ``full``, or ``strict``.
-  If not defined, defaults to ``major``.
+  If defined, must be one of ``major``, ``full``, ``strict``.
+  If unset or set to an unexpected value, defaults to ``major``.
   The checks performed for compatibility in the different cases are as follows:
 
   * ``major``
@@ -76,16 +78,30 @@ arguments, but its actions are controlled through a few environment variables:
   This compatibility check is in agreement with the MPICH ABI version number
   schema.
 
-* ``MPI_DEPENDENCY_LIBS`` (OPTIONAL): Colon separated list of absolute paths to
+* ``MPI_DEPENDENCY_LIBS``: Colon separated list of absolute paths to
   libraries that are dependencies of the ``MPI_LIBS``. These libraries
   are always bind mounted in the container under ``/usr/lib``.
 
-* ``BIND_MOUNTS`` (OPTIONAL): Colon separated list of absolute paths to generic
+* ``BIND_MOUNTS``: Colon separated list of absolute paths to generic
   files or directories that are required for the correct functionality of the
   host MPI implementation (e.g. specific device files). These resources will
   be bind mounted inside the container with the same path they have on the host.
   If a path corresponds to a device file, that file will be whitelisted for
   read/write access in the container's devices cgroup.
+
+* ``HOOK_ROOTLESS``: String indicating whether the hook is being run under
+  a rootless container runtime. It determines some of the actions undertaken by
+  the hook before performing its bind mounts, for example if identity switches
+  are required to validate the mounts or to work with "root squashed"
+  filesystems.
+  By default, the hook operates in fully privileged mode, assuming "real root"
+  capabilities. This is the way the hook is run under Sarus, and in such a case
+  it is recommended to leave this environment variable unset.
+
+  If this variable is set to ``True`` (case-insensitive), the hook assumes
+  rootless execution.
+  This setting is intended to enable using the hook under unprivileged tools
+  like rootless Podman or Enroot.
 
 The following is an example of `OCI hook JSON configuration file
 <https://github.com/containers/common/blob/main/pkg/hooks/docs/oci-hooks.5.md>`_

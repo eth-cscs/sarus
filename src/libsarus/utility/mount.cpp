@@ -171,12 +171,22 @@ void validatedBindMount(const boost::filesystem::path& source,
                         const boost::filesystem::path& destination,
                         const UserIdentity& userIdentity,
                         const boost::filesystem::path& rootfsDir,
-                        const unsigned long flags) {
+                        const unsigned long flags,
+                        const bool rootless) {
+    // This function assumes to be run as the root user, since it needs privileges to perform bind mounts.
+    // However, it is necessary to distinguish whether we are running within a fully privileged context
+    // (i.e. real root, e.g. within an suid program) or within a rootless/unprivileged context (i.e. under a user namespace).
+    // In the first case, we need to switch to the user identity to avoid complications due to root_squashed network
+    // filesystems; in the second case, identity switching is not necessary, since the kernel will always resolve
+    // to our true (unprivileged) identity in the topmost user namespace.
+    // To solve this somewhat elegantly, if we run as rootless, we set the target identity for the switches
+    // to the id which we already have. process::switchIdentity() is a no-op when attempting to switch to the same identity.
     auto rootIdentity = UserIdentity{};
+    auto targetIdentity = rootless ? rootIdentity : userIdentity;
 
     try {
         // switch to user identity to make sure user has access to the mount source
-        process::switchIdentity(userIdentity);
+        process::switchIdentity(targetIdentity);
         auto sourceReal = getValidatedMountSource(source);
         auto destinationReal = getValidatedMountDestination(destination, rootfsDir);
 
@@ -199,10 +209,14 @@ void validatedBindMount(const boost::filesystem::path& source,
             filesystem::createFileIfNecessary(destinationReal, userIdentity.uid, userIdentity.gid);
         }
 
-        // switch to user filesystem identity to make sure we can access paths as root even on root_squashed filesystems
-        process::setFilesystemUid(userIdentity);
+        // If we are real root, switch to user filesystem identity (fsuid) to make sure we can access paths as root
+        // even on root_squashed filesystems.
+        // There is no dedicated way of retrieving the current fsuid, and calling setfsuid(-1) will immediately error out
+        // if we are rootless, because we have no CAP_SETUID.
+        // So in the end we have no way of telling whether we can no-op the fsuid switch, hence we have to use an explicit condition.
+        if (!rootless) process::setFilesystemUid(userIdentity);
         bindMount(sourceReal, destinationReal, flags);
-        process::setFilesystemUid(rootIdentity);
+        if (!rootless) process::setFilesystemUid(rootIdentity);
     }
     catch(Error& e) {
         // Restore root identity in case the exception happened while having a non-privileged id.

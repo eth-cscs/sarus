@@ -3,7 +3,7 @@
 set -ex
 
 # Install packages
-sudo zypper install -y gcc-c++ glibc-static wget which git gzip bzip2 tar \
+sudo zypper install -y gcc-c++ glibc-static wget which git gzip bzip2 tar procps \
     make autoconf automake squashfs cmake zlib-devel zlib-devel-static \
     runc tini-static skopeo umoci \
     libboost_filesystem1_75_0-devel \

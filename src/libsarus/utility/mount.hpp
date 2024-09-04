@@ -37,7 +37,8 @@ void validatedBindMount(const boost::filesystem::path& source,
                         const boost::filesystem::path& destination,
                         const UserIdentity& userIdentity,
                         const boost::filesystem::path& rootfsDir,
-                        const unsigned long flags=0);
+                        const unsigned long flags=0,
+                        const bool rootless=false);
 void bindMount(const boost::filesystem::path& from, const boost::filesystem::path& to, unsigned long flags=0);
 void loopMountSquashfs(const boost::filesystem::path& image, const boost::filesystem::path& mountPoint);
 void mountOverlayfs(const boost::filesystem::path& lowerDir,

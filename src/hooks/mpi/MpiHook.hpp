@@ -61,6 +61,7 @@ private:
     void log(const boost::format& message, libsarus::LogLevel level) const;
 
 private:
+    bool rootless = false;
     libsarus::hook::ContainerState containerState;
     boost::filesystem::path rootfsDir;
     libsarus::UserIdentity userIdentity;

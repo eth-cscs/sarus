@@ -129,6 +129,10 @@ void MpiHook::parseEnvironmentVariables() {
         abiCompatibilityCheckerType = std::string(p);
     }
 
+    if ((p = getenv("HOOK_ROOTLESS")) != nullptr) {
+        rootless = (boost::algorithm::to_upper_copy(std::string(p)) == std::string("TRUE"));
+    }
+
     log("Successfully parsed environment variables", libsarus::LogLevel::INFO);
 }
 
@@ -252,7 +256,7 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
     if (it == hostToContainerLibs.cend()) {
         log(boost::format{"no corresponding libs in container => bind mount (%s) into /lib"} % hostLib.getPath(), libsarus::LogLevel::DEBUG);
         auto containerLib = "/lib" / hostLib.getPath().filename();
-        libsarus::mount::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
+        libsarus::mount::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir, 0, rootless);
         createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), false);
         return;
     }
@@ -265,14 +269,14 @@ void MpiHook::injectHostLibrary(const SharedLibrary& hostLib,
     auto areCompatible{abiCompatibilityChecker->check(hostLib, bestCandidateLib)};
     if(areCompatible.second == boost::none) {
         log(boost::format{"abi-compatible => bind mount host lib (%s) on top of container lib (%s) (i.e. override)"} % hostLib.getPath() % bestCandidateLib.getPath(), libsarus::LogLevel::DEBUG);
-        libsarus::mount::validatedBindMount(hostLib.getPath(), bestCandidateLib.getPath(), userIdentity, rootfsDir);
+        libsarus::mount::validatedBindMount(hostLib.getPath(), bestCandidateLib.getPath(), userIdentity, rootfsDir, 0, rootless);
         createSymlinksInDynamicLinkerDefaultSearchDirs(bestCandidateLib.getPath(), hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
         log("Successfully injected host's shared lib", libsarus::LogLevel::DEBUG);
         return;
     }
     log(areCompatible.second.get(), libsarus::LogLevel::INFO);
     auto containerLib = "/lib" / hostLib.getPath().filename();
-    libsarus::mount::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir);
+    libsarus::mount::validatedBindMount(hostLib.getPath(), containerLib, userIdentity, rootfsDir, 0, rootless);
     if (areCompatible.first) {
         createSymlinksInDynamicLinkerDefaultSearchDirs(containerLib, hostLib.getPath().filename(), containerHasLibsWithIncompatibleVersion);
     } else {
@@ -296,7 +300,7 @@ void MpiHook::performBindMounts() const {
     auto devicesCgroupPath = boost::filesystem::path{};
 
     for(const auto& mount : bindMounts) {
-        libsarus::mount::validatedBindMount(mount, mount, userIdentity, rootfsDir);
+        libsarus::mount::validatedBindMount(mount, mount, userIdentity, rootfsDir, 0, rootless);
 
         if (libsarus::filesystem::isDeviceFile(mount)) {
             if (devicesCgroupPath.empty()) {

@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - MPI hook: added support for the environment variable `MPI_COMPATIBILITY_TYPE` that defines the behaviour of the compatibility check of the libraries
   that the hook mounts. Valid values are `major`, `full` and `strict`. Default value is `major`.
+- MPI hook: added support for the `HOOK_ROOTLESS` environment variable, which enables to use the hook under rootless container runtimes
 - SSH Hook: added a poststop functionality that kills the Dropbear process in case the hook does not join the container's PID namespace.
 - Added the `sarus ps` command to list running containers
 - Added the `sarus kill` command to terminate (and subsequently remove) containers

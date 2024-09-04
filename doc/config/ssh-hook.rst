@@ -30,7 +30,7 @@ In the prestart stage the hook sets up the container to accept connections and s
 In the poststop stage, cleanup of the SSH daemon process takes place. 
 One OCI hook JSON configuration files is sufficient, provided it defines ``"stages": ["prestart", "poststop"]``.
 
-The configuration of the ssh hook expects to receive its own name/location as the first argument, 
+The hook expects to receive its own name/location as the first argument,
 and the string ``start-ssh-daemon`` as positional argument. In addition, the following
 environment variables must be defined:
 
