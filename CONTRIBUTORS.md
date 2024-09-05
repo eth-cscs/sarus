@@ -6,6 +6,7 @@
 - Chesi, Matteo. ETH Zurich - CSCS
 - Cruz, Felipe. ETH Zurich - CSCS
 - Fink, Andreas. ETH Zurich - CSCS
+- Lee, Gwangmu. ETH Zurich - CSCS
 - Hooks, Timothy Dayne
 - Madonna, Alberto. ETH Zurich - CSCS
 - Manitaras, Theofilos. ETH Zurich - CSCS

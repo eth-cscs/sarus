@@ -28,7 +28,7 @@ Hook configuration
 The SSH hook must be configured to run as a **createRuntime** and as a **poststop** hook. 
 In the prestart stage the hook sets up the container to accept connections and starts the Dropbear SSH daemon. 
 In the poststop stage, cleanup of the SSH daemon process takes place. 
-One OCI hook JSON configuration files is sufficient, provided it defines ``"stages": ["prestart", "poststop"]``.
+One OCI hook JSON configuration file is sufficient, provided it defines ``"stages": ["createRuntime", "poststop"]``.
 
 The hook expects to receive its own name/location as the first argument,
 and the string ``start-ssh-daemon`` as positional argument. In addition, the following
@@ -93,8 +93,8 @@ enabling the SSH hook:
 .. literalinclude:: /config/hook_examples/07-ssh-hook.json
    :language: json
 
-The poststop functionality is especially valuable in cases where the hook does not actively join the PID namespace 
-of the container. In its absence, the termination of the container would not result in the termination of the 
+The poststop functionality is especially valuable in cases where the container does not have a private PID namespace.
+In the absence of poststop actions, the termination of the container would not result in the termination of the
 Dropbear daemon, leading to the persistence of the daemon even after the container has been stopped. 
 This persistence can cause issues like port conflicts, as the daemon may still be listening on a port that 
 is required by a new container attempting to start.

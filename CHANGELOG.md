@@ -4,22 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [1.7.0]
 
 ### Added
 
+- Added the `sarus ps` command to list running containers. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#listing-running-containers).
+- Added the `sarus kill` command to terminate (and subsequently remove) containers.
+- Added the `-n, --name` option the `sarus run` command to specify the name of the container to run. If the option is not specified, Sarus assigns a default name in the form `sarus-container-*`. More details [here](https://sarus.readthedocs.io/en/stable/user/user_guide.html#naming-the-container)
 - MPI hook: added support for the environment variable `MPI_COMPATIBILITY_TYPE` that defines the behaviour of the compatibility check of the libraries
   that the hook mounts. Valid values are `major`, `full` and `strict`. Default value is `major`.
-- MPI hook: added support for the `HOOK_ROOTLESS` environment variable, which enables to use the hook under rootless container runtimes
-- SSH Hook: added a poststop functionality that kills the Dropbear process in case the hook does not join the container's PID namespace.
-- Added the `sarus ps` command to list running containers
-- Added the `sarus kill` command to terminate (and subsequently remove) containers
-- Added the `-n, --name` option the `sarus run` command to specify the name of the container to run. If the option is not specified, Sarus assigns a default name in the form `sarus-container-*`.
+  More details [here](https://sarus.readthedocs.io/en/stable/config/mpi-hook.html#hook-configuration).
+- MPI hook: added support for the `HOOK_ROOTLESS` environment variable, enabling the hook to be used in rootless container runtimes. More details [here](https://sarus.readthedocs.io/en/stable/config/mpi-hook.html#hook-configuration).
+- SSH Hook: added a poststop functionality that kills the Dropbear process in case the hook does not join the container's PID namespace. More details [here](https://sarus.readthedocs.io/en/stable/config/ssh-hook.html#hook-configuration).
 
 ### Changed
 
-- Configuration templates and documentation for OCI hooks now use createRuntime, createContainer or startContainer execution stages, instead of the prestart stage which has been deprecated since version 1.0.2 of the OCI Runtime specification. The only exception is the NVIDIA container toolkit hook.
-- Updated the build environment of the Sarus static standalone package to Alpine Linux 3.20 with a GCC 13.2.1 toolchain
+- Configuration templates and documentation for OCI hooks now use the `createRuntime`, `createContainer`, or `startContainer` execution stages instead of the `prestart` stage, which has been deprecated since version 1.0.2 of the OCI Runtime specification. The only exception is the NVIDIA Container Toolkit hook.
+- Updated the build environment of the Sarus static standalone package to Alpine Linux 3.20 with a GCC 13.2.1 toolchain.
 - Updated recommended runc version to 1.1.14
 - Updated recommended Boost version to 1.85.0
 - Updated recommended RapidJSON version to commit ab1842a2da
