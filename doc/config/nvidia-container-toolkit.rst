@@ -150,3 +150,7 @@ These modifications ensure that the host resource allocations are respected,
 while guaranteeing the correct operation of CUDA applications inside the
 container, even in the case of partial or shuffled devices selection on
 multi-GPU systems.
+
+If ``CUDA_VISIBLE_DEVICES`` is not set in the *host* Sarus will unset
+``NVIDIA_VISIBLE_DEVICES``, making the NVIDIA hook exit without carrying out any
+operation.
