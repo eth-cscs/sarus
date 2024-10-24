@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Updated recommended runc version to 1.2.0
+
 ### Removed
 
 - Removed the CI test with Spack on CentOS 7
