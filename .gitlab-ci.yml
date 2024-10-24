@@ -195,11 +195,6 @@ spack_debian10:
   before_script:
     - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-debian10 spack-debian10
 
-spack_centos7:
-  extends: .scheduled_spack_package
-  before_script:
-    - . ./CI/utility_docker_functions.bash Release gcc.cmake $(pwd) $HOST_CACHES_PATH spack-centos7 spack-centos7
-
 spack_fedora34:
   extends: .scheduled_spack_package
   before_script:
