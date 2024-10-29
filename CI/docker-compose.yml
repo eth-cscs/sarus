@@ -4,7 +4,6 @@ services:
     hostname: controller
     volumes:
       - etc-munge-volume:/etc/munge
-      - etc-slurm-volume:/etc/slurm
       - opt-sarus-volume:/opt/sarus
       - @cached_oci_hooks_dir@:/home/docker/.oci-hooks
       - @cached_local_repo_dir@:/home/docker/.sarus
@@ -29,7 +28,6 @@ services:
     hostname: server0
     volumes:
       - etc-munge-volume:/etc/munge
-      - etc-slurm-volume:/etc/slurm
       - opt-sarus-volume:/opt/sarus
       - @cached_oci_hooks_dir@:/home/docker/.oci-hooks
       - @cached_local_repo_dir@:/home/docker/.sarus
@@ -41,8 +39,10 @@ services:
         sleep 1;
       done;
       . /sarus-source/CI/utility_functions.bash
+      && . /sarus-source/CI/src/integration_tests_for_virtual_cluster/helpers.bash
       && change_uid_gid_of_docker_user @host_uid@ @host_gid@
       && /etc/init.d/munge start
+      && generate_slurm_conf /etc/slurm/slurm.conf controller server0 server1
       && touch /etc/slurm/gres.conf && echo Starting slurmd
       && slurmd -L /var/log/slurm/slurmd && echo Going to sleep
       && sleep infinity"
@@ -58,7 +58,6 @@ services:
     hostname: server1
     volumes:
       - etc-munge-volume:/etc/munge
-      - etc-slurm-volume:/etc/slurm
       - opt-sarus-volume:/opt/sarus
       - @cached_oci_hooks_dir@:/home/docker/.oci-hooks
       - @cached_local_repo_dir@:/home/docker/.sarus
@@ -70,8 +69,10 @@ services:
         sleep 1;
       done;
       . /sarus-source/CI/utility_functions.bash
+      && . /sarus-source/CI/src/integration_tests_for_virtual_cluster/helpers.bash
       && change_uid_gid_of_docker_user @host_uid@ @host_gid@
       && /etc/init.d/munge start
+      && generate_slurm_conf /etc/slurm/slurm.conf controller server0 server1
       && touch /etc/slurm/gres.conf && echo Starting slurmd
       && slurmd -L /var/log/slurm/slurmd && echo Going to sleep
       && sleep infinity"

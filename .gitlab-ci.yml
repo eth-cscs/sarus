@@ -120,6 +120,7 @@ coverage:
   script:
     - . ./CI/utility_docker_functions.bash Debug gcc-gcov.cmake $(pwd) $HOST_CACHES_PATH standalone-build standalone-run
     - sarus-build-and-test
+  coverage: '/^TOTAL.*\s+(\d+\%)$/'
 
 rocky8:
   extends: .from_source
